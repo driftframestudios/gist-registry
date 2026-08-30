@@ -101,11 +101,27 @@ async function gitOutput(root, arguments_, { encoding = "utf8" } = {}) {
   return stdout;
 }
 
-async function requireRevisionOnBranch(root, revision, branch, label) {
+export async function requireRevisionOnBranch(root, revision, branch, label) {
   assert.match(revision, gitRevisionPattern, `${label} must be a full lowercase Git SHA`);
-  await gitOutput(root, ["merge-base", "--is-ancestor", revision, branch]).catch(() => {
+  const branchRevision = await resolveBranchRevision(root, branch);
+  await gitOutput(root, ["merge-base", "--is-ancestor", revision, branchRevision]).catch(() => {
     throw new Error(`${label} must be reachable from ${branch}`);
   });
+}
+
+async function resolveBranchRevision(root, branch) {
+  const candidates = [`refs/heads/${branch}`, `refs/remotes/origin/${branch}`];
+  for (const candidate of candidates) {
+    try {
+      const raw = await gitOutput(root, ["show-ref", "-s", "--verify", candidate]);
+      const revision = raw.trim();
+      if (revision.length > 0) return revision;
+    } catch {
+      // Keep probing for a supported branch shape in deterministic order.
+      continue;
+    }
+  }
+  throw new Error(`no commit ref found for branch ${branch}`);
 }
 
 function assertExactKeys(value, expectedKeys, label) {

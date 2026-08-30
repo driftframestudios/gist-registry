@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import {
+  requireRevisionOnBranch,
   checkDeliveryObservations,
   parseMediaType,
   validateDeliveryObservationEvidence,
@@ -12,6 +16,15 @@ import {
 } from "../tools/check-delivery-observations.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
+const execFileAsync = promisify(execFile);
+const runGit = async (root, args, options = {}) => {
+  const { stdout } = await execFileAsync("git", args, {
+    cwd: root,
+    encoding: "utf8",
+    ...options,
+  });
+  return stdout;
+};
 const schemaPath = resolve(
   repositoryRoot,
   "schemas/delivery-observation/0.1.0/delivery-observation.schema.json",
@@ -23,6 +36,25 @@ const recordPath = resolve(
 
 async function json(path) {
   return JSON.parse(await readFile(path, "utf8"));
+}
+
+async function createRemoteOnlyMainCheckout() {
+  const root = await mkdtemp(join(tmpdir(), "delivery-observation-check-"));
+  await runGit(root, ["init", "-b", "main"]);
+  await runGit(root, ["config", "user.email", "delivery-observations@example.invalid"]);
+  await runGit(root, ["config", "user.name", "Delivery Observations Test"]);
+
+  const fixture = resolve(root, "payload.txt");
+  await writeFile(fixture, "observed bytes\n");
+  await runGit(root, ["add", "payload.txt"]);
+  await runGit(root, ["commit", "-m", "seed commit"]);
+  const acceptedRevision = (await runGit(root, ["rev-parse", "HEAD"])).trim();
+
+  await runGit(root, ["switch", "-c", "runner"]);
+  await runGit(root, ["update-ref", "refs/remotes/origin/main", acceptedRevision]);
+  await runGit(root, ["branch", "-D", "main"]);
+
+  return { root, acceptedRevision };
 }
 
 async function realContract() {
@@ -88,6 +120,20 @@ test("the canonical request remains query-free and path-exact", async () => {
     () => validateDeliveryObservationSemantics(record),
     /request must use the exact canonical schema URL/u,
   );
+});
+
+test("the ancestry check resolves origin-tracking when local branch refs are absent", async () => {
+  const fixture = await createRemoteOnlyMainCheckout();
+  try {
+    await requireRevisionOnBranch(
+      fixture.root,
+      fixture.acceptedRevision,
+      "main",
+      "accepted source revision",
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
 });
 
 test("the schema requires the accepted source revision that makes evidence recoverable", async () => {
