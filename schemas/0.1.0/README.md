@@ -8,5 +8,5 @@ The URL is an intended identity; hosted retrieval has not yet been observed.
 The schema deliberately leaves `artifactKind` open, distinguishes declared
 representation media types from hosted observations, and provides an
 `extensions` object for bounded learning. Issue #4 receives this experiment
-and selects the first stable exact-version contract after the Humatics instance
-and another materially different artifact have pressured the shape.
+and selects the first stable exact-version contract after the document-evidence
+instance and another materially different artifact have pressured the shape.

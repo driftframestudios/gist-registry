@@ -2,7 +2,7 @@
 
 Current work follows four GitHub Issue owners:
 
-- #1 — canonical registry core and first Humatics artifact;
+- #1 — canonical registry core and first document-evidence artifact;
 - #2 — principal-level sample-quality disposition and receiving placement;
 - #3 — collaboration ground, branch topology, and later `main` to `docs`
   publication; and

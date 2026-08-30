@@ -1,5 +1,5 @@
 {
-  "artifactId": "humatics-evidence-extraction",
+  "artifactId": "document-evidence-extraction",
   "captureVersion": "0.1.0",
   "captureRole": "reviewed_synthetic_fixture",
   "reviewStanding": "reviewed_synthetic_fixture",

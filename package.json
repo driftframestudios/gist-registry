@@ -10,10 +10,10 @@
     "check:public-boundary": "node tools/check-public-boundary.mjs",
     "check:registry": "node tools/check-registry.mjs",
     "check:schema": "node tools/check-schema.mjs",
-    "check:python-lock": "uv --cache-dir .artifacts/uv-cache lock --project snippets/humatics-evidence-extraction/0.1.0 --check",
+    "check:python-lock": "uv --cache-dir .artifacts/uv-cache lock --project snippets/document-evidence-extraction/0.1.0 --check",
     "test:node": "node --test tests/*.test.mjs && npm run check:public-boundary && npm run check:registry && npm run check:schema",
-    "lint:python": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked ruff check snippets/humatics-evidence-extraction/0.1.0/src snippets/humatics-evidence-extraction/0.1.0/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked ruff format --check snippets/humatics-evidence-extraction/0.1.0/src snippets/humatics-evidence-extraction/0.1.0/tests",
-    "test:python": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked python -m unittest discover -s snippets/humatics-evidence-extraction/0.1.0/tests -v",
+    "lint:python": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked ruff check snippets/document-evidence-extraction/0.1.0/src snippets/document-evidence-extraction/0.1.0/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked ruff format --check snippets/document-evidence-extraction/0.1.0/src snippets/document-evidence-extraction/0.1.0/tests",
+    "test:python": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked python -m unittest discover -s snippets/document-evidence-extraction/0.1.0/tests -v",
     "test": "npm run test:node && npm run check:python-lock && npm run lint:python && npm run test:python"
   },
   "devDependencies": {

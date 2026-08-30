@@ -51,7 +51,7 @@ wheels = [
 ]
 
 [[package]]
-name = "gist-registry-humatics-evidence-extraction"
+name = "gist-registry-document-evidence-extraction"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

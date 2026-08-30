@@ -10,7 +10,7 @@ import { checkSchemaNursery, validateArtifactEnvelope } from "../tools/check-sch
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const manifestPath = resolve(
   repositoryRoot,
-  "snippets/humatics-evidence-extraction/0.1.0/snippet.json",
+  "snippets/document-evidence-extraction/0.1.0/snippet.json",
 );
 const schemaPath = resolve(repositoryRoot, "schemas/0.1.0/registry-artifact.schema.json");
 
@@ -28,7 +28,7 @@ test("the first schema attempt validates its real artifact without closing the k
   assert.deepEqual(result, {
     schemaVersion: "0.1.0",
     artifactCount: 1,
-    instances: ["humatics-evidence-extraction@0.1.0"],
+    instances: ["document-evidence-extraction@0.1.0"],
   });
 });
 
@@ -110,7 +110,7 @@ test("path disagreement returns to the registry owner without copying the worktr
   const fixture = await mkdtemp(join(tmpdir(), "gist-registry-path-check-"));
   try {
     const registry = await json(resolve(repositoryRoot, "registry.json"));
-    registry.entries[0].canonicalPath = "snippets/humatics-evidence-extraction/0.1.1";
+    registry.entries[0].canonicalPath = "snippets/document-evidence-extraction/0.1.1";
     await writeFile(
       join(fixture, "registry.json"),
       `${JSON.stringify(registry, null, 2)}\n`,

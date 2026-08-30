@@ -3,7 +3,7 @@
   "sourceCaptureRole": "reviewed_synthetic_fixture",
   "sourceClass": "realistic_synthetic",
   "sourceReviewStanding": "reviewed_synthetic_fixture",
-  "termWeightsSha256": "9ec017885af775365f77e4aab8fc6d7a9f89afcf10fa0cf2a5e91044b4a2c95b",
+  "termWeightsSha256": "26e741d7de220f2912387b690ad2041be85e40a0be17a0b2514b59cec1e5aaf7",
   "combinedTop": [
     {"term": "review", "weight": 0.11635596},
     {"term": "not", "weight": 0.10962257},
@@ -15,7 +15,7 @@
   "eras": ["2018", "2019"],
   "retainedNegationTerms": ["no", "not", "without"],
   "outputs": [
-    {"path": ".humatics-evidence-output.json", "mediaType": "application/json"},
+    {"path": ".document-evidence-output.json", "mediaType": "application/json"},
     {"path": "term-weights.json", "mediaType": "application/json"},
     {"path": "word-cloud.png", "mediaType": "image/png"},
     {"path": "render-metadata.json", "mediaType": "application/json"}

@@ -24,8 +24,8 @@ from pathlib import Path
 from typing import Any
 
 WORKFLOW_VERSION = "0.1.0"
-ARTIFACT_ID = "humatics-evidence-extraction"
-OUTPUT_SENTINEL = ".humatics-evidence-output.json"
+ARTIFACT_ID = "document-evidence-extraction"
+OUTPUT_SENTINEL = ".document-evidence-output.json"
 NEGATION_TERMS = frozenset({"neither", "never", "no", "nor", "not", "without"})
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:['-][a-z0-9]+)*")
 DEFAULT_STOPWORDS = Path(__file__).resolve().parents[1] / "config" / "stopwords-en.txt"
@@ -120,7 +120,7 @@ def _require_analysis_dependencies():
         raise DependencyUnavailableError(
             "Resolve the committed artifact lock before analysis: "
             "uv --cache-dir .artifacts/uv-cache sync "
-            "--project snippets/humatics-evidence-extraction/0.1.0 --locked"
+            "--project snippets/document-evidence-extraction/0.1.0 --locked"
         ) from error
     versions = {
         "python": platform.python_version(),
@@ -615,7 +615,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             collect_ocr(documents, args.output, replace=args.replace)
             print(f"OCR capture ready for review: {args.output}")
     except (EvidenceWorkflowError, FileNotFoundError, json.JSONDecodeError) as error:
-        print(f"humatics evidence workflow: {error}")
+        print(f"document evidence workflow: {error}")
         return 1
     return 0
 

@@ -11,22 +11,22 @@ from pathlib import Path
 from unittest import mock
 
 ARTIFACT_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_PATH = ARTIFACT_ROOT / "src" / "humatics_evidence.py"
+SOURCE_PATH = ARTIFACT_ROOT / "src" / "document_evidence.py"
 CAPTURE_PATH = ARTIFACT_ROOT / "fixtures" / "synthetic-ocr-capture.json"
 EXPECTED_PATH = ARTIFACT_ROOT / "expected" / "contract.json"
 
-SPEC = importlib.util.spec_from_file_location("humatics_evidence", SOURCE_PATH)
+SPEC = importlib.util.spec_from_file_location("document_evidence", SOURCE_PATH)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"Unable to load artifact source: {SOURCE_PATH}")
-humatics_evidence = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = humatics_evidence
-SPEC.loader.exec_module(humatics_evidence)
+document_evidence = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = document_evidence
+SPEC.loader.exec_module(document_evidence)
 
 
-class HumaticsEvidenceTests(unittest.TestCase):
+class DocumentEvidenceTests(unittest.TestCase):
     def test_stopword_policy_retains_negation(self) -> None:
-        stopwords, digest = humatics_evidence.load_stopwords()
-        tokens = humatics_evidence.normalize_text(
+        stopwords, digest = document_evidence.load_stopwords()
+        tokens = document_evidence.normalize_text(
             "The result is not complete, with no overwrite and without silent loss.",
             stopwords,
         )
@@ -51,22 +51,22 @@ class HumaticsEvidenceTests(unittest.TestCase):
         capture["captureRole"] = "local_ocr_capture"
         capture["sourceClass"] = "local_image_observation"
         capture["reviewStanding"] = "requires_human_review"
-        self.assertEqual(len(humatics_evidence._validate_capture(capture)), 4)
+        self.assertEqual(len(document_evidence._validate_capture(capture)), 4)
 
         capture["sourceClass"] = "realistic_synthetic"
         with self.assertRaisesRegex(
-            humatics_evidence.EvidenceWorkflowError,
+            document_evidence.EvidenceWorkflowError,
             "coherent supported capture state",
         ):
-            humatics_evidence._validate_capture(capture)
+            document_evidence._validate_capture(capture)
 
         capture["sourceClass"] = "local_image_observation"
         capture["documents"][0]["sourceName"] = "/private/reviewed-source.txt"
         with self.assertRaisesRegex(
-            humatics_evidence.EvidenceWorkflowError,
+            document_evidence.EvidenceWorkflowError,
             "must not contain a local path",
         ):
-            humatics_evidence._validate_capture(capture)
+            document_evidence._validate_capture(capture)
 
     def test_analysis_is_ordered_and_repeatable_in_one_environment(self) -> None:
         expected = json.loads(EXPECTED_PATH.read_text(encoding="utf-8"))
@@ -74,8 +74,8 @@ class HumaticsEvidenceTests(unittest.TestCase):
             root = Path(temporary)
             first = root / "first"
             second = root / "second"
-            first_result = humatics_evidence.analyze_capture(CAPTURE_PATH, first)
-            second_result = humatics_evidence.analyze_capture(CAPTURE_PATH, second)
+            first_result = document_evidence.analyze_capture(CAPTURE_PATH, first)
+            second_result = document_evidence.analyze_capture(CAPTURE_PATH, second)
 
             self.assertEqual(first_result, second_result)
             self.assertEqual(
@@ -87,7 +87,7 @@ class HumaticsEvidenceTests(unittest.TestCase):
                 (second / "word-cloud.png").read_bytes(),
             )
             self.assertEqual(
-                humatics_evidence.sha256_file(first / "term-weights.json"),
+                document_evidence.sha256_file(first / "term-weights.json"),
                 expected["termWeightsSha256"],
             )
             self.assertEqual(
@@ -139,7 +139,7 @@ class HumaticsEvidenceTests(unittest.TestCase):
             )
             self.assertEqual(
                 first_result["render"]["sha256"],
-                humatics_evidence.sha256_file(first / "word-cloud.png"),
+                document_evidence.sha256_file(first / "word-cloud.png"),
             )
 
             for output in expected["outputs"]:
@@ -172,15 +172,15 @@ class HumaticsEvidenceTests(unittest.TestCase):
             (unowned / "keep.txt").write_bytes(b"keep-byte-for-byte\n")
             staged = root / "staged-for-unowned"
             staged.mkdir()
-            humatics_evidence.write_json(
-                staged / humatics_evidence.OUTPUT_SENTINEL,
-                humatics_evidence._output_sentinel_record(),
+            document_evidence.write_json(
+                staged / document_evidence.OUTPUT_SENTINEL,
+                document_evidence._output_sentinel_record(),
             )
             (staged / "next.txt").write_bytes(b"next\n")
             before = {path.name: path.read_bytes() for path in unowned.iterdir()}
 
-            with self.assertRaises(humatics_evidence.EvidenceWorkflowError):
-                humatics_evidence._promote_staged_directory(staged, unowned, replace=True)
+            with self.assertRaises(document_evidence.EvidenceWorkflowError):
+                document_evidence._promote_staged_directory(staged, unowned, replace=True)
             self.assertEqual(
                 {path.name: path.read_bytes() for path in unowned.iterdir()},
                 before,
@@ -188,16 +188,16 @@ class HumaticsEvidenceTests(unittest.TestCase):
 
             target = root / "accepted"
             target.mkdir()
-            humatics_evidence.write_json(
-                target / humatics_evidence.OUTPUT_SENTINEL,
-                humatics_evidence._output_sentinel_record(),
+            document_evidence.write_json(
+                target / document_evidence.OUTPUT_SENTINEL,
+                document_evidence._output_sentinel_record(),
             )
             (target / "prior.txt").write_text("prior\n", encoding="utf-8")
             replacement = root / "replacement"
             replacement.mkdir()
-            humatics_evidence.write_json(
-                replacement / humatics_evidence.OUTPUT_SENTINEL,
-                humatics_evidence._output_sentinel_record(),
+            document_evidence.write_json(
+                replacement / document_evidence.OUTPUT_SENTINEL,
+                document_evidence._output_sentinel_record(),
             )
             (replacement / "next.txt").write_text("next\n", encoding="utf-8")
 
@@ -212,7 +212,7 @@ class HumaticsEvidenceTests(unittest.TestCase):
                 mock.patch.object(Path, "rename", new=fail_staged_promotion),
                 self.assertRaisesRegex(OSError, "simulated promotion failure"),
             ):
-                humatics_evidence._promote_staged_directory(
+                document_evidence._promote_staged_directory(
                     replacement,
                     target,
                     replace=True,
@@ -220,22 +220,22 @@ class HumaticsEvidenceTests(unittest.TestCase):
             self.assertTrue((target / "prior.txt").is_file())
             self.assertEqual(list(root.glob(".accepted.previous-*")), [])
 
-            humatics_evidence._promote_staged_directory(replacement, target, replace=True)
+            document_evidence._promote_staged_directory(replacement, target, replace=True)
             self.assertTrue((target / "next.txt").is_file())
             self.assertFalse((target / "prior.txt").exists())
 
             retained_target = root / "retained-backup"
             retained_target.mkdir()
-            humatics_evidence.write_json(
-                retained_target / humatics_evidence.OUTPUT_SENTINEL,
-                humatics_evidence._output_sentinel_record(),
+            document_evidence.write_json(
+                retained_target / document_evidence.OUTPUT_SENTINEL,
+                document_evidence._output_sentinel_record(),
             )
             (retained_target / "prior.txt").write_text("prior\n", encoding="utf-8")
             retained_replacement = root / "retained-replacement"
             retained_replacement.mkdir()
-            humatics_evidence.write_json(
-                retained_replacement / humatics_evidence.OUTPUT_SENTINEL,
-                humatics_evidence._output_sentinel_record(),
+            document_evidence.write_json(
+                retained_replacement / document_evidence.OUTPUT_SENTINEL,
+                document_evidence._output_sentinel_record(),
             )
             (retained_replacement / "next.txt").write_text("next\n", encoding="utf-8")
 
@@ -243,7 +243,7 @@ class HumaticsEvidenceTests(unittest.TestCase):
                 mock.patch.object(shutil, "rmtree", side_effect=OSError("cleanup blocked")),
                 self.assertWarnsRegex(RuntimeWarning, "prior output remains"),
             ):
-                humatics_evidence._promote_staged_directory(
+                document_evidence._promote_staged_directory(
                     retained_replacement,
                     retained_target,
                     replace=True,
@@ -272,7 +272,7 @@ class HumaticsEvidenceTests(unittest.TestCase):
                     "settings": "deterministic",
                 }
 
-            record = humatics_evidence.collect_ocr(
+            record = document_evidence.collect_ocr(
                 [("document", "2019", source)],
                 capture_path,
                 reader=reader,
@@ -288,15 +288,15 @@ class HumaticsEvidenceTests(unittest.TestCase):
             self.assertEqual(record["ocrEngine"]["name"], "fixture-reader")
             self.assertEqual(record["reviewStanding"], "requires_human_review")
 
-            with self.assertRaises(humatics_evidence.OutputExistsError):
-                humatics_evidence.collect_ocr(
+            with self.assertRaises(document_evidence.OutputExistsError):
+                document_evidence.collect_ocr(
                     [("document", "2019", source)],
                     capture_path,
                     reader=lambda *_: self.fail("existing capture should fail before OCR"),
                 )
 
             source.write_bytes(original_source)
-            replaced = humatics_evidence.collect_ocr(
+            replaced = document_evidence.collect_ocr(
                 [("document", "2019", source)],
                 capture_path,
                 reader=lambda _bytes, _name: {
@@ -323,7 +323,7 @@ class HumaticsEvidenceTests(unittest.TestCase):
                 mock.patch.object(Path, "rename", new=fail_capture_promotion),
                 self.assertRaisesRegex(OSError, "simulated capture promotion failure"),
             ):
-                humatics_evidence.collect_ocr(
+                document_evidence.collect_ocr(
                     [("document", "2019", source)],
                     capture_path,
                     reader=lambda _bytes, _name: {
@@ -344,10 +344,10 @@ class HumaticsEvidenceTests(unittest.TestCase):
             reader = mock.Mock()
 
             with self.assertRaisesRegex(
-                humatics_evidence.EvidenceWorkflowError,
+                document_evidence.EvidenceWorkflowError,
                 "id must be a non-empty string",
             ):
-                humatics_evidence.collect_ocr(
+                document_evidence.collect_ocr(
                     [(" ", "2019", source)],
                     Path(temporary) / "capture.json",
                     reader=reader,
@@ -355,10 +355,10 @@ class HumaticsEvidenceTests(unittest.TestCase):
             reader.assert_not_called()
 
             with self.assertRaisesRegex(
-                humatics_evidence.EvidenceWorkflowError,
+                document_evidence.EvidenceWorkflowError,
                 "era must be a non-empty string",
             ):
-                humatics_evidence.collect_ocr(
+                document_evidence.collect_ocr(
                     [("document", " ", source)],
                     Path(temporary) / "capture.json",
                     reader=reader,
