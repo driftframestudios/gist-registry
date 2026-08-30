@@ -62,7 +62,10 @@ authority remains explicit.
 `main` is the accepted authored source. The reserved `docs` branch receives
 only output from [`tools/build-pages.mjs`](tools/build-pages.mjs) for
 `kindlight.io`; it has no cPanel or Cloudflare WAF role. See
-[`BRANCHING.md`](BRANCHING.md).
+[`BRANCHING.md`](BRANCHING.md). After a reviewed source change reaches `main`,
+the [Gist Registry Pages publication runbook](.agents/runbooks/gist-registry-pages-publication.v0.1.md)
+provides the re-entry route through build, observation, `docs` promotion, and
+public handback.
 
 ## Run the current checks
 

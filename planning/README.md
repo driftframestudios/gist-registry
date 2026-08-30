@@ -12,5 +12,9 @@ Current work follows five GitHub Issue owners:
   request.
 
 [`SCHEMA-NURSERY.md`](../SCHEMA-NURSERY.md) is the current design note for the
-schema attempt. A publication runbook rests until two materially similar
-`main` to `docs` cycles show that the route repeats.
+schema attempt. Two materially similar `main` to `docs` cycles have now
+exercised deterministic build, named-artifact observation, projection commit,
+Pages reception, and signed-out byte parity. The resulting
+[Pages publication runbook](../.agents/runbooks/gist-registry-pages-publication.v0.1.md)
+is the exercised re-entry route. An independent cold-start traversal recovered
+every phase and reran the public observation without additional orientation.

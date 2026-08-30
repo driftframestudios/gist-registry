@@ -65,3 +65,10 @@ output for `kindlight.io`; this repository has no cPanel or Cloudflare WAF
 path. Run `npm run check:pages` for two-build byte comparison and
 `npm run build:pages` for the ignored local projection. Hosted observations
 retain their own delivery evidence.
+
+Versioned operational runbooks live in [`.agents/runbooks/`](.agents/runbooks/).
+Use the Pages publication runbook after a reviewed source change reaches
+`main` and the current task grants the fitting projection actions. The runbook
+orders source binding, deterministic build, artifact observation, `docs`
+assembly, Pages reception, live parity, and handback while each existing owner
+retains its decision.
