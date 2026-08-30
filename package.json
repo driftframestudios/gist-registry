@@ -9,6 +9,7 @@
   "scripts": {
     "build:pages": "node tools/build-pages.mjs",
     "check:pages": "node tools/build-pages.mjs --check",
+    "observe:pages": "node tools/observe-pages.mjs",
     "check:delivery-observations": "node tools/check-delivery-observations.mjs",
     "check:public-boundary": "node tools/check-public-boundary.mjs",
     "check:registry": "node tools/check-registry.mjs",
