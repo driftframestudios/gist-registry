@@ -1,0 +1,17 @@
+{
+  "indexFormatVersion": "0.1.0",
+  "records": [
+    {
+      "observationId": "schema-registry-artifact-0.1.0-20260830t052206z",
+      "observedAt": "2026-08-30T05:22:06Z",
+      "subject": {
+        "kind": "schema",
+        "canonicalId": "https://kindlight.io/schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+        "version": "0.1.0"
+      },
+      "recordPath": "records/schema-registry-artifact-0.1.0-20260830t052206z.json",
+      "sha256": "891f178f10d36fe4697a3f02e4d28aa05da33ba7c9d96feb34d9d372f2abbdab",
+      "resultStanding": "matches_named_sources"
+    }
+  ]
+}
