@@ -1,0 +1,332 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { execFile } from "node:child_process";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import test from "node:test";
+import { promisify } from "node:util";
+
+import {
+  bigBenchCanary,
+  buildPages,
+  checkPages,
+  checkProjection,
+  mapsCanary,
+  verifyAcceptedSource,
+} from "../tools/build-pages.mjs";
+
+const execFileAsync = promisify(execFile);
+const repositoryRoot = resolve(import.meta.dirname, "..");
+const fixedSourceRevision = "1111111111111111111111111111111111111111";
+
+const expectedPaths = [
+  ".nojekyll",
+  "AI-DATA-USE.md",
+  "AUTHORS",
+  "CNAME",
+  "LICENSE",
+  "assets/site.css",
+  "data-use/index.html",
+  "index.html",
+  "projection-manifest.json",
+  "registry.json",
+  "robots.txt",
+  "schemas/0.1.0/registry-artifact.schema.json",
+  "schemas/gist-registry/0.1.0/index.html",
+  "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+  "schemas/gist-registry/index.html",
+  "sitemap.xml",
+  "snippets/document-evidence-extraction/0.1.0/.python-version",
+  "snippets/document-evidence-extraction/0.1.0/README.md",
+  "snippets/document-evidence-extraction/0.1.0/config/stopwords-en.txt",
+  "snippets/document-evidence-extraction/0.1.0/expected/contract.json",
+  "snippets/document-evidence-extraction/0.1.0/fixtures/reviewed-ocr/era-comparison.txt",
+  "snippets/document-evidence-extraction/0.1.0/fixtures/reviewed-ocr/ocr-intake.txt",
+  "snippets/document-evidence-extraction/0.1.0/fixtures/reviewed-ocr/orientation-output.txt",
+  "snippets/document-evidence-extraction/0.1.0/fixtures/reviewed-ocr/requirements-core.txt",
+  "snippets/document-evidence-extraction/0.1.0/fixtures/synthetic-ocr-capture.json",
+  "snippets/document-evidence-extraction/0.1.0/index.html",
+  "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
+  "snippets/document-evidence-extraction/0.1.0/snippet.json",
+  "snippets/document-evidence-extraction/0.1.0/src/document_evidence.py",
+  "snippets/document-evidence-extraction/0.1.0/tests/test_document_evidence.py",
+  "snippets/document-evidence-extraction/0.1.0/uv.lock",
+  "snippets/document-evidence-extraction/README.md",
+  "snippets/document-evidence-extraction/index.html",
+  "snippets/index.html",
+];
+
+async function withProjection(action) {
+  const container = await mkdtemp(join(tmpdir(), "gist-registry-pages-test-"));
+  const output = resolve(container, "pages");
+  try {
+    await buildPages({
+      root: repositoryRoot,
+      output,
+      sourceSha: fixedSourceRevision,
+      sourceBinding: "test",
+    });
+    return await action({ container, output });
+  } finally {
+    await rm(container, { recursive: true, force: true });
+  }
+}
+
+async function git(root, arguments_) {
+  const { stdout } = await execFileAsync("git", arguments_, {
+    cwd: root,
+    encoding: "utf8",
+  });
+  return stdout.trim();
+}
+
+test("the public projection is deterministic for one source revision", async () => {
+  const result = await checkPages({
+    root: repositoryRoot,
+    sourceSha: fixedSourceRevision,
+    sourceBinding: "test",
+  });
+  assert.equal(result.fileCount, expectedPaths.length);
+  assert.equal(result.sourceRevision, fixedSourceRevision);
+  assert.match(result.manifestSha256, /^[a-f0-9]{64}$/u);
+});
+
+test("the projection has one exact allowlisted inventory and complete digest manifest", async () => {
+  await withProjection(async ({ output }) => {
+    const result = await checkProjection({ root: repositoryRoot, output });
+    const manifest = JSON.parse(
+      await readFile(resolve(output, "projection-manifest.json"), "utf8"),
+    );
+    const actualPaths = [...manifest.files.map(file => file.path), "projection-manifest.json"].sort();
+
+    assert.deepEqual(actualPaths, expectedPaths);
+    assert.equal(result.fileCount, expectedPaths.length);
+    assert.equal(manifest.sourceRevision, fixedSourceRevision);
+    assert.equal(
+      manifest.fileScope,
+      "Every projection file except projection-manifest.json itself.",
+    );
+    assert.equal(manifest.files.some(file => file.path === "projection-manifest.json"), false);
+    assert.equal(actualPaths.some(path => path.startsWith(".github/")), false);
+    assert.equal(actualPaths.some(path => path.startsWith("planning/")), false);
+    assert.equal(actualPaths.includes("AGENTS.md"), false);
+    assert.equal(actualPaths.includes("README.md"), false);
+  });
+});
+
+test("schemas, registry data, and declared artifact representations preserve authored bytes", async () => {
+  await withProjection(async ({ output }) => {
+    const authoredSchema = await readFile(
+      resolve(repositoryRoot, "schemas/0.1.0/registry-artifact.schema.json"),
+    );
+    const authoredRegistry = await readFile(resolve(repositoryRoot, "registry.json"));
+    const authoredSource = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/document-evidence-extraction/0.1.0/src/document_evidence.py",
+      ),
+    );
+
+    assert.deepEqual(
+      await readFile(resolve(output, "schemas/0.1.0/registry-artifact.schema.json")),
+      authoredSchema,
+    );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+        ),
+      ),
+      authoredSchema,
+    );
+    assert.deepEqual(await readFile(resolve(output, "registry.json")), authoredRegistry);
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/document-evidence-extraction/0.1.0/src/document_evidence.py",
+        ),
+      ),
+      authoredSource,
+    );
+  });
+});
+
+test("public-boundary carrier parity remains independent from a rewritten manifest", async () => {
+  await withProjection(async ({ output }) => {
+    const carrierPath = resolve(output, "AI-DATA-USE.md");
+    const changedBytes = Buffer.from("changed public-boundary carrier\n", "utf8");
+    await writeFile(carrierPath, changedBytes);
+
+    const manifestPath = resolve(output, "projection-manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    const entry = manifest.files.find(file => file.path === "AI-DATA-USE.md");
+    entry.bytes = changedBytes.length;
+    entry.sha256 = createHash("sha256").update(changedBytes).digest("hex");
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+
+    await assert.rejects(
+      checkProjection({ root: repositoryRoot, output }),
+      /AI-DATA-USE\.md must preserve authored public-boundary bytes/u,
+    );
+  });
+});
+
+test("every generated HTML surface carries the exact canaries above the final copyright", async () => {
+  await withProjection(async ({ output }) => {
+    const manifest = JSON.parse(
+      await readFile(resolve(output, "projection-manifest.json"), "utf8"),
+    );
+    const htmlPaths = manifest.files
+      .map(file => file.path)
+      .filter(path => path.endsWith("index.html"));
+    assert.ok(htmlPaths.length > 0);
+
+    for (const path of htmlPaths) {
+      const html = await readFile(resolve(output, path), "utf8");
+      const mapsPosition = html.indexOf(mapsCanary);
+      const bigBenchPosition = html.indexOf(bigBenchCanary);
+      const copyrightPosition = html.indexOf(
+        "© 2026 Driftframe Studios, Limited Liability Company.",
+      );
+      assert.ok(mapsPosition >= 0, path + " must carry the MAPS marker");
+      assert.ok(bigBenchPosition > mapsPosition, path + " must stack BIG-bench after MAPS");
+      assert.ok(
+        copyrightPosition > bigBenchPosition,
+        path + " must place copyright after the marker stack",
+      );
+      assert.equal(
+        html.indexOf("<p", copyrightPosition),
+        -1,
+        path + " must keep copyright as the final visible footer paragraph",
+      );
+    }
+  });
+});
+
+test("the projection expresses training restraint and open person-directed retrieval", async () => {
+  await withProjection(async ({ output }) => {
+    const robots = await readFile(resolve(output, "robots.txt"), "utf8");
+    assert.match(robots, /User-agent: GPTBot\nDisallow: \/\n/u);
+    assert.match(robots, /User-agent: ClaudeBot\nDisallow: \/\n/u);
+    assert.match(robots, /User-agent: CCBot\nDisallow: \/\n/u);
+    assert.match(robots, /User-agent: OAI-SearchBot\nAllow: \/\n/u);
+    assert.match(robots, /User-agent: ChatGPT-User\nAllow: \/\n/u);
+    assert.match(robots, /User-agent: \*\nAllow: \/\n$/u);
+    assert.equal((await readFile(resolve(output, ".nojekyll"))).length, 0);
+    assert.equal(await readFile(resolve(output, "CNAME"), "utf8"), "kindlight.io\n");
+  });
+});
+
+test("replacement is limited to output previously created by this builder", async () => {
+  const container = await mkdtemp(join(tmpdir(), "gist-registry-pages-ownership-test-"));
+  const output = resolve(container, "pages");
+  try {
+    await mkdir(output);
+    await writeFile(resolve(output, "unrelated"), "unrelated", "utf8");
+    await assert.rejects(
+      buildPages({
+        root: repositoryRoot,
+        output,
+        sourceSha: fixedSourceRevision,
+        sourceBinding: "test",
+      }),
+      /existing output needs its projection manifest/u,
+    );
+    assert.equal(await readFile(resolve(output, "unrelated"), "utf8"), "unrelated");
+  } finally {
+    await rm(container, { recursive: true, force: true });
+  }
+});
+
+test("an owned output can be rebuilt without retaining undeclared files", async () => {
+  await withProjection(async ({ output }) => {
+    await writeFile(resolve(output, "transient-local-note.txt"), "local only\n", "utf8");
+    await buildPages({
+      root: repositoryRoot,
+      output,
+      sourceSha: fixedSourceRevision,
+      sourceBinding: "test",
+    });
+    await assert.rejects(readFile(resolve(output, "transient-local-note.txt")), /ENOENT/u);
+    await checkProjection({ root: repositoryRoot, output });
+  });
+});
+
+test("source identity requires a complete immutable Git coordinate", async () => {
+  const container = await mkdtemp(join(tmpdir(), "gist-registry-pages-revision-test-"));
+  try {
+    await assert.rejects(
+      buildPages({
+        root: repositoryRoot,
+        output: resolve(container, "pages"),
+        sourceSha: "c1b9bc8",
+        sourceBinding: "test",
+      }),
+      /source revision must be a full lowercase Git SHA/u,
+    );
+  } finally {
+    await rm(container, { recursive: true, force: true });
+  }
+});
+
+test("accepted source binding rejects mismatched, modified, and untracked inputs", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gist-registry-source-binding-test-"));
+  try {
+    await writeFile(resolve(root, "input.txt"), "accepted\n", "utf8");
+    await git(root, ["init", "-q"]);
+    await git(root, ["add", "input.txt"]);
+    await git(root, [
+      "-c",
+      "user.name=Projection Test",
+      "-c",
+      "user.email=projection-test@example.invalid",
+      "commit",
+      "-qm",
+      "Add accepted input",
+    ]);
+    const head = await git(root, ["rev-parse", "HEAD"]);
+
+    assert.equal(
+      await verifyAcceptedSource({
+        root,
+        requestedRevision: head,
+        inputPaths: ["input.txt"],
+      }),
+      head,
+    );
+    await assert.rejects(
+      verifyAcceptedSource({
+        root,
+        requestedRevision: fixedSourceRevision,
+        inputPaths: ["input.txt"],
+      }),
+      /source revision must equal HEAD/u,
+    );
+
+    await writeFile(resolve(root, "input.txt"), "modified\n", "utf8");
+    await assert.rejects(
+      verifyAcceptedSource({
+        root,
+        requestedRevision: head,
+        inputPaths: ["input.txt"],
+      }),
+      /publication source must be a clean Git worktree/u,
+    );
+
+    await writeFile(resolve(root, "input.txt"), "accepted\n", "utf8");
+    await writeFile(resolve(root, "new-public-input.txt"), "untracked\n", "utf8");
+    await assert.rejects(
+      verifyAcceptedSource({
+        root,
+        requestedRevision: head,
+        inputPaths: ["input.txt", "new-public-input.txt"],
+      }),
+      /publication source must be a clean Git worktree/u,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

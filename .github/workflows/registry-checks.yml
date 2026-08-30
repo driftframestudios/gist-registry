@@ -6,10 +6,13 @@ on:
     paths:
       - ".github/workflows/registry-checks.yml"
       - "AI-DATA-USE.md"
+      - "AUTHORS"
+      - "LICENSE"
       - "README.md"
       - "package.json"
       - "package-lock.json"
       - "registry.json"
+      - "robots.txt"
       - "schemas/**"
       - "snippets/**"
       - "tests/**"

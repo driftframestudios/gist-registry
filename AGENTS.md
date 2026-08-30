@@ -60,6 +60,8 @@ checkpoints, and move an accepted result through a fresh Issue branch from
 `main`. The receiving pull request carries the selected files and evidence;
 `res` is never merged wholesale into `main`.
 
-`main` owns authored source. A future `docs` branch is builder-owned GitHub
-Pages output for `kindlight.io`; this repository has no cPanel or Cloudflare
-WAF path.
+`main` owns authored source. The `docs` branch is builder-owned GitHub Pages
+output for `kindlight.io`; this repository has no cPanel or Cloudflare WAF
+path. Run `npm run check:pages` for two-build byte comparison and
+`npm run build:pages` for the ignored local projection. Hosted observations
+retain their own delivery evidence.
