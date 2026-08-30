@@ -3,6 +3,11 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Repository-local generated state
+node_modules/
+.artifacts/
+.DS_Store
+
 # C extensions
 *.so
 

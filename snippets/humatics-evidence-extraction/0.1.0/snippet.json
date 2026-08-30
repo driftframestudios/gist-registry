@@ -1,0 +1,151 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "humatics-evidence-extraction",
+  "version": "0.1.0",
+  "artifactKind": "code_sample",
+  "standing": "candidate",
+  "title": "Humatics evidence extraction",
+  "summary": "A representative reconstruction that separates local OCR collection from deterministic, era-aware evidence analysis.",
+  "use": {
+    "practicalQuestion": "How can a local document-evidence workflow keep OCR provenance, negation, era-specific term weighting, and a visual orientation artifact inspectable?",
+    "changedAbility": "A collaborator can review captured text, reproduce ordered term evidence, inspect a seeded visualization, and replace prior output only through an explicit recovery-aware action.",
+    "readers": [
+      "AI collaborators implementing or reviewing evidence-extraction workflows",
+      "Technical practitioners evaluating provenance, determinism, and recovery"
+    ],
+    "capabilities": [
+      "capture_local_ocr",
+      "retain_negation",
+      "compare_eras",
+      "render_deterministically",
+      "recover_output"
+    ]
+  },
+  "provenance": {
+    "class": "representative_reconstruction",
+    "description": "Participant-account-supported reconstruction of a 2018–2019 workflow using realistic synthetic reviewed-OCR material.",
+    "temporalScope": "The account describes a method practiced during 2018–2019; this implementation was authored as a current portable exemplar.",
+    "sourceKeys": [
+      "participant-account:humatics-2018-2019",
+      "realistic-synthetic:reviewed-ocr"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Focused tests exercise normalization, negation retention, review standing, locator-safe captured-source identity, deterministic ordering and rendering, explicit replacement, and retained-output recovery in the pinned environment."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/humatics-evidence-extraction/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "runtime_version", "path": ".python-version", "declaredMediaType": "text/plain"},
+    {"role": "dependency_definition", "path": "pyproject.toml", "declaredMediaType": "application/toml"},
+    {"role": "dependency_lock", "path": "uv.lock", "declaredMediaType": "application/toml"},
+    {"role": "source", "path": "src/humatics_evidence.py", "declaredMediaType": "text/x-python"},
+    {"role": "test", "path": "tests/test_humatics_evidence.py", "declaredMediaType": "text/x-python"},
+    {"role": "configuration", "path": "config/stopwords-en.txt", "declaredMediaType": "text/plain"},
+    {"role": "fixture", "path": "fixtures/synthetic-ocr-capture.json", "declaredMediaType": "application/json"},
+    {"role": "fixture_source", "path": "fixtures/reviewed-ocr/requirements-core.txt", "declaredMediaType": "text/plain"},
+    {"role": "fixture_source", "path": "fixtures/reviewed-ocr/ocr-intake.txt", "declaredMediaType": "text/plain"},
+    {"role": "fixture_source", "path": "fixtures/reviewed-ocr/era-comparison.txt", "declaredMediaType": "text/plain"},
+    {"role": "fixture_source", "path": "fixtures/reviewed-ocr/orientation-output.txt", "declaredMediaType": "text/plain"},
+    {"role": "expected_contract", "path": "expected/contract.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Python >=3.12,<3.13; local OCR additionally requires a Tesseract executable",
+    "dependenciesPath": "uv.lock",
+    "commands": [
+      {
+        "name": "run",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked python snippets/humatics-evidence-extraction/0.1.0/src/humatics_evidence.py analyze snippets/humatics-evidence-extraction/0.1.0/fixtures/synthetic-ocr-capture.json --output .artifacts/humatics-evidence-extraction/0.1.0",
+        "establishes": "Produces ordered term evidence, a seeded word-cloud orientation image, and digest-bearing render metadata from the reviewed synthetic capture."
+      },
+      {
+        "name": "test",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked python -m unittest discover -s snippets/humatics-evidence-extraction/0.1.0/tests -v",
+        "establishes": "Exercises the artifact's deterministic, provenance, negation, authority, and recovery contracts in the resolved environment."
+      },
+      {
+        "name": "lint",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked ruff check snippets/humatics-evidence-extraction/0.1.0/src snippets/humatics-evidence-extraction/0.1.0/tests",
+        "establishes": "Returns focused Python syntax, import, correctness, modernization, and maintainability diagnostics."
+      }
+    ],
+    "fixtures": [
+      "fixtures/synthetic-ocr-capture.json",
+      "fixtures/reviewed-ocr/requirements-core.txt",
+      "fixtures/reviewed-ocr/ocr-intake.txt",
+      "fixtures/reviewed-ocr/era-comparison.txt",
+      "fixtures/reviewed-ocr/orientation-output.txt"
+    ],
+    "expectedResults": ["expected/contract.json"],
+    "environmentNotes": [
+      "The ordinary analysis and test route consumes reviewed text and does not require Tesseract.",
+      "The optional OCR route records the locally observed Tesseract version and input digest before analysis.",
+      "Repeated-render byte equality is asserted within one resolved environment; cross-platform image-library differences remain an observation boundary."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Can a reviewer inspect what OCR produced before weighting begins?",
+      "Does every visualization remain connected to ordered machine-readable evidence?",
+      "Can an existing accepted-looking output survive a failed replacement?"
+    ],
+    "decisionRules": [
+      "Treat captured OCR as observed input and require human review before interpretation.",
+      "Retain explicit negation terms even when the general stop-word source includes them.",
+      "Require explicit replace authority and stage a complete result before promotion."
+    ],
+    "semanticMarkers": [
+      {"marker": "TARGET", "meaning": "Source-digested capture, visible negation, era-aware weights, and a visualization paired with evidence."},
+      {"marker": "CONTRAST", "meaning": "An opaque script that combines collection, scoring, interpretation, and overwrite into one uninspectable action."},
+      {"marker": "GUARD", "meaning": "Reviewable capture, deterministic staging, and explicit output replacement preserve the recovery route."}
+    ],
+    "instructionYields": [
+      {"mode": "implementation", "instruction": "Separate environment-observed collection from deterministic analysis through a digest-bearing intermediate."},
+      {"mode": "review", "instruction": "Inspect the ordered JSON before using the word cloud as an orientation surface."},
+      {"mode": "recovery", "instruction": "Preserve the prior output until the staged successor is complete and promotion succeeds."}
+    ],
+    "codeExemplarGranularity": "One self-contained workflow with two explicit stages, one synthetic capture family, focused tests, and a visitor-readable technical boundary.",
+    "complexityAndAllocation": "Text normalization occurs once, the sparse TF-IDF matrix is fitted once, era views reuse the matrix, and rendering consumes only the bounded combined term set."
+  },
+  "boundaries": {
+    "evidence": "The checks establish current code behavior with the committed fixture and resolved lock; they do not establish equality with an earlier production system, OCR accuracy on an unseen corpus, or interpretive importance of a frequent term.",
+    "trust": "The fixture is realistic synthetic material and the historical method is supported by a participant account rather than recovered operational source.",
+    "transfer": "A receiver selects its own corpus, OCR review policy, stop-word source, era model, privacy boundary, and interpretation method before adaptation."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "Missing analysis dependencies stop before output staging.",
+      "Malformed or empty captures stop before term weighting.",
+      "An existing output rejects implicit replacement.",
+      "A failed staged promotion restores the prior output when it was moved aside."
+    ],
+    "recoveryMoves": [
+      "Resolve the committed lock and rerun the same command.",
+      "Review and repair the capture as a distinct input artifact.",
+      "Choose a new output path or grant explicit --replace authority.",
+      "Inspect the retained output and sibling staging path before another replacement attempt."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:implementation-track",
+      "reason": "A selected visitor excerpt can point technical readers to this complete versioned implementation after publication acceptance."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "The real instance supplies pressure for the first exact-version artifact contract and hosted retrieval route."
+    }
+  ],
+  "extensions": {
+    "practitionerProbePressure": {
+      "answerRange": "A probe may later distinguish five levels of response sophistication; this code sample instead records the implemented technical core and instruction yield.",
+      "reviewSurfaces": ["capture", "term evidence", "visual orientation", "recovery behavior"]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "registryVersion": "0.1.0",
+  "entries": [
+    {
+      "semanticId": "humatics-evidence-extraction",
+      "version": "0.1.0",
+      "artifactKind": "code_sample",
+      "manifestPath": "snippets/humatics-evidence-extraction/0.1.0/snippet.json",
+      "canonicalPath": "snippets/humatics-evidence-extraction/0.1.0"
+    }
+  ]
+}

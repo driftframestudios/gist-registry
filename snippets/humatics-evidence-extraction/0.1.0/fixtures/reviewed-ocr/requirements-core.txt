@@ -1,0 +1,1 @@
+The analyst must not overwrite the original requirement. Each extracted phrase keeps a page reference, source identifier, and review status. Empty scans enter a review queue instead of silently becoming complete.
