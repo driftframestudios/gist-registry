@@ -56,9 +56,15 @@ profiles become schemas only after real instances demonstrate their shape.
 
 The current experiment is
 [`schemas/0.1.0/registry-artifact.schema.json`](schemas/0.1.0/registry-artifact.schema.json).
-It is an authored draft identity for local learning, not an observed hosted
-route. Issue #4 receives the real document-evidence instance and decides which
-fields become the first stable exact-version `kindlight.io` contract.
+It is an authored draft identity exercised by the real document-evidence
+instance. The Pages builder carries its exact bytes at the canonical
+`kindlight.io` path and at the repository-relative path needed by the
+byte-identical manifest. A signed-out request will establish hosted delivery;
+the local build establishes projection parity.
+
+This `0.1.0` publication exercises retrieval without declaring the envelope
+stable. Another materially different artifact can reveal which shared fields
+have earned the first stable exact-version contract and immutable schema tag.
 
 An artifact may add information without waiting for a universal schema field.
 When two materially different artifacts use the same extension and a reader or

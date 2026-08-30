@@ -18,9 +18,9 @@ It gives each accepted artifact a versioned canonical source before an
 optional GitHub Gist or another visitor surface projects it.
 
 The repository is a private authored-source and collaboration carrier. Its
-planned public boundary is a generated GitHub Pages projection from `docs`.
-Repository visibility and creation of a public or unlisted Gist remain
-separate human-held publication decisions.
+selected public boundary is an allowlisted GitHub Pages projection on `docs`.
+Repository visibility, Pages activation, and creation of a public or unlisted
+Gist remain separate human-held publication decisions.
 
 ## Start with the first vertical slice
 
@@ -59,9 +59,10 @@ semantic ID, version, source coordinate, and digest. An optional Gist is a
 convenience projection of the same accepted artifact; repository source
 authority remains explicit.
 
-`main` is the accepted authored source. A future `docs` branch is a generated
-GitHub Pages projection for `kindlight.io`; it has no cPanel or Cloudflare WAF
-role. See [`BRANCHING.md`](BRANCHING.md).
+`main` is the accepted authored source. The reserved `docs` branch receives
+only output from [`tools/build-pages.mjs`](tools/build-pages.mjs) for
+`kindlight.io`; it has no cPanel or Cloudflare WAF role. See
+[`BRANCHING.md`](BRANCHING.md).
 
 ## Run the current checks
 
@@ -82,8 +83,22 @@ npm test
 ```
 
 `npm test` asks `uv` to create or refresh the artifact-local environment from
-its committed lock. Run the document-evidence analysis directly with the same
-lock:
+its committed lock. It also builds the Pages projection twice in isolated
+directories and compares the complete inventory and bytes. Build the inspected
+local projection into the ignored `.artifacts/pages/` directory with:
+
+```sh
+npm run check:pages
+npm run build:pages
+```
+
+The projection preserves every registered representation byte-for-byte, carries
+the current schema both at its manifest-relative path and canonical `$id`
+path, and records the accepted source revision plus SHA-256 for every other
+output file. Collaboration records, workflows, histories, caches, and local
+environments remain outside its allowlist.
+
+Run the document-evidence analysis directly with the same lock:
 
 ```sh
 uv --cache-dir .artifacts/uv-cache run \
@@ -94,10 +109,11 @@ uv --cache-dir .artifacts/uv-cache run \
 ```
 
 The Node checks establish registry, path, manifest, schema, media-declaration,
-and command agreement. The Python checks establish the sample's normalization,
-negation retention, ordered evidence weights, deterministic render behavior,
-and recovery messages. Historical production equivalence remains a separate
-evidence question.
+command, projection-membership, and deterministic-byte agreement. The Python
+checks establish the sample's normalization, negation retention, ordered
+evidence weights, deterministic render behavior, and recovery messages.
+Historical production equivalence and hosted delivery remain separate evidence
+questions.
 
 The pull-request workflow runs this same route in one cancellable job with an
 eight-minute timeout and no schedule. Workflow YAML cannot enforce a monthly
