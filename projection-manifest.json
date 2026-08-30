@@ -2,7 +2,7 @@
   "projectionFormatVersion": "0.1.0",
   "projectionOwner": "gist-registry-pages-builder",
   "canonicalOrigin": "https://kindlight.io",
-  "sourceRevision": "631e347aa6ad188a97031a6a8b07137a7934c6d1",
+  "sourceRevision": "4827c010309b802711be2eaa1cab65883f00f530",
   "sourceStanding": "accepted_revision",
   "fileScope": "Every projection file except projection-manifest.json itself.",
   "files": [
@@ -44,7 +44,7 @@
     {
       "path": "index.html",
       "bytes": 2809,
-      "sha256": "483b8f4d06fbca08bb6b230a9779d431c2e8002fc7b009a0b2f7607f82bab13f"
+      "sha256": "e7d223832239d578f335005dc42a52de3f86a7a08e75d2aada8c1648542fae30"
     },
     {
       "path": "observations/delivery/README.md",
@@ -89,7 +89,7 @@
     {
       "path": "schemas/gist-registry/0.1.0/index.html",
       "bytes": 2796,
-      "sha256": "7731ea06e552be2b8a1c97ab6a55dfe112cb5f94c84ee1521ba53e2b83ba9b16"
+      "sha256": "b5dc43dc4d241341cf33427258cc6f2aa2cc2115822e3caa477b16f207e51947"
     },
     {
       "path": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
@@ -104,7 +104,7 @@
     {
       "path": "schemas/gist-registry/delivery-observation/0.1.0/index.html",
       "bytes": 2793,
-      "sha256": "ab23d4db81f9338e8bf520ea7eb2a6f0c278a9e66cdce69049b98eed31cd4a60"
+      "sha256": "2cf14d4fa79a70dc91d7d76dc7d2d8ff29fc76bc54282b2c96740eb4478dab8d"
     },
     {
       "path": "schemas/gist-registry/index.html",
@@ -164,7 +164,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.0/index.html",
       "bytes": 6657,
-      "sha256": "003f5fe16722e5dfacfdaad989d81378d5affbcb562e373ff191b5cd1e6dee32"
+      "sha256": "7e8d93d82fa719c38333943456bc0d8945a311d2c7106560929243dd96a20a5d"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
