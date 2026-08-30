@@ -1,0 +1,12 @@
+{
+  "registryVersion": "0.1.0",
+  "entries": [
+    {
+      "semanticId": "document-evidence-extraction",
+      "version": "0.1.0",
+      "artifactKind": "code_sample",
+      "manifestPath": "snippets/document-evidence-extraction/0.1.0/snippet.json",
+      "canonicalPath": "snippets/document-evidence-extraction/0.1.0"
+    }
+  ]
+}

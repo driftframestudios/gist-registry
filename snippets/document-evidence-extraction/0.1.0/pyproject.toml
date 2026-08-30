@@ -1,0 +1,27 @@
+[project]
+name = "gist-registry-document-evidence-extraction"
+version = "0.1.0"
+description = "Inspectable OCR capture and deterministic evidence extraction"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "Pillow==12.3.0",
+  "pytesseract==0.3.13",
+  "scikit-learn==1.9.0",
+  "wordcloud==1.9.6",
+]
+
+[dependency-groups]
+dev = ["ruff==0.16.4"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["B", "E4", "E7", "E9", "F", "I", "RUF", "SIM", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
