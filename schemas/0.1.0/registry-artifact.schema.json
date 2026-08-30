@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kindlight.io/schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+  "title": "Gist Registry artifact envelope",
+  "description": "Experimental shared envelope for versioned code samples, Practitioner Probes, prototypes, domain exemplars, experiments, runbooks, loop-bearing members, and harness material.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "semanticId",
+    "version",
+    "artifactKind",
+    "standing",
+    "title",
+    "summary",
+    "use",
+    "provenance",
+    "technicalVeracity",
+    "license",
+    "canonicalPath",
+    "representations",
+    "boundaries"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Manifest-relative path to the exact schema used by this instance."
+    },
+    "schemaVersion": { "const": "0.1.0" },
+    "semanticId": { "$ref": "#/$defs/semanticId" },
+    "version": { "$ref": "#/$defs/semanticVersion" },
+    "artifactKind": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Open kind name. Current examples include code_sample, practitioner_probe, prototype, domain_exemplar, experiment, runbook, loop_bearing_member, and harness_material."
+    },
+    "standing": {
+      "enum": ["experiment", "candidate", "accepted", "retired"]
+    },
+    "title": { "$ref": "#/$defs/nonEmptyString" },
+    "summary": { "$ref": "#/$defs/nonEmptyString" },
+    "use": {
+      "type": "object",
+      "required": ["practicalQuestion", "changedAbility", "readers", "capabilities"],
+      "properties": {
+        "practicalQuestion": { "$ref": "#/$defs/nonEmptyString" },
+        "changedAbility": { "$ref": "#/$defs/nonEmptyString" },
+        "readers": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "capabilities": { "$ref": "#/$defs/tokenArray" }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["class", "description", "temporalScope", "sourceKeys"],
+      "properties": {
+        "class": { "$ref": "#/$defs/token" },
+        "description": { "$ref": "#/$defs/nonEmptyString" },
+        "temporalScope": { "$ref": "#/$defs/nonEmptyString" },
+        "sourceKeys": { "$ref": "#/$defs/tokenArray" }
+      },
+      "additionalProperties": false
+    },
+    "technicalVeracity": {
+      "type": "object",
+      "required": ["status", "basis"],
+      "properties": {
+        "status": {
+          "enum": [
+            "verified",
+            "source_supported",
+            "source_specific",
+            "draft_probe",
+            "local_measurement_needed",
+            "correction_needed",
+            "hold_for_resilience_pass"
+          ]
+        },
+        "basis": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "license": { "const": "Apache-2.0" },
+    "canonicalPath": { "$ref": "#/$defs/relativePath" },
+    "representations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/representation" }
+    },
+    "execution": { "$ref": "#/$defs/execution" },
+    "practice": { "$ref": "#/$defs/practice" },
+    "boundaries": {
+      "type": "object",
+      "required": ["evidence", "trust", "transfer"],
+      "properties": {
+        "evidence": { "$ref": "#/$defs/nonEmptyString" },
+        "trust": { "$ref": "#/$defs/nonEmptyString" },
+        "transfer": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "failureRecovery": {
+      "type": "object",
+      "required": ["failureModes", "recoveryMoves"],
+      "properties": {
+        "failureModes": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "recoveryMoves": { "$ref": "#/$defs/nonEmptyStringArray" }
+      },
+      "additionalProperties": false
+    },
+    "relationships": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/relationship" }
+    },
+    "extensions": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Bounded experimental fields awaiting evidence of shared use.",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "semanticVersion": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "semanticId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_:-]*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "tokenArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/token" }
+    },
+    "representation": {
+      "type": "object",
+      "required": ["role", "path", "declaredMediaType"],
+      "properties": {
+        "role": { "$ref": "#/$defs/token" },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "declaredMediaType": {
+          "type": "string",
+          "pattern": "^[a-z0-9!#$&^_.+-]+/[a-z0-9!#$&^_.+-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "command": {
+      "type": "object",
+      "required": ["name", "command", "establishes"],
+      "properties": {
+        "name": { "$ref": "#/$defs/token" },
+        "command": { "$ref": "#/$defs/nonEmptyString" },
+        "establishes": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "required": ["runtime", "dependenciesPath", "commands", "fixtures", "expectedResults"],
+      "properties": {
+        "runtime": { "$ref": "#/$defs/nonEmptyString" },
+        "dependenciesPath": {
+          "$ref": "#/$defs/relativePath",
+          "description": "Artifact-relative dependency lock used by the declared commands."
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/command" }
+        },
+        "fixtures": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/relativePath" }
+        },
+        "expectedResults": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/relativePath" }
+        },
+        "environmentNotes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticMarker": {
+      "type": "object",
+      "required": ["marker", "meaning"],
+      "properties": {
+        "marker": { "enum": ["TARGET", "CONTRAST", "GUARD"] },
+        "meaning": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "instructionYield": {
+      "type": "object",
+      "required": ["mode", "instruction"],
+      "properties": {
+        "mode": { "$ref": "#/$defs/token" },
+        "instruction": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "probabilityAssessment": {
+      "type": "object",
+      "required": ["probabilityOfWhat", "standing"],
+      "properties": {
+        "probabilityOfWhat": { "$ref": "#/$defs/nonEmptyString" },
+        "estimate": { "$ref": "#/$defs/nonEmptyString" },
+        "standing": { "enum": ["planning_prior", "measured"] }
+      },
+      "additionalProperties": false
+    },
+    "practice": {
+      "type": "object",
+      "properties": {
+        "reviewQuestions": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "decisionRules": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "semanticMarkers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/semanticMarker" }
+        },
+        "instructionYields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/instructionYield" }
+        },
+        "probabilityAssessments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/probabilityAssessment" }
+        },
+        "codeExemplarGranularity": { "$ref": "#/$defs/nonEmptyString" },
+        "complexityAndAllocation": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["type", "target", "reason"],
+      "properties": {
+        "type": { "$ref": "#/$defs/token" },
+        "target": { "$ref": "#/$defs/nonEmptyString" },
+        "reason": { "$ref": "#/$defs/nonEmptyString" },
+        "publicUrl": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

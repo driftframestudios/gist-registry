@@ -1,0 +1,1 @@
+Evidence terms are compared by era. The review does not treat frequency as importance without a human reading. Repeated runs use one seed, pinned stop words, and stable ordering.

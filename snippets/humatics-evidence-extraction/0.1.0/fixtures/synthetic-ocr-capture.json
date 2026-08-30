@@ -1,0 +1,42 @@
+{
+  "artifactId": "humatics-evidence-extraction",
+  "captureVersion": "0.1.0",
+  "captureRole": "reviewed_synthetic_fixture",
+  "reviewStanding": "reviewed_synthetic_fixture",
+  "sourceClass": "realistic_synthetic",
+  "ocrEngine": {
+    "name": "reviewed_fixture_capture",
+    "version": "0.1.0",
+    "settings": "checked-in text representing reviewed local OCR output"
+  },
+  "documents": [
+    {
+      "id": "requirements-core",
+      "era": "2018",
+      "sourceName": "requirements-core.txt",
+      "sourceSha256": "90922eb4cfe4d59ade4a787b20cbe5794f2df9b4408bb15ea2894abab4ca12c1",
+      "text": "The analyst must not overwrite the original requirement. Each extracted phrase keeps a page reference, source identifier, and review status. Empty scans enter a review queue instead of silently becoming complete."
+    },
+    {
+      "id": "ocr-intake",
+      "era": "2018",
+      "sourceName": "ocr-intake.txt",
+      "sourceSha256": "3ab6fa8d1683499cba70154276154ea3280a4448958eed9f551034cc08db47c5",
+      "text": "Local OCR converts the synthetic page image into text. The pipeline records the engine version and input digest. No participant names or private endpoints travel with the capture."
+    },
+    {
+      "id": "era-comparison",
+      "era": "2019",
+      "sourceName": "era-comparison.txt",
+      "sourceSha256": "6c8858b609669fc31d15170dce53a26940588562af3fe6ae885bcc5063fd78e5",
+      "text": "Evidence terms are compared by era. The review does not treat frequency as importance without a human reading. Repeated runs use one seed, pinned stop words, and stable ordering."
+    },
+    {
+      "id": "orientation-output",
+      "era": "2019",
+      "sourceName": "orientation-output.txt",
+      "sourceSha256": "88c6579281c6f4148f2a4e9010654d14927a208c577eac4990667d1c7e8b1ae6",
+      "text": "A word cloud is an orientation surface, not a conclusion. Weighted terms remain available as JSON. Missing inputs stop before the prior accepted output is replaced."
+    }
+  ]
+}
