@@ -95,8 +95,12 @@ npm run build:pages
 The projection preserves every registered representation byte-for-byte, carries
 the current schema both at its manifest-relative path and canonical `$id`
 path, and records the accepted source revision plus SHA-256 for every other
-output file. Collaboration records, workflows, histories, caches, and local
-environments remain outside its allowlist.
+output file. The separate
+[`observations/delivery/`](observations/delivery/README.md) family preserves
+small, public-safe records of named signed-out HTTPS observations without
+changing the artifact or schema whose delivery was observed. Collaboration
+records, workflows, histories, caches, and local environments remain outside
+the projection allowlist.
 
 Run the document-evidence analysis directly with the same lock:
 
@@ -109,11 +113,12 @@ uv --cache-dir .artifacts/uv-cache run \
 ```
 
 The Node checks establish registry, path, manifest, schema, media-declaration,
-command, projection-membership, and deterministic-byte agreement. The Python
-checks establish the sample's normalization, negation retention, ordered
-evidence weights, deterministic render behavior, and recovery messages.
-Historical production equivalence and hosted delivery remain separate evidence
-questions.
+delivery-observation, command, projection-membership, and deterministic-byte
+agreement. The Python checks establish the sample's normalization, negation
+retention, ordered evidence weights, deterministic render behavior, and
+recovery messages. Each delivery observation names the source and projection
+coordinates it actually examined; later hosted behavior remains a new evidence
+question.
 
 The pull-request workflow runs this same route in one cancellable job with an
 eight-minute timeout and no schedule. Workflow YAML cannot enforce a monthly

@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kindlight.io/schemas/gist-registry/delivery-observation/0.1.0/delivery-observation.schema.json",
+  "title": "Gist Registry delivery observation",
+  "description": "Experimental, appendable evidence envelope for one signed-out HTTPS observation of a versioned registry schema.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "observationSchemaVersion",
+    "contractStanding",
+    "observationId",
+    "observedAt",
+    "observerClass",
+    "subject",
+    "source",
+    "projection",
+    "request",
+    "response",
+    "comparison",
+    "resultStanding",
+    "evidenceBoundary",
+    "recoveryRoute"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://kindlight.io/schemas/gist-registry/delivery-observation/0.1.0/delivery-observation.schema.json"
+    },
+    "observationSchemaVersion": { "const": "0.1.0" },
+    "contractStanding": { "const": "experimental" },
+    "observationId": { "$ref": "#/$defs/observationId" },
+    "observedAt": { "type": "string", "format": "date-time" },
+    "observerClass": { "const": "signed-out-https" },
+    "subject": {
+      "type": "object",
+      "required": [
+        "kind",
+        "canonicalId",
+        "version",
+        "authoredSourcePath",
+        "projectedPath",
+        "mediaTypeExpectation"
+      ],
+      "properties": {
+        "kind": { "const": "schema" },
+        "canonicalId": { "type": "string", "format": "uri" },
+        "version": { "$ref": "#/$defs/semanticVersion" },
+        "authoredSourcePath": { "$ref": "#/$defs/relativePath" },
+        "projectedPath": { "$ref": "#/$defs/relativePath" },
+        "mediaTypeExpectation": {
+          "type": "object",
+          "required": ["declaredMediaType", "basis"],
+          "properties": {
+            "declaredMediaType": { "$ref": "#/$defs/mediaType" },
+            "basis": { "$ref": "#/$defs/token" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["branch", "acceptedRevision", "sourcePath", "sha256"],
+      "properties": {
+        "branch": { "const": "main" },
+        "acceptedRevision": { "$ref": "#/$defs/gitRevision" },
+        "sourcePath": { "$ref": "#/$defs/relativePath" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "projection": {
+      "type": "object",
+      "required": [
+        "owner",
+        "branch",
+        "revision",
+        "projectionManifestPath",
+        "projectionManifestSha256",
+        "projectedPath",
+        "projectedSha256"
+      ],
+      "properties": {
+        "owner": { "const": "gist-registry-pages-builder" },
+        "branch": { "const": "docs" },
+        "revision": { "$ref": "#/$defs/gitRevision" },
+        "projectionManifestPath": { "const": "projection-manifest.json" },
+        "projectionManifestSha256": { "$ref": "#/$defs/sha256" },
+        "projectedPath": { "$ref": "#/$defs/relativePath" },
+        "projectedSha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "required": ["method", "url"],
+      "properties": {
+        "method": { "const": "GET" },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "required": [
+        "status",
+        "returnedSha256",
+        "rawContentType",
+        "normalizedMediaType",
+        "selectedResponseHeaders"
+      ],
+      "properties": {
+        "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "returnedSha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "rawContentType": { "$ref": "#/$defs/nonEmptyString" },
+        "normalizedMediaType": {
+          "type": "object",
+          "required": ["type", "subtype", "parameters"],
+          "properties": {
+            "type": { "$ref": "#/$defs/mediaTypeToken" },
+            "subtype": { "$ref": "#/$defs/mediaTypeToken" },
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "charset": { "$ref": "#/$defs/mediaTypeToken" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "selectedResponseHeaders": {
+          "type": "object",
+          "required": ["accessControlAllowOrigin"],
+          "properties": {
+            "accessControlAllowOrigin": {
+              "oneOf": [
+                { "$ref": "#/$defs/nonEmptyString" },
+                { "type": "null" }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "comparison": {
+      "type": "object",
+      "required": ["sourceToProjection", "projectionToResponse"],
+      "properties": {
+        "sourceToProjection": { "$ref": "#/$defs/comparisonStanding" },
+        "projectionToResponse": { "$ref": "#/$defs/comparisonStanding" }
+      },
+      "additionalProperties": false
+    },
+    "resultStanding": {
+      "enum": [
+        "matches_named_sources",
+        "differs_from_named_source",
+        "observation_incomplete"
+      ]
+    },
+    "evidenceBoundary": { "$ref": "#/$defs/nonEmptyString" },
+    "recoveryRoute": { "$ref": "#/$defs/nonEmptyString" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observationId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "semanticVersion": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "gitRevision": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_:-]*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "mediaTypeToken": {
+      "type": "string",
+      "pattern": "^[a-z0-9!#$%&'*+.^_`|~-]+$"
+    },
+    "mediaType": {
+      "type": "string",
+      "pattern": "^[a-z0-9!#$%&'*+.^_`|~-]+/[a-z0-9!#$%&'*+.^_`|~-]+$"
+    },
+    "comparisonStanding": {
+      "enum": ["equal", "different", "unavailable"]
+    }
+  }
+}

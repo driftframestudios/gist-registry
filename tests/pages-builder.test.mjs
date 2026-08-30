@@ -29,12 +29,19 @@ const expectedPaths = [
   "assets/site.css",
   "data-use/index.html",
   "index.html",
+  "observations/delivery/README.md",
+  "observations/delivery/index.html",
+  "observations/delivery/index.json",
+  "observations/delivery/records/schema-registry-artifact-0.1.0-20260830t052206z.json",
   "projection-manifest.json",
   "registry.json",
   "robots.txt",
   "schemas/0.1.0/registry-artifact.schema.json",
+  "schemas/delivery-observation/0.1.0/delivery-observation.schema.json",
   "schemas/gist-registry/0.1.0/index.html",
   "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+  "schemas/gist-registry/delivery-observation/0.1.0/delivery-observation.schema.json",
+  "schemas/gist-registry/delivery-observation/0.1.0/index.html",
   "schemas/gist-registry/index.html",
   "sitemap.xml",
   "snippets/document-evidence-extraction/0.1.0/.python-version",
@@ -115,12 +122,20 @@ test("the projection has one exact allowlisted inventory and complete digest man
   });
 });
 
-test("schemas, registry data, and declared artifact representations preserve authored bytes", async () => {
+test("schemas, observations, registry data, and artifact representations preserve authored bytes", async () => {
   await withProjection(async ({ output }) => {
     const authoredSchema = await readFile(
       resolve(repositoryRoot, "schemas/0.1.0/registry-artifact.schema.json"),
     );
+    assert.equal(
+      createHash("sha256").update(authoredSchema).digest("hex"),
+      "32475af0ad5e4b96d25a3ca2d458d2a814b2d73bd4a0d84055fb1703ff78f4de",
+      "published artifact schema 0.1.0 retains its exact byte identity",
+    );
     const authoredRegistry = await readFile(resolve(repositoryRoot, "registry.json"));
+    const authoredObservation = await readFile(
+      resolve(repositoryRoot, "observations/delivery/index.json"),
+    );
     const authoredSource = await readFile(
       resolve(
         repositoryRoot,
@@ -142,6 +157,10 @@ test("schemas, registry data, and declared artifact representations preserve aut
       authoredSchema,
     );
     assert.deepEqual(await readFile(resolve(output, "registry.json")), authoredRegistry);
+    assert.deepEqual(
+      await readFile(resolve(output, "observations/delivery/index.json")),
+      authoredObservation,
+    );
     assert.deepEqual(
       await readFile(
         resolve(
