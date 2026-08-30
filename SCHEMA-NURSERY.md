@@ -57,8 +57,8 @@ profiles become schemas only after real instances demonstrate their shape.
 The current experiment is
 [`schemas/0.1.0/registry-artifact.schema.json`](schemas/0.1.0/registry-artifact.schema.json).
 It is an authored draft identity for local learning, not an observed hosted
-route. Issue #4 receives the real Humatics instance and decides which fields
-become the first stable exact-version `kindlight.io` contract.
+route. Issue #4 receives the real document-evidence instance and decides which
+fields become the first stable exact-version `kindlight.io` contract.
 
 An artifact may add information without waiting for a universal schema field.
 When two materially different artifacts use the same extension and a reader or

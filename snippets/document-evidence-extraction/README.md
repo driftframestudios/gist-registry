@@ -1,4 +1,4 @@
-# Humatics evidence extraction
+# Document evidence extraction
 
 Current candidate: [`0.1.0`](0.1.0/README.md).
 

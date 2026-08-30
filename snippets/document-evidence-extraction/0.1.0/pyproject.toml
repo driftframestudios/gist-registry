@@ -1,5 +1,5 @@
 [project]
-name = "gist-registry-humatics-evidence-extraction"
+name = "gist-registry-document-evidence-extraction"
 version = "0.1.0"
 description = "Inspectable OCR capture and deterministic evidence extraction"
 requires-python = ">=3.12,<3.13"

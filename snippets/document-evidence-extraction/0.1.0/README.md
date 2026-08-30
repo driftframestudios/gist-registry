@@ -1,10 +1,10 @@
-# Humatics evidence extraction 0.1.0
+# Document evidence extraction 0.1.0
 
 ## Practical question
 
 How can a local document-evidence workflow keep OCR provenance, negation,
 era-specific term weighting, and a visual orientation artifact inspectable
-without turning the word cloud into the evidence itself?
+while ordered JSON remains the evidence carrier?
 
 This representative reconstruction separates two concerns:
 
@@ -24,10 +24,10 @@ From the repository root:
 
 ```sh
 uv --cache-dir .artifacts/uv-cache run \
-  --project snippets/humatics-evidence-extraction/0.1.0 --locked \
-  python snippets/humatics-evidence-extraction/0.1.0/src/humatics_evidence.py analyze \
-  snippets/humatics-evidence-extraction/0.1.0/fixtures/synthetic-ocr-capture.json \
-  --output .artifacts/humatics-evidence-extraction/0.1.0
+  --project snippets/document-evidence-extraction/0.1.0 --locked \
+  python snippets/document-evidence-extraction/0.1.0/src/document_evidence.py analyze \
+  snippets/document-evidence-extraction/0.1.0/fixtures/synthetic-ocr-capture.json \
+  --output .artifacts/document-evidence-extraction/0.1.0
 ```
 
 The committed `.python-version` and package contract select Python 3.12 as the
@@ -37,7 +37,7 @@ as universally equal.
 
 The output directory receives:
 
-- `.humatics-evidence-output.json` — the ownership sentinel required before an
+- `.document-evidence-output.json` — the ownership sentinel required before an
   existing directory can be replaced;
 - `term-weights.json` — normalized, bounded ordered terms by era and across the
   corpus, including the selected `topN`;
@@ -62,10 +62,10 @@ trusted local images; it is not a network or upload intake surface. After
 installing Tesseract locally:
 
 ```sh
-python snippets/humatics-evidence-extraction/0.1.0/src/humatics_evidence.py ocr \
+python snippets/document-evidence-extraction/0.1.0/src/document_evidence.py ocr \
   --document requirements-core 2018 /path/to/page-1.png \
   --document review-notes 2019 /path/to/page-2.png \
-  --output /tmp/humatics-ocr-capture.json
+  --output /tmp/document-ocr-capture.json
 ```
 
 The command reads each source into one in-memory snapshot, then hashes and OCRs
@@ -84,9 +84,9 @@ compatible local capture.
 
 ```sh
 uv --cache-dir .artifacts/uv-cache run \
-  --project snippets/humatics-evidence-extraction/0.1.0 --locked \
+  --project snippets/document-evidence-extraction/0.1.0 --locked \
   python -m unittest discover \
-  -s snippets/humatics-evidence-extraction/0.1.0/tests -v
+  -s snippets/document-evidence-extraction/0.1.0/tests -v
 ```
 
 The tests establish:

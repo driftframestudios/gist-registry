@@ -1,11 +1,11 @@
 {
   "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
   "schemaVersion": "0.1.0",
-  "semanticId": "humatics-evidence-extraction",
+  "semanticId": "document-evidence-extraction",
   "version": "0.1.0",
   "artifactKind": "code_sample",
   "standing": "candidate",
-  "title": "Humatics evidence extraction",
+  "title": "Document evidence extraction",
   "summary": "A representative reconstruction that separates local OCR collection from deterministic, era-aware evidence analysis.",
   "use": {
     "practicalQuestion": "How can a local document-evidence workflow keep OCR provenance, negation, era-specific term weighting, and a visual orientation artifact inspectable?",
@@ -27,7 +27,7 @@
     "description": "Participant-account-supported reconstruction of a 2018–2019 workflow using realistic synthetic reviewed-OCR material.",
     "temporalScope": "The account describes a method practiced during 2018–2019; this implementation was authored as a current portable exemplar.",
     "sourceKeys": [
-      "participant-account:humatics-2018-2019",
+      "participant-account:enterprise-document-evidence-2018-2019",
       "realistic-synthetic:reviewed-ocr"
     ]
   },
@@ -36,15 +36,15 @@
     "basis": "Focused tests exercise normalization, negation retention, review standing, locator-safe captured-source identity, deterministic ordering and rendering, explicit replacement, and retained-output recovery in the pinned environment."
   },
   "license": "Apache-2.0",
-  "canonicalPath": "snippets/humatics-evidence-extraction/0.1.0",
+  "canonicalPath": "snippets/document-evidence-extraction/0.1.0",
   "representations": [
     {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
     {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
     {"role": "runtime_version", "path": ".python-version", "declaredMediaType": "text/plain"},
     {"role": "dependency_definition", "path": "pyproject.toml", "declaredMediaType": "application/toml"},
     {"role": "dependency_lock", "path": "uv.lock", "declaredMediaType": "application/toml"},
-    {"role": "source", "path": "src/humatics_evidence.py", "declaredMediaType": "text/x-python"},
-    {"role": "test", "path": "tests/test_humatics_evidence.py", "declaredMediaType": "text/x-python"},
+    {"role": "source", "path": "src/document_evidence.py", "declaredMediaType": "text/x-python"},
+    {"role": "test", "path": "tests/test_document_evidence.py", "declaredMediaType": "text/x-python"},
     {"role": "configuration", "path": "config/stopwords-en.txt", "declaredMediaType": "text/plain"},
     {"role": "fixture", "path": "fixtures/synthetic-ocr-capture.json", "declaredMediaType": "application/json"},
     {"role": "fixture_source", "path": "fixtures/reviewed-ocr/requirements-core.txt", "declaredMediaType": "text/plain"},
@@ -59,17 +59,17 @@
     "commands": [
       {
         "name": "run",
-        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked python snippets/humatics-evidence-extraction/0.1.0/src/humatics_evidence.py analyze snippets/humatics-evidence-extraction/0.1.0/fixtures/synthetic-ocr-capture.json --output .artifacts/humatics-evidence-extraction/0.1.0",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked python snippets/document-evidence-extraction/0.1.0/src/document_evidence.py analyze snippets/document-evidence-extraction/0.1.0/fixtures/synthetic-ocr-capture.json --output .artifacts/document-evidence-extraction/0.1.0",
         "establishes": "Produces ordered term evidence, a seeded word-cloud orientation image, and digest-bearing render metadata from the reviewed synthetic capture."
       },
       {
         "name": "test",
-        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked python -m unittest discover -s snippets/humatics-evidence-extraction/0.1.0/tests -v",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked python -m unittest discover -s snippets/document-evidence-extraction/0.1.0/tests -v",
         "establishes": "Exercises the artifact's deterministic, provenance, negation, authority, and recovery contracts in the resolved environment."
       },
       {
         "name": "lint",
-        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/humatics-evidence-extraction/0.1.0 --locked ruff check snippets/humatics-evidence-extraction/0.1.0/src snippets/humatics-evidence-extraction/0.1.0/tests",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked ruff check snippets/document-evidence-extraction/0.1.0/src snippets/document-evidence-extraction/0.1.0/tests",
         "establishes": "Returns focused Python syntax, import, correctness, modernization, and maintainability diagnostics."
       }
     ],
