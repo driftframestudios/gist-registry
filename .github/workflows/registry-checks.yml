@@ -11,6 +11,7 @@ on:
       - "README.md"
       - "package.json"
       - "package-lock.json"
+      - "observations/**"
       - "registry.json"
       - "robots.txt"
       - "schemas/**"

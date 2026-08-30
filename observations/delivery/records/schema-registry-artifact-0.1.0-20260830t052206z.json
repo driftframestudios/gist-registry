@@ -1,0 +1,60 @@
+{
+  "$schema": "https://kindlight.io/schemas/gist-registry/delivery-observation/0.1.0/delivery-observation.schema.json",
+  "observationSchemaVersion": "0.1.0",
+  "contractStanding": "experimental",
+  "observationId": "schema-registry-artifact-0.1.0-20260830t052206z",
+  "observedAt": "2026-08-30T05:22:06Z",
+  "observerClass": "signed-out-https",
+  "subject": {
+    "kind": "schema",
+    "canonicalId": "https://kindlight.io/schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+    "version": "0.1.0",
+    "authoredSourcePath": "schemas/0.1.0/registry-artifact.schema.json",
+    "projectedPath": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+    "mediaTypeExpectation": {
+      "declaredMediaType": "application/schema+json",
+      "basis": "json-schema-2020-12-core"
+    }
+  },
+  "source": {
+    "branch": "main",
+    "acceptedRevision": "836f6afaf7bca375b058daf5e637ab17a4cb2ff9",
+    "sourcePath": "schemas/0.1.0/registry-artifact.schema.json",
+    "sha256": "32475af0ad5e4b96d25a3ca2d458d2a814b2d73bd4a0d84055fb1703ff78f4de"
+  },
+  "projection": {
+    "owner": "gist-registry-pages-builder",
+    "branch": "docs",
+    "revision": "8f5caac929f9562e7103513f6651e803a5762569",
+    "projectionManifestPath": "projection-manifest.json",
+    "projectionManifestSha256": "d9f3a59a725ceea471d68c1d730106b9c046383a0d5b1f5b855c4748537cac3b",
+    "projectedPath": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
+    "projectedSha256": "32475af0ad5e4b96d25a3ca2d458d2a814b2d73bd4a0d84055fb1703ff78f4de"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://kindlight.io/schemas/gist-registry/0.1.0/registry-artifact.schema.json"
+  },
+  "response": {
+    "status": 200,
+    "returnedSha256": "32475af0ad5e4b96d25a3ca2d458d2a814b2d73bd4a0d84055fb1703ff78f4de",
+    "rawContentType": "application/json; charset=utf-8",
+    "normalizedMediaType": {
+      "type": "application",
+      "subtype": "json",
+      "parameters": {
+        "charset": "utf-8"
+      }
+    },
+    "selectedResponseHeaders": {
+      "accessControlAllowOrigin": "*"
+    }
+  },
+  "comparison": {
+    "sourceToProjection": "equal",
+    "projectionToResponse": "equal"
+  },
+  "resultStanding": "matches_named_sources",
+  "evidenceBoundary": "This record establishes byte equality among the named accepted source revision, docs projection revision, and one signed-out HTTPS response at the recorded time. DNS continuity, future responses, certificate lifecycle, cache variance, and other routes remain current observations for their named checks.",
+  "recoveryRoute": "Rebuild the docs projection from the accepted source revision, publish the resulting docs revision, then append a new signed-out observation that names its own source, projection manifest, response digest, and media-type result."
+}

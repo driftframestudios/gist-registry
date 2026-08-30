@@ -45,10 +45,12 @@ profiles become schemas only after real instances demonstrate their shape.
    recovery moves.
 8. **Relationships** — receivers, projections, dependencies, variants, and
    other named routes.
-9. **Delivery observations** — a separate appendable observation envelope can
-   key hosted status, raw and parsed media type, digest, source coordinate, and
-   representation path to one immutable artifact-manifest digest. Hosted
-   behavior does not mutate a tagged artifact version.
+9. **Delivery observations** — the separate appendable
+   [`delivery-observation` family](observations/delivery/README.md) keys a
+   hosted status, raw and normalized media type, digest, and named source and
+   projection coordinates to the subject that was actually requested. The
+   first exercised subject is a schema. A later artifact-representation profile
+   can earn its own schema version when a real request supplies that pressure.
 10. **Extensions** — an experimental field can serve a real artifact before it
     is promoted into the shared envelope.
 
@@ -59,8 +61,9 @@ The current experiment is
 It is an authored draft identity exercised by the real document-evidence
 instance. The Pages builder carries its exact bytes at the canonical
 `kindlight.io` path and at the repository-relative path needed by the
-byte-identical manifest. A signed-out request will establish hosted delivery;
-the local build establishes projection parity.
+byte-identical manifest. The first signed-out HTTPS observation records the
+successful canonical-schema response against the exact accepted source and
+`docs` revisions. The local build continues to establish projection parity.
 
 This `0.1.0` publication exercises retrieval without declaring the envelope
 stable. Another materially different artifact can reveal which shared fields

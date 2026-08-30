@@ -18,6 +18,7 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import { checkRootReadmeCanaryPrefix } from "./check-public-boundary.mjs";
+import { checkDeliveryObservations } from "./check-delivery-observations.mjs";
 import { checkRegistry } from "./check-registry.mjs";
 import { checkSchemaNursery } from "./check-schema.mjs";
 
@@ -42,6 +43,8 @@ export const bigBenchCanary = [
 
 const sourceRevisionPattern = /^[a-f0-9]{40}$/u;
 const safeRelativePathPattern = /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\).+$/u;
+const publishedArtifactSchemaDigest =
+  "32475af0ad5e4b96d25a3ca2d458d2a814b2d73bd4a0d84055fb1703ff78f4de";
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -162,6 +165,7 @@ function pageShell({ title, description, outputPath, body }) {
     '    <nav aria-label="Primary">',
     '      <a href="/snippets/">Artifacts</a>',
     '      <a href="/schemas/gist-registry/">Schemas</a>',
+    '      <a href="/observations/delivery/">Observations</a>',
     '      <a href="/data-use/">Data use</a>',
     "    </nav>",
     "  </header>",
@@ -301,10 +305,11 @@ function canonicalSchemaPath(schema, label) {
 }
 
 async function collectSourceModel(root) {
-  await Promise.all([
+  const [, , , deliveryObservations] = await Promise.all([
     checkRootReadmeCanaryPrefix({ root }),
     checkRegistry({ root }),
     checkSchemaNursery({ root }),
+    checkDeliveryObservations({ root }),
   ]);
 
   const registryBytes = await readSourceBytes(root, "registry.json", "registry.json");
@@ -326,6 +331,12 @@ async function collectSourceModel(root) {
     const schema = await readJsonBytes(schemaBytes, schemaSourcePath);
     const schemaCanonicalPath = canonicalSchemaPath(schema, schemaSourcePath);
     const schemaDigest = sha256(schemaBytes);
+    if (schemaSourcePath === "schemas/0.1.0/registry-artifact.schema.json")
+      assert.equal(
+        schemaDigest,
+        publishedArtifactSchemaDigest,
+        "published artifact schema 0.1.0 must retain its exact byte identity",
+      );
     const previous = schemas.get(schema.$id);
 
     if (previous) {
@@ -365,11 +376,25 @@ async function collectSourceModel(root) {
     });
   }
 
+  assert.equal(
+    schemas.has(deliveryObservations.schema.value.$id),
+    false,
+    "delivery observation schema must have a distinct identity",
+  );
+  schemas.set(deliveryObservations.schema.value.$id, {
+    canonicalPath: deliveryObservations.schema.canonicalPath,
+    digest: deliveryObservations.schema.sha256,
+    schema: deliveryObservations.schema.value,
+    sourcePath: deliveryObservations.schema.sourcePath,
+    bytes: deliveryObservations.schema.bytes,
+  });
+
   return {
     registry,
     registryBytes,
     artifacts,
     carriers,
+    deliveryObservations,
     schemas: [...schemas.values()],
   };
 }
@@ -381,11 +406,15 @@ function publicationInputs(model) {
     "package-lock.json",
     "registry.json",
     "tools/build-pages.mjs",
+    "tools/check-delivery-observations.mjs",
     "tools/check-public-boundary.mjs",
     "tools/check-registry.mjs",
     "tools/check-schema.mjs",
     ...model.carriers.keys(),
     ...model.schemas.map(schema => schema.sourcePath),
+    model.deliveryObservations.readme.sourcePath,
+    model.deliveryObservations.index.sourcePath,
+    ...model.deliveryObservations.records.map(record => record.sourcePath),
     ...model.artifacts.flatMap(artifact => [
       artifact.familyReadmePath,
       ...artifact.representations.map(representation => representation.sourcePath),
@@ -536,6 +565,14 @@ function allArtifactsPage(artifacts, outputPath) {
   });
 }
 
+function declaredSchemaVersion(schema) {
+  const version =
+    schema.schema.properties.schemaVersion?.const ??
+    schema.schema.properties.observationSchemaVersion?.const;
+  assert.equal(typeof version, "string", schema.schema.$id + " must declare one version const");
+  return version;
+}
+
 function schemaDiscoveryPage(schemas, outputPath) {
   const cards = schemas
     .map(
@@ -543,7 +580,7 @@ function schemaDiscoveryPage(schemas, outputPath) {
         [
           '<article class="card">',
           '<p class="eyebrow">Schema ' +
-            escapeHtml(schema.schema.properties.schemaVersion.const) +
+            escapeHtml(declaredSchemaVersion(schema)) +
             " · experimental</p>",
           "<h2><a href=\"/" +
             escapeHtml(posix.dirname(schema.canonicalPath)) +
@@ -563,7 +600,7 @@ function schemaDiscoveryPage(schemas, outputPath) {
     body: [
       '<p class="eyebrow">Schema nursery</p>',
       "<h1>Schema registry</h1>",
-      '<p class="lede">The current contract is an exercised experimental envelope. Its canonical route and repository-relative mirror serve the same bytes while later artifacts continue to test the shape.</p>',
+      '<p class="lede">Each exercised experimental contract keeps one exact identity. Its canonical route and repository-relative mirror serve the same bytes while later artifacts and observations continue to test each shape.</p>',
       '<div class="grid">' + cards + "</div>",
     ].join("\n"),
   });
@@ -571,7 +608,7 @@ function schemaDiscoveryPage(schemas, outputPath) {
 
 function schemaVersionPage(schema, sourceSha, outputPath) {
   return pageShell({
-    title: schema.schema.title + " " + schema.schema.properties.schemaVersion.const,
+    title: schema.schema.title + " " + declaredSchemaVersion(schema),
     description: schema.schema.description,
     outputPath,
     body: [
@@ -580,7 +617,7 @@ function schemaVersionPage(schema, sourceSha, outputPath) {
       '<p class="lede">' + escapeHtml(schema.schema.description) + "</p>",
       '<dl class="metadata">',
       "<dt>Version</dt><dd><code>" +
-        escapeHtml(schema.schema.properties.schemaVersion.const) +
+        escapeHtml(declaredSchemaVersion(schema)) +
         "</code></dd>",
       "<dt>Canonical identity</dt><dd><a href=\"/" +
         escapeHtml(schema.canonicalPath) +
@@ -602,7 +639,50 @@ function schemaVersionPage(schema, sourceSha, outputPath) {
   });
 }
 
-function rootPage(artifacts, schemas, sourceSha, outputPath) {
+function deliveryObservationsPage(deliveryObservations, outputPath) {
+  const cards = deliveryObservations.records
+    .map(({ projectionPath, value, sha256: recordSha256 }) =>
+      [
+        '<article class="card">',
+        '<p class="eyebrow">' +
+          escapeHtml(value.observerClass.replaceAll("-", " ")) +
+          " · " +
+          escapeHtml(value.resultStanding.replaceAll("_", " ")) +
+          "</p>",
+        '<h2><a href="/' +
+          escapeHtml(projectionPath) +
+          '">' +
+          escapeHtml(value.subject.version + " · " + value.subject.kind) +
+          "</a></h2>",
+        "<p>Observed <time datetime=\"" +
+          escapeHtml(value.observedAt) +
+          "\">" +
+          escapeHtml(value.observedAt) +
+          "</time> at <a href=\"" +
+          escapeHtml(value.request.url) +
+          "\"><code>" +
+          escapeHtml(value.subject.canonicalId) +
+          "</code></a>.</p>",
+        "<p><code>sha256:" + escapeHtml(recordSha256) + "</code></p>",
+        "</article>",
+      ].join("\n"),
+    )
+    .join("\n");
+  return pageShell({
+    title: "Delivery observations",
+    description: "Named, public-safe observations of exact source, projection, and hosted response coordinates.",
+    outputPath,
+    body: [
+      '<p class="eyebrow">Hosted behavior · named evidence</p>',
+      "<h1>Delivery observations</h1>",
+      '<p class="lede">Each record states what one signed-out HTTPS request established about named source and projection revisions. A later request receives its own record.</p>',
+      '<div class="grid">' + cards + "</div>",
+      '<p><a href="/observations/delivery/index.json">Read the machine-readable observation index</a> or <a href="/observations/delivery/README.md">inspect the family contract</a>.</p>',
+    ].join("\n"),
+  });
+}
+
+function rootPage(artifacts, schemas, deliveryObservations, sourceSha, outputPath) {
   return pageShell({
     title: "Versioned technical artifacts",
     description: "A public retrieval projection for exact-version code samples and schema contracts.",
@@ -621,6 +701,11 @@ function rootPage(artifacts, schemas, sourceSha, outputPath) {
         escapeHtml(schemas.length) +
         " exercised exact-version contract" +
         (schemas.length === 1 ? "" : "s") +
+        " currently available.</p></article>",
+      '<article class="card"><h2><a href="/observations/delivery/">Delivery observations</a></h2><p>' +
+        escapeHtml(deliveryObservations.observationCount) +
+        " signed-out exact-coordinate observation" +
+        (deliveryObservations.observationCount === 1 ? "" : "s") +
         " currently available.</p></article>",
       '<article class="card"><h2><a href="/data-use/">Data use</a></h2><p>Search, citation, and person-directed retrieval are welcome. The benchmark markers express the training-data boundary.</p></article>',
       "</div>",
@@ -758,8 +843,27 @@ async function populateProjection({ root, output, sourceSha, sourceBinding }) {
     generatedPages.push(familyIndex);
   }
 
+  await Promise.all([
+    writeBytes(
+      output,
+      model.deliveryObservations.readme.projectionPath,
+      model.deliveryObservations.readme.bytes,
+      claims,
+    ),
+    writeBytes(
+      output,
+      model.deliveryObservations.index.projectionPath,
+      model.deliveryObservations.index.bytes,
+      claims,
+    ),
+    ...model.deliveryObservations.records.map(record =>
+      writeBytes(output, record.projectionPath, record.bytes, claims),
+    ),
+  ]);
+
   const artifactIndex = "snippets/index.html";
   const schemaIndex = "schemas/gist-registry/index.html";
+  const observationIndex = "observations/delivery/index.html";
   const dataUseIndex = "data-use/index.html";
   const rootIndex = "index.html";
   await Promise.all([
@@ -775,15 +879,27 @@ async function populateProjection({ root, output, sourceSha, sourceBinding }) {
       schemaDiscoveryPage(model.schemas, schemaIndex),
       claims,
     ),
+    writeText(
+      output,
+      observationIndex,
+      deliveryObservationsPage(model.deliveryObservations, observationIndex),
+      claims,
+    ),
     writeText(output, dataUseIndex, dataUsePage(dataUseIndex), claims),
     writeText(
       output,
       rootIndex,
-      rootPage(model.artifacts, model.schemas, sourceSha, rootIndex),
+      rootPage(
+        model.artifacts,
+        model.schemas,
+        model.deliveryObservations,
+        sourceSha,
+        rootIndex,
+      ),
       claims,
     ),
   ]);
-  generatedPages.push(artifactIndex, schemaIndex, dataUseIndex, rootIndex);
+  generatedPages.push(artifactIndex, schemaIndex, observationIndex, dataUseIndex, rootIndex);
   await writeText(
     output,
     "sitemap.xml",
@@ -807,6 +923,7 @@ async function populateProjection({ root, output, sourceSha, sourceBinding }) {
     artifactCount: model.artifacts.length,
     fileCount: files.length + 1,
     manifestSha256: sha256(manifestBytes),
+    observationCount: model.deliveryObservations.observationCount,
     schemaCount: model.schemas.length,
     sourceRevision: sourceSha,
   };
@@ -981,6 +1098,16 @@ export async function checkProjection({ root = repositoryRoot, output }) {
       await readFile(resolve(resolvedOutput, artifact.familyReadmePath)),
       artifact.familyReadmeBytes,
       artifact.familyReadmePath + " must preserve authored bytes",
+    );
+  for (const carrier of [
+    model.deliveryObservations.readme,
+    model.deliveryObservations.index,
+    ...model.deliveryObservations.records,
+  ])
+    assert.deepEqual(
+      await readFile(resolve(resolvedOutput, carrier.projectionPath)),
+      carrier.bytes,
+      carrier.projectionPath + " must preserve authored observation bytes",
     );
 
   return {
