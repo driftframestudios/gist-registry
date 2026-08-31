@@ -29,6 +29,7 @@ const repositoryRoot = resolve(dirname(modulePath), "..");
 export const projectionFormatVersion = "0.1.0";
 export const projectionOwner = "gist-registry-pages-builder";
 export const canonicalOrigin = "https://kindlight.io";
+const sourceRepositoryOrigin = "https://github.com/driftframestudios/gist-registry";
 export const defaultOutputRoot = resolve(repositoryRoot, ".artifacts/pages");
 
 export const mapsCanary = [
@@ -74,6 +75,22 @@ function requireSafeRelativePath(path, label) {
   assert.match(path, safeRelativePathPattern, label + " must be a safe relative path");
   assert.equal(path.includes("//"), false, label + " must use normalized separators");
   return path;
+}
+
+export function sourceRepositoryRevisionUrl(view, sourceSha, sourcePath) {
+  assert.ok(view === "blob" || view === "tree", "repository view must be blob or tree");
+  assert.match(sourceSha, sourceRevisionPattern, "repository revision must be a full Git SHA");
+  requireSafeRelativePath(sourcePath, "repository source path");
+  const encodedPath = sourcePath
+    .split("/")
+    .map(segment => encodeURIComponent(segment))
+    .join("/");
+  return sourceRepositoryOrigin + "/" + view + "/" + sourceSha + "/" + encodedPath;
+}
+
+function repositoryCommitUrl(sourceSha) {
+  assert.match(sourceSha, sourceRevisionPattern, "repository revision must be a full Git SHA");
+  return sourceRepositoryOrigin + "/commit/" + sourceSha;
 }
 
 async function requireRegularFile(root, relativePath, label) {
@@ -479,8 +496,13 @@ function artifactFamilyPage(semanticId, versions, outputPath) {
 function artifactVersionPage(artifact, sourceSha, outputPath) {
   const { entry, manifest, representations, schemaId } = artifact;
   const files = representations
-    .map(
-      representation =>
+    .map(representation => {
+      const repositoryUrl = sourceRepositoryRevisionUrl(
+        "blob",
+        sourceSha,
+        representation.sourcePath,
+      );
+      return (
         "<li><a href=\"/" +
         escapeHtml(representation.sourcePath) +
         "\"><code>" +
@@ -489,9 +511,17 @@ function artifactVersionPage(artifact, sourceSha, outputPath) {
         escapeHtml(representation.role.replaceAll("_", " ")) +
         " · " +
         escapeHtml(representation.declaredMediaType) +
-        "</li>",
-    )
+        " · <a href=\"" +
+        escapeHtml(repositoryUrl) +
+        "\">Inspect on GitHub</a></li>"
+      );
+    })
     .join("\n");
+  const repositoryDirectoryUrl = sourceRepositoryRevisionUrl(
+    "tree",
+    sourceSha,
+    entry.canonicalPath,
+  );
   const commands = (manifest.execution?.commands ?? [])
     .map(
       command =>
@@ -527,10 +557,18 @@ function artifactVersionPage(artifact, sourceSha, outputPath) {
         "\"><code>" +
         escapeHtml(schemaId) +
         "</code></a></dd>",
-      "<dt>Source revision</dt><dd><code>" + escapeHtml(sourceSha) + "</code></dd>",
+      "<dt>Source revision</dt><dd><a href=\"" +
+        escapeHtml(repositoryCommitUrl(sourceSha)) +
+        "\"><code>" +
+        escapeHtml(sourceSha) +
+        "</code></a></dd>",
+      "<dt>Repository directory</dt><dd><a href=\"" +
+        escapeHtml(repositoryDirectoryUrl) +
+        "\">Inspect this exact source tree on GitHub</a></dd>",
       "</dl>",
       "<h2>Representations</h2>",
       '<ul class="file-list">' + files + "</ul>",
+      "<p>The filename opens the byte-preserving kindlight.io projection. Inspect on GitHub opens the repository file at the source revision above; access follows the repository’s current visibility.</p>",
       commands ? "<h2>Run and verify</h2>" + commands : "",
       "<h2>Evidence and transfer</h2>",
       "<p>" + escapeHtml(manifest.boundaries.evidence) + "</p>",
