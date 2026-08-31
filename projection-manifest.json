@@ -2,7 +2,7 @@
   "projectionFormatVersion": "0.1.0",
   "projectionOwner": "gist-registry-pages-builder",
   "canonicalOrigin": "https://kindlight.io",
-  "sourceRevision": "4596bb6f00d7b6d97bb6a4b3dd4e4623fb438c53",
+  "sourceRevision": "367694b69a39234683d55cabe4787aff922b78ed",
   "sourceStanding": "accepted_revision",
   "fileScope": "Every projection file except projection-manifest.json itself.",
   "files": [
@@ -44,7 +44,7 @@
     {
       "path": "index.html",
       "bytes": 3097,
-      "sha256": "c88d892456706500f4e263e6fe393e90c7bf60c7961fd13bfa7ce9a2719f3a14"
+      "sha256": "df4933bef5a479349af506794b6dcf10bcef0015f035a5f9fdca17a6a517c59c"
     },
     {
       "path": "observations/delivery/README.md",
@@ -89,7 +89,7 @@
     {
       "path": "schemas/gist-registry/0.1.0/index.html",
       "bytes": 2796,
-      "sha256": "8deb0302d7ba71c714e83ba3f87ee3052670ea1b1b402a50342e696aecb9b6ce"
+      "sha256": "b0c636ba5e2eaabce9e1f0a231bc40588412266349fe738c011375a52d0afc41"
     },
     {
       "path": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
@@ -104,7 +104,7 @@
     {
       "path": "schemas/gist-registry/delivery-observation/0.1.0/index.html",
       "bytes": 2793,
-      "sha256": "19a25f986bf32b581e486648828e2efb14003dfd8d1813766b5368aeb5bccc93"
+      "sha256": "9f5fdb6969a5af939369b8775fa65f796b021f8d037d706d98cf10fc2ab4892b"
     },
     {
       "path": "schemas/gist-registry/index.html",
@@ -139,7 +139,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/index.html",
       "bytes": 3851,
-      "sha256": "1d8593cfa71564543b81157b9d396ed87f5111ce13eb8f414ae51f1220a20f4a"
+      "sha256": "f3817012d0d85c162b410d0af407b114ea6e1385958cd4bcab931f328df1968e"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
@@ -169,7 +169,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/index.html",
       "bytes": 4294,
-      "sha256": "40a251f6508e66603a35d1e660cd0ff8f2e112cd250fc46f8276ea110508c0a1"
+      "sha256": "f33ceecf081bffec3b346f5d79cd13fea037d8105b8258f55b010152af2deb0a"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
@@ -234,7 +234,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.0/index.html",
       "bytes": 6657,
-      "sha256": "f41286b030baecfa2bae8d4a09cd4ca95ca99bd8addf92400bfdc12df7c965d6"
+      "sha256": "cd7b768eb11876e4227923cd13329f4af8bced2b5dee688aa4b3f42a320b4c1d"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
@@ -309,7 +309,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.1/index.html",
       "bytes": 7750,
-      "sha256": "0525d330d0af5abd28d8d5a511caa2f13fb9b4931107bf887032853864a224db"
+      "sha256": "740913a69db8fe9a5c7f8d4398b5a53abd7d8c851692dee26405855c83577a75"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.1/pyproject.toml",
@@ -389,7 +389,7 @@
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/index.html",
       "bytes": 6475,
-      "sha256": "c281aadd8d3fe7aae3aa6405ac955d801ecf43aebec524652b670e69c6ebeb8c"
+      "sha256": "9c2ac5f8ee5392e957486b4bb60c3e9c2a060329c8da3ed703c6000e72427b7f"
     },
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/pyproject.toml",
@@ -449,7 +449,7 @@
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/index.html",
       "bytes": 5861,
-      "sha256": "4f4b37ee92e9841a2fcd8d0d14fe946ce8e74fbbca16caf329acf5e3cc07da19"
+      "sha256": "069182f8d41b381421394c20d94dd092ba34518fa6327c46932f3f0f9598831d"
     },
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/pyproject.toml",
