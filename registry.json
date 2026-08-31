@@ -9,6 +9,13 @@
       "canonicalPath": "snippets/document-evidence-extraction/0.1.0"
     },
     {
+      "semanticId": "document-evidence-extraction",
+      "version": "0.1.1",
+      "artifactKind": "code_sample",
+      "manifestPath": "snippets/document-evidence-extraction/0.1.1/snippet.json",
+      "canonicalPath": "snippets/document-evidence-extraction/0.1.1"
+    },
+    {
       "semanticId": "document-evidence-core-patterns",
       "version": "0.1.0",
       "artifactKind": "code_excerpt",

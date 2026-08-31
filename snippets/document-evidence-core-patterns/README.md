@@ -14,9 +14,10 @@ Version `0.1.0` selects two broadly transferable mechanics:
   restoration path after one injected `OSError`.
 
 The ordered files under `gist/` form a human-reviewable GitHub Gist candidate.
-Repository source remains canonical. A published Gist becomes a convenience
-projection of one accepted version and receives its own revision-and-digest
-observation after publication.
+Repository source remains canonical. The PR #14 publication observation at
+`docs@2b996ccd5d0f487eaa590d8822ada6203dfbae0e` carries the accepted `0.1.0`
+companion. A published Gist becomes a convenience projection of one accepted
+version and receives its own revision-and-digest observation after publication.
 
 ## Continuation
 
@@ -28,6 +29,7 @@ observation after publication.
   the `0.1.0` evidence boundary.
 
 This standing belongs to the companion's narrow orientation job. The runnable
-source family is `interstitial` while `0.1.1` receives the stronger promotion
-architecture and tests. After that successor is accepted, a matching exact
-excerpt can form its own coordinate.
+source family is `interstitial` while Issue #2 carries `0.1.1` as the registry
+successor for the stronger promotion architecture and tests. Its manifest keeps
+candidate maturity distinct from source acceptance; a matching exact excerpt
+derives from an accepted successor source.

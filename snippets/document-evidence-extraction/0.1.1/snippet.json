@@ -1,0 +1,268 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "document-evidence-extraction",
+  "version": "0.1.1",
+  "artifactKind": "code_sample",
+  "standing": "candidate",
+  "title": "Document evidence extraction",
+  "summary": "A representative document-evidence workflow with compatible OCR capture, deterministic analysis, and one typed staged-promotion transition for directory and file outputs.",
+  "use": {
+    "practicalQuestion": "How can a local document-evidence workflow preserve OCR provenance and deterministic analysis while one trusted writer replaces directory or file output through a typed recovery path?",
+    "changedAbility": "A collaborator can review captured text, reproduce ordered term evidence, and inspect one shared promotion transition that reconciles events on either side of a rename effect, restores the prior state, or returns every event, coordinate, phase, and observed occupancy for re-entry.",
+    "readers": [
+      "AI collaborators implementing or reviewing evidence-extraction workflows",
+      "Technical practitioners evaluating provenance, determinism, and filesystem recovery"
+    ],
+    "capabilities": [
+      "capture_local_ocr",
+      "retain_negation",
+      "compare_eras",
+      "render_deterministically",
+      "share_promotion_transition",
+      "reconcile_rename_effects",
+      "retain_recovery_coordinates"
+    ]
+  },
+  "provenance": {
+    "class": "representative_reconstruction",
+    "description": "Participant-account-supported reconstruction of a 2018–2019 workflow using realistic synthetic reviewed-OCR material, with a successor filesystem mechanism derived from focused architecture convergence.",
+    "temporalScope": "The account describes a method practiced during 2018–2019; this current candidate advances the runnable exemplar's recovery behavior while preserving capture-format compatibility.",
+    "sourceKeys": [
+      "participant-account:enterprise-document-evidence-2018-2019",
+      "realistic-synthetic:reviewed-ocr",
+      "gist-registry:document-evidence-extraction-0-1-0"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Focused tests exercise normalization, negation retention, review standing, deterministic ordering and rendering, and the shared directory/file transition through pre-effect and post-effect events at prior movement, activation, successor retention, restoration, staged retention, typed recovery, and post-acceptance cleanup in the resolved environment."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/document-evidence-extraction/0.1.1",
+  "representations": [
+    {
+      "role": "orientation",
+      "path": "README.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "manifest",
+      "path": "snippet.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "runtime_version",
+      "path": ".python-version",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "dependency_definition",
+      "path": "pyproject.toml",
+      "declaredMediaType": "application/toml"
+    },
+    {
+      "role": "dependency_lock",
+      "path": "uv.lock",
+      "declaredMediaType": "application/toml"
+    },
+    {
+      "role": "source",
+      "path": "src/document_evidence.py",
+      "declaredMediaType": "text/x-python"
+    },
+    {
+      "role": "source",
+      "path": "src/filesystem_promotion.py",
+      "declaredMediaType": "text/x-python"
+    },
+    {
+      "role": "test",
+      "path": "tests/test_document_evidence.py",
+      "declaredMediaType": "text/x-python"
+    },
+    {
+      "role": "test",
+      "path": "tests/test_filesystem_promotion.py",
+      "declaredMediaType": "text/x-python"
+    },
+    {
+      "role": "configuration",
+      "path": "config/stopwords-en.txt",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "fixture",
+      "path": "fixtures/synthetic-ocr-capture.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "fixture_source",
+      "path": "fixtures/reviewed-ocr/requirements-core.txt",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "fixture_source",
+      "path": "fixtures/reviewed-ocr/ocr-intake.txt",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "fixture_source",
+      "path": "fixtures/reviewed-ocr/era-comparison.txt",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "fixture_source",
+      "path": "fixtures/reviewed-ocr/orientation-output.txt",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "expected_contract",
+      "path": "expected/contract.json",
+      "declaredMediaType": "application/json"
+    }
+  ],
+  "execution": {
+    "runtime": "Python >=3.12,<3.13; local OCR additionally requires a Tesseract executable",
+    "dependenciesPath": "uv.lock",
+    "commands": [
+      {
+        "name": "run",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.1 --locked python snippets/document-evidence-extraction/0.1.1/src/document_evidence.py analyze snippets/document-evidence-extraction/0.1.1/fixtures/synthetic-ocr-capture.json --output .artifacts/document-evidence-extraction/0.1.1",
+        "establishes": "Produces 0.1.1 ordered term evidence, a seeded word-cloud orientation image, and digest-bearing render metadata from a compatible 0.1.0 reviewed synthetic capture."
+      },
+      {
+        "name": "test",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.1 --locked python -m unittest discover -s snippets/document-evidence-extraction/0.1.1/tests -v",
+        "establishes": "Exercises deterministic analysis and the shared cooperative single-writer transition, including pre-effect and post-effect Python events, original-event propagation, typed observed-state recovery, staged retention, and post-acceptance retirement behavior."
+      },
+      {
+        "name": "lint",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.1 --locked ruff check snippets/document-evidence-extraction/0.1.1/src snippets/document-evidence-extraction/0.1.1/tests",
+        "establishes": "Returns focused Python syntax, import, correctness, modernization, and maintainability diagnostics for the analysis and promotion modules."
+      }
+    ],
+    "fixtures": [
+      "fixtures/synthetic-ocr-capture.json",
+      "fixtures/reviewed-ocr/requirements-core.txt",
+      "fixtures/reviewed-ocr/ocr-intake.txt",
+      "fixtures/reviewed-ocr/era-comparison.txt",
+      "fixtures/reviewed-ocr/orientation-output.txt"
+    ],
+    "expectedResults": [
+      "expected/contract.json"
+    ],
+    "environmentNotes": [
+      "The ordinary analysis and test route consumes reviewed text and does not require Tesseract.",
+      "Artifact and emitted output workflow identity is 0.1.1; coherent existing and newly collected OCR captures retain captureVersion 0.1.0.",
+      "Explicit replacement can receive an owned 0.1.0 analysis-output sentinel as a migration input; the successor emits a 0.1.1 sentinel.",
+      "Promotion assumes one cooperative writer and a trusted parent directory for the transition interval.",
+      "Repeated-render byte equality is asserted within one resolved environment; cross-platform image-library differences remain an observation boundary."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Can a reviewer inspect what OCR produced before weighting begins?",
+      "Do directory and capture replacement share one semantic transition?",
+      "Which original Python event is propagated after successful restoration?",
+      "Did an operation event arrive before or after its filesystem effect?",
+      "Which causes and coordinates remain available when restoration also stops?",
+      "Which future mechanism would establish a broader writer, reader, platform, or durability guarantee?"
+    ],
+    "decisionRules": [
+      "Treat captured OCR as observed input and keep human review standing visible through analysis.",
+      "Stage a complete sibling result and require explicit authority plus an owned 0.1.0 migration or 0.1.1 current sentinel before moving an accepted target.",
+      "Use the shared transition while one cooperative writer owns a trusted parent directory.",
+      "Observe the named coordinates after every operation event, reconcile pre-effect and post-effect states, and retain every cause, coordinate, phase, and occupancy when recovery stops.",
+      "Accept the successor before carrier-specific retirement and describe recursive cleanup results by the material actually observed."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "Source-digested capture, visible negation, ordered evidence, deterministic rendering, and one typed promotion transition for directory and file carriers."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "Carrier-specific replacement paths that discard staged recovery material or replace the event that first interrupted promotion."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Explicit authority, complete sibling staging, rename-effect reconciliation, original-event propagation, typed observed-state recovery, and post-acceptance retirement keep recovery coordinates legible."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Separate environment-observed collection from deterministic analysis and route file and directory replacement through one semantic transition."
+      },
+      {
+        "mode": "review",
+        "instruction": "Inspect capture version, workflow version, accepted target, staged successor, prior coordinate, and typed causes as distinct state."
+      },
+      {
+        "mode": "recovery",
+        "instruction": "Classify each operation event from observed coordinates, restore the accepted target while cleanup can execute, and retain every event, phase, coordinate, and occupancy when recovery stops."
+      }
+    ],
+    "codeExemplarGranularity": "One self-contained collection-and-analysis workflow, one shared file/directory promotion module, compatible synthetic captures, and focused transition tests.",
+    "complexityAndAllocation": "Text normalization and sparse TF-IDF fitting remain the main analysis work. A finite promotion transition, named-coordinate observations, and a narrow operation adapter isolate recovery behavior from carrier cleanup and incidental path lookup counts."
+  },
+  "boundaries": {
+    "evidence": "Focused tests establish deterministic analysis and injected pre-effect and post-effect Python-event recovery states on real temporary filesystems in the resolved environment. Static symbolic-link and ownership checks are momentary observations within the trusted-parent model; they are not TOCTOU protection.",
+    "trust": "The fixture is realistic synthetic material, the historical method is participant-account-supported, and replacement assumes one cooperative writer with a trusted parent directory. Another process with equal parent-directory authority remains outside this boundary.",
+    "transfer": "A receiver selects its corpus, review policy, parent-directory authority, filesystem and platform contract, writer and reader model, and durability requirement. Participating POSIX coordination, process or host restart durability, descriptor/no-follow hardening, same-authority resistance, complete old-or-new reader visibility, and Windows handle parity each retain a distinct future probe."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "Missing analysis dependencies stop before output staging.",
+      "Malformed captures and output ownership outside the explicit 0.1.0 migration or 0.1.1 current contract stop before promotion.",
+      "An operation event can arrive before or after its rename effect; the transition classifies the observed staged, target, and prior coordinates before recovery continues.",
+      "A recovery operation can also receive an event, yielding either a restored prior plus attached post-effect event or a typed state for re-entry.",
+      "Post-acceptance directory retirement can partially complete before reporting an error."
+    ],
+    "recoveryMoves": [
+      "Resolve the committed lock or repair the capture, then rerun the same candidate command.",
+      "Choose a new target or grant explicit --replace authority only for an owned 0.1.0 migration input or 0.1.1 current output.",
+      "After successful reconciliation, inspect the retained stage, original propagated event, and any attached post-effect recovery events.",
+      "On PromotionRecoveryError, inspect primary_error, recovery_errors, phase, state, staged, target, and prior before selecting a recovery move.",
+      "After a retirement warning, treat the successor as accepted and inspect the named remaining material before cleanup continues."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "successor_of",
+      "target": "document-evidence-extraction@0.1.0",
+      "reason": "This candidate preserves the accepted capture format and analysis relationship while strengthening shared file and directory promotion behavior."
+    },
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:implementation-track",
+      "reason": "A reviewed future excerpt can point technical readers to this complete candidate after its source and publication owners accept that route."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "The candidate continues to exercise the exact-version artifact contract while version identity, evidence standing, and publication remain distinct."
+    }
+  ],
+  "extensions": {
+    "practitionerProbePressure": {
+      "answerRange": "A probe may distinguish broader coordination and durability levels; this candidate records the selected cooperative single-writer mechanism and its bounded evidence.",
+      "reviewSurfaces": [
+        "capture",
+        "term evidence",
+        "visual orientation",
+        "shared promotion transition",
+        "typed recovery"
+      ]
+    },
+    "operatingModelProbes": [
+      "participating_posix_writers",
+      "process_host_power_loss_durability",
+      "descriptor_no_follow_hardening",
+      "same_authority_interference",
+      "concurrent_reader_old_or_new_visibility",
+      "windows_handle_parity"
+    ]
+  }
+}

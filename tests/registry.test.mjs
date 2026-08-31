@@ -34,18 +34,19 @@ function indentBlock(source, spaces) {
     .join("\n");
 }
 
-test("the real registry resolves both versioned artifacts and their representations", async () => {
+test("the real registry resolves all exact versions and their representations", async () => {
   const result = await checkRegistry({ root: repositoryRoot });
-  assert.deepEqual(result, { artifactCount: 2 });
+  assert.deepEqual(result, { artifactCount: 3 });
 });
 
-test("the first schema attempt validates two artifact kinds without closing the kind set", async () => {
+test("the first schema attempt validates three artifacts across two kinds", async () => {
   const result = await checkSchemaNursery();
   assert.deepEqual(result, {
     schemaVersion: "0.1.0",
-    artifactCount: 2,
+    artifactCount: 3,
     instances: [
       "document-evidence-extraction@0.1.0",
+      "document-evidence-extraction@0.1.1",
       "document-evidence-core-patterns@0.1.0",
     ],
   });
