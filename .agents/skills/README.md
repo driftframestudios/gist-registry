@@ -32,7 +32,7 @@ history, or generated artifact receives interpretation.
 
 | Skill | Use it when | Standing |
 | --- | --- | --- |
-| [Architecture convergence vantages](architecture-convergence-vantages/SKILL.md) | Several plausible technical changes create different concurrency, recovery, portability, evidence, or publication guarantees | Initial instruction-only skill; formed from the first natural filesystem-promotion and exact-excerpt convergence use |
+| [Architecture convergence vantages](architecture-convergence-vantages/SKILL.md) | Several plausible technical changes create different concurrency, recovery, portability, evidence, or publication guarantees | Exercised through filesystem-promotion, exact-excerpt, and instrument-ingress cycles; source-and-test rotation now shapes its guarantee map and release event |
 | [Probe-bearing exemplar formation](probe-bearing-exemplar-formation/SKILL.md) | A public-safe code sample, Practitioner Probe, or domain exemplar is ready for its first reviewable registry version | First source-owning execution through Issue #18 |
 | [Repository collaboration cycle](repository-collaboration-cycle/SKILL.md) | A cold or resumed collaborator is expected to carry one authorized repository task through orientation, implementation, evidence, and reviewable re-entry | Exercised through Issue #18 / PR #22 and a fresh-context Issue #3 source cycle |
 | [Secret-boundary inspection](secret-boundary-inspection/SKILL.md) | Source, an exact proposed index, locally available history, or a generated artifact is preparing for a repository or publication handoff | Received portable contract with a Gist Registry-owned Betterleaks implementation and Pages artifact route |
@@ -48,9 +48,11 @@ more routing than capability, fold its useful rules into `AGENTS.md`, the
 nearest artifact README, or the source-owning runbook and retire the catalog
 entry.
 
-`transaction-boundary-evidence-mapping` remains an observed candidate rather
-than a routing entry. A second materially different domain artifact can wake
-it when command fingerprinting, exact replay, changed-intent reconciliation,
-state/event/outbox agreement, and injected-failure restoration repeat as one
-distinct receiving job. Until then, the specimen-custody source, focused tests,
-and artifact README retain the instruction authority.
+`transaction-boundary-evidence-mapping` remains a resting observed candidate.
+Specimen custody/outbox and instrument ingress/quarantine now supply two
+materially different domain observations:
+identity fingerprints, exact replay, changed-meaning reconciliation, aligned
+effects, and injected-failure restoration recur across both. A distinct
+receiving job can wake the candidate when a portable contract would change an
+implementation or review decision. Until then, each artifact's source,
+focused tests, and README retain the instruction authority.

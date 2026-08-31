@@ -16,8 +16,9 @@ description: Coordinates bounded technical vantages around a consequential imple
 ## Fit and attention
 
 - **Useful when:** Mechanism, failure semantics, state transition, reader behavior, and artifact authority can each change the answer.
-- **Poor fit when:** One direct source reading or one already-scoped repair establishes the complete result.
+- **Direct route when:** One source reading or one already-scoped repair establishes the complete result.
 - **Smallest useful dose:** Two genuinely distinct vantages plus one synthesis; add another vantage only when it can change the selected guarantee or receiver.
+- **Candidate rotation:** Select only pressures that can change the route: state and concurrency, interruption and recovery, portability and platform, authority and publication, or behavior and test evidence.
 - **Foregrounds:** Operation-level guarantees, protocol-level guarantees, recovery states, evidence reach, and transfer conditions.
 - **May under-attend:** Product priority and human-held policy choices unless the receiving task names them.
 - **Material result:** A decision that an implementer can test and a reviewer can bound.
@@ -30,6 +31,10 @@ description: Coordinates bounded technical vantages around a consequential imple
 Name each vantage for the mechanism, state, or evidence boundary it examines.
 A platform enters the name when that platform contract owns the behavior under
 inspection.
+
+Rotate attention across these boundaries. Each vantage stays attached to an
+artifact question, named evidence, and a decision it can change; one
+collaborator may carry several vantages in sequence.
 
 ### Rule: Each vantage returns a decision-changing observation
 
@@ -59,6 +64,32 @@ documentation establishes platform contracts. Local fault injection,
 concurrency checks, or delivery observations establish only the environment
 and states they actually exercise.
 
+### Rule: Code and tests form one convergence pair
+
+For a code-bearing decision, source identifies the mechanism and reachable
+states; focused tests identify executable observations, acceptance semantics,
+and materially distinct cases. Map each current code-bearing guarantee to both
+surfaces. Other guarantees retain their named documentation, platform,
+delivery, policy, or human-held evidence owner. For a proposed successor, name
+both the mechanism and its planned observation while implementation evidence
+remains pending.
+
+The smallest useful test makes the named mechanism observable by
+distinguishing it from a plausible alternative. Force overlap when claiming
+concurrent work, derive expected digests through an independent oracle, and
+seed prior accepted state before fault injection when claiming state
+preservation. Each return names the exercised actors, state, and environment
+alongside the adjacent guarantee that remains open.
+
+When they change the decision, carry the smallest exact source excerpt with
+path and lines plus the focused test or command and normalized result. The
+excerpt illustrates the mechanism; the observation establishes only its
+exercised actors, state, and environment.
+
+When a code-bearing guarantee changes, align its source mechanism and focused
+observation. Route a missing observation to acceptance work and a missing
+mechanism to source work.
+
 ### Rule: The return remains supportive and actionable
 
 Lead with the strongest shared route. Present each architectural lesson as a
@@ -70,12 +101,12 @@ implementation or review check easier to retrieve.
 
 1. **Name the decision:** State the desired system behavior and the consequence that makes the choice material.
 2. **Map the uncertainty:** Identify the two to four independent questions that could change the architecture.
-3. **Assign bounded vantages:** Give each vantage one question, named evidence, an observable return, and a stopping event. Parallel sub-agents may carry these vantages when available; direct analysis remains a complete route.
-4. **Reconstruct current guarantees:** Read source, tests, version standing, and the nearest publication or delivery owner before evaluating successors.
+3. **Rotate bounded attention:** Give each selected pressure one question, named evidence, an observable return, and a stopping event. One collaborator may rotate through them; parallel sub-agents are optional.
+4. **Reconstruct current guarantees:** For code-bearing work, read source and focused tests as one convergence pair. Map each code-bearing claim to the mechanism that creates it and the observation that establishes it; route other guarantees to their named evidence owner, then read version standing and the nearest publication or delivery owner.
 5. **Compare architectures:** For each viable option, name the exact guarantee, portability and complexity cost, recovery behavior, and adjacent guarantee requiring its own evidence.
-6. **Synthesize:** Calibrate attractive claims to the mechanism and evidence that establish them, select the smallest fitting architecture, and preserve a materially different option only when a named condition would activate it.
-7. **Define acceptance:** Name focused behavior checks, error-state observations, version or source-authority movement, and the next receiver.
-8. **Release:** Return to implementation, an Issue, or a held-open decision once another vantage would leave the route unchanged.
+6. **Synthesize:** Calibrate each current claim to its fitting evidence owner. For a code-bearing claim, align source mechanism and test observation; select a proposed guarantee when both its mechanism and planned observation are explicit. Preserve a materially different option only when a named condition would activate it.
+7. **Define acceptance:** Give each selected guarantee one proportionate observation or named decision signal, then name error-state evidence, version or source-authority movement, and the next receiver.
+8. **Release:** Return one synthesis to implementation, an Issue, or a held-open decision when the selected guarantee, fitting evidence owner and observation, evidence limit, and next receiver are legible and another eligible pressure would leave them unchanged. For code-bearing work, these include the source owner and focused check.
 
 ## Scenario: A local simplification changes freshness
 
@@ -96,7 +127,9 @@ coordination, rollback, or crash recovery enters scope.
 
 ## Completion
 
-The review completes when the current guarantees, selected operating model,
-most-effective architecture, acceptance observations, evidence limits, and
-next receiver are legible. A changed platform, threat model, source version,
-runtime observation, or human-held requirement can reopen convergence.
+The review completes when each code-bearing selected guarantee has a legible
+source mechanism and proportionate test observation or planned observation,
+other guarantees retain their fitting evidence owners, and the operating
+model, evidence limits, and next receiver are legible. A changed mechanism,
+test observation, platform, threat model, source version, runtime observation,
+or human-held requirement can reopen convergence.
