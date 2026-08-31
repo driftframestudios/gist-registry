@@ -42,7 +42,7 @@ recovery, and test architecture. Review calibrated the current promotion
 guarantee to one injected `OSError` restoration case under cooperative
 single-writer use, preserved `0.1.0` at that demonstrated boundary, formed an
 [exact excerpt companion derived from `0.1.0`](snippets/document-evidence-core-patterns/README.md)
-and two [provisional collaboration skills](.agents/skills/README.md). The
+and the initial [provisional collaboration skills](.agents/skills/README.md). The
 accepted `0.1.1` successor and its immutable tag carry the stronger source and
 tests. A matching exact companion selects the observed-effect and
 caller-retained recovery relationships from that accepted source. Source

@@ -63,12 +63,12 @@ standing is established.
 
 ## Re-entry
 
-`document-evidence-core-patterns@0.1.0` is accepted; PR #14 observed its ordered
-files at `docs@2b996cc`. The accepted
-`document-evidence-extraction@0.1.1` source and immutable tag now support the
-exact `document-evidence-core-patterns@0.1.1` companion. The consolidated Pages
-runbook is the next publication receiver; each optional Gist remains a
-human-held exact-version decision. A later Issue branch can select replay-safe specimen
-custody and transactional outbox as the first independent domain companion,
-then test whether the current shared schema still describes a materially
-different runnable artifact while shared fields remain evidence-earned.
+Both document-evidence versions and their exact companions are accepted with
+immutable tags. The consolidated projection at `docs@a6554f6` carries the four
+registered artifacts and has one complete signed-out byte-parity observation;
+each optional Gist remains a human-held exact-version decision. Issue #17
+records the first-coordinate skill route. Issue #18 is the next active receiver
+for replay-safe specimen custody and transactional outbox as the first
+independent domain companion, then tests whether the current shared schema
+still describes a materially different runnable artifact while shared fields
+remain evidence-earned.
