@@ -8,19 +8,20 @@ source, focused checks, and granted tool authority retain those roles.
 The first two skills formed from the registry's initial lived collaboration:
 the [document-evidence artifact](../../snippets/document-evidence-extraction/README.md)
 received several bounded architectural vantages, its demonstrated guarantee
-became more precise, and accepted `0.1.0` bytes stayed intact. Issue #2 carries
-`0.1.1` as the registry successor for the materially stronger source and test
-architecture while its manifest records candidate maturity. An [exact excerpt
-companion](../../snippets/document-evidence-core-patterns/README.md) makes the
-accepted `0.1.0` boundary easier to inspect; a matching `0.1.1` companion
-begins from accepted successor source after review and merge. The skills
-preserve that collaboration shape for another team while technical authority
-stays with the artifact's source and focused tests.
+became more precise, and accepted `0.1.0` bytes stayed intact. The immutable
+`0.1.1` successor now carries the materially stronger source and test
+architecture while its manifest records candidate maturity. [Exact excerpt
+companions](../../snippets/document-evidence-core-patterns/README.md) make both
+accepted behavior boundaries easier to inspect: `0.1.0` carries the initial
+same-byte and single-failure patterns, while `0.1.1` carries observed-effect
+reconciliation and caller-retained recovery. The skills preserve that
+collaboration shape for another team while technical authority stays with the
+artifact's source and focused tests.
 
 | Skill | Use it when | Standing |
 | --- | --- | --- |
 | [Architecture convergence vantages](architecture-convergence-vantages/SKILL.md) | Several plausible technical changes create different concurrency, recovery, portability, evidence, or publication guarantees | Initial instruction-only skill; formed from the first natural filesystem-promotion and exact-excerpt convergence use |
-| [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Initial instruction-only skill; first receiving use is the document-evidence promotion successor |
+| [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Initial instruction-only skill; first receiving use reached the accepted document-evidence `0.1.1` source and exact companion |
 
 “Vantage” means a bounded attention instrument specified by a question,
 evidence source, observable return, and stopping event. Mechanism-centered

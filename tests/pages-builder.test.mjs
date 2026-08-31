@@ -50,6 +50,12 @@ const expectedPaths = [
   "snippets/document-evidence-core-patterns/0.1.0/gist/20-recovery-aware-promotion.md",
   "snippets/document-evidence-core-patterns/0.1.0/index.html",
   "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
+  "snippets/document-evidence-core-patterns/0.1.1/README.md",
+  "snippets/document-evidence-core-patterns/0.1.1/gist/00-README.md",
+  "snippets/document-evidence-core-patterns/0.1.1/gist/10-observed-effect-reconciliation.md",
+  "snippets/document-evidence-core-patterns/0.1.1/gist/20-caller-retained-recovery.md",
+  "snippets/document-evidence-core-patterns/0.1.1/index.html",
+  "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
   "snippets/document-evidence-core-patterns/README.md",
   "snippets/document-evidence-core-patterns/index.html",
   "snippets/document-evidence-extraction/0.1.0/.python-version",
@@ -173,6 +179,12 @@ test("schemas, observations, registry data, and artifact representations preserv
         "snippets/document-evidence-core-patterns/0.1.0/gist/10-same-byte-capture.md",
       ),
     );
+    const authoredSuccessorCompanion = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/document-evidence-core-patterns/0.1.1/gist/10-observed-effect-reconciliation.md",
+      ),
+    );
 
     assert.deepEqual(
       await readFile(resolve(output, "schemas/0.1.0/registry-artifact.schema.json")),
@@ -210,6 +222,15 @@ test("schemas, observations, registry data, and artifact representations preserv
       ),
       authoredCompanion,
     );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/document-evidence-core-patterns/0.1.1/gist/10-observed-effect-reconciliation.md",
+        ),
+      ),
+      authoredSuccessorCompanion,
+    );
   });
 });
 
@@ -217,8 +238,12 @@ test("public discovery routes carry collaboration and continuation orientation",
   await withProjection(async ({ output }) => {
     const root = await readFile(resolve(output, "index.html"), "utf8");
     const artifacts = await readFile(resolve(output, "snippets/index.html"), "utf8");
-    const family = await readFile(
+    const extractionFamily = await readFile(
       resolve(output, "snippets/document-evidence-extraction/index.html"),
+      "utf8",
+    );
+    const companionFamily = await readFile(
+      resolve(output, "snippets/document-evidence-core-patterns/index.html"),
       "utf8",
     );
 
@@ -226,10 +251,15 @@ test("public discovery routes carry collaboration and continuation orientation",
     assert.match(root, /every accepted coordinate remains available/u);
     assert.match(artifacts, /the next useful collaboration/u);
     assert.match(
-      family,
+      extractionFamily,
       /href="\/snippets\/document-evidence-extraction\/README\.md"/u,
     );
-    assert.match(family, /The family README names its purpose and current continuation/u);
+    assert.match(
+      extractionFamily,
+      /The family README names its purpose and current continuation/u,
+    );
+    assert.match(companionFamily, /document-evidence-core-patterns\/0\.1\.0\//u);
+    assert.match(companionFamily, /document-evidence-core-patterns\/0\.1\.1\//u);
   });
 });
 
