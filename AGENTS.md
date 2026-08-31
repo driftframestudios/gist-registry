@@ -41,6 +41,9 @@ small real artifact over an abstract inventory.
   and house annotations with their authorized owners.
 - A Gist is public material when created, including an unlisted Gist. Human
   review retains the publication decision.
+- Before a source or publication handoff, prove the pinned secret-material
+  reader with a fresh canary and observe the exact tree, index, history, or
+  generated artifact in scope. Keep findings in private local triage.
 
 ## Use registry skills when their trigger fits
 
@@ -50,6 +53,8 @@ Registry-specific skills live in [`.agents/skills/`](.agents/skills/):
   when plausible changes create materially different guarantees;
 - `probe-bearing-exemplar-formation` carries one source-grounded technical
   question into a public-safe first registry coordinate with focused evidence;
+- `secret-boundary-inspection` produces a canary-proven, scope-explicit
+  secret-material receipt or a private finding route; and
 - `versioned-exemplar-successor` carries a material strengthening into new
   runnable source and exact derived teaching surfaces while accepted versions
   remain immutable.

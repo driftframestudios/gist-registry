@@ -67,8 +67,8 @@ Both document-evidence versions and their exact companions are accepted with
 immutable tags. The consolidated projection at `docs@a6554f6` carries the four
 registered artifacts and has one complete signed-out byte-parity observation;
 each optional Gist remains a human-held exact-version decision. Issue #17
-records the first-coordinate skill route. Issue #18 is the next active receiver
-for replay-safe specimen custody and transactional outbox as the first
-independent domain companion, then tests whether the current shared schema
-still describes a materially different runnable artifact while shared fields
-remain evidence-earned.
+records the first-coordinate skill route, and Issue #20 records its
+secret-material handoff boundary. Issue #18 is the current content receiver for
+replay-safe specimen custody and transactional outbox, then tests whether the
+current shared schema still describes a materially different runnable artifact
+while shared fields remain evidence-earned.

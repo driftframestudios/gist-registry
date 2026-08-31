@@ -1,7 +1,8 @@
 # Current planning terrain
 
-Current work follows the remaining settlement owners, the first-coordinate
-formation record, and its prepared content receiver:
+Current work follows the remaining settlement owners, the accepted
+first-coordinate and secret-boundary records, and the current content
+receiver:
 
 - #1 — canonical registry core and first document-evidence artifact;
 - #3 — collaboration ground, branch topology, and `main` to `docs`
@@ -10,7 +11,9 @@ formation record, and its prepared content receiver:
 - #6 — observed media type and hosted-byte evidence after the first signed-out
   request;
 - #17 — probe-bearing exemplar formation for first reviewable registry
-  coordinates; and
+  coordinates;
+- #20 — canary-proven secret-material inspection for source and publication
+  handoffs; and
 - #18 — replay-safe specimen custody and transactional outbox as the first
   independent domain companion.
 
@@ -47,6 +50,7 @@ completed from the exact `docs` commit, and the signed-out observation at
 byte equality for all 71 addressable files. Issue #2 settled after this source,
 identity, delivery, and evidence route completed.
 
-Issue #17 records the first-coordinate formation route introduced through its
-accepted change. Issue #18 is the next active content path and begins from a
-fresh short-lived branch.
+Issue #17 records the accepted first-coordinate formation route. Issue #20
+records the repository-owned source and publication secret-material boundary.
+Issue #18 is the current content path and their first independent
+artifact-formation receiver.
