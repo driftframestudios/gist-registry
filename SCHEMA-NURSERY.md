@@ -73,3 +73,22 @@ An artifact may add information without waiting for a universal schema field.
 When two materially different artifacts use the same extension and a reader or
 check depends on it, that observation is evidence for promotion. This keeps the
 schema responsive to how coding and collaboration actually change.
+
+## Second artifact observation
+
+`document-evidence-core-patterns@0.1.0` exercises the envelope as a compact
+`code_excerpt` whose runnable evidence belongs to a related comprehensive
+artifact. The current shape accommodates that difference through the open
+`artifactKind`, optional `execution`, source-supported technical standing,
+and a `derived_from` relationship.
+
+Its ordered Gist candidate stays in `extensions.gistCandidate`. One real use
+is enough to make the publication handoff inspectable and remains modest
+evidence for a shared field. A later materially different companion can reveal
+whether Gist selection belongs in a kind-specific profile, an appendable
+projection record, or the existing relationship family.
+
+The next runnable domain companion is the useful pressure point. It can test
+whether the shared identity, use, provenance, representation, execution,
+boundary, and recovery layers continue to describe a different technical
+artifact while kind-specific behavior stays local.

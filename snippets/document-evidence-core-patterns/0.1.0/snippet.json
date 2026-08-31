@@ -1,0 +1,171 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "document-evidence-core-patterns",
+  "version": "0.1.0",
+  "artifactKind": "code_excerpt",
+  "standing": "candidate",
+  "title": "Document evidence core patterns",
+  "summary": "Two source-mapped Python excerpts show same-byte evidence capture and ownership-aware output promotion with recovery.",
+  "use": {
+    "practicalQuestion": "Which compact mechanics help a document-evidence workflow preserve a reliable relationship among source identity, review standing, output authority, and recovery?",
+    "changedAbility": "A collaborator can inspect and reuse two consequential integrity patterns while resolving every excerpt to its complete implementation and focused test.",
+    "readers": [
+      "AI collaborators implementing or reviewing document-processing workflows",
+      "Technical practitioners evaluating evidence identity and recovery behavior"
+    ],
+    "capabilities": [
+      "bind_source_bytes",
+      "limit_source_locator",
+      "preserve_review_standing",
+      "promote_owned_output",
+      "recover_prior_output"
+    ]
+  },
+  "provenance": {
+    "class": "derived_code_excerpt",
+    "description": "Exact source-mapped teaching selections from the complete document-evidence-extraction 0.1.0 representative reconstruction.",
+    "temporalScope": "The selected implementation was accepted in document-evidence-extraction 0.1.0; this companion packages its current public teaching surface.",
+    "sourceKeys": [
+      "gist-registry:document-evidence-extraction-0-1-0"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "source_supported",
+    "basis": "The complete artifact's focused tests exercise same-byte capture, locator-safe serialization, output ownership, failed-promotion rollback, and retained-backup behavior. This excerpt companion maps to those symbols and tests and carries a source-supported reading standing."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/document-evidence-core-patterns/0.1.0",
+  "representations": [
+    {
+      "role": "orientation",
+      "path": "README.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "manifest",
+      "path": "snippet.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "gist_orientation",
+      "path": "gist/00-README.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "gist_excerpt",
+      "path": "gist/10-same-byte-capture.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "gist_excerpt",
+      "path": "gist/20-recovery-aware-promotion.md",
+      "declaredMediaType": "text/markdown"
+    }
+  ],
+  "practice": {
+    "reviewQuestions": [
+      "Do observation and digest resolve to one immutable byte snapshot?",
+      "Which source label can travel while the authorized local locator stays with its owner?",
+      "What proves that a target belongs to this workflow before replacement?",
+      "Which accepted state is restored when promotion stops?"
+    ],
+    "decisionRules": [
+      "Read a source once, then route that snapshot to observation and digesting.",
+      "Carry a locator-safe source name and an explicit review standing with captured evidence.",
+      "Recognize owned output before replacement and preserve prior accepted state through promotion."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "One source snapshot, one digest identity, visible review standing, owned output, and recoverable promotion."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "A pipeline that re-reads mutable input or replaces a directory whose ownership and recovery route are unspecified."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Source-byte reuse, locator-safe serialization, exact sentinels, explicit replacement, and rollback preserve the inspectable route."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Form one immutable byte snapshot before observation, then compute source identity from that same value."
+      },
+      {
+        "mode": "review",
+        "instruction": "Trace the captured name, digest, engine configuration, source class, and review standing together."
+      },
+      {
+        "mode": "recovery",
+        "instruction": "Promote only recognized output and keep prior accepted state available until successor promotion settles."
+      }
+    ],
+    "codeExemplarGranularity": "Two compact source-and-test selections with one orientation file and exact links to the complete runnable package.",
+    "complexityAndAllocation": "Runtime remains with the complete artifact; the companion reuses verified implementation evidence and packages the smallest decision-changing reading surface."
+  },
+  "boundaries": {
+    "evidence": "The complete artifact checks establish current behavior for the selected symbols and committed fixtures; this companion establishes their source map and portable reading surface.",
+    "trust": "The selections inherit source-supported standing from a representative reconstruction and its focused tests. The complete artifact remains the runnable evidence owner.",
+    "transfer": "A receiver selects its own source classification, review policy, storage authority, filesystem semantics, concurrency model, and operational recovery observation before adaptation."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A copied excerpt can lose the surrounding validation and authority model supplied by the complete artifact.",
+      "A mutable Gist head can move beyond the exact registry version selected for review."
+    ],
+    "recoveryMoves": [
+      "Return to the complete versioned artifact and its focused tests before implementation transfer.",
+      "Resolve a published Gist through its exact revision and content digests while retaining this registry version as authority."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "derived_from",
+      "target": "document-evidence-extraction@0.1.0",
+      "reason": "The comprehensive artifact owns the selected implementation, focused tests, fixtures, dependency lock, and recovery behavior."
+    },
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:implementation-track",
+      "reason": "A nearby accessible excerpt can help a Debrief reader decide whether to open the comprehensive implementation."
+    }
+  ],
+  "extensions": {
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        "gist/00-README.md",
+        "gist/10-same-byte-capture.md",
+        "gist/20-recovery-aware-promotion.md"
+      ],
+      "sourceSelections": [
+        {
+          "companionPath": "gist/10-same-byte-capture.md",
+          "sourcePath": "snippets/document-evidence-extraction/0.1.0/src/document_evidence.py",
+          "testPath": "snippets/document-evidence-extraction/0.1.0/tests/test_document_evidence.py",
+          "symbols": [
+            "collect_ocr"
+          ],
+          "tests": [
+            "test_collection_records_source_identity_without_local_directory"
+          ]
+        },
+        {
+          "companionPath": "gist/20-recovery-aware-promotion.md",
+          "sourcePath": "snippets/document-evidence-extraction/0.1.0/src/document_evidence.py",
+          "testPath": "snippets/document-evidence-extraction/0.1.0/tests/test_document_evidence.py",
+          "symbols": [
+            "_require_owned_output_directory",
+            "_promote_staged_directory"
+          ],
+          "tests": [
+            "test_output_authority_and_recovery_preserve_prior_state"
+          ]
+        }
+      ]
+    }
+  }
+}

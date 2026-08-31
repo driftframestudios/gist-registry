@@ -44,6 +44,14 @@ const expectedPaths = [
   "schemas/gist-registry/delivery-observation/0.1.0/index.html",
   "schemas/gist-registry/index.html",
   "sitemap.xml",
+  "snippets/document-evidence-core-patterns/0.1.0/README.md",
+  "snippets/document-evidence-core-patterns/0.1.0/gist/00-README.md",
+  "snippets/document-evidence-core-patterns/0.1.0/gist/10-same-byte-capture.md",
+  "snippets/document-evidence-core-patterns/0.1.0/gist/20-recovery-aware-promotion.md",
+  "snippets/document-evidence-core-patterns/0.1.0/index.html",
+  "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
+  "snippets/document-evidence-core-patterns/README.md",
+  "snippets/document-evidence-core-patterns/index.html",
   "snippets/document-evidence-extraction/0.1.0/.python-version",
   "snippets/document-evidence-extraction/0.1.0/README.md",
   "snippets/document-evidence-extraction/0.1.0/config/stopwords-en.txt",
@@ -142,6 +150,12 @@ test("schemas, observations, registry data, and artifact representations preserv
         "snippets/document-evidence-extraction/0.1.0/src/document_evidence.py",
       ),
     );
+    const authoredCompanion = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/document-evidence-core-patterns/0.1.0/gist/10-same-byte-capture.md",
+      ),
+    );
 
     assert.deepEqual(
       await readFile(resolve(output, "schemas/0.1.0/registry-artifact.schema.json")),
@@ -169,6 +183,15 @@ test("schemas, observations, registry data, and artifact representations preserv
         ),
       ),
       authoredSource,
+    );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/document-evidence-core-patterns/0.1.0/gist/10-same-byte-capture.md",
+        ),
+      ),
+      authoredCompanion,
     );
   });
 });

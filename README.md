@@ -38,6 +38,22 @@ captured synthetic OCR fixture keeps the ordinary test route independent of a
 machine-specific Tesseract installation, while the image-intake command remains
 available for a local OCR observation.
 
+The first compact Debrief companion selects two source-and-test relationships
+from that implementation:
+
+- canonical ID: `document-evidence-core-patterns`;
+- current version: `0.1.0`;
+- source:
+  [`snippets/document-evidence-core-patterns/0.1.0/`](snippets/document-evidence-core-patterns/0.1.0/README.md);
+  and
+- Gist-ready file set:
+  [`gist/`](snippets/document-evidence-core-patterns/0.1.0/gist/).
+
+The companion is a `code_excerpt`: it makes same-byte capture and
+recovery-aware promotion compact enough for a nearby visitor reading while
+the complete artifact remains the runnable evidence owner. Human review
+retains the optional Gist publication decision.
+
 ## Canonical path and projection roles
 
 ```text
