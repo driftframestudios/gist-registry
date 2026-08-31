@@ -6,7 +6,7 @@ retains mutation, publication, deployment, and external-action authority.
 
 | Runbook | Use it when | Standing |
 | --- | --- | --- |
-| [Gist Registry source collaboration cycle](gist-registry-source-collaboration-cycle.v0.1.md) | One active Issue should move from current truth through canonical source, proportionate evidence, and a reviewable pull request | Working; Issue #18 is its first live traversal |
+| [Gist Registry source collaboration cycle](gist-registry-source-collaboration-cycle.v0.1.md) | One active Issue should move from current truth through canonical source, proportionate evidence, and a reviewable pull request | Exercised through Issue #18 / PR #22 and an independent fresh-context source cycle |
 | [Gist Registry Pages publication](gist-registry-pages-publication.v0.1.md) | An accepted `main` revision is ready for deterministic `docs` projection, GitHub Pages reception, and ordinary-domain byte observation | Exercised through two real publication cycles and an independent cold-start traversal |
 
 `working`, `exercised`, `stable`, and `retired` describe observed maturity.
