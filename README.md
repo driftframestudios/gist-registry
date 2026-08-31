@@ -163,6 +163,73 @@ changing the artifact or schema whose delivery was observed. Collaboration
 records, workflows, histories, caches, and local environments remain outside
 the projection allowlist.
 
+## Secret-material inspection
+
+The repository-owned secret-material route pins Betterleaks 1.8.1 and verifies
+each supported release archive and extracted executable against tracked
+SHA-256 values. It also requires a regular tool-owned receipt whose release
+identity matches that evidence. Every observation begins with a fresh,
+non-issued provider-shaped canary and requires its expected fully redacted
+finding before interpreting the requested scope.
+
+Install or verify the reader, exercise its focused contract, and observe the
+complete local boundary with:
+
+```sh
+npm run security:secrets:install
+npm run test:secret-material
+npm run security:secrets
+```
+
+The complete command observes the working tree, exact staged index when it
+differs from `HEAD`, and diff-visible history across all locally available refs
+in a complete clone. Focused routes support one collaboration phase at a time:
+
+```sh
+npm run security:secrets:canary
+npm run security:secrets:tree
+npm run security:secrets:staged
+npm run security:secrets:history
+npm run security:secrets:artifact -- path/inside/repository
+npm run security:secrets:pages
+```
+
+Tree inspection includes tracked, untracked, ignored, and generated
+publication material. Repository internals, the verified `.tools/` reader,
+installed `node_modules` and `.venv` trees, Python bytecode and Ruff caches,
+and `.artifacts/uv-cache/` rest as tool or dependency owners.
+`.artifacts/pages/` remains authored projection output and receives the named
+Pages observation after generation.
+
+Provider validation stays off so candidate material remains within the local
+process boundary. Raw scanner reports and diagnostics remain ephemeral; the
+command returns only an allowlisted rule identifier, finding ordinal, numeric
+line, validated abbreviated commit, engine version, configuration digest,
+canary result, and named-scope disposition. [`.betterleaks.toml`](.betterleaks.toml)
+is the one reviewed exception surface.
+
+A clean receipt establishes zero unresolved matches for the printed engine,
+configuration, canary, and scope. Unfetched refs, GitHub-native prose, dangling
+objects, some historical binary bytes, credential validity, runtime
+authorization, and publication approval retain their fitting observations. A
+finding pauses the affected handoff and stays in private local triage; a
+plausibly live credential returns first to its provider owner for revocation or
+rotation. The observation assumes a quiescent handoff; local-host compromise
+or a concurrently mutating filesystem and index would require a separately
+designed immutable-snapshot boundary.
+
+The local route also observes ignored workstation material and generated Pages
+bytes. A separate read-only pull-request receiver exercises checked-out source
+and locally available history. Checkout uses GitHub's short-lived read token,
+then removes it from Git configuration before scanner execution. The scanner
+steps inject no configured repository or environment secrets, and the wrapper
+supplies an allowlisted process environment. The receiver uses the
+repository-owned installer, complete checkout history, concurrency
+cancellation, and a four-minute ceiling. The
+[`secret-boundary-inspection` skill](.agents/skills/secret-boundary-inspection/SKILL.md)
+and [Pages publication runbook](.agents/runbooks/gist-registry-pages-publication.v0.1.md)
+carry the same scope and handoff boundary.
+
 Run the document-evidence analysis directly with the same lock:
 
 ```sh
@@ -181,14 +248,15 @@ recovery messages. Each delivery observation names the source and projection
 coordinates it actually examined; later hosted behavior remains a new evidence
 question.
 
-The pull-request workflow runs this same route in one cancellable job with an
-eight-minute timeout and no schedule. Workflow YAML cannot enforce a monthly
-minute ceiling: the repository's [Actions usage
-view](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time)
+The path-filtered Registry checks workflow runs this same route in one
+cancellable job with an eight-minute timeout and no schedule. The independent
+secret-material receiver runs for every pull request with its own four-minute
+ceiling. Workflow YAML cannot enforce a monthly minute ceiling: the
+repository's [Actions usage view](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time)
 is the source for keeping this repository at or below 300 minutes per month,
-and account billing controls remain with the repository owner. Path filtering,
-concurrency cancellation, and the per-job timeout keep each requested
-observation small.
+and account billing controls remain with the repository owner. Path filtering
+where it fits, concurrency cancellation, and per-job timeouts keep each
+requested observation small.
 
 ## Source and evidence boundary
 

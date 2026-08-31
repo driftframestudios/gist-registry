@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - ".betterleaks.toml"
+      - ".gitignore"
       - ".github/workflows/registry-checks.yml"
       - "AI-DATA-USE.md"
       - "AUTHORS"

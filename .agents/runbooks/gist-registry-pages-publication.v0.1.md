@@ -60,7 +60,7 @@ worktree receives a separate clean worktree or a `friction` return.
 | Branch relationship | [`BRANCHING.md`](../../BRANCHING.md) | Defines `main`, `docs`, `res`, review branches, and immutable-tag roles |
 | Projection membership and bytes | [`tools/build-pages.mjs`](../../tools/build-pages.mjs) | Builds and checks the allowlisted Pages tree |
 | Manual hosted parity | [`tools/observe-pages.mjs`](../../tools/observe-pages.mjs) | Compares ordinary HTTPS responses with the generated projection |
-| Secret-material observation | The canary-proven implementation named by the active publication packet | Establishes its named generated-artifact scope before handoff |
+| Secret-material observation | [`tools/scan-secret-material.mjs`](../../tools/scan-secret-material.mjs), [`.betterleaks.toml`](../../.betterleaks.toml), and `npm run security:secrets:pages` | Establishes the generated Pages scope after a fresh canary proves the pinned reader and sanitized output |
 | Builder-owned public branch | `docs` | Records one exact projection of one accepted `main` revision |
 | Delivery interpretation | [Issue #6](https://github.com/driftframestudios/gist-registry/issues/6) or its successor | Owns durable response observations and declared-versus-observed media interpretation |
 | Pages, domain, DNS, and certificate settings | Human or repository-administrator receiver | Owns configuration and activation decisions |
@@ -105,14 +105,20 @@ source pull request or owning Issue. Keep the current `docs` tip unchanged.
 
 ### Phase 2 — Observe the publication candidate's secret boundary
 
-**Action mode:** `observation_only` through the canary-proven scanner receiver
-named by the active task. Scanner installation or configuration change needs
-its own granted packet.
+**Action mode:** `observation_only` through the repository-owned scanner.
+Installation verifies the accepted pinned reader; a version, checksum,
+configuration, or wrapper change returns to its own Issue branch.
 
 Observe the exact `.artifacts/pages/` directory. Require the selected route to
 name its engine version, configuration identity, fresh synthetic-canary result,
 artifact scope, and normalized finding disposition. The canary passes only
 when detection and redaction both succeed.
+
+```sh
+npm run security:secrets:install
+npm run test:secret-material
+npm run security:secrets:pages
+```
 
 **Checkpoint:** A clean named-artifact result establishes zero unresolved
 matches from the selected detector, version, configuration, and exact

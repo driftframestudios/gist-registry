@@ -1,0 +1,23 @@
+title = "Gist Registry secret-material boundary"
+betterleaksMinVersion = "1.8.1"
+
+# Authored, untracked, ignored, and generated publication material remains in
+# scope. Repository internals, the pinned scanner cache, installed dependency
+# trees, and observed Python tool caches rest. In particular,
+# `.artifacts/pages/` remains visible while `.artifacts/uv-cache/` rests.
+prefilter = '''
+filter.matchesAny(get(attributes, "path", ""), [
+  `^\.git(?:[\\/]|$)`,
+  `^\.tools(?:[\\/]|$)`,
+  `(?:^|[\\/])node_modules(?:[\\/]|$)`,
+  `(?:^|[\\/])\.venv(?:[\\/]|$)`,
+  `(?:^|[\\/])\.ruff_cache(?:[\\/]|$)`,
+  `(?:^|[\\/])__pycache__(?:[\\/]|$)`,
+  `^\.artifacts[\\/]uv-cache(?:[\\/]|$)`
+])
+'''
+
+# This registry begins without finding suppressions. A future exception belongs
+# here with one exact path, rule or value shape, rationale, and focused test.
+[extend]
+useDefault = true
