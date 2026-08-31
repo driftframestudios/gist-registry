@@ -11,16 +11,47 @@ markers, open GitHub delivery, and person-directed retrieval posture.
 
 # Gist Registry
 
-Gist Registry is a rigorous nursery for durable technical material: code
-samples, Practitioner Probes, self-contained prototypes, authentic domain
+Gist Registry is a working nursery for technical material worth continuing:
+code samples, Practitioner Probes, self-contained prototypes, authentic domain
 exemplars, experiments, runbooks, loop-bearing members, and harness material.
-It gives each accepted artifact a versioned canonical source before an
-optional GitHub Gist or another visitor surface projects it.
+A small, legible first form can gain architectural vantages, focused tests,
+failure-and-recovery evidence, and exact teaching companions through
+constructive human–AI collaboration. Each accepted version remains a stable
+coordinate; successors carry what later collaboration learns.
 
-The repository is a private authored-source and collaboration carrier. Its
-selected public boundary is an allowlisted GitHub Pages projection on `docs`.
-Repository visibility, Pages activation, and creation of a public or unlisted
-Gist remain separate human-held publication decisions.
+The repository is the private authored-source and collaboration carrier.
+Apache-2.0 governs its code; its selected public boundary is the allowlisted
+GitHub Pages projection on `docs`. Repository visibility, Pages activation,
+and creation of a public or unlisted Gist are distinct publication actions.
+Human review retains those decisions.
+
+## Why this repository exists
+
+For engineers moving toward principal practice, the important unit is larger
+than a code block. The surrounding decision surface makes the operating model,
+ownership boundary, failure behavior, evidence reach, and next receiver
+visible. A useful first form can arrive while architectural questions are
+still open; bounded collaboration then strengthens what the evidence supports
+and routes material behavior changes into a successor version.
+
+The first lived case began with
+[`document-evidence-extraction@0.1.0`](snippets/document-evidence-extraction/0.1.0/README.md)
+and a focused question about filesystem replacement. Several architectural
+vantages separated symlink behavior, writer coordination, interruption
+recovery, and test architecture. Review calibrated the current promotion
+guarantee to one injected `OSError` restoration case under cooperative
+single-writer use, preserved `0.1.0` at that demonstrated boundary, formed an
+[exact excerpt companion derived from `0.1.0`](snippets/document-evidence-core-patterns/README.md)
+and two [provisional collaboration skills](.agents/skills/README.md), and named
+`0.1.1` as the receiver for stronger behavior. This
+preservation–calibration–successor route is the registry's exemplar pattern.
+
+Family READMEs describe continuation as `seeded`, `interstitial`, or `settled`.
+The standing is an orientation coordinate: it names the current form and the
+next useful collaboration. Acceptance, publication, and technical evidence
+retain their separate owners. Every standing remains available for execution,
+study, adaptation, forks, and successors. The [current planning
+terrain](planning/README.md) names the live receivers and re-entry route.
 
 ## Start with the first vertical slice
 
@@ -49,10 +80,11 @@ from that implementation:
 - Gist-ready file set:
   [`gist/`](snippets/document-evidence-core-patterns/0.1.0/gist/).
 
-The companion is a `code_excerpt`: it makes same-byte capture and
-recovery-aware promotion compact enough for a nearby visitor reading while
-the complete artifact remains the runnable evidence owner. Human review
-retains the optional Gist publication decision.
+The companion is a `code_excerpt`: it makes same-byte capture and the current
+staged-promotion path with its demonstrated single-failure restoration case
+compact enough for a nearby visitor reading. The complete artifact remains the
+runnable evidence owner. Human review retains the optional Gist publication
+decision.
 
 ## Canonical path and projection roles
 
@@ -69,11 +101,12 @@ snippets/
         └── expected/
 ```
 
-The versioned repository path owns editable meaning, tests, and history. The
-generated `docs` branch carries a public retrieval projection with the accepted
-semantic ID, version, source coordinate, and digest. An optional Gist is a
-convenience projection of the same accepted artifact; repository source
-authority remains explicit.
+The versioned repository path owns canonical meaning, tests, evidence, and
+history. Accepted coordinates remain unchanged; material behavior advances
+form a successor. The generated `docs` branch carries a public retrieval
+projection with the accepted semantic ID, version, source coordinate, and
+digest. An optional Gist is a convenience projection of the same accepted
+artifact; repository source authority remains explicit.
 
 `main` is the accepted authored source. The reserved `docs` branch receives
 only output from [`tools/build-pages.mjs`](tools/build-pages.mjs) for

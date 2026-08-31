@@ -1,7 +1,8 @@
 # Debrief implementation-companion ledger
 
-Issue #11 owns this revisable inventory. It follows observed source and visitor
-needs rather than fixing a universal catalog in advance.
+Issue #11 established this revisable inventory and closed when its first exact
+excerpt companion was accepted. The ledger continues to follow observed source
+and visitor needs while each new implementation receives its own Issue owner.
 
 ## Selection standard
 
@@ -29,7 +30,7 @@ authority.
 
 | Priority | Companion | Visitor placement | Source standing | Public adaptation | Next receiver |
 | --- | --- | --- | --- | --- | --- |
-| P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Complete verified artifact and focused tests | Exact public-safe excerpts are ready | Human Gist-publication decision |
+| P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Accepted exact excerpt companion at the `0.1.0` evidence boundary | Exact public-safe excerpts are ready | Human Gist-publication decision; a future `0.1.1` excerpt follows its accepted runnable successor |
 | P0 | Replay-safe specimen custody and transactional outbox | LIMS/ELN replatforming, Implementation custody section | Strong runnable synthetic implementation with tests and receipts | Select the smallest custody/replay seam while retaining tenant, actor, concurrency, event, and outbox invariants | New Issue branch, then human technical and publication review |
 | P0 | Instrument ingress with raw-byte integrity and quarantine | LIMS/ELN replatforming, Implementation ingress section | Strong runnable synthetic implementation | Package raw-digest continuity, mapping, identity conflict, and accepted/quarantined fixtures | Domain-companion implementation branch |
 | P0 | Migration reconciliation and approval-bound cutover | LIMS/ELN replatforming, migration and cutover section | Strong runnable synthetic implementation | Package distinct reconciliation results with quality, operations, restore, and approval evidence | Domain-companion implementation branch |
@@ -62,9 +63,11 @@ standing is established.
 
 ## Re-entry
 
-After `document-evidence-core-patterns@0.1.0` is accepted, the human receiver
-can publish its ordered files as an exact Gist. The following Issue branch
-should select replay-safe specimen custody and transactional outbox as the
-first domain companion, then test whether the current shared schema still
-describes a materially different runnable artifact while shared fields remain
-evidence-earned.
+`document-evidence-core-patterns@0.1.0` is accepted and its ordered files are
+ready for the human-held exact Gist publication decision. Issue #2 is the
+source receiver for the runnable `document-evidence-extraction@0.1.1`
+successor; its matching exact excerpt follows after acceptance. A later Issue
+branch can select replay-safe specimen custody and transactional outbox as the
+first independent domain companion, then test whether the current shared
+schema still describes a materially different runnable artifact while shared
+fields remain evidence-earned.
