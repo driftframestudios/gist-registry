@@ -35,10 +35,12 @@ description: Carries an authorized Gist Registry task from current-truth reconst
   surface.
 - **Interactions:** `probe-bearing-exemplar-formation` owns a first artifact
   coordinate; `architecture-convergence-vantages` selects among materially
-  different guarantees; `versioned-exemplar-successor` owns a material change
-  to an accepted coordinate; `secret-boundary-inspection` owns source and
-  publication handoff inspection. Accepted Pages work transfers to the Gist
-  Registry Pages publication runbook.
+  different guarantees; `transaction-boundary-evidence-mapping` maps aligned
+  effects, publication, replay, and recovery for a selected operation;
+  `versioned-exemplar-successor` owns a material change to an accepted
+  coordinate; `secret-boundary-inspection` owns source and publication handoff
+  inspection. Accepted Pages work transfers to the Gist Registry Pages
+  publication runbook.
 - **Rest or release when:** A protected decision, unresolved architecture,
   source-authority boundary, or environment capability can materially change
   the result. Return the last verified coordinate and observable release event.
@@ -108,8 +110,8 @@ receipt.
 2. Select one primary Issue and classify its route.
 3. Prepare only the toolchain required by the selected checks.
 4. Create or restore one short-lived Issue branch from the verified base.
-5. Load the artifact-formation, successor, convergence, or secret-boundary
-   skill whose distinct receiving job applies.
+5. Load the artifact-formation, successor, convergence, transaction-boundary,
+   or secret-boundary skill whose distinct receiving job applies.
 6. Change the canonical source owner and preserve accepted exact-version bytes.
 7. Reconcile schema-nursery and generated-projection effects while `docs`
    remains at its accepted coordinate.

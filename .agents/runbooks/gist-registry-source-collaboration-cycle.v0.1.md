@@ -1,6 +1,6 @@
 ---
 title: Gist Registry source collaboration cycle
-version: 0.1.1
+version: 0.1.2
 status: exercised
 audience: ai_collaborators
 source_band: public_possible
@@ -103,6 +103,7 @@ task grant supply later implementation authority.
 | First artifact coordinate | One public-safe source-grounded question has a named reader and fitting evidence | `probe-bearing-exemplar-formation` |
 | Accepted-version successor | Material behavior, guarantee, or evidence changes accepted exact-version bytes | `versioned-exemplar-successor` |
 | Architecture convergence | Several mechanisms create materially different concurrency, recovery, portability, evidence, or publication guarantees | `architecture-convergence-vantages` |
+| Transaction boundary | Several effects form one result, or identity, freshness, retry, interruption, or response loss changes the correct outcome | `transaction-boundary-evidence-mapping` |
 | Schema experiment | A real artifact or reader exposes new shared-contract pressure | `SCHEMA-NURSERY.md`, using `extensions` first |
 | Repository tooling or prose | One current owner can receive the bounded change directly | The owning script, test, instruction, or document |
 | Held route | A human choice, source fact, environment capability, or external dependency can materially change the result | Named receiver and observable release event |
@@ -368,5 +369,9 @@ one sufficient receiving surface, and a direct continuation. Issue #18 and PR
 #22 supplied the first complete traversal. The next fresh-context source cycle
 recovered their accepted coordinate, evidence boundary, issue-chain relation,
 and post-acceptance receivers from current repository ground. Version 0.1.1
-records the resulting acceptance-reconciliation refinement; the exercised
-runbook now rests until another natural use exposes a routing or recovery gap.
+records the resulting acceptance-reconciliation refinement. The accepted
+migration-cutover cycle then exposed a reusable operation-mapping route across
+identity, aligned effects, publication, replay, and recovery; version 0.1.2
+adds that route while retaining the exercised phases and authority boundaries.
+The runbook now rests until another natural use exposes a routing or recovery
+gap.
