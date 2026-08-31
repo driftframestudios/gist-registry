@@ -32,8 +32,8 @@ authority.
 | --- | --- | --- | --- | --- | --- |
 | P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Accepted exact companions at the `0.1.0` and `0.1.1` evidence boundaries; PR #14 observed `0.1.0` at `docs@2b996cc` | Ordered public-safe excerpts are ready | Consolidated Pages projection, then the human-held exact Gist-publication decision |
 | P0 | Replay-safe specimen custody and transactional outbox | LIMS/ELN replatforming, Implementation custody section | Accepted `specimen-custody-outbox@0.1.0` at `main@4aeb88a` with candidate maturity and verified in-memory transfer, replay, reconciliation, collision, concurrency, and fault evidence | Canonical README, source, test, fixture, and expected result form a proposed Gist publication set and reading order | Immutable tag and consolidated Pages projection through #3; optional Gist publication remains human-held |
-| P0 | Instrument ingress with raw-byte integrity and quarantine | LIMS/ELN replatforming, Implementation ingress section | `instrument-ingress-integrity@0.1.0` candidate formed through #24 with focused byte, identity, mapping, replay, concurrency, and fault evidence | Canonical README, source, test, two raw fixtures, and expected aggregate form a proposed Gist publication set and reading order | Review and source acceptance through #24; immutable tag and Pages projection through #3; optional Gist publication remains human-held |
-| P0 | Migration reconciliation and approval-bound cutover | LIMS/ELN replatforming, migration and cutover section | Strong runnable synthetic implementation | Package distinct reconciliation results with quality, operations, restore, and approval evidence | Domain-companion implementation branch |
+| P0 | Instrument ingress with raw-byte integrity and quarantine | LIMS/ELN replatforming, Implementation ingress section | Accepted `instrument-ingress-integrity@0.1.0` at `main@4596bb6` with candidate maturity and verified byte, identity, mapping, replay, concurrency, and fault evidence | Canonical README, source, test, two raw fixtures, and expected aggregate form a proposed Gist publication set and reading order | Consolidated Pages projection through #3; optional Gist publication remains human-held |
+| P0 | Migration reconciliation and approval-bound cutover | LIMS/ELN replatforming, migration and cutover section | `migration-reconciliation-cutover@0.1.0` candidate formed through #27 with focused generation, reconciliation, restore, request, approval, activation, replay, and publication-recovery evidence | Canonical README, source, test, reconciled and returned-for-evidence fixtures, and expected aggregate form a proposed Gist publication set and reading order | Review and source acceptance through #27; immutable tag and Pages projection through #3; optional Gist publication remains human-held |
 | P1 | Offline inspection record and ordered resumable envelope | Distributed inspection, record and return sections | Detailed TypeScript-shaped specification | Add executable duplicate-delivery, exhaustion, parking, and human-confirmed extraction cases | Synthetic implementation and test receiver |
 | P1 | Inspectable initiative-range calculation | Initiative costing, “How the range is formed” | Working single-file calculator | Extract a pure calculation module with lower/upper-bound fixtures | Calculator extraction branch |
 | P1 | Coverage-ledger orchestration packet | Research atlas, beside the compact start packet | Strong research sequence and bounded packet | Add a machine-readable ledger, finite worker returns, coverage/disconfirmation review, and settlement condition | Multi-agent orchestration example branch |
@@ -69,8 +69,10 @@ registered artifacts and has one complete signed-out byte-parity observation;
 each optional Gist remains a human-held exact-version decision. Issue #17
 records the first-coordinate skill route, and Issue #20 records its
 secret-material handoff boundary. Issue #18 accepted replay-safe specimen
-custody and transactional outbox through pull request #22. Its fifth
-registered candidate tests the shared schema across a materially different
-runnable kind while shared fields remain evidence-earned. Issue #3 carries
-each consolidated Pages publication receipt, and every optional Gist remains
-a human-held exact-version decision.
+custody and transactional outbox through pull request #22, and Issue #24
+accepted raw-byte-preserving instrument ingress through pull request #25.
+Issue #27 is the current migration reconciliation and cutover-decision source
+receiver. These domain exemplars exercise the shared schema across materially
+different mechanisms while shared fields remain evidence-earned. Issue #3
+carries each consolidated Pages publication receipt, and every optional Gist
+remains a human-held exact-version decision.

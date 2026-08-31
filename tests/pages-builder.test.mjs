@@ -106,6 +106,19 @@ const expectedPaths = [
   "snippets/instrument-ingress-integrity/0.1.0/uv.lock",
   "snippets/instrument-ingress-integrity/README.md",
   "snippets/instrument-ingress-integrity/index.html",
+  "snippets/migration-reconciliation-cutover/0.1.0/.python-version",
+  "snippets/migration-reconciliation-cutover/0.1.0/README.md",
+  "snippets/migration-reconciliation-cutover/0.1.0/expected/cutover-evaluation.json",
+  "snippets/migration-reconciliation-cutover/0.1.0/fixtures/reconciled-cutover.json",
+  "snippets/migration-reconciliation-cutover/0.1.0/fixtures/returned-for-evidence.json",
+  "snippets/migration-reconciliation-cutover/0.1.0/index.html",
+  "snippets/migration-reconciliation-cutover/0.1.0/pyproject.toml",
+  "snippets/migration-reconciliation-cutover/0.1.0/snippet.json",
+  "snippets/migration-reconciliation-cutover/0.1.0/src/migration_cutover.py",
+  "snippets/migration-reconciliation-cutover/0.1.0/tests/test_migration_cutover.py",
+  "snippets/migration-reconciliation-cutover/0.1.0/uv.lock",
+  "snippets/migration-reconciliation-cutover/README.md",
+  "snippets/migration-reconciliation-cutover/index.html",
   "snippets/specimen-custody-outbox/0.1.0/.python-version",
   "snippets/specimen-custody-outbox/0.1.0/README.md",
   "snippets/specimen-custody-outbox/0.1.0/expected/transfer-commit.json",
@@ -222,6 +235,12 @@ test("schemas, observations, registry data, and artifact representations preserv
         "snippets/instrument-ingress-integrity/0.1.0/src/instrument_ingress.py",
       ),
     );
+    const authoredMigrationSource = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/migration-reconciliation-cutover/0.1.0/src/migration_cutover.py",
+      ),
+    );
 
     assert.deepEqual(
       await readFile(resolve(output, "schemas/0.1.0/registry-artifact.schema.json")),
@@ -286,6 +305,15 @@ test("schemas, observations, registry data, and artifact representations preserv
       ),
       authoredIngressSource,
     );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/migration-reconciliation-cutover/0.1.0/src/migration_cutover.py",
+        ),
+      ),
+      authoredMigrationSource,
+    );
   });
 });
 
@@ -303,6 +331,10 @@ test("public discovery routes carry collaboration and continuation orientation",
     );
     const custodyFamily = await readFile(
       resolve(output, "snippets/specimen-custody-outbox/index.html"),
+      "utf8",
+    );
+    const migrationFamily = await readFile(
+      resolve(output, "snippets/migration-reconciliation-cutover/index.html"),
       "utf8",
     );
 
@@ -324,6 +356,11 @@ test("public discovery routes carry collaboration and continuation orientation",
       /href="\/snippets\/specimen-custody-outbox\/README\.md"/u,
     );
     assert.match(custodyFamily, /specimen-custody-outbox\/0\.1\.0\//u);
+    assert.match(
+      migrationFamily,
+      /href="\/snippets\/migration-reconciliation-cutover\/README\.md"/u,
+    );
+    assert.match(migrationFamily, /migration-reconciliation-cutover\/0\.1\.0\//u);
   });
 });
 

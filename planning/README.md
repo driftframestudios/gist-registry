@@ -7,8 +7,8 @@ Current live receivers are:
 - #4 — exact-version schema projection and retrieval settlement; and
 - #6 — the exercised delivery-observation model and its conditional receiver
   for a response change that affects interpretation or recovery; and
-- #24 — raw-byte-preserving instrument ingress, identity convergence, and
-  reviewable quarantine as the next domain companion.
+- #27 — exact migration reconciliation and approval-bound process-local
+  cutover activation as the next domain companion.
 
 Accepted path records supply this terrain:
 
@@ -17,7 +17,9 @@ Accepted path records supply this terrain:
 - #20 — accepted canary-proven secret-material inspection for source and
   publication handoffs; and
 - #18 — accepted replay-safe specimen custody and transactional outbox as the
-  first independent domain companion.
+  first independent domain companion; and
+- #24 — accepted raw-byte-preserving instrument ingress, identity convergence,
+  and reviewable quarantine as the second domain companion.
 
 [`SCHEMA-NURSERY.md`](../SCHEMA-NURSERY.md) is the current design note for the
 schema attempt. The exercised `main` to `docs` route now carries deterministic
@@ -66,10 +68,20 @@ Pages build `1186340421` completed from that exact projection, and the
 signed-out observation at `2026-08-31T19:11:48.646Z` established byte equality
 for all 83 addressable routes.
 
-Issue #24 now receives `instrument-ingress-integrity@0.1.0`. Its first form
-keeps transport delivery, logical acquisition, and raw content identity
-distinct while a process-local copy-on-write repository aligns exact source
-bytes, strict scientific mapping, replay, concurrency, and quarantine
-evidence. After source acceptance, Issue #3 receives its immutable tag and
-consolidated Pages projection. Optional Gist publication remains a separate
-human-held exact-version action.
+Issue #24 and pull request #25 accepted
+`instrument-ingress-integrity@0.1.0` at
+`main@4596bb6e78d753357738f81633970077147942cd`. The immutable
+`snippet/instrument-ingress-integrity/v0.1.0` tag resolves to that merge. Issue
+#3 receives its consolidated Pages projection, while optional Gist publication
+remains a separate human-held exact-version action.
+
+Issue #27 now receives `migration-reconciliation-cutover@0.1.0`. Its first
+form reconciles immutable active and candidate generations, binds a supplied
+approval record whose declared approver differs from the actor to the exact
+request and restore evidence, and publishes active, prior,
+approval-consumption, receipt, and event state through
+one process-local state change. Authenticated approval, observed restore,
+domain acceptance, durable execution, and production recovery retain their
+named evidence owners. After source acceptance, Issue #3 receives its
+immutable tag and consolidated Pages projection. Optional Gist publication
+remains a separate human-held exact-version action.

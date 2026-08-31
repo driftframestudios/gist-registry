@@ -8,6 +8,7 @@ import { checkRegistry } from "../tools/check-registry.mjs";
 import { checkSchemaNursery, validateArtifactEnvelope } from "../tools/check-schema.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
+const registryPath = resolve(repositoryRoot, "registry.json");
 const manifestPath = resolve(
   repositoryRoot,
   "snippets/document-evidence-extraction/0.1.0/snippet.json",
@@ -19,6 +20,10 @@ const custodyManifestPath = resolve(
 const ingressManifestPath = resolve(
   repositoryRoot,
   "snippets/instrument-ingress-integrity/0.1.0/snippet.json",
+);
+const migrationManifestPath = resolve(
+  repositoryRoot,
+  "snippets/migration-reconciliation-cutover/0.1.0/snippet.json",
 );
 const companionManifestPaths = new Map([
   [
@@ -112,23 +117,18 @@ function definitionBlock(source, name) {
 }
 
 test("the real registry resolves all exact versions and their representations", async () => {
+  const registry = await json(registryPath);
   const result = await checkRegistry({ root: repositoryRoot });
-  assert.deepEqual(result, { artifactCount: 6 });
+  assert.deepEqual(result, { artifactCount: registry.entries.length });
 });
 
-test("the first schema attempt validates six artifacts across three kinds", async () => {
+test("the first schema attempt validates every registered exact version", async () => {
+  const registry = await json(registryPath);
   const result = await checkSchemaNursery();
   assert.deepEqual(result, {
     schemaVersion: "0.1.0",
-    artifactCount: 6,
-    instances: [
-      "document-evidence-extraction@0.1.0",
-      "document-evidence-extraction@0.1.1",
-      "document-evidence-core-patterns@0.1.0",
-      "document-evidence-core-patterns@0.1.1",
-      "specimen-custody-outbox@0.1.0",
-      "instrument-ingress-integrity@0.1.0",
-    ],
+    artifactCount: registry.entries.length,
+    instances: registry.entries.map(entry => entry.semanticId + "@" + entry.version),
   });
 });
 
@@ -210,6 +210,70 @@ test("instrument ingress keeps schema pressure local and proposes canonical sour
     );
   }
   assert.equal(manifest.extensions.sourceCoordinates.length, 2);
+  assert.deepEqual(
+    manifest.relationships.map(relationship => relationship.type),
+    ["receiver", "schema_nursery"],
+  );
+});
+
+test("migration cutover keeps activation evidence and authority owners distinct", async () => {
+  const manifest = await json(migrationManifestPath);
+  const declaredPaths = new Set(
+    manifest.representations.map(representation => representation.path),
+  );
+  const gistFiles = manifest.extensions.gistCandidate.orderedFiles;
+
+  assert.equal(manifest.artifactKind, "domain_exemplar");
+  assert.equal(manifest.standing, "candidate");
+  assert.equal(manifest.technicalVeracity.status, "verified");
+  assert.deepEqual(manifest.execution.fixtures, [
+    "fixtures/reconciled-cutover.json",
+    "fixtures/returned-for-evidence.json",
+  ]);
+  assert.deepEqual(manifest.execution.expectedResults, [
+    "expected/cutover-evaluation.json",
+  ]);
+  assert.deepEqual(gistFiles, [
+    { publicationName: "00-README.md", sourcePath: "README.md" },
+    {
+      publicationName: "migration_cutover.py",
+      sourcePath: "src/migration_cutover.py",
+    },
+    {
+      publicationName: "test_migration_cutover.py",
+      sourcePath: "tests/test_migration_cutover.py",
+    },
+    {
+      publicationName: "reconciled-cutover.json",
+      sourcePath: "fixtures/reconciled-cutover.json",
+    },
+    {
+      publicationName: "returned-for-evidence.json",
+      sourcePath: "fixtures/returned-for-evidence.json",
+    },
+    {
+      publicationName: "cutover-evaluation.json",
+      sourcePath: "expected/cutover-evaluation.json",
+    },
+  ]);
+  for (const file of gistFiles) {
+    assert.ok(
+      declaredPaths.has(file.sourcePath),
+      file.sourcePath + " must be one declared canonical representation",
+    );
+  }
+  assert.deepEqual(manifest.extensions.sourceCoordinates, [
+    {
+      sourceKey: "urn:source-key:lims-eln-program-specification",
+      capturedRevision: "23e6ea973f6bd5cc5caa46de10aed589816af9b5",
+      role: "semantic_contract",
+    },
+    {
+      sourceKey: "urn:source-key:lims-eln-enterprise-implementation",
+      capturedRevision: "ac33876eba2dff1ad803d9a7175c1e956036c226",
+      role: "runnable_ancestry",
+    },
+  ]);
   assert.deepEqual(
     manifest.relationships.map(relationship => relationship.type),
     ["receiver", "schema_nursery"],

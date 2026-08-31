@@ -1,0 +1,53 @@
+{
+  "requestId": "cutover-request-reconciliation-019",
+  "approvalId": "cutover-approval-reconciliation-019",
+  "candidateGeneration": {
+    "generationId": "candidate-generation-019",
+    "records": [
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "specimen:control-042",
+        "revision": 7,
+        "payload": {
+          "status": "released",
+          "measurement": {
+            "value": "7.40",
+            "unit": "pH"
+          },
+          "tags": [
+            "quality-control",
+            "release"
+          ]
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      },
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "sample:synthetic-200",
+        "revision": 4,
+        "payload": {
+          "status": "amended",
+          "assay": "synthetic-panel-a",
+          "replicates": [
+            "replicate-1",
+            "replicate-2"
+          ]
+        },
+        "artifactSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "tenantId": "tenant-south",
+        "canonicalIdentity": "batch:synthetic-bx-99",
+        "revision": 1,
+        "payload": {
+          "status": "review-pending",
+          "lineage": {
+            "source": "synthetic-import-05",
+            "method": "bounded-reconciliation"
+          }
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      }
+    ]
+  }
+}
