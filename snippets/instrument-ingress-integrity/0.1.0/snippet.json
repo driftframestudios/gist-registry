@@ -1,0 +1,188 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "instrument-ingress-integrity",
+  "version": "0.1.0",
+  "artifactKind": "domain_exemplar",
+  "standing": "candidate",
+  "title": "Instrument ingress integrity and reviewable quarantine",
+  "summary": "A realistic synthetic conformance model preserves exact instrument bytes while distinct delivery, acquisition, normalization, replay, and quarantine identities converge through one process-local state publication.",
+  "use": {
+    "practicalQuestion": "How can an instrument-ingress boundary preserve exact source bytes while keeping transport delivery, logical acquisition, scientific normalization, replay, and quarantine decisions legible under retries and concurrent arrivals?",
+    "changedAbility": "A collaborator can inspect immutable byte capture, distinct delivery and acquisition fingerprints, strict parsing and scientific mapping, exact replay, duplicate convergence, typed conflict evidence, and atomic process-local recovery in runnable Python.",
+    "readers": [
+      "AI collaborators implementing or reviewing retry-bearing scientific ingress",
+      "Technical practitioners evaluating raw-artifact lineage and quarantine boundaries"
+    ],
+    "capabilities": [
+      "preserve_raw_byte_lineage",
+      "separate_delivery_acquisition_content_identity",
+      "normalize_scientific_measurement",
+      "replay_recorded_disposition",
+      "retain_reviewable_quarantine",
+      "preserve_pre_call_state"
+    ]
+  },
+  "provenance": {
+    "class": "authorized_source_synthesis",
+    "description": "A separately reviewed public adaptation synthesized from authorized LIMS/ELN specification, implementation, and visitor-reading roles using realistic synthetic identities, payloads, and scientific mappings.",
+    "temporalScope": "This version is a current portable Python 3.12 conformance exemplar. Durable object storage, database coordination, configured instruments, and accountable scientific acceptance remain named later implementation and evidence routes.",
+    "sourceKeys": [
+      "authorized-source:lims-eln-program-specification",
+      "authorized-source:lims-eln-enterprise-implementation",
+      "authorized-source:lims-eln-site-reading",
+      "realistic-synthetic:instrument-ingress"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Twenty-one focused tests establish immutable construction-time byte capture, independently reproducible raw and lineage-bound normalized-document digests, exact accepted and quarantined replay, delivery and acquisition identity comparison, tenant-scoped raw retention, duplicate convergence, explicit parser and mapper contract binding, returned-lineage validation, constructive quarantine resubmission, typed digest-collision handling, parser and mapper fault propagation, every detached commit interruption, reentrant protection, and coordinated process-local convergence in the resolved Python 3.12 environment."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/instrument-ingress-integrity/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "runtime_version", "path": ".python-version", "declaredMediaType": "text/plain"},
+    {"role": "dependency_definition", "path": "pyproject.toml", "declaredMediaType": "application/toml"},
+    {"role": "dependency_lock", "path": "uv.lock", "declaredMediaType": "application/toml"},
+    {"role": "source", "path": "src/instrument_ingress.py", "declaredMediaType": "text/x-python"},
+    {"role": "test", "path": "tests/test_instrument_ingress.py", "declaredMediaType": "text/x-python"},
+    {"role": "fixture", "path": "fixtures/accepted-measurement.json", "declaredMediaType": "application/json"},
+    {"role": "fixture", "path": "fixtures/quarantined-measurement.json", "declaredMediaType": "application/json"},
+    {"role": "expected_contract", "path": "expected/ingress-run.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Python >=3.12,<3.13; standard-library runtime behavior",
+    "dependenciesPath": "uv.lock",
+    "commands": [
+      {
+        "name": "run",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/instrument-ingress-integrity/0.1.0 --locked python snippets/instrument-ingress-integrity/0.1.0/src/instrument_ingress.py snippets/instrument-ingress-integrity/0.1.0/fixtures/accepted-measurement.json snippets/instrument-ingress-integrity/0.1.0/fixtures/quarantined-measurement.json",
+        "establishes": "Produces one deterministic aggregate with accepted, quarantined, replay, retained-byte, and repository-count observations."
+      },
+      {
+        "name": "test",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/instrument-ingress-integrity/0.1.0 --locked python -m unittest discover -s snippets/instrument-ingress-integrity/0.1.0/tests -v",
+        "establishes": "Exercises byte capture, scientific mapping, identity, replay, quarantine, collision, atomic publication, and process-local concurrency boundaries."
+      },
+      {
+        "name": "lint",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/instrument-ingress-integrity/0.1.0 --locked ruff check snippets/instrument-ingress-integrity/0.1.0/src snippets/instrument-ingress-integrity/0.1.0/tests",
+        "establishes": "Returns focused Python syntax, import, correctness, modernization, and maintainability diagnostics."
+      }
+    ],
+    "fixtures": [
+      "fixtures/accepted-measurement.json",
+      "fixtures/quarantined-measurement.json"
+    ],
+    "expectedResults": ["expected/ingress-run.json"],
+    "environmentNotes": [
+      "The runtime uses the Python standard library; the development lock supplies Ruff for the repository lint route.",
+      "The process-local lock protects one repository instance while parsing and mapping remain outside the lock and identity is checked again before publication.",
+      "The fixtures contain realistic synthetic measurements and fixed aware times supply deterministic comparison."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Which identity describes transport, logical occurrence, and exact content?",
+      "Can a reviewer independently reproduce both source-byte and lineage-bound normalized-document digests?",
+      "Does every accepted, duplicate, and quarantined retry preserve one established acquisition meaning?",
+      "Which guarantees move to the durable object-store and inbox receiver?"
+    ],
+    "decisionRules": [
+      "Snapshot source bytes before hashing, parsing, mapping, or repository work.",
+      "Bind delivery and acquisition meaning through separate canonical fingerprints while content addressing retains exact bytes.",
+      "Return an existing delivery receipt before repeating parser or mapper work when complete meaning agrees.",
+      "Publish raw capture, receipt, acquisition, and outcome through one detached candidate state change."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "One exact raw capture, one recorded delivery meaning, and one logical acquisition outcome whose scientific projection remains linked to source bytes."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "A single identity for transport, logical occurrence, and content makes retries, equal-byte acquisitions, and changed source meaning indistinguishable."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Immutable capture, separate fingerprints, strict typed decisions, a second identity check, tenant-scoped content addressing, and one publication point preserve the demonstrated boundary."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Capture bytes once, keep delivery, acquisition, and content identity distinct, and publish every related outcome through one unit of work."
+      },
+      {
+        "mode": "review",
+        "instruction": "Compare accepted, quarantined, exact retry, duplicate delivery, changed meaning, collision, concurrent, and injected-fault paths against the complete snapshot."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Carry the demonstrated identities into governed raw-object storage and one durable inbox, measurement, and quarantine transaction."
+      }
+    ],
+    "codeExemplarGranularity": "One self-contained scientific ingress boundary with two realistic synthetic raw fixtures, deterministic expected output, focused unit tests, and a named durable receiver.",
+    "complexityAndAllocation": "Parsing and mapping run outside the lock; identity is rechecked before publication. Copy-on-write maps trade bounded allocation for one legible commit point, exact rollback-by-discard, and stable process-local snapshots."
+  },
+  "boundaries": {
+    "evidence": "The checks establish immutable byte capture, strict scientific projection, semantic replay and reconciliation, one-instance concurrent convergence, and rollback-by-discard under injected Python events in the resolved environment.",
+    "trust": "The fixtures and identities are realistic synthetic material. SHA-256 supplies content comparison while configured instrument authenticity, signer identity, and scientific approval remain separate trust mechanisms.",
+    "transfer": "A durable receiver selects governed object storage, database and isolation model, atomic object-and-inbox protocol, restart recovery, cross-process coordination, assay-bound unit and precision profiles, quarantine-resolution workflow, operational authority, and accountable acceptance before adaptation."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A delivery identity can arrive with changed source meaning after its receipt is recorded.",
+      "A logical acquisition can arrive through another delivery with changed byte or semantic meaning.",
+      "Malformed or scientifically unsupported content can reach the instrument boundary.",
+      "Parser, mapper, or candidate publication work can stop before the accepted state changes.",
+      "A content-digest implementation can report one digest for distinct captured bytes."
+    ],
+    "recoveryMoves": [
+      "Return changed fields and both fingerprints for transport-level review while preserving the recorded delivery.",
+      "Retain the incoming raw capture and typed conflict quarantine while preserving the established acquisition.",
+      "Preserve exact bytes with a stable reason, bounded details, and constructive mapping or source-repair route.",
+      "Discard the candidate maps and retry from the same immutable delivery when appropriate.",
+      "Preserve accepted state and route both byte fingerprints to cryptographic-integrity review."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:implementation-track",
+      "reason": "A reviewed LIMS/ELN Implementation companion can route technical readers to this complete raw-byte-preserving ingress and quarantine model."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "This second runnable domain exemplar tests the shared envelope and supplies a third materially different Gist-candidate experiment without requiring schema promotion."
+    }
+  ],
+  "extensions": {
+    "sourceCoordinates": [
+      {
+        "sourceKey": "urn:source-key:lims-eln-program-specification",
+        "capturedRevision": "23e6ea973f6bd5cc5caa46de10aed589816af9b5",
+        "role": "semantic_contract"
+      },
+      {
+        "sourceKey": "urn:source-key:lims-eln-enterprise-implementation",
+        "capturedRevision": "ac33876eba2dff1ad803d9a7175c1e956036c226",
+        "role": "runnable_ancestry"
+      }
+    ],
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        {"publicationName": "00-README.md", "sourcePath": "README.md"},
+        {"publicationName": "instrument_ingress.py", "sourcePath": "src/instrument_ingress.py"},
+        {"publicationName": "test_instrument_ingress.py", "sourcePath": "tests/test_instrument_ingress.py"},
+        {"publicationName": "accepted-measurement.json", "sourcePath": "fixtures/accepted-measurement.json"},
+        {"publicationName": "quarantined-measurement.json", "sourcePath": "fixtures/quarantined-measurement.json"},
+        {"publicationName": "ingress-run.json", "sourcePath": "expected/ingress-run.json"}
+      ]
+    }
+  }
+}
