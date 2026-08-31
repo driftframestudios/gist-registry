@@ -56,6 +56,33 @@ These skills are instruction-only affordance surfaces. Natural receiving
 work supplies revision evidence, and direct reasoning remains the fitting route
 when one source reading or scoped repair answers the question.
 
+## Keep continuation lightweight
+
+An artifact-family README may carry one informational continuation block:
+
+- `seeded` means a useful first form exists and is available for collaboration;
+- `interstitial` means the current form is purposefully between collaboration
+  cycles and names one concrete re-entry move; and
+- `settled` means the current coordinate supports its declared use within its
+  stated evidence boundary and can reopen when new evidence changes the job.
+
+Always name the current form. Add one `Re-entry` sentence for `interstitial`.
+These reversible annotations describe how work can continue. Versioned source,
+tests, boundaries, and `technicalVeracity` retain behavior and evidence
+standing; the publication route retains inclusion and authority; branches and
+pull requests show active collaboration. Keep exact-version manifests
+unchanged. Material behavior advances form a successor coordinate while the
+mutable family README points to the current form.
+
+An optional Gist may project the continuation block in its orientation file.
+The exact Gist revision preserves that snapshot; repository source retains
+meaning authority, and a later Gist edit binds to its own source version and
+revision.
+
+Every continuation standing remains available for forks, derivatives, and
+successors. A registered continuation uses the existing relationship surface
+to name the coordinate it extends.
+
 ## Work and return proportionately
 
 Use a short-lived Issue branch from `main`. Run the nearest artifact test plus

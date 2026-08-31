@@ -61,6 +61,14 @@ New mechanism evidence may revise an earlier “retain as written” disposition
 The earlier collaboration remains accurately described at its original
 evidence boundary, while the successor receives the stronger job.
 
+### Rule: Family continuation remains lightweight
+
+The mutable artifact-family README may describe continuation as `seeded`,
+`interstitial`, or `settled`. An interstitial family names one re-entry move.
+Exact-version manifests retain artifact identity and evidence standing. The
+family README owns pause and re-entry context; branches and pull requests show
+active work.
+
 ## Operating sequence
 
 1. **Reconstruct authority:** Confirm branch, accepted tag, source bytes, focused tests, companion mappings, and current projections.
@@ -71,7 +79,8 @@ evidence boundary, while the successor receives the stronger job.
 6. **Add focused observations:** Exercise success, consequential failure, recovery failure, and any concurrency or durability claim the successor makes.
 7. **Derive teaching surfaces:** Select exact source and test bytes, preserve their veracity status, and link to the complete runnable package.
 8. **Validate and receive:** Run the nearest artifact checks and repository suite, review the diff against the prior version, and merge through the Issue branch.
-9. **Project after acceptance:** Create the immutable tag and use the existing Pages or Gist route only when the current task grants that action.
+9. **Update continuation:** Point the family README to the current form and record `interstitial` with one re-entry move or `settled` at the declared boundary.
+10. **Project after acceptance:** Create the immutable tag and use the existing Pages or Gist route only when the current task grants that action.
 
 ## Scenario: A source-supported excerpt reveals a stronger architecture
 
