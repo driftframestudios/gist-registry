@@ -42,6 +42,13 @@
       "artifactKind": "domain_exemplar",
       "manifestPath": "snippets/instrument-ingress-integrity/0.1.0/snippet.json",
       "canonicalPath": "snippets/instrument-ingress-integrity/0.1.0"
+    },
+    {
+      "semanticId": "migration-reconciliation-cutover",
+      "version": "0.1.0",
+      "artifactKind": "domain_exemplar",
+      "manifestPath": "snippets/migration-reconciliation-cutover/0.1.0/snippet.json",
+      "canonicalPath": "snippets/migration-reconciliation-cutover/0.1.0"
     }
   ]
 }

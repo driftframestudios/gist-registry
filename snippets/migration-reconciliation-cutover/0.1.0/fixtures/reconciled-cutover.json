@@ -1,0 +1,173 @@
+{
+  "migrationId": "lims-cutover-synthetic-001",
+  "activeGeneration": {
+    "generationId": "accepted-generation-017",
+    "records": [
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "specimen:control-042",
+        "revision": 7,
+        "payload": {
+          "status": "released",
+          "measurement": {
+            "value": "7.40",
+            "unit": "pH"
+          },
+          "tags": [
+            "quality-control",
+            "release"
+          ]
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      },
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "sample:synthetic-200",
+        "revision": 3,
+        "payload": {
+          "status": "reviewed",
+          "assay": "synthetic-panel-a",
+          "replicates": [
+            "replicate-1",
+            "replicate-2"
+          ]
+        },
+        "artifactSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "tenantId": "tenant-south",
+        "canonicalIdentity": "batch:synthetic-bx-42",
+        "revision": 12,
+        "payload": {
+          "status": "approved",
+          "lineage": {
+            "source": "synthetic-import-04",
+            "method": "bounded-reconciliation"
+          }
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      }
+    ]
+  },
+  "candidateGeneration": {
+    "generationId": "candidate-generation-018",
+    "records": [
+      {
+        "tenantId": "tenant-south",
+        "canonicalIdentity": "batch:synthetic-bx-42",
+        "revision": 12,
+        "payload": {
+          "status": "approved",
+          "lineage": {
+            "source": "synthetic-import-04",
+            "method": "bounded-reconciliation"
+          }
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      },
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "sample:synthetic-200",
+        "revision": 3,
+        "payload": {
+          "status": "reviewed",
+          "assay": "synthetic-panel-a",
+          "replicates": [
+            "replicate-1",
+            "replicate-2"
+          ]
+        },
+        "artifactSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "specimen:control-042",
+        "revision": 7,
+        "payload": {
+          "status": "released",
+          "measurement": {
+            "value": "7.40",
+            "unit": "pH"
+          },
+          "tags": [
+            "quality-control",
+            "release"
+          ]
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      }
+    ]
+  },
+  "restoredGeneration": {
+    "generationId": "restore-rehearsal-017",
+    "records": [
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "specimen:control-042",
+        "revision": 7,
+        "payload": {
+          "status": "released",
+          "measurement": {
+            "value": "7.40",
+            "unit": "pH"
+          },
+          "tags": [
+            "quality-control",
+            "release"
+          ]
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      },
+      {
+        "tenantId": "tenant-north",
+        "canonicalIdentity": "sample:synthetic-200",
+        "revision": 3,
+        "payload": {
+          "status": "reviewed",
+          "assay": "synthetic-panel-a",
+          "replicates": [
+            "replicate-1",
+            "replicate-2"
+          ]
+        },
+        "artifactSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "tenantId": "tenant-south",
+        "canonicalIdentity": "batch:synthetic-bx-42",
+        "revision": 12,
+        "payload": {
+          "status": "approved",
+          "lineage": {
+            "source": "synthetic-import-04",
+            "method": "bounded-reconciliation"
+          }
+        },
+        "artifactSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      }
+    ]
+  },
+  "request": {
+    "requestId": "cutover-request-018",
+    "approvalId": "cutover-approval-018",
+    "actorId": "migration-operator-07",
+    "requestedAt": "2026-08-31T14:30:00+00:00"
+  },
+  "restore": {
+    "restoreId": "restore-observation-017",
+    "observedRtoSeconds": 184.5,
+    "observedRpoSeconds": 0.0,
+    "rtoObjectiveSeconds": 300.0,
+    "rpoObjectiveSeconds": 0.0,
+    "operatorId": "recovery-operator-03",
+    "witnessId": "recovery-witness-11",
+    "completedAt": "2026-08-31T14:10:00+00:00"
+  },
+  "approval": {
+    "approvedBy": "accountable-reviewer-05",
+    "approvedAt": "2026-08-31T14:32:00+00:00",
+    "expiresAt": "2026-08-31T14:45:00+00:00"
+  },
+  "evaluatedAt": "2026-08-31T14:35:00+00:00",
+  "replayedAt": "2026-09-01T09:00:00+00:00"
+}

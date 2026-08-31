@@ -60,7 +60,7 @@ profiles become schemas only after real instances demonstrate their shape.
 
 The current experiment is
 [`schemas/0.1.0/registry-artifact.schema.json`](schemas/0.1.0/registry-artifact.schema.json).
-It is an authored draft identity exercised by six registered versions across
+It is an authored draft identity exercised by the registered versions across
 `code_sample`, `code_excerpt`, and `domain_exemplar`. The Pages builder carries
 its exact bytes at the canonical
 `kindlight.io` path and at the repository-relative path needed by the
@@ -134,3 +134,27 @@ The manifest records `verified` standing for the process-local conformance
 model. Governed raw-object storage, durable inbox alignment, restart behavior,
 cross-process concurrency, configured instrument identity, scientific mapping
 qualification, and accountable acceptance retain separate receivers.
+
+## Fifth artifact observation
+
+`migration-reconciliation-cutover@0.1.0` is the third runnable
+`domain_exemplar`. Strict Python-value admission, structured migration
+identities, epoch compare-and-set staging, lifetime generation-ID consistency,
+complete reconciliation, supplied restore comparison, exact request and
+original-approval replay, and a single process-local activation remain
+artifact-local. The shared identity,
+representation, execution, practice, boundary, recovery, and relationship
+layers continue to describe the artifact without absorbing its transaction
+model.
+
+This artifact supplies a fourth materially different
+`extensions.gistCandidate` use and a second bounded source-coordinate record.
+Those repetitions make the experimental shapes easier to compare. Promotion
+still follows a shared publisher or reader that demonstrates which fields it
+uses and which owner maintains them.
+
+The manifest records `verified` standing for the process-local conformance
+model after its focused source and test evidence passes. Authenticated identity,
+accountable authorization, observed clean restore, durable database execution,
+cross-process coordination, production authority transfer, and operational
+rollback retain their named receiving systems and evidence owners.

@@ -1,0 +1,334 @@
+{
+  "activation": {
+    "candidateFingerprint": null,
+    "changedFields": [],
+    "reasonCode": null,
+    "receipt": {
+      "acceptedGeneration": {
+        "id": "candidate-generation-018",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      "actorId": "migration-operator-07",
+      "approvalFingerprint": "1bbe6f0054c3c965014807d9f28243690a68114d25d9ef393cef2a67701d894c",
+      "approvalId": "cutover-approval-018",
+      "approvedBy": "accountable-reviewer-05",
+      "committedAt": "2026-08-31T14:35:00+00:00",
+      "committedStateEpoch": 2,
+      "eventId": "cutover-event:b9020edb9a0a1c9f28d40807614ef301542ef0629151e6a1527e73f6af5d0355",
+      "migrationId": "lims-cutover-synthetic-001",
+      "operation": {
+        "contract": "migration-cutover-operation/0.1.0",
+        "name": "migration.cutover.activate",
+        "version": "0.1.0"
+      },
+      "priorGeneration": {
+        "id": "accepted-generation-017",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      "priorStateEpoch": 1,
+      "reportSha256": "5ed539e642ba48ded4f1810de94fc47c0dc61d477a4907cd397b0875d38209c1",
+      "requestFingerprint": "9208d24607d83cbf1d03237d37c4e429acd053e4acc2e14057677dd197ce4da2",
+      "requestId": "cutover-request-018",
+      "restoreEvidenceSha256": "322c07ac0c24c93da67b454b9056bc471dc80856a31e0b6717d7299ca3dea25c"
+    },
+    "recordedFingerprint": null,
+    "recovery": "retain the prior generation and use the exact original request-and-approval pair to replay the recorded receipt",
+    "status": "activated"
+  },
+  "approval": {
+    "actorId": "migration-operator-07",
+    "approvalFingerprint": "1bbe6f0054c3c965014807d9f28243690a68114d25d9ef393cef2a67701d894c",
+    "approvalId": "cutover-approval-018",
+    "approvedAt": "2026-08-31T14:32:00+00:00",
+    "approvedBy": "accountable-reviewer-05",
+    "expiresAt": "2026-08-31T14:45:00+00:00",
+    "operation": {
+      "contract": "migration-cutover-operation/0.1.0",
+      "name": "migration.cutover.activate",
+      "version": "0.1.0"
+    },
+    "reportSha256": "5ed539e642ba48ded4f1810de94fc47c0dc61d477a4907cd397b0875d38209c1",
+    "requestFingerprint": "9208d24607d83cbf1d03237d37c4e429acd053e4acc2e14057677dd197ce4da2",
+    "requestId": "cutover-request-018",
+    "revokedAt": null
+  },
+  "event": {
+    "acceptedGenerationId": "candidate-generation-018",
+    "committedAt": "2026-08-31T14:35:00+00:00",
+    "committedStateEpoch": 2,
+    "eventId": "cutover-event:b9020edb9a0a1c9f28d40807614ef301542ef0629151e6a1527e73f6af5d0355",
+    "migrationId": "lims-cutover-synthetic-001",
+    "priorGenerationId": "accepted-generation-017",
+    "receiptSha256": "4603054ffe6275fa2b7db2ac4ca4759d655ff2fd59ce4ec97de8c7124e12df77",
+    "requestId": "cutover-request-018"
+  },
+  "finalState": {
+    "activeGeneration": {
+      "id": "candidate-generation-018",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "candidateGeneration": null,
+    "counts": {
+      "approvalConsumptions": 1,
+      "approvals": 1,
+      "events": 1,
+      "receipts": 1,
+      "requests": 1
+    },
+    "knownGenerations": [
+      {
+        "id": "accepted-generation-017",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      {
+        "id": "candidate-generation-018",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      }
+    ],
+    "priorGenerations": [
+      {
+        "id": "accepted-generation-017",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      }
+    ],
+    "stateEpoch": 2
+  },
+  "reconciliation": {
+    "activeGeneration": {
+      "id": "accepted-generation-017",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "candidateGeneration": {
+      "count": 3,
+      "id": "candidate-generation-018",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "migrationId": "lims-cutover-synthetic-001",
+    "partition": {
+      "divergent": [],
+      "extra": [],
+      "matching": [
+        {
+          "canonicalIdentity": "sample:synthetic-200",
+          "tenantId": "tenant-north"
+        },
+        {
+          "canonicalIdentity": "specimen:control-042",
+          "tenantId": "tenant-north"
+        },
+        {
+          "canonicalIdentity": "batch:synthetic-bx-42",
+          "tenantId": "tenant-south"
+        }
+      ],
+      "missing": []
+    },
+    "phase": "ready_for_approval",
+    "reportContract": "migration-reconciliation-report/0.1.0",
+    "reportSha256": "5ed539e642ba48ded4f1810de94fc47c0dc61d477a4907cd397b0875d38209c1",
+    "sourceGeneration": {
+      "count": 3,
+      "id": "accepted-generation-017",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "stateEpoch": 1
+  },
+  "replay": {
+    "candidateFingerprint": null,
+    "changedFields": [],
+    "reasonCode": null,
+    "receipt": {
+      "acceptedGeneration": {
+        "id": "candidate-generation-018",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      "actorId": "migration-operator-07",
+      "approvalFingerprint": "1bbe6f0054c3c965014807d9f28243690a68114d25d9ef393cef2a67701d894c",
+      "approvalId": "cutover-approval-018",
+      "approvedBy": "accountable-reviewer-05",
+      "committedAt": "2026-08-31T14:35:00+00:00",
+      "committedStateEpoch": 2,
+      "eventId": "cutover-event:b9020edb9a0a1c9f28d40807614ef301542ef0629151e6a1527e73f6af5d0355",
+      "migrationId": "lims-cutover-synthetic-001",
+      "operation": {
+        "contract": "migration-cutover-operation/0.1.0",
+        "name": "migration.cutover.activate",
+        "version": "0.1.0"
+      },
+      "priorGeneration": {
+        "id": "accepted-generation-017",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      "priorStateEpoch": 1,
+      "reportSha256": "5ed539e642ba48ded4f1810de94fc47c0dc61d477a4907cd397b0875d38209c1",
+      "requestFingerprint": "9208d24607d83cbf1d03237d37c4e429acd053e4acc2e14057677dd197ce4da2",
+      "requestId": "cutover-request-018",
+      "restoreEvidenceSha256": "322c07ac0c24c93da67b454b9056bc471dc80856a31e0b6717d7299ca3dea25c"
+    },
+    "recordedFingerprint": null,
+    "recovery": "reuse the recorded cutover receipt",
+    "status": "replayed"
+  },
+  "request": {
+    "actorId": "migration-operator-07",
+    "approvalId": "cutover-approval-018",
+    "candidateGeneration": {
+      "id": "candidate-generation-018",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "expectedActiveGeneration": {
+      "id": "accepted-generation-017",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "expectedStateEpoch": 1,
+    "migrationId": "lims-cutover-synthetic-001",
+    "operation": {
+      "contract": "migration-cutover-operation/0.1.0",
+      "name": "migration.cutover.activate",
+      "version": "0.1.0"
+    },
+    "reportSha256": "5ed539e642ba48ded4f1810de94fc47c0dc61d477a4907cd397b0875d38209c1",
+    "requestFingerprint": "9208d24607d83cbf1d03237d37c4e429acd053e4acc2e14057677dd197ce4da2",
+    "requestId": "cutover-request-018",
+    "requestedAt": "2026-08-31T14:30:00+00:00",
+    "restoreEvidenceSha256": "322c07ac0c24c93da67b454b9056bc471dc80856a31e0b6717d7299ca3dea25c",
+    "sourceGeneration": {
+      "id": "accepted-generation-017",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    }
+  },
+  "restore": {
+    "completedAt": "2026-08-31T14:10:00+00:00",
+    "evidenceSha256": "322c07ac0c24c93da67b454b9056bc471dc80856a31e0b6717d7299ca3dea25c",
+    "objective": {
+      "rpoSeconds": 0.0,
+      "rtoSeconds": 300.0
+    },
+    "observed": {
+      "rpoSeconds": 0.0,
+      "rtoSeconds": 184.5
+    },
+    "operatorId": "recovery-operator-03",
+    "restoreContract": "migration-restore-observation/0.1.0",
+    "restoreId": "restore-observation-017",
+    "restoredGeneration": {
+      "artifactMultiplicity": [
+        {
+          "count": 2,
+          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        },
+        {
+          "count": 1,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "count": 3,
+      "id": "restore-rehearsal-017",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "sourceGeneration": {
+      "artifactMultiplicity": [
+        {
+          "count": 2,
+          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        },
+        {
+          "count": 1,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "count": 3,
+      "id": "accepted-generation-017",
+      "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+    },
+    "verified": true,
+    "witnessId": "recovery-witness-11"
+  },
+  "returnedForEvidence": {
+    "decision": {
+      "candidateFingerprint": null,
+      "changedFields": [],
+      "reasonCode": "report_not_ready",
+      "receipt": null,
+      "recordedFingerprint": null,
+      "recovery": "resolve each missing, divergent, and extra identity, then reconcile again",
+      "status": "return_for_evidence"
+    },
+    "report": {
+      "activeGeneration": {
+        "id": "accepted-generation-017",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      "candidateGeneration": {
+        "count": 3,
+        "id": "candidate-generation-019",
+        "sha256": "238e9abee2472bf6a1bd7135e6f10580d5b7ee845aa93fd2940092e28d85427c"
+      },
+      "migrationId": "lims-cutover-synthetic-001",
+      "partition": {
+        "divergent": [
+          {
+            "canonicalIdentity": "sample:synthetic-200",
+            "tenantId": "tenant-north"
+          }
+        ],
+        "extra": [
+          {
+            "canonicalIdentity": "batch:synthetic-bx-99",
+            "tenantId": "tenant-south"
+          }
+        ],
+        "matching": [
+          {
+            "canonicalIdentity": "specimen:control-042",
+            "tenantId": "tenant-north"
+          }
+        ],
+        "missing": [
+          {
+            "canonicalIdentity": "batch:synthetic-bx-42",
+            "tenantId": "tenant-south"
+          }
+        ]
+      },
+      "phase": "reconciliation_required",
+      "reportContract": "migration-reconciliation-report/0.1.0",
+      "reportSha256": "5a802b29c0ed2e0240a9e16a236aa4c264a649ef51e77afdb0d5f6e37f62b9e9",
+      "sourceGeneration": {
+        "count": 3,
+        "id": "accepted-generation-017",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      "stateEpoch": 1
+    },
+    "state": {
+      "activeGeneration": {
+        "id": "accepted-generation-017",
+        "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+      },
+      "candidateGeneration": {
+        "id": "candidate-generation-019",
+        "sha256": "238e9abee2472bf6a1bd7135e6f10580d5b7ee845aa93fd2940092e28d85427c"
+      },
+      "counts": {
+        "approvalConsumptions": 0,
+        "approvals": 0,
+        "events": 0,
+        "receipts": 0,
+        "requests": 0
+      },
+      "knownGenerations": [
+        {
+          "id": "accepted-generation-017",
+          "sha256": "00e103ef2efa9600a9fc3fe9afc9dfb25a8a5761e9b974bbc7b2a97bbcdb089b"
+        },
+        {
+          "id": "candidate-generation-019",
+          "sha256": "238e9abee2472bf6a1bd7135e6f10580d5b7ee845aa93fd2940092e28d85427c"
+        }
+      ],
+      "priorGenerations": [],
+      "stateEpoch": 1
+    }
+  }
+}
