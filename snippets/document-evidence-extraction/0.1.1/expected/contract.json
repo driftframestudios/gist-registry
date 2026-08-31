@@ -1,0 +1,26 @@
+{
+  "captureVersion": "0.1.0",
+  "workflowVersion": "0.1.1",
+  "sourceCaptureRole": "reviewed_synthetic_fixture",
+  "sourceClass": "realistic_synthetic",
+  "sourceReviewStanding": "reviewed_synthetic_fixture",
+  "termWeightsSha256": "a3b34e64d55a248b056dd1ae49b7ccfdf7125db83361c3f47fd0edfa5db917ae",
+  "combinedTop": [
+    {"term": "review", "weight": 0.11635596},
+    {"term": "not", "weight": 0.10962257},
+    {"term": "stop", "weight": 0.09320149},
+    {"term": "terms", "weight": 0.09320149},
+    {"term": "page", "weight": 0.08670069}
+  ],
+  "topN": 24,
+  "eras": ["2018", "2019"],
+  "retainedNegationTerms": ["no", "not", "without"],
+  "outputs": [
+    {"path": ".document-evidence-output.json", "mediaType": "application/json"},
+    {"path": "term-weights.json", "mediaType": "application/json"},
+    {"path": "word-cloud.png", "mediaType": "image/png"},
+    {"path": "render-metadata.json", "mediaType": "application/json"}
+  ],
+  "ordering": "descending weight with lexical tie-break",
+  "render": {"width": 1200, "height": 720, "seed": 27}
+}

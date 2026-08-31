@@ -1,0 +1,1 @@
+Local OCR converts the synthetic page image into text. The pipeline records the engine version and input digest. No participant names or private endpoints travel with the capture.

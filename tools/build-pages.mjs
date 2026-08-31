@@ -122,6 +122,19 @@ async function writeText(root, relativePath, text, claims) {
   await writeBytes(root, relativePath, Buffer.from(text, "utf8"), claims);
 }
 
+async function writeSharedBytes(root, relativePath, bytes, claims) {
+  const digest = sha256(bytes);
+  if (claims.has(relativePath)) {
+    assert.equal(
+      claims.get(relativePath),
+      digest,
+      relativePath + " must have one shared byte identity",
+    );
+    return;
+  }
+  await writeBytes(root, relativePath, bytes, claims);
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -812,7 +825,7 @@ async function populateProjection({ root, output, sourceSha, sourceBinding }) {
     const family = byFamily.get(artifact.entry.semanticId) ?? [];
     family.push(artifact);
     byFamily.set(artifact.entry.semanticId, family);
-    await writeBytes(
+    await writeSharedBytes(
       output,
       artifact.familyReadmePath,
       artifact.familyReadmeBytes,

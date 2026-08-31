@@ -42,8 +42,11 @@ recovery, and test architecture. Review calibrated the current promotion
 guarantee to one injected `OSError` restoration case under cooperative
 single-writer use, preserved `0.1.0` at that demonstrated boundary, formed an
 [exact excerpt companion derived from `0.1.0`](snippets/document-evidence-core-patterns/README.md)
-and two [provisional collaboration skills](.agents/skills/README.md), and named
-`0.1.1` as the receiver for stronger behavior. This
+and two [provisional collaboration skills](.agents/skills/README.md). The
+`0.1.1` registry successor carries the stronger source and tests through Issue
+#2 while its manifest keeps candidate maturity visible. Source acceptance and
+maturity remain separate; a matching exact companion derives only from an
+accepted successor source. This
 preservation–calibration–successor route is the registry's exemplar pattern.
 
 Family READMEs describe continuation as `seeded`, `interstitial`, or `settled`.
@@ -59,8 +62,9 @@ The first artifact is a participant-account-supported representative
 reconstruction of a 2018–2019 enterprise document-evidence workflow:
 
 - canonical ID: `document-evidence-extraction`;
-- current version: `0.1.0`;
-- source: [`snippets/document-evidence-extraction/0.1.0/`](snippets/document-evidence-extraction/0.1.0/README.md);
+- accepted baseline: `0.1.0`;
+- registry successor: `0.1.1`, with `candidate` maturity;
+- source family: [`snippets/document-evidence-extraction/`](snippets/document-evidence-extraction/README.md);
 - registry record: [`registry.json`](registry.json); and
 - schema-nursery reading: [`SCHEMA-NURSERY.md`](SCHEMA-NURSERY.md).
 
@@ -83,8 +87,9 @@ from that implementation:
 The companion is a `code_excerpt`: it makes same-byte capture and the current
 staged-promotion path with its demonstrated single-failure restoration case
 compact enough for a nearby visitor reading. The complete artifact remains the
-runnable evidence owner. Human review retains the optional Gist publication
-decision.
+runnable evidence owner. The PR #14 publication observation at
+`docs@2b996ccd5d0f487eaa590d8822ada6203dfbae0e` carries this accepted companion.
+Human review retains the optional Gist publication decision.
 
 ## Canonical path and projection roles
 

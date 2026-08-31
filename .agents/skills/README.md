@@ -8,12 +8,14 @@ source, focused checks, and granted tool authority retain those roles.
 The first two skills formed from the registry's initial lived collaboration:
 the [document-evidence artifact](../../snippets/document-evidence-extraction/README.md)
 received several bounded architectural vantages, its demonstrated guarantee
-became more precise, accepted bytes stayed intact, and successor work was
-named to receive the materially stronger behavior. An [exact excerpt
-companion](../../snippets/document-evidence-core-patterns/README.md) made the
-accepted boundary easier to inspect. The skills preserve that collaboration
-shape for another team while technical authority stays with the artifact's
-source and focused tests.
+became more precise, and accepted `0.1.0` bytes stayed intact. Issue #2 carries
+`0.1.1` as the registry successor for the materially stronger source and test
+architecture while its manifest records candidate maturity. An [exact excerpt
+companion](../../snippets/document-evidence-core-patterns/README.md) makes the
+accepted `0.1.0` boundary easier to inspect; a matching `0.1.1` companion
+begins from accepted successor source after review and merge. The skills
+preserve that collaboration shape for another team while technical authority
+stays with the artifact's source and focused tests.
 
 | Skill | Use it when | Standing |
 | --- | --- | --- |
