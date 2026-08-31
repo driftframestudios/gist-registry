@@ -2,7 +2,7 @@
   "projectionFormatVersion": "0.1.0",
   "projectionOwner": "gist-registry-pages-builder",
   "canonicalOrigin": "https://kindlight.io",
-  "sourceRevision": "d4cadcc74d00cd1715cf496bee6878938934b801",
+  "sourceRevision": "194b74e6ca07001a98f4b7760e6ed582784cb924",
   "sourceStanding": "accepted_revision",
   "fileScope": "Every projection file except projection-manifest.json itself.",
   "files": [
@@ -44,7 +44,7 @@
     {
       "path": "index.html",
       "bytes": 3097,
-      "sha256": "47a7917fff9fbc43ac79fa4a104cbc8b488cf9f1402024b8447af5b73945171d"
+      "sha256": "b0453421c56bb722dfbd54d0c90d59a2b5beef6fe9f4f0bd7a945c5231b12862"
     },
     {
       "path": "observations/delivery/README.md",
@@ -68,8 +68,8 @@
     },
     {
       "path": "registry.json",
-      "bytes": 1188,
-      "sha256": "2164daf25de65cbd0db45ac3320e8a9abac2f449bc75d370a5b963b062771a4f"
+      "bytes": 1456,
+      "sha256": "e38b3a1ba735d25887f14a35e6bf651faa84f09977fa19edcabd3ccdf27fe5bc"
     },
     {
       "path": "robots.txt",
@@ -89,7 +89,7 @@
     {
       "path": "schemas/gist-registry/0.1.0/index.html",
       "bytes": 2796,
-      "sha256": "883c88b0de1bf73a8a5670de3186b386f03a9e4a19e41948e7edfb68491d859d"
+      "sha256": "b66ebad856a851cb8fd2bb52b09d4cf08c45e6cc97b427d28950d2c34a1f2bc6"
     },
     {
       "path": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
@@ -104,7 +104,7 @@
     {
       "path": "schemas/gist-registry/delivery-observation/0.1.0/index.html",
       "bytes": 2793,
-      "sha256": "866c83538867fd91a506993a5b147b091e057c34e4f2a1efb222edd45866bf1f"
+      "sha256": "a22904248a9a45b930efc5e945f3e8f13763b596fc30f8614881ce8735da9d23"
     },
     {
       "path": "schemas/gist-registry/index.html",
@@ -113,8 +113,8 @@
     },
     {
       "path": "sitemap.xml",
-      "bytes": 1108,
-      "sha256": "c99ebe9a9e01aba47e44f0ee6d566dcc4f418bb1c31ee3bd9a3ed4561f07ba3e"
+      "bytes": 1272,
+      "sha256": "b615c3d2545d7dbdbb42a278e04ebc2772ee51c5182bff40af84806777cc0822"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/README.md",
@@ -139,7 +139,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/index.html",
       "bytes": 3851,
-      "sha256": "9713f9d5f99137f59b1b23d4608e36603cfda0b18d18294c74c28c9f8cabc23f"
+      "sha256": "d9ce69aa699dc8f8a222cf1f8b20a337ea7222d10361ed22401189704b19a13b"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
@@ -169,7 +169,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/index.html",
       "bytes": 4294,
-      "sha256": "87335f6fbb8047161980ca288d4ee942324a32bf9a65be89d0f2947602079c28"
+      "sha256": "1aece30dcfc9212c0534fde4d28c0503dfac8e26d40cb33dd495e17d59a2b657"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
@@ -234,7 +234,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.0/index.html",
       "bytes": 6657,
-      "sha256": "15f426b13a63d10d0968f9c8922f29be1a2cb91802292d2d8b1e8dbe47bc69bf"
+      "sha256": "3dd24fcfd47cf67b757e7e916f2eda848eb54d410b7eaa86417e55525fdb5eb8"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
@@ -309,7 +309,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.1/index.html",
       "bytes": 7750,
-      "sha256": "58f7e33fce738b1cc8c8233419eed6b145b2d5d8e2e143fb5ccd436bebe7626d"
+      "sha256": "1a3a06d02c1a5eba433cba3a660b24b7a204395427c7fba8bfec7db9d60c5763"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.1/pyproject.toml",
@@ -358,8 +358,68 @@
     },
     {
       "path": "snippets/index.html",
-      "bytes": 3262,
-      "sha256": "3308f3a833b066dc78f7603ec65eb4ae61879da9aa5b044a0016fe17e15bad6a"
+      "bytes": 3697,
+      "sha256": "6050c3e3e7acb4eeaa681d9fa06a87ee61a5dadaaf74d88779a7f1849e81009b"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/.python-version",
+      "bytes": 5,
+      "sha256": "7b55f8e67b5623c4bef3fa691288da9437d79d3aba156de48d481db32ac7d16d"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/README.md",
+      "bytes": 6403,
+      "sha256": "2fd77134ab92e7f078cacd570ac189be2c10ff0541f1000486d72053262a11d4"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/expected/transfer-commit.json",
+      "bytes": 1958,
+      "sha256": "aee73e3c53e1756fd3b833653e9875eccba828219d2bb15e3ebb309cd7c7481c"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/fixtures/transfer-command.json",
+      "bytes": 802,
+      "sha256": "cd96b4963b7b7680a7d8591ef72308e065b9684204ab6bcdddfcdb0574e29121"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/index.html",
+      "bytes": 5861,
+      "sha256": "509c5febf8e372366c037914f6356dd38d2524a884fb78b0d3de22248c3548d8"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/pyproject.toml",
+      "bytes": 465,
+      "sha256": "0bc790de00d4e9c0fdf6e6728454b0e43eb4628cb0b0bbc38f7ca0555e7832f5"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/snippet.json",
+      "bytes": 10861,
+      "sha256": "40098a0b174ccc4cefd27a236231d6b5ae1daf1efd949766cf0cadd0ca08d638"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py",
+      "bytes": 23748,
+      "sha256": "e9180a51125450727aa1a17d315b92773c2da13570d448f63fc11c295c74586d"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/tests/test_specimen_custody.py",
+      "bytes": 20592,
+      "sha256": "8d8a272cf750ea5169d1dd709230a7540a1fee3b2698697fe08671009d49cf19"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/0.1.0/uv.lock",
+      "bytes": 6082,
+      "sha256": "7a8b7277b5f2efea5f6663dc426d80be8d5955d2a91bc00fc39857492653690c"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/README.md",
+      "bytes": 1048,
+      "sha256": "02ba68bb0ffa061f323752bdf2e990961ee9f03e6f9d781f21ddec920de03037"
+    },
+    {
+      "path": "snippets/specimen-custody-outbox/index.html",
+      "bytes": 2258,
+      "sha256": "fc135e44b904643f53a2fb9ebe90687108a0704e7150b951418b907424a6eafd"
     }
   ]
 }
