@@ -13,12 +13,15 @@ import {
   checkPages,
   checkProjection,
   mapsCanary,
+  sourceRepositoryRevisionUrl,
   verifyAcceptedSource,
 } from "../tools/build-pages.mjs";
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const fixedSourceRevision = "1111111111111111111111111111111111111111";
+const expectedSourceRepositoryOrigin =
+  "https://github.com/driftframestudios/gist-registry";
 
 const expectedPaths = [
   ".nojekyll",
@@ -362,6 +365,91 @@ test("public discovery routes carry collaboration and continuation orientation",
     );
     assert.match(migrationFamily, /migration-reconciliation-cutover\/0\.1\.0\//u);
   });
+});
+
+test("artifact file inspection links retain local bytes and bind GitHub to the source revision", async () => {
+  await withProjection(async ({ output }) => {
+    const registry = JSON.parse(await readFile(resolve(repositoryRoot, "registry.json"), "utf8"));
+
+    for (const entry of registry.entries) {
+      const manifest = JSON.parse(
+        await readFile(resolve(repositoryRoot, entry.manifestPath), "utf8"),
+      );
+      const html = await readFile(
+        resolve(output, entry.canonicalPath, "index.html"),
+        "utf8",
+      );
+      const encodedCanonicalPath = entry.canonicalPath
+        .split("/")
+        .map(segment => encodeURIComponent(segment))
+        .join("/");
+
+      assert.ok(
+        html.includes(
+          'href="' +
+            expectedSourceRepositoryOrigin +
+            "/commit/" +
+            fixedSourceRevision +
+            '"',
+        ),
+        entry.semanticId + " must link the displayed source revision",
+      );
+      assert.ok(
+        html.includes(
+          'href="' +
+            expectedSourceRepositoryOrigin +
+            "/tree/" +
+            fixedSourceRevision +
+            "/" +
+            encodedCanonicalPath +
+            '"',
+        ),
+        entry.semanticId + " must link its exact source directory",
+      );
+
+      for (const representation of manifest.representations) {
+        const sourcePath = entry.canonicalPath + "/" + representation.path;
+        const encodedSourcePath = sourcePath
+          .split("/")
+          .map(segment => encodeURIComponent(segment))
+          .join("/");
+        assert.ok(
+          html.includes('href="/' + sourcePath + '"'),
+          sourcePath + " must retain its byte-preserving Pages link",
+        );
+        assert.ok(
+          html.includes(
+            'href="' +
+              expectedSourceRepositoryOrigin +
+              "/blob/" +
+              fixedSourceRevision +
+              "/" +
+              encodedSourcePath +
+              '"',
+          ),
+          sourcePath + " must link its exact GitHub file view",
+        );
+      }
+
+      assert.match(html, /filename opens the byte-preserving kindlight\.io projection/u);
+      assert.match(html, /access follows the repository’s current visibility/u);
+      assert.equal(html.includes('target="_blank"'), false);
+    }
+  });
+});
+
+test("repository inspection paths preserve separators and encode path data", () => {
+  assert.equal(
+    sourceRepositoryRevisionUrl(
+      "blob",
+      fixedSourceRevision,
+      'snippets/space #?%"/β.py',
+    ),
+    expectedSourceRepositoryOrigin +
+      "/blob/" +
+      fixedSourceRevision +
+      "/snippets/space%20%23%3F%25%22/%CE%B2.py",
+  );
 });
 
 test("public-boundary carrier parity remains independent from a rewritten manifest", async () => {
