@@ -54,6 +54,8 @@ Registry-specific skills live in [`.agents/skills/`](.agents/skills/):
   reviewable re-entry;
 - `architecture-convergence-vantages` coordinates bounded technical vantages
   when plausible changes create materially different guarantees;
+- `transaction-boundary-evidence-mapping` maps operation meaning, accepted
+  state, aligned effects, publication, replay, recovery, and evidence owners;
 - `probe-bearing-exemplar-formation` carries one source-grounded technical
   question into a public-safe first registry coordinate with focused evidence;
 - `secret-boundary-inspection` produces a canary-proven, scope-explicit

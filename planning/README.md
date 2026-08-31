@@ -6,20 +6,20 @@ Current live receivers are:
 - #3 — current immutable-tag and `main` to `docs` publication front;
 - #4 — exact-version schema projection and retrieval settlement; and
 - #6 — the exercised delivery-observation model and its conditional receiver
-  for a response change that affects interpretation or recovery; and
-- #27 — exact migration reconciliation and approval-bound process-local
-  cutover activation as the next domain companion.
+  for a response change that affects interpretation or recovery.
 
 Accepted path records supply this terrain:
 
 - #17 — accepted probe-bearing exemplar formation for first reviewable
   registry coordinates;
 - #20 — accepted canary-proven secret-material inspection for source and
-  publication handoffs; and
+  publication handoffs;
 - #18 — accepted replay-safe specimen custody and transactional outbox as the
-  first independent domain companion; and
+  first independent domain companion;
 - #24 — accepted raw-byte-preserving instrument ingress, identity convergence,
-  and reviewable quarantine as the second domain companion.
+  and reviewable quarantine as the second domain companion; and
+- #27 — accepted migration reconciliation and approval-bound process-local
+  cutover as the third domain companion.
 
 [`SCHEMA-NURSERY.md`](../SCHEMA-NURSERY.md) is the current design note for the
 schema attempt. The exercised `main` to `docs` route now carries deterministic
@@ -75,13 +75,17 @@ Issue #24 and pull request #25 accepted
 #3 receives its consolidated Pages projection, while optional Gist publication
 remains a separate human-held exact-version action.
 
-Issue #27 now receives `migration-reconciliation-cutover@0.1.0`. Its first
-form reconciles immutable active and candidate generations, binds a supplied
-approval record whose declared approver differs from the actor to the exact
-request and restore evidence, and publishes active, prior,
-approval-consumption, receipt, and event state through
-one process-local state change. Authenticated approval, observed restore,
-domain acceptance, durable execution, and production recovery retain their
-named evidence owners. After source acceptance, Issue #3 receives its
-immutable tag and consolidated Pages projection. Optional Gist publication
+Issue #27 and pull request #28 accepted
+`migration-reconciliation-cutover@0.1.0` at
+`main@30f5a646a37a2d3e120e77b86041596aa52f8692`. The immutable
+`snippet/migration-reconciliation-cutover/v0.1.0` tag resolves to that merge.
+Builder-owned `docs@2e297e0a8a7530190ad766073e35b4dc9831c585`
+projects that accepted source through 110 files; the signed-out observation at
+`2026-08-31T22:35:30.014Z` established byte equality for all 109 addressable
+routes.
+
+The accepted migration cycle supplies the third materially different domain
+observation for transaction-boundary evidence mapping. Issue #3 receives the
+small portable skill and its source-cycle routing because that Issue already
+owns collaboration ground and skills cultivation. Optional Gist publication
 remains a separate human-held exact-version action.

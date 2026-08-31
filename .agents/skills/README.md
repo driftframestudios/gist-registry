@@ -36,6 +36,7 @@ history, or generated artifact receives interpretation.
 | [Probe-bearing exemplar formation](probe-bearing-exemplar-formation/SKILL.md) | A public-safe code sample, Practitioner Probe, or domain exemplar is ready for its first reviewable registry version | First source-owning execution through Issue #18 |
 | [Repository collaboration cycle](repository-collaboration-cycle/SKILL.md) | A cold or resumed collaborator is expected to carry one authorized repository task through orientation, implementation, evidence, and reviewable re-entry | Exercised through Issue #18 / PR #22 and a fresh-context Issue #3 source cycle |
 | [Secret-boundary inspection](secret-boundary-inspection/SKILL.md) | Source, an exact proposed index, locally available history, or a generated artifact is preparing for a repository or publication handoff | Received portable contract with a Gist Registry-owned Betterleaks implementation and Pages artifact route |
+| [Transaction boundary evidence mapping](transaction-boundary-evidence-mapping/SKILL.md) | Several state changes must become visible together, or retry correctness depends on whether publication occurred | Formed from accepted custody/outbox, ingress/quarantine, and migration/cutover decisions that changed identity, freshness, effect, replay, and recovery architecture |
 | [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Initial instruction-only skill; first receiving use reached the accepted document-evidence `0.1.1` source and exact companion |
 
 “Vantage” means a bounded attention instrument specified by a question,
@@ -48,11 +49,12 @@ more routing than capability, fold its useful rules into `AGENTS.md`, the
 nearest artifact README, or the source-owning runbook and retire the catalog
 entry.
 
-`transaction-boundary-evidence-mapping` remains a resting observed candidate.
-Specimen custody/outbox and instrument ingress/quarantine now supply two
-materially different domain observations:
-identity fingerprints, exact replay, changed-meaning reconciliation, aligned
-effects, and injected-failure restoration recur across both. A distinct
-receiving job can wake the candidate when a portable contract would change an
-implementation or review decision. Until then, each artifact's source,
-focused tests, and README retain the instruction authority.
+The transaction-boundary route formed after three materially different domain
+cycles changed implementation and review decisions. Specimen custody paired
+semantic replay with an aligned outbox publication. Instrument ingress added
+layered delivery, acquisition, and content identity plus a freshness check
+after outside work. Migration cutover added epoch comparison, lifetime
+generation meaning, original-approval replay, and post-publication response
+recovery. The portable skill retains those operation-level distinctions while
+each artifact's source, focused tests, and README retain its domain semantics
+and evidence authority.
