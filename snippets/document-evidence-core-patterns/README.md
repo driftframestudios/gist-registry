@@ -13,21 +13,30 @@ Version `0.1.0` selects two broadly transferable mechanics:
 - an ownership sentinel, staged promotion, and focused test show the current
   restoration path after one injected `OSError`.
 
+Version `0.1.1` selects two recovery relationships from the accepted
+successor:
+
+- named-coordinate observations classify operation events on either side of a
+  rename effect while preserving the original event; and
+- complete callers transfer staged-cleanup ownership so prior and successor
+  material remain available when recovery also stops.
+
 The ordered files under `gist/` form a human-reviewable GitHub Gist candidate.
-Repository source remains canonical. A published Gist becomes a convenience
-projection of one accepted version and receives its own revision-and-digest
-observation after publication.
+Repository source remains canonical. The PR #14 publication observation at
+`docs@2b996ccd5d0f487eaa590d8822ada6203dfbae0e` carries the accepted `0.1.0`
+companion. A published Gist becomes a convenience projection of one accepted
+version and receives its own revision-and-digest observation after publication.
 
 ## Continuation
 
 - **Standing:** `settled`
 - **Current form:**
-  [`document-evidence-core-patterns@0.1.0`](0.1.0/)
-- **Present use:** Exact source-and-test selections orient a reader to
-  same-byte capture and the demonstrated single-failure restoration case at
-  the `0.1.0` evidence boundary.
+  [`document-evidence-core-patterns@0.1.1`](0.1.1/)
+- **Present use:** Exact source-and-test selections orient a reader to the
+  observed-effect and caller-retained recovery architecture at the accepted
+  `0.1.1` evidence boundary. Version `0.1.0` remains the concise same-byte and
+  single-failure reading.
 
-This standing belongs to the companion's narrow orientation job. The runnable
-source family is `interstitial` while `0.1.1` receives the stronger promotion
-architecture and tests. After that successor is accepted, a matching exact
-excerpt can form its own coordinate.
+This standing belongs to the companion's narrow orientation job. Runnable
+source, focused tests, immutable tags, exact companions, Pages delivery, and
+optional Gist publication retain their distinct authority roles.
