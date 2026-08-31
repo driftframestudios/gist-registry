@@ -48,6 +48,8 @@ Registry-specific skills live in [`.agents/skills/`](.agents/skills/):
 
 - `architecture-convergence-vantages` coordinates bounded technical vantages
   when plausible changes create materially different guarantees;
+- `probe-bearing-exemplar-formation` carries one source-grounded technical
+  question into a public-safe first registry coordinate with focused evidence;
 - `versioned-exemplar-successor` carries a material strengthening into new
   runnable source and exact derived teaching surfaces while accepted versions
   remain immutable.

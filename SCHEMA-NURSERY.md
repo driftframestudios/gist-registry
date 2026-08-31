@@ -14,7 +14,8 @@ publishing its workspace locators or house annotations. That family contributes
 several durable ideas:
 
 - one practical question and the changed ability it seeks;
-- a five-level answer or sophistication range when the artifact is a probe;
+- answer ranges or levels when they materially change a receiving decision,
+  with depth attached to the artifact or answer;
 - technical core, review surfaces, and an instruction yield;
 - technical-veracity standing adjacent to claims;
 - `TARGET`, `CONTRAST`, and `GUARD` as text-only semantic markers;
@@ -91,4 +92,6 @@ projection record, or the existing relationship family.
 The next runnable domain companion is the useful pressure point. It can test
 whether the shared identity, use, provenance, representation, execution,
 boundary, and recovery layers continue to describe a different technical
-artifact while kind-specific behavior stays local.
+artifact while kind-specific behavior stays local. Its first formation also
+tests whether the probe-bearing route supplies enough instruction while shared
+schema requirements continue to follow demonstrated cross-kind use.
