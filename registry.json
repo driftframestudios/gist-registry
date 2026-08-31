@@ -28,6 +28,13 @@
       "artifactKind": "code_excerpt",
       "manifestPath": "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
       "canonicalPath": "snippets/document-evidence-core-patterns/0.1.1"
+    },
+    {
+      "semanticId": "specimen-custody-outbox",
+      "version": "0.1.0",
+      "artifactKind": "domain_exemplar",
+      "manifestPath": "snippets/specimen-custody-outbox/0.1.0/snippet.json",
+      "canonicalPath": "snippets/specimen-custody-outbox/0.1.0"
     }
   ]
 }

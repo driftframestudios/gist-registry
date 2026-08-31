@@ -12,6 +12,10 @@ const manifestPath = resolve(
   repositoryRoot,
   "snippets/document-evidence-extraction/0.1.0/snippet.json",
 );
+const custodyManifestPath = resolve(
+  repositoryRoot,
+  "snippets/specimen-custody-outbox/0.1.0/snippet.json",
+);
 const companionManifestPaths = new Map([
   [
     "0.1.0",
@@ -105,21 +109,67 @@ function definitionBlock(source, name) {
 
 test("the real registry resolves all exact versions and their representations", async () => {
   const result = await checkRegistry({ root: repositoryRoot });
-  assert.deepEqual(result, { artifactCount: 4 });
+  assert.deepEqual(result, { artifactCount: 5 });
 });
 
-test("the first schema attempt validates four artifacts across two kinds", async () => {
+test("the first schema attempt validates five artifacts across three kinds", async () => {
   const result = await checkSchemaNursery();
   assert.deepEqual(result, {
     schemaVersion: "0.1.0",
-    artifactCount: 4,
+    artifactCount: 5,
     instances: [
       "document-evidence-extraction@0.1.0",
       "document-evidence-extraction@0.1.1",
       "document-evidence-core-patterns@0.1.0",
       "document-evidence-core-patterns@0.1.1",
+      "specimen-custody-outbox@0.1.0",
     ],
   });
+});
+
+test("the domain exemplar records one runnable boundary and proposed Gist source order", async () => {
+  const manifest = await json(custodyManifestPath);
+  const declaredPaths = new Set(
+    manifest.representations.map(representation => representation.path),
+  );
+  const gistFiles = manifest.extensions.gistCandidate.orderedFiles;
+
+  assert.equal(manifest.artifactKind, "domain_exemplar");
+  assert.equal(manifest.standing, "candidate");
+  assert.equal(manifest.technicalVeracity.status, "verified");
+  assert.deepEqual(manifest.execution.fixtures, ["fixtures/transfer-command.json"]);
+  assert.deepEqual(manifest.execution.expectedResults, [
+    "expected/transfer-commit.json",
+  ]);
+  assert.deepEqual(gistFiles, [
+    { publicationName: "00-README.md", sourcePath: "README.md" },
+    {
+      publicationName: "specimen_custody.py",
+      sourcePath: "src/specimen_custody.py",
+    },
+    {
+      publicationName: "test_specimen_custody.py",
+      sourcePath: "tests/test_specimen_custody.py",
+    },
+    {
+      publicationName: "transfer-command.json",
+      sourcePath: "fixtures/transfer-command.json",
+    },
+    {
+      publicationName: "transfer-commit.json",
+      sourcePath: "expected/transfer-commit.json",
+    },
+  ]);
+  for (const file of gistFiles) {
+    assert.ok(
+      declaredPaths.has(file.sourcePath),
+      file.sourcePath + " must be one declared canonical representation",
+    );
+  }
+  assert.deepEqual(
+    manifest.relationships.map(relationship => relationship.type),
+    ["receiver", "schema_nursery"],
+  );
 });
 
 test("each compact companion keeps one ordered Gist candidate and one runnable source owner", async () => {

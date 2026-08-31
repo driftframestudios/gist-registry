@@ -95,6 +95,22 @@ publication observation at
 companion. The next consolidated Pages cycle can receive `0.1.1`; human review
 retains the optional Gist publication decision for each exact version.
 
+## First independent domain companion
+
+[`specimen-custody-outbox@0.1.0`](snippets/specimen-custody-outbox/0.1.0/README.md)
+is the registry's first runnable `domain_exemplar`. Its realistic synthetic
+transfer aligns tenant, actor, capability, optimistic custody state, exact
+replay, changed-intent reconciliation, attributable event history, and a
+content-bound outbox through one in-memory unit of work. Focused tests exercise
+competing calls and injected failure while comparing the complete accepted
+snapshot.
+
+The artifact's evidence boundary is intentionally process-local. A durable
+database implementation is the next owner for isolation, persistence,
+cross-process concurrency, and broker-delivery claims. The manifest records a
+proposed compact Gist source set and reading order; human review retains the
+exact-version projection and publication decision.
+
 ## Canonical path and projection roles
 
 ```text
@@ -119,11 +135,17 @@ artifact; repository source authority remains explicit.
 
 `main` is the accepted authored source. The reserved `docs` branch receives
 only output from [`tools/build-pages.mjs`](tools/build-pages.mjs) for
-`kindlight.io`; it has no cPanel or Cloudflare WAF role. See
+`kindlight.io`. GitHub Pages is this repository's current delivery path;
+cPanel and Cloudflare WAF belong to Human–AI Systems Exemplars. See
 [`BRANCHING.md`](BRANCHING.md). After a reviewed source change reaches `main`,
 the [Gist Registry Pages publication runbook](.agents/runbooks/gist-registry-pages-publication.v0.1.md)
 provides the re-entry route through build, observation, `docs` promotion, and
 public handback.
+
+The [Gist Registry source collaboration cycle](.agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md)
+provides the preceding route from current truth through one exact-version
+source pull request. It hands accepted projection work to the Pages runbook
+while immutable tagging and optional Gist creation retain their own grants.
 
 ## Run the current checks
 
@@ -143,8 +165,8 @@ npm ci
 npm test
 ```
 
-`npm test` asks `uv` to create or refresh the artifact-local environment from
-its committed lock. It also builds the Pages projection twice in isolated
+`npm test` asks `uv` to create or refresh the artifact-local environments from
+their committed locks. It also builds the Pages projection twice in isolated
 directories and compares the complete inventory and bytes. Build the inspected
 local projection into the ignored `.artifacts/pages/` directory with:
 
@@ -240,11 +262,23 @@ uv --cache-dir .artifacts/uv-cache run \
   --output .artifacts/document-evidence-extraction/0.1.1
 ```
 
+Run the specimen-custody fixture through its standard-library runtime:
+
+```sh
+uv --cache-dir .artifacts/uv-cache run \
+  --project snippets/specimen-custody-outbox/0.1.0 --locked \
+  python snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py \
+  snippets/specimen-custody-outbox/0.1.0/fixtures/transfer-command.json
+```
+
 The Node checks establish registry, path, manifest, schema, media-declaration,
 delivery-observation, command, projection-membership, and deterministic-byte
 agreement. The Python checks establish the sample's normalization, negation
 retention, ordered evidence weights, deterministic render behavior, and
-recovery messages. Each delivery observation names the source and projection
+recovery messages. They also establish one in-memory specimen state/event/
+replay/outbox effect, semantic replay, explicit reconciliation and collision
+results, and complete pre-call-state preservation under injected failure. Each
+delivery observation names the source and projection
 coordinates it actually examined; later hosted behavior remains a new evidence
 question.
 
@@ -270,3 +304,10 @@ The document-evidence example is a representative reconstruction using
 realistic synthetic material. [`AUTHORS`](AUTHORS) carries general provenance;
 Apache-2.0 in [`LICENSE`](LICENSE) governs repository code; Git history and
 reviewed pull requests carry contribution credit.
+
+The specimen-custody exemplar is a separately reviewed public adaptation of
+authorized semantic and transaction-design source roles using realistic
+synthetic identities and commands. Its versioned source and focused suite own
+the in-memory claim. Exact private locators remain with their authorized
+resolver, and the durable database route receives the operational transaction
+and delivery evidence.
