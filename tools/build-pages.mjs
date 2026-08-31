@@ -453,7 +453,10 @@ function artifactFamilyPage(semanticId, versions, outputPath) {
     body: [
       '<p class="eyebrow">Versioned artifact family</p>',
       "<h1>" + escapeHtml(title) + "</h1>",
-      '<p class="lede">Each version keeps its runnable files, manifest, evidence boundary, and exact source bytes together.</p>',
+      '<p class="lede">Each version keeps its runnable files, manifest, evidence boundary, and exact source bytes together. The family README names its purpose and current continuation.</p>',
+      '<p><a href="/snippets/' +
+        escapeHtml(semanticId) +
+        '/README.md">Read the family README</a></p>',
       '<div class="grid">' + cards + "</div>",
       "<p><a href=\"/snippets/\">Return to all artifacts</a></p>",
     ].join("\n"),
@@ -559,7 +562,7 @@ function allArtifactsPage(artifacts, outputPath) {
     body: [
       '<p class="eyebrow">Public retrieval projection</p>',
       "<h1>Artifacts</h1>",
-      '<p class="lede">Each artifact keeps a stable semantic identity, exact version, declared representations, and a focused verification route.</p>',
+      '<p class="lede">Each artifact keeps a stable semantic identity, exact version, declared representations, and a focused verification route. Its family README names the current form and the next useful collaboration.</p>',
       '<div class="grid">' + cards + "</div>",
     ].join("\n"),
   });
@@ -685,12 +688,13 @@ function deliveryObservationsPage(deliveryObservations, outputPath) {
 function rootPage(artifacts, schemas, deliveryObservations, sourceSha, outputPath) {
   return pageShell({
     title: "Versioned technical artifacts",
-    description: "A public retrieval projection for exact-version code samples and schema contracts.",
+    description: "A public retrieval projection for technical artifacts that grow through versioned collaboration.",
     outputPath,
     body: [
       '<p class="eyebrow">Public retrieval projection</p>',
       "<h1>Durable technical material, version by version.</h1>",
-      '<p class="lede">Gist Registry serves selected runnable artifacts, exact schema bytes, and the evidence boundaries needed to inspect and reuse them. Authored meaning remains with the accepted source; this site is its deterministic retrieval projection.</p>',
+      '<p class="lede">Gist Registry gives useful technical material a durable coordinate from its first legible form. Constructive collaboration can add architectural vantages, focused tests, evidence, and successor versions while every accepted coordinate remains available to inspect, run, fork, or extend.</p>',
+      '<p>This site serves selected runnable artifacts, exact schema bytes, and the evidence boundaries needed to reuse them. Authored meaning remains with the accepted source; this is its deterministic retrieval projection.</p>',
       '<div class="grid">',
       '<article class="card"><h2><a href="/snippets/">Artifacts</a></h2><p>' +
         escapeHtml(artifacts.length) +

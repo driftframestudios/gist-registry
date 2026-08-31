@@ -196,6 +196,26 @@ test("schemas, observations, registry data, and artifact representations preserv
   });
 });
 
+test("public discovery routes carry collaboration and continuation orientation", async () => {
+  await withProjection(async ({ output }) => {
+    const root = await readFile(resolve(output, "index.html"), "utf8");
+    const artifacts = await readFile(resolve(output, "snippets/index.html"), "utf8");
+    const family = await readFile(
+      resolve(output, "snippets/document-evidence-extraction/index.html"),
+      "utf8",
+    );
+
+    assert.match(root, /a durable coordinate from its first legible form/u);
+    assert.match(root, /every accepted coordinate remains available/u);
+    assert.match(artifacts, /the next useful collaboration/u);
+    assert.match(
+      family,
+      /href="\/snippets\/document-evidence-extraction\/README\.md"/u,
+    );
+    assert.match(family, /The family README names its purpose and current continuation/u);
+  });
+});
+
 test("public-boundary carrier parity remains independent from a rewritten manifest", async () => {
   await withProjection(async ({ output }) => {
     const carrierPath = resolve(output, "AI-DATA-USE.md");

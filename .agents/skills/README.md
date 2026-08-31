@@ -5,6 +5,16 @@ transferable job easy to discover without supplying truth, priority,
 permission, or proof of their own effectiveness. Current intent, runnable
 source, focused checks, and granted tool authority retain those roles.
 
+The first two skills formed from the registry's initial lived collaboration:
+the [document-evidence artifact](../../snippets/document-evidence-extraction/README.md)
+received several bounded architectural vantages, its demonstrated guarantee
+became more precise, accepted bytes stayed intact, and successor work was
+named to receive the materially stronger behavior. An [exact excerpt
+companion](../../snippets/document-evidence-core-patterns/README.md) made the
+accepted boundary easier to inspect. The skills preserve that collaboration
+shape for another team while technical authority stays with the artifact's
+source and focused tests.
+
 | Skill | Use it when | Standing |
 | --- | --- | --- |
 | [Architecture convergence vantages](architecture-convergence-vantages/SKILL.md) | Several plausible technical changes create different concurrency, recovery, portability, evidence, or publication guarantees | Initial instruction-only skill; formed from the first natural filesystem-promotion and exact-excerpt convergence use |
