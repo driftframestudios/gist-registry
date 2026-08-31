@@ -7,6 +7,13 @@
       "artifactKind": "code_sample",
       "manifestPath": "snippets/document-evidence-extraction/0.1.0/snippet.json",
       "canonicalPath": "snippets/document-evidence-extraction/0.1.0"
+    },
+    {
+      "semanticId": "document-evidence-core-patterns",
+      "version": "0.1.0",
+      "artifactKind": "code_excerpt",
+      "manifestPath": "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
+      "canonicalPath": "snippets/document-evidence-core-patterns/0.1.0"
     }
   ]
 }
