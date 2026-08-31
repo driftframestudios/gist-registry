@@ -93,6 +93,19 @@ const expectedPaths = [
   "snippets/document-evidence-extraction/README.md",
   "snippets/document-evidence-extraction/index.html",
   "snippets/index.html",
+  "snippets/instrument-ingress-integrity/0.1.0/.python-version",
+  "snippets/instrument-ingress-integrity/0.1.0/README.md",
+  "snippets/instrument-ingress-integrity/0.1.0/expected/ingress-run.json",
+  "snippets/instrument-ingress-integrity/0.1.0/fixtures/accepted-measurement.json",
+  "snippets/instrument-ingress-integrity/0.1.0/fixtures/quarantined-measurement.json",
+  "snippets/instrument-ingress-integrity/0.1.0/index.html",
+  "snippets/instrument-ingress-integrity/0.1.0/pyproject.toml",
+  "snippets/instrument-ingress-integrity/0.1.0/snippet.json",
+  "snippets/instrument-ingress-integrity/0.1.0/src/instrument_ingress.py",
+  "snippets/instrument-ingress-integrity/0.1.0/tests/test_instrument_ingress.py",
+  "snippets/instrument-ingress-integrity/0.1.0/uv.lock",
+  "snippets/instrument-ingress-integrity/README.md",
+  "snippets/instrument-ingress-integrity/index.html",
   "snippets/specimen-custody-outbox/0.1.0/.python-version",
   "snippets/specimen-custody-outbox/0.1.0/README.md",
   "snippets/specimen-custody-outbox/0.1.0/expected/transfer-commit.json",
@@ -203,6 +216,12 @@ test("schemas, observations, registry data, and artifact representations preserv
         "snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py",
       ),
     );
+    const authoredIngressSource = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/instrument-ingress-integrity/0.1.0/src/instrument_ingress.py",
+      ),
+    );
 
     assert.deepEqual(
       await readFile(resolve(output, "schemas/0.1.0/registry-artifact.schema.json")),
@@ -257,6 +276,15 @@ test("schemas, observations, registry data, and artifact representations preserv
         ),
       ),
       authoredCustodySource,
+    );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/instrument-ingress-integrity/0.1.0/src/instrument_ingress.py",
+        ),
+      ),
+      authoredIngressSource,
     );
   });
 });

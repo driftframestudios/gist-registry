@@ -60,7 +60,7 @@ profiles become schemas only after real instances demonstrate their shape.
 
 The current experiment is
 [`schemas/0.1.0/registry-artifact.schema.json`](schemas/0.1.0/registry-artifact.schema.json).
-It is an authored draft identity exercised by five registered versions across
+It is an authored draft identity exercised by six registered versions across
 `code_sample`, `code_excerpt`, and `domain_exemplar`. The Pages builder carries
 its exact bytes at the canonical
 `kindlight.io` path and at the repository-relative path needed by the
@@ -113,3 +113,24 @@ in-memory unit of work. Durable SQL execution has a separate receiver for
 database isolation, persistence, process interruption, and cross-process
 concurrency. This separation keeps schema standing responsive to observed use
 while each technical claim stays with its fitting evidence owner.
+
+## Fourth artifact observation
+
+`instrument-ingress-integrity@0.1.0` is the second runnable
+`domain_exemplar`. Delivery identity, acquisition identity, raw-byte content
+addressing, strict scientific mapping, and quarantine evidence remain
+artifact-local while the shared identity, representation, execution,
+practice, boundary, recovery, and relationship layers retain their jobs.
+
+This artifact supplies a third materially different
+`extensions.gistCandidate` use and adds bounded source-coordinate detail under
+`extensions.sourceCoordinates`. Both extensions remain experiments. The
+repository has several authored examples and still has no shared publisher or
+reader whose behavior depends on one common Gist-candidate or source-coordinate
+shape. A future consumer can establish the useful fields and their ownership
+before a schema version promotes them.
+
+The manifest records `verified` standing for the process-local conformance
+model. Governed raw-object storage, durable inbox alignment, restart behavior,
+cross-process concurrency, configured instrument identity, scientific mapping
+qualification, and accountable acceptance retain separate receivers.
