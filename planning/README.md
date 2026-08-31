@@ -6,7 +6,9 @@ Current live receivers are:
 - #3 — current immutable-tag and `main` to `docs` publication front;
 - #4 — exact-version schema projection and retrieval settlement; and
 - #6 — the exercised delivery-observation model and its conditional receiver
-  for a response change that affects interpretation or recovery.
+  for a response change that affects interpretation or recovery; and
+- #24 — raw-byte-preserving instrument ingress, identity convergence, and
+  reviewable quarantine as the next domain companion.
 
 Accepted path records supply this terrain:
 
@@ -55,10 +57,19 @@ records the repository-owned source and publication secret-material boundary.
 Issue #18 and pull request #22 accepted
 `specimen-custody-outbox@0.1.0` at
 `main@4aeb88a97b9f1ffd1ec83c5cd8afd5a697f279e4` as their first independent
-artifact-formation receiver. The manifest carries a proposed Gist source set
-and reading order; a flattened Gist projection remains a distinct human-held
-publication choice. Issue #3 receives the immutable artifact coordinate and
-the next consolidated Pages projection. Its existing receipt preserves the
-prior source, generated `docs`, and signed-out observation coordinate; the
-successor receipt will establish that relationship for the newly accepted
-source.
+artifact-formation receiver. The immutable
+`snippet/specimen-custody-outbox/v0.1.0` tag resolves to that acceptance merge.
+The later collaboration-ground update is accepted at
+`main@194b74e6ca07001a98f4b7760e6ed582784cb924`; builder-owned
+`docs@12d80d3369e9ce4f71f7afa5c03ebbf3e03f3327` projects it through 84 files.
+Pages build `1186340421` completed from that exact projection, and the
+signed-out observation at `2026-08-31T19:11:48.646Z` established byte equality
+for all 83 addressable routes.
+
+Issue #24 now receives `instrument-ingress-integrity@0.1.0`. Its first form
+keeps transport delivery, logical acquisition, and raw content identity
+distinct while a process-local copy-on-write repository aligns exact source
+bytes, strict scientific mapping, replay, concurrency, and quarantine
+evidence. After source acceptance, Issue #3 receives its immutable tag and
+consolidated Pages projection. Optional Gist publication remains a separate
+human-held exact-version action.

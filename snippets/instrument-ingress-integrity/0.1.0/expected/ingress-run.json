@@ -1,0 +1,125 @@
+{
+  "accepted": {
+    "candidateFingerprint": null,
+    "changedFields": [],
+    "reasonCode": null,
+    "receipt": {
+      "acquisitionFingerprint": "f4f0a563494a1e1bbba95c212b4a92b1bbb39354419e3bf6c49f0a54f5deeca0",
+      "acquisitionId": "acquisition-accepted-001",
+      "byteLength": 59,
+      "canonicalDeliveryId": "delivery-accepted-001",
+      "deliveryFingerprint": "8915eed45c08d02815c5cd5adcb6a8e7d7efa676abdb5f9f6aac602f8048c6ca",
+      "deliveryId": "delivery-accepted-001",
+      "disposition": "accepted",
+      "instrumentId": "instrument-synthetic-07",
+      "normalizedSha256": "f159e73995f6e670fc4ef73e757455b272e79923fc845e6bc8eb0a98f2150a20",
+      "outcome": "accepted",
+      "pipeline": {
+        "mapper": "synthetic-ucum-profile/1.0.0",
+        "parser": "strict-json-measurement/1.0.0"
+      },
+      "rawSha256": "34dc28853cb05deea91c0f7b78829b200aafe1b34879771c84cce525dd6099af",
+      "reasonCode": null,
+      "recovery": "continue to scientific review",
+      "tenantId": "tenant-north"
+    },
+    "recordedFingerprint": null,
+    "recovery": null,
+    "status": "accepted"
+  },
+  "acceptedReplay": {
+    "candidateFingerprint": null,
+    "changedFields": [],
+    "reasonCode": null,
+    "receipt": {
+      "acquisitionFingerprint": "f4f0a563494a1e1bbba95c212b4a92b1bbb39354419e3bf6c49f0a54f5deeca0",
+      "acquisitionId": "acquisition-accepted-001",
+      "byteLength": 59,
+      "canonicalDeliveryId": "delivery-accepted-001",
+      "deliveryFingerprint": "8915eed45c08d02815c5cd5adcb6a8e7d7efa676abdb5f9f6aac602f8048c6ca",
+      "deliveryId": "delivery-accepted-001",
+      "disposition": "accepted",
+      "instrumentId": "instrument-synthetic-07",
+      "normalizedSha256": "f159e73995f6e670fc4ef73e757455b272e79923fc845e6bc8eb0a98f2150a20",
+      "outcome": "accepted",
+      "pipeline": {
+        "mapper": "synthetic-ucum-profile/1.0.0",
+        "parser": "strict-json-measurement/1.0.0"
+      },
+      "rawSha256": "34dc28853cb05deea91c0f7b78829b200aafe1b34879771c84cce525dd6099af",
+      "reasonCode": null,
+      "recovery": "continue to scientific review",
+      "tenantId": "tenant-north"
+    },
+    "recordedFingerprint": null,
+    "recovery": null,
+    "status": "replayed"
+  },
+  "quarantined": {
+    "candidateFingerprint": null,
+    "changedFields": [],
+    "reasonCode": null,
+    "receipt": {
+      "acquisitionFingerprint": "c90838ed43de0c21e1ab98b4663767dec04e70ac579867b4c69f166c1b297375",
+      "acquisitionId": "acquisition-quarantined-001",
+      "byteLength": 68,
+      "canonicalDeliveryId": "delivery-quarantined-001",
+      "deliveryFingerprint": "387af3ab85c65c01bf90212b90331bb9977ba91b16b985a31d6ae9fb90ab574a",
+      "deliveryId": "delivery-quarantined-001",
+      "disposition": "quarantined",
+      "instrumentId": "instrument-synthetic-07",
+      "normalizedSha256": null,
+      "outcome": "quarantined",
+      "pipeline": {
+        "mapper": "synthetic-ucum-profile/1.0.0",
+        "parser": "strict-json-measurement/1.0.0"
+      },
+      "rawSha256": "e34ccc0b73bc8a4d58a343006f76babed7e6997833c8f1b94d5676ab35967417",
+      "reasonCode": "unsupported_unit",
+      "recovery": "map the quantity through a reviewed scientific unit profile; then submit reviewed content under new delivery and acquisition identities",
+      "tenantId": "tenant-north"
+    },
+    "recordedFingerprint": null,
+    "recovery": null,
+    "status": "quarantined"
+  },
+  "quarantinedReplay": {
+    "candidateFingerprint": null,
+    "changedFields": [],
+    "reasonCode": null,
+    "receipt": {
+      "acquisitionFingerprint": "c90838ed43de0c21e1ab98b4663767dec04e70ac579867b4c69f166c1b297375",
+      "acquisitionId": "acquisition-quarantined-001",
+      "byteLength": 68,
+      "canonicalDeliveryId": "delivery-quarantined-001",
+      "deliveryFingerprint": "387af3ab85c65c01bf90212b90331bb9977ba91b16b985a31d6ae9fb90ab574a",
+      "deliveryId": "delivery-quarantined-001",
+      "disposition": "quarantined",
+      "instrumentId": "instrument-synthetic-07",
+      "normalizedSha256": null,
+      "outcome": "quarantined",
+      "pipeline": {
+        "mapper": "synthetic-ucum-profile/1.0.0",
+        "parser": "strict-json-measurement/1.0.0"
+      },
+      "rawSha256": "e34ccc0b73bc8a4d58a343006f76babed7e6997833c8f1b94d5676ab35967417",
+      "reasonCode": "unsupported_unit",
+      "recovery": "map the quantity through a reviewed scientific unit profile; then submit reviewed content under new delivery and acquisition identities",
+      "tenantId": "tenant-north"
+    },
+    "recordedFingerprint": null,
+    "recovery": null,
+    "status": "replayed"
+  },
+  "retainedRawBytes": {
+    "accepted": true,
+    "quarantined": true
+  },
+  "stateCounts": {
+    "accepted": 1,
+    "acquisitions": 2,
+    "quarantines": 1,
+    "rawArtifacts": 2,
+    "receipts": 2
+  }
+}

@@ -16,6 +16,10 @@ const custodyManifestPath = resolve(
   repositoryRoot,
   "snippets/specimen-custody-outbox/0.1.0/snippet.json",
 );
+const ingressManifestPath = resolve(
+  repositoryRoot,
+  "snippets/instrument-ingress-integrity/0.1.0/snippet.json",
+);
 const companionManifestPaths = new Map([
   [
     "0.1.0",
@@ -109,20 +113,21 @@ function definitionBlock(source, name) {
 
 test("the real registry resolves all exact versions and their representations", async () => {
   const result = await checkRegistry({ root: repositoryRoot });
-  assert.deepEqual(result, { artifactCount: 5 });
+  assert.deepEqual(result, { artifactCount: 6 });
 });
 
-test("the first schema attempt validates five artifacts across three kinds", async () => {
+test("the first schema attempt validates six artifacts across three kinds", async () => {
   const result = await checkSchemaNursery();
   assert.deepEqual(result, {
     schemaVersion: "0.1.0",
-    artifactCount: 5,
+    artifactCount: 6,
     instances: [
       "document-evidence-extraction@0.1.0",
       "document-evidence-extraction@0.1.1",
       "document-evidence-core-patterns@0.1.0",
       "document-evidence-core-patterns@0.1.1",
       "specimen-custody-outbox@0.1.0",
+      "instrument-ingress-integrity@0.1.0",
     ],
   });
 });
@@ -166,6 +171,45 @@ test("the domain exemplar records one runnable boundary and proposed Gist source
       file.sourcePath + " must be one declared canonical representation",
     );
   }
+  assert.deepEqual(
+    manifest.relationships.map(relationship => relationship.type),
+    ["receiver", "schema_nursery"],
+  );
+});
+
+test("instrument ingress keeps schema pressure local and proposes canonical source files", async () => {
+  const manifest = await json(ingressManifestPath);
+  const declaredPaths = new Set(
+    manifest.representations.map(representation => representation.path),
+  );
+  const gistFiles = manifest.extensions.gistCandidate.orderedFiles;
+
+  assert.equal(manifest.artifactKind, "domain_exemplar");
+  assert.equal(manifest.standing, "candidate");
+  assert.equal(manifest.technicalVeracity.status, "verified");
+  assert.deepEqual(manifest.execution.fixtures, [
+    "fixtures/accepted-measurement.json",
+    "fixtures/quarantined-measurement.json",
+  ]);
+  assert.deepEqual(manifest.execution.expectedResults, ["expected/ingress-run.json"]);
+  assert.deepEqual(
+    gistFiles.map(file => file.publicationName),
+    [
+      "00-README.md",
+      "instrument_ingress.py",
+      "test_instrument_ingress.py",
+      "accepted-measurement.json",
+      "quarantined-measurement.json",
+      "ingress-run.json",
+    ],
+  );
+  for (const file of gistFiles) {
+    assert.ok(
+      declaredPaths.has(file.sourcePath),
+      file.sourcePath + " must be one declared canonical representation",
+    );
+  }
+  assert.equal(manifest.extensions.sourceCoordinates.length, 2);
   assert.deepEqual(
     manifest.relationships.map(relationship => relationship.type),
     ["receiver", "schema_nursery"],

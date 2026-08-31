@@ -35,6 +35,13 @@
       "artifactKind": "domain_exemplar",
       "manifestPath": "snippets/specimen-custody-outbox/0.1.0/snippet.json",
       "canonicalPath": "snippets/specimen-custody-outbox/0.1.0"
+    },
+    {
+      "semanticId": "instrument-ingress-integrity",
+      "version": "0.1.0",
+      "artifactKind": "domain_exemplar",
+      "manifestPath": "snippets/instrument-ingress-integrity/0.1.0/snippet.json",
+      "canonicalPath": "snippets/instrument-ingress-integrity/0.1.0"
     }
   ]
 }

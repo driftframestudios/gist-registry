@@ -111,6 +111,24 @@ cross-process concurrency, and broker-delivery claims. The manifest records a
 proposed compact Gist source set and reading order; human review retains the
 exact-version projection and publication decision.
 
+## Raw-byte-preserving instrument ingress
+
+[`instrument-ingress-integrity@0.1.0`](snippets/instrument-ingress-integrity/0.1.0/README.md)
+is the registry's second runnable `domain_exemplar`. It keeps delivery
+identity, logical acquisition identity, and raw-byte SHA-256 in distinct
+roles. A strict JSON and decimal pipeline links accepted scientific meaning to
+its exact source bytes; expected intake or mapping differences retain a
+reviewable quarantine record and constructive recovery route.
+
+The process-local repository parses outside its lock, repeats identity checks,
+and publishes detached raw, receipt, acquisition, and outcome maps once.
+Focused tests exercise exact accepted and quarantined replay, duplicate
+deliveries, equal-byte acquisitions, identity changes, digest collisions,
+concurrent callers, parser and mapper faults, and every candidate commit
+interruption. A governed object-store and durable inbox transaction is the
+next receiver for restart, cross-process, configured-instrument, and
+scientific-qualification claims.
+
 ## Canonical path and projection roles
 
 ```text
@@ -271,14 +289,28 @@ uv --cache-dir .artifacts/uv-cache run \
   snippets/specimen-custody-outbox/0.1.0/fixtures/transfer-command.json
 ```
 
+Run the accepted and quarantined instrument-ingress fixtures through their
+standard-library runtime:
+
+```sh
+uv --cache-dir .artifacts/uv-cache run \
+  --project snippets/instrument-ingress-integrity/0.1.0 --locked \
+  python snippets/instrument-ingress-integrity/0.1.0/src/instrument_ingress.py \
+  snippets/instrument-ingress-integrity/0.1.0/fixtures/accepted-measurement.json \
+  snippets/instrument-ingress-integrity/0.1.0/fixtures/quarantined-measurement.json
+```
+
 The Node checks establish registry, path, manifest, schema, media-declaration,
 delivery-observation, command, projection-membership, and deterministic-byte
 agreement. The Python checks establish the sample's normalization, negation
 retention, ordered evidence weights, deterministic render behavior, and
 recovery messages. They also establish one in-memory specimen state/event/
 replay/outbox effect, semantic replay, explicit reconciliation and collision
-results, and complete pre-call-state preservation under injected failure. Each
-delivery observation names the source and projection
+results, and complete pre-call-state preservation under injected failure. The
+instrument-ingress checks add exact raw-byte retention, strict scientific
+mapping, delivery and acquisition identity convergence, stable accepted and
+quarantined replay, and copy-on-write recovery under concurrent and injected
+faults. Each delivery observation names the source and projection
 coordinates it actually examined; later hosted behavior remains a new evidence
 question.
 
@@ -311,3 +343,11 @@ synthetic identities and commands. Its versioned source and focused suite own
 the in-memory claim. Exact private locators remain with their authorized
 resolver, and the durable database route receives the operational transaction
 and delivery evidence.
+
+The instrument-ingress exemplar is a separately reviewed public adaptation of
+authorized LIMS/ELN specification, implementation, and visitor-reading roles.
+Its realistic synthetic fixtures, versioned source, and focused suite own the
+process-local raw-capture, identity, normalization, replay, quarantine,
+concurrency, and fault-recovery claim. Durable raw-object storage, inbox and
+measurement transactions, configured source authenticity, and scientific
+mapping qualification remain with their named receivers.
