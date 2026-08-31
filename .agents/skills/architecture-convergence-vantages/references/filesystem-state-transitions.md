@@ -93,6 +93,13 @@ behavior are explicit. Assign a transaction-specific recovery coordinate,
 persist the current phase through the declared durability protocol, perform the
 bounded mutations, and reconcile every durably recorded phase on re-entry.
 
+For a declared local-POSIX contract, a persistent sibling lock file held by an
+operating-system advisory lock is a compact option: the open descriptor carries
+ownership, process exit releases the kernel lock, owner data remains diagnostic,
+and the next owner reconciles any existing journal before beginning another
+transaction. Distributed or time-expiring leases require fencing and their own
+filesystem or network contract.
+
 ### Complete-generation reader visibility
 
 Write immutable version directories, validate them completely, then atomically
@@ -140,6 +147,61 @@ carries process or host interruption.
 # stops.
 ```
 
+## Test architecture
+
+Let tests express the protocol rather than the incidental shape of one
+implementation. When directory outputs and regular-file captures share the
+same replacement semantics, give them one transition contract with
+carrier-specific validation and cleanup adapters.
+
+Use four complementary layers:
+
+1. **Pure reconciliation table:** Map recorded phase plus observed generation
+   identities to one next action or a typed conflict. Exercise every finite
+   state and require a second reconciliation to be a no-op.
+2. **Real-filesystem transition contracts:** Use a temporary sibling layout and
+   a narrow filesystem adapter whose semantic operations name the transition,
+   such as moving the prior generation, activating the successor, restoring
+   the prior generation, and retiring recovery material. Inject failures at
+   those boundaries while asserting complete filesystem state.
+3. **Coordinated process contracts:** Use spawned processes and explicit
+   parent-child messages or barriers to create exact interleavings. Timeouts
+   diagnose a stopped test; elapsed time does not decide correctness.
+4. **Capability-bound platform contracts:** Exercise descriptor, symbolic-link,
+   advisory-lock, and filesystem behavior only where the declared platform
+   supplies it. Return an explicit unsupported-capability result when a
+   required guarantee is unavailable.
+
+A sorted tree snapshot can record entry kind, relative name, symbolic-link
+target without following it, and regular-file digest. State-transition
+assertions then establish that:
+
+- authority failure changes neither generation;
+- prior accepted bytes remain at the target or the transaction-owned recovery
+  coordinate until publication settles;
+- staged bytes remain recoverable until they become accepted or a caller
+  explicitly retains cleanup ownership;
+- promotion failure plus successful restoration returns the prior generation
+  and re-raises the original event;
+- promotion plus restoration failure retains both events, transaction phase,
+  and recovery coordinates in one typed surface;
+- cleanup failure leaves the successor accepted and the prior generation
+  inspectable; and
+- unrelated sibling entries remain byte-identical.
+
+Public caller tests remain necessary. An outer `except` or `finally` cleanup can
+remove staged recovery material after the transition layer has deliberately
+retained it, so test the complete command boundary as well as the internal
+promotion helper.
+
+Keep the ordinary suite deterministic and dependency-proportional. A finite
+transition matrix, semantic failpoints, and spawned-process coordination are a
+strong initial route with the standard library. Add property-based generation
+after a larger state space or a second protocol demonstrates decision-changing
+coverage. Keep actual power-loss durability, alternate filesystems, native
+Windows handle semantics, and a non-participating writer with equal parent
+authority as named probes until their environments and receivers are explicit.
+
 ## Focused behavior checks
 
 - A late target appearance follows the declared replace policy without
@@ -148,6 +210,8 @@ carries process or host interruption.
 - Promotion failure restores the prior generation and preserves the original
   failure.
 - Promotion plus restoration failure retains both failures and the backup.
+- Public analysis and collection callers retain staged and prior generations
+  when promotion and restoration both stop.
 - Cleanup failure keeps the promoted generation active and the prior backup
   inspectable.
 - A cross-device error follows the same recovery contract.
@@ -159,6 +223,8 @@ carries process or host interruption.
 - Every persisted recovery phase has one deterministic restart outcome.
 - Two participating processes converge on one accepted generation and one
   bounded contention result.
+- Reconciliation from each durably recorded phase is idempotent; contradictory
+  or identity-mismatched state stops with every coordinate preserved.
 - Crash-durability language appears only with the matching file and directory
   synchronization behavior and observation.
 
