@@ -30,9 +30,10 @@ and closed that Issue. Pull request #13 accepted the first provisional
 architecture-convergence skills, focused test-architecture additions, and
 lightweight continuation standing.
 
-Issue #2 is the source front for `document-evidence-extraction@0.1.1`. The
-registry successor receives the stronger filesystem-promotion architecture and
-principal-level tests while its manifest records candidate maturity. Source
-acceptance enables an exact `0.1.1` excerpt companion derived from those bytes.
-The first independent domain companion remains the next content path through a
-later short-lived Issue branch.
+Pull request #15 accepted `document-evidence-extraction@0.1.1` as
+`main@de3c5cd143cf0b645e9adc294910f7db9ca53874`; the immutable
+`snippet/document-evidence-extraction/v0.1.1` tag resolves to that merge. Issue
+#2 next receives the exact `0.1.1` companion derived from those bytes. After
+companion acceptance, the consolidated Pages runbook becomes the publication
+front. The first independent domain companion remains the next content path
+through a later short-lived Issue branch.

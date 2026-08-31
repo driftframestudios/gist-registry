@@ -1,0 +1,192 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "document-evidence-core-patterns",
+  "version": "0.1.1",
+  "artifactKind": "code_excerpt",
+  "standing": "candidate",
+  "title": "Document evidence core patterns",
+  "summary": "Exact source-mapped Python selections show observed-effect filesystem reconciliation and caller-retained recovery state from the accepted document-evidence successor.",
+  "use": {
+    "practicalQuestion": "How can a cooperative single-writer workflow classify a filesystem event by its observed rename effect and preserve both generations when recovery also stops?",
+    "changedAbility": "A collaborator can inspect the recovery transition and its caller boundary while resolving every Python selection to the accepted 0.1.1 implementation and focused tests.",
+    "readers": [
+      "AI collaborators implementing or reviewing staged filesystem promotion",
+      "Technical practitioners evaluating recovery state and caller cleanup authority"
+    ],
+    "capabilities": [
+      "classify_rename_effect",
+      "retain_original_event",
+      "report_observed_recovery_state",
+      "transfer_staged_cleanup_authority"
+    ]
+  },
+  "provenance": {
+    "class": "derived_code_excerpt",
+    "description": "Exact teaching selections from the accepted document-evidence-extraction 0.1.1 promotion source and focused tests.",
+    "temporalScope": "The selected implementation is accepted in document-evidence-extraction 0.1.1; this candidate companion packages its bounded public teaching surface.",
+    "sourceKeys": [
+      "gist-registry:document-evidence-extraction-0-1-1",
+      "gist-registry:document-evidence-core-patterns-0-1-0"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "source_supported",
+    "basis": "The complete artifact's focused tests exercise post-effect activation recovery, typed dual failure, and directory and file caller retention on real temporary filesystems. Every Python fence in this companion remains an exact contiguous selection from those accepted source or test owners."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/document-evidence-core-patterns/0.1.1",
+  "representations": [
+    {
+      "role": "orientation",
+      "path": "README.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "manifest",
+      "path": "snippet.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "gist_orientation",
+      "path": "gist/00-README.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "gist_excerpt",
+      "path": "gist/10-observed-effect-reconciliation.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "gist_excerpt",
+      "path": "gist/20-caller-retained-recovery.md",
+      "declaredMediaType": "text/markdown"
+    }
+  ],
+  "practice": {
+    "reviewQuestions": [
+      "Which observed coordinates distinguish a pre-effect event from a post-effect event?",
+      "Which object preserves the event that first interrupted promotion?",
+      "Which causes, phase, coordinates, and occupancy remain when recovery cannot restore the accepted state?",
+      "When does caller cleanup authority transfer to the promotion layer?"
+    ],
+    "decisionRules": [
+      "Observe staged, target, and prior coordinates after each semantic operation event.",
+      "Reverse a completed rename effect before restoring the prior generation and propagating the original event.",
+      "Return typed recovery state when reconciliation cannot restore a ready successor and accepted prior.",
+      "Let callers remove an ordinary failed stage; recovery owns a stage marked for re-entry."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "Observed-effect classification, original-event propagation, typed re-entry state, and caller-preserved recovery material."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "A path that assumes a raised event arrived before its filesystem effect or lets outer cleanup discard retained recovery material."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Semantic operation boundaries, current coordinate observations, cause-retaining errors, and explicit cleanup ownership keep recovery state legible."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Classify an operation event from current coordinate occupancy before selecting reversal or restoration."
+      },
+      {
+        "mode": "review",
+        "instruction": "Trace the primary event, recovery events, phase, staged successor, accepted target, prior coordinate, and observed state together."
+      },
+      {
+        "mode": "recovery",
+        "instruction": "Preserve staged and prior generations for re-entry when a recovery operation stops before restoration completes."
+      }
+    ],
+    "codeExemplarGranularity": "Two source-and-test selections with one orientation file and exact links to the complete accepted package.",
+    "complexityAndAllocation": "Runtime and full recovery helpers remain with the complete artifact; this companion selects the transition spine and the caller cleanup boundary needed for review."
+  },
+  "boundaries": {
+    "evidence": "The selected tests establish injected Python-event recovery states for directory and file carriers on real temporary filesystems in the resolved environment. This companion establishes exact source mapping and a bounded reading surface. Static symbolic-link and ownership checks are momentary observations within the trusted-parent model; they are not TOCTOU protection. Descriptor-relative opens, no-follow semantics, and opened-object verification remain the fitting Unix hardening probe.",
+    "trust": "Promotion assumes one cooperative writer and a trusted parent directory. Another process with equal parent-directory authority remains outside the demonstrated model.",
+    "transfer": "A receiver selects its filesystem and platform contract, writer and reader model, durability requirement, descriptor policy, and operational recovery route before adaptation."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A copied excerpt can lose the ownership validation and complete helper implementations supplied by the runnable artifact.",
+      "A mutable Gist head can move beyond the exact registry version selected for review.",
+      "A receiver can overread injected Python-event recovery as a concurrency, crash-durability, or platform guarantee."
+    ],
+    "recoveryMoves": [
+      "Return to the complete 0.1.1 artifact and its focused suite before implementation transfer.",
+      "Resolve a published Gist through its exact revision and content digests while retaining this repository version as authority.",
+      "Route broader writer, reader, durability, hardening, and platform claims to their named future probes."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "successor_of",
+      "target": "document-evidence-core-patterns@0.1.0",
+      "reason": "The accepted companion continues to own the unchanged same-byte capture pattern while this candidate selects the strengthened recovery architecture."
+    },
+    {
+      "type": "derived_from",
+      "target": "document-evidence-extraction@0.1.1",
+      "reason": "The complete accepted artifact owns the selected transition, caller integration, focused tests, dependency lock, and recovery behavior."
+    },
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:implementation-track",
+      "reason": "A nearby exact excerpt can orient technical readers before they open the complete recovery implementation."
+    }
+  ],
+  "extensions": {
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        "gist/00-README.md",
+        "gist/10-observed-effect-reconciliation.md",
+        "gist/20-caller-retained-recovery.md"
+      ],
+      "sourceSelections": [
+        {
+          "companionPath": "gist/10-observed-effect-reconciliation.md",
+          "sourcePath": "snippets/document-evidence-extraction/0.1.1/src/filesystem_promotion.py",
+          "testPath": "snippets/document-evidence-extraction/0.1.1/tests/test_filesystem_promotion.py",
+          "symbols": [
+            "PromotionOperation",
+            "PromotionState",
+            "PromotionRecoveryError",
+            "path_is_occupied",
+            "observe_promotion_state",
+            "recovery_path_for",
+            "retains_staged_recovery",
+            "recovery_events_for",
+            "_retain_staged_with",
+            "_raise_recovery_error",
+            "_reconcile_activation_event",
+            "promote_staged"
+          ],
+          "tests": [
+            "test_activation_post_effect_event_reverses_successor_before_restoration",
+            "test_dual_failure_retains_both_causes_and_generations"
+          ]
+        },
+        {
+          "companionPath": "gist/20-caller-retained-recovery.md",
+          "sourcePath": "snippets/document-evidence-extraction/0.1.1/src/document_evidence.py",
+          "testPath": "snippets/document-evidence-extraction/0.1.1/tests/test_document_evidence.py",
+          "symbols": [
+            "analyze_capture",
+            "collect_ocr"
+          ],
+          "tests": [
+            "test_analysis_dual_failure_retains_both_generations_for_reentry",
+            "test_collection_dual_failure_retains_both_generations_for_reentry"
+          ]
+        }
+      ]
+    }
+  }
+}

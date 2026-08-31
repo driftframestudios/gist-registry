@@ -30,7 +30,7 @@ authority.
 
 | Priority | Companion | Visitor placement | Source standing | Public adaptation | Next receiver |
 | --- | --- | --- | --- | --- | --- |
-| P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Accepted exact excerpt companion at the `0.1.0` evidence boundary; PR #14 observed it at `docs@2b996cc` | Exact public-safe excerpts are ready | Human Gist-publication decision; a future `0.1.1` excerpt follows its accepted runnable successor |
+| P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Accepted exact companions at the `0.1.0` and `0.1.1` evidence boundaries; PR #14 observed `0.1.0` at `docs@2b996cc` | Ordered public-safe excerpts are ready | Consolidated Pages projection, then the human-held exact Gist-publication decision |
 | P0 | Replay-safe specimen custody and transactional outbox | LIMS/ELN replatforming, Implementation custody section | Strong runnable synthetic implementation with tests and receipts | Select the smallest custody/replay seam while retaining tenant, actor, concurrency, event, and outbox invariants | New Issue branch, then human technical and publication review |
 | P0 | Instrument ingress with raw-byte integrity and quarantine | LIMS/ELN replatforming, Implementation ingress section | Strong runnable synthetic implementation | Package raw-digest continuity, mapping, identity conflict, and accepted/quarantined fixtures | Domain-companion implementation branch |
 | P0 | Migration reconciliation and approval-bound cutover | LIMS/ELN replatforming, migration and cutover section | Strong runnable synthetic implementation | Package distinct reconciliation results with quality, operations, restore, and approval evidence | Domain-companion implementation branch |
@@ -64,11 +64,11 @@ standing is established.
 ## Re-entry
 
 `document-evidence-core-patterns@0.1.0` is accepted; PR #14 observed its ordered
-files at `docs@2b996cc`. They are also ready for the human-held exact Gist
-publication decision. Issue #2 carries
-`document-evidence-extraction@0.1.1` as the registry successor with candidate
-maturity. Its matching exact excerpt derives from an accepted source
-coordinate. A later Issue branch can select replay-safe specimen
+files at `docs@2b996cc`. The accepted
+`document-evidence-extraction@0.1.1` source and immutable tag now support the
+exact `document-evidence-core-patterns@0.1.1` companion. The consolidated Pages
+runbook is the next publication receiver; each optional Gist remains a
+human-held exact-version decision. A later Issue branch can select replay-safe specimen
 custody and transactional outbox as the first independent domain companion,
 then test whether the current shared schema still describes a materially
 different runnable artifact while shared fields remain evidence-earned.

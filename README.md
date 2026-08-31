@@ -43,10 +43,11 @@ guarantee to one injected `OSError` restoration case under cooperative
 single-writer use, preserved `0.1.0` at that demonstrated boundary, formed an
 [exact excerpt companion derived from `0.1.0`](snippets/document-evidence-core-patterns/README.md)
 and two [provisional collaboration skills](.agents/skills/README.md). The
-`0.1.1` registry successor carries the stronger source and tests through Issue
-#2 while its manifest keeps candidate maturity visible. Source acceptance and
-maturity remain separate; a matching exact companion derives only from an
-accepted successor source. This
+accepted `0.1.1` successor and its immutable tag carry the stronger source and
+tests. A matching exact companion selects the observed-effect and
+caller-retained recovery relationships from that accepted source. Source
+acceptance, manifest maturity, immutable coordinates, and publication remain
+separate. This
 preservation–calibration–successor route is the registry's exemplar pattern.
 
 Family READMEs describe continuation as `seeded`, `interstitial`, or `settled`.
@@ -62,8 +63,9 @@ The first artifact is a participant-account-supported representative
 reconstruction of a 2018–2019 enterprise document-evidence workflow:
 
 - canonical ID: `document-evidence-extraction`;
-- accepted baseline: `0.1.0`;
-- registry successor: `0.1.1`, with `candidate` maturity;
+- accepted versions: `0.1.0` and `0.1.1`;
+- current accepted form: `0.1.1`, with `candidate` maturity recorded in its
+  exact manifest;
 - source family: [`snippets/document-evidence-extraction/`](snippets/document-evidence-extraction/README.md);
 - registry record: [`registry.json`](registry.json); and
 - schema-nursery reading: [`SCHEMA-NURSERY.md`](SCHEMA-NURSERY.md).
@@ -73,23 +75,25 @@ captured synthetic OCR fixture keeps the ordinary test route independent of a
 machine-specific Tesseract installation, while the image-intake command remains
 available for a local OCR observation.
 
-The first compact Debrief companion selects two source-and-test relationships
-from that implementation:
+The compact Debrief companion family selects source-and-test relationships
+from both accepted implementations:
 
 - canonical ID: `document-evidence-core-patterns`;
-- current version: `0.1.0`;
-- source:
-  [`snippets/document-evidence-core-patterns/0.1.0/`](snippets/document-evidence-core-patterns/0.1.0/README.md);
+- accepted versions: `0.1.0` and `0.1.1`;
+- current form:
+  [`snippets/document-evidence-core-patterns/0.1.1/`](snippets/document-evidence-core-patterns/0.1.1/README.md);
   and
 - Gist-ready file set:
-  [`gist/`](snippets/document-evidence-core-patterns/0.1.0/gist/).
+  [`gist/`](snippets/document-evidence-core-patterns/0.1.1/gist/).
 
-The companion is a `code_excerpt`: it makes same-byte capture and the current
-staged-promotion path with its demonstrated single-failure restoration case
-compact enough for a nearby visitor reading. The complete artifact remains the
-runnable evidence owner. The PR #14 publication observation at
-`docs@2b996ccd5d0f487eaa590d8822ada6203dfbae0e` carries this accepted companion.
-Human review retains the optional Gist publication decision.
+Each companion is a `code_excerpt`. Version `0.1.0` makes same-byte capture and
+the demonstrated single-failure restoration case compact. Version `0.1.1`
+makes observed-effect reconciliation and complete-caller recovery ownership
+compact. The complete artifact remains the runnable evidence owner. The PR #14
+publication observation at
+`docs@2b996ccd5d0f487eaa590d8822ada6203dfbae0e` carries the accepted `0.1.0`
+companion. The next consolidated Pages cycle can receive `0.1.1`; human review
+retains the optional Gist publication decision for each exact version.
 
 ## Canonical path and projection roles
 
@@ -163,10 +167,10 @@ Run the document-evidence analysis directly with the same lock:
 
 ```sh
 uv --cache-dir .artifacts/uv-cache run \
-  --project snippets/document-evidence-extraction/0.1.0 --locked \
-  python snippets/document-evidence-extraction/0.1.0/src/document_evidence.py analyze \
-  snippets/document-evidence-extraction/0.1.0/fixtures/synthetic-ocr-capture.json \
-  --output .artifacts/document-evidence-extraction/0.1.0
+  --project snippets/document-evidence-extraction/0.1.1 --locked \
+  python snippets/document-evidence-extraction/0.1.1/src/document_evidence.py analyze \
+  snippets/document-evidence-extraction/0.1.1/fixtures/synthetic-ocr-capture.json \
+  --output .artifacts/document-evidence-extraction/0.1.1
 ```
 
 The Node checks establish registry, path, manifest, schema, media-declaration,
