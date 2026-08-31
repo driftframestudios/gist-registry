@@ -9,8 +9,9 @@ bounded extension block preserve differences among code samples, Practitioner
 Probes, prototypes, domain exemplars, experiments, runbooks, loop-bearing
 members, and harness material.
 
-This first attempt is informed by the private Practitioner Probe family without
-publishing its workspace locators or house annotations. That family contributes
+This first attempt is informed by the private Practitioner Probe family. Its
+workspace locators and house annotations remain with their authorized owner,
+while the family contributes
 several durable ideas:
 
 - one practical question and the changed ability it seeks;
@@ -25,8 +26,8 @@ several durable ideas:
 - references attached to the claims they support; and
 - handoff, failure, recovery, and settlement standing.
 
-The first schema does not require every artifact to impersonate a Practitioner
-Probe. It exposes reusable `practice` fields and lets later kind-specific
+The first schema keeps Practitioner Probe fields optional. It exposes reusable
+`practice` fields and lets later kind-specific
 profiles become schemas only after real instances demonstrate their shape.
 
 ## Layers
@@ -59,18 +60,20 @@ profiles become schemas only after real instances demonstrate their shape.
 
 The current experiment is
 [`schemas/0.1.0/registry-artifact.schema.json`](schemas/0.1.0/registry-artifact.schema.json).
-It is an authored draft identity exercised by the real document-evidence
-instance. The Pages builder carries its exact bytes at the canonical
+It is an authored draft identity exercised by five registered versions across
+`code_sample`, `code_excerpt`, and `domain_exemplar`. The Pages builder carries
+its exact bytes at the canonical
 `kindlight.io` path and at the repository-relative path needed by the
 byte-identical manifest. The first signed-out HTTPS observation records the
 successful canonical-schema response against the exact accepted source and
 `docs` revisions. The local build continues to establish projection parity.
 
-This `0.1.0` publication exercises retrieval without declaring the envelope
-stable. Another materially different artifact can reveal which shared fields
-have earned the first stable exact-version contract and immutable schema tag.
+This `0.1.0` publication exercises retrieval while the envelope remains an
+experiment. The independent domain exemplar now establishes useful cross-kind
+fit. A stable exact-version contract and immutable schema tag can follow when
+a shared reader or check demonstrates which reusable fields it depends on.
 
-An artifact may add information without waiting for a universal schema field.
+An artifact may add information through a bounded extension first.
 When two materially different artifacts use the same extension and a reader or
 check depends on it, that observation is evidence for promotion. This keeps the
 schema responsive to how coding and collaboration actually change.
@@ -89,9 +92,24 @@ evidence for a shared field. A later materially different companion can reveal
 whether Gist selection belongs in a kind-specific profile, an appendable
 projection record, or the existing relationship family.
 
-The next runnable domain companion is the useful pressure point. It can test
-whether the shared identity, use, provenance, representation, execution,
-boundary, and recovery layers continue to describe a different technical
-artifact while kind-specific behavior stays local. Its first formation also
-tests whether the probe-bearing route supplies enough instruction while shared
-schema requirements continue to follow demonstrated cross-kind use.
+## Third artifact observation
+
+`specimen-custody-outbox@0.1.0` is the first runnable `domain_exemplar`. It
+reuses the shared identity, use, provenance, representation, execution,
+practice, boundary, recovery, and relationship layers while its tenant,
+command, replay, reconciliation, event, and outbox behavior remains local to
+the artifact and focused tests.
+
+This artifact supplies a second, materially different
+`extensions.gistCandidate` use. The compact excerpt companions carry
+Gist-owned Markdown representations; the domain exemplar maps canonical
+README, source, test, fixture, and expected-result files to proposed
+publication names. Both make a human-held publication selection inspectable.
+The extension remains experimental while a shared publisher or other reader
+has yet to demonstrate dependence on one common shape.
+
+The manifest records `verified` technical standing for the demonstrated
+in-memory unit of work. Durable SQL execution has a separate receiver for
+database isolation, persistence, process interruption, and cross-process
+concurrency. This separation keeps schema standing responsive to observed use
+while each technical claim stays with its fitting evidence owner.

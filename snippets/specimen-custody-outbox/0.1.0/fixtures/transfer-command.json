@@ -1,0 +1,29 @@
+{
+  "actor": {
+    "actorId": "operator-17",
+    "role": "custody_coordinator",
+    "tenantId": "tenant-north"
+  },
+  "command": {
+    "actorId": "operator-17",
+    "actorRole": "custody_coordinator",
+    "awareAt": "2026-08-31T14:30:00Z",
+    "currentSource": "cold-storage-a",
+    "destination": "analysis-bench-2",
+    "expectedVersion": 4,
+    "payload": {
+      "carrier": "synthetic-rack-7",
+      "temperatureBand": "controlled-cold"
+    },
+    "reason": "Move the synthetic control specimen into the scheduled analysis handoff.",
+    "specimenId": "specimen-control-042",
+    "tenantId": "tenant-north",
+    "transferId": "transfer-0001"
+  },
+  "custody": {
+    "currentSource": "cold-storage-a",
+    "specimenId": "specimen-control-042",
+    "tenantId": "tenant-north",
+    "version": 4
+  }
+}

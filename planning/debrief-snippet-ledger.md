@@ -31,7 +31,7 @@ authority.
 | Priority | Companion | Visitor placement | Source standing | Public adaptation | Next receiver |
 | --- | --- | --- | --- | --- | --- |
 | P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Accepted exact companions at the `0.1.0` and `0.1.1` evidence boundaries; PR #14 observed `0.1.0` at `docs@2b996cc` | Ordered public-safe excerpts are ready | Consolidated Pages projection, then the human-held exact Gist-publication decision |
-| P0 | Replay-safe specimen custody and transactional outbox | LIMS/ELN replatforming, Implementation custody section | Strong runnable synthetic implementation with tests and receipts | Select the smallest custody/replay seam while retaining tenant, actor, concurrency, event, and outbox invariants | New Issue branch, then human technical and publication review |
+| P0 | Replay-safe specimen custody and transactional outbox | LIMS/ELN replatforming, Implementation custody section | Candidate `specimen-custody-outbox@0.1.0` with focused in-memory transfer, replay, reconciliation, collision, concurrency, and fault tests | Canonical README, source, test, fixture, and expected result form a proposed Gist publication set and reading order | Human technical and publication review |
 | P0 | Instrument ingress with raw-byte integrity and quarantine | LIMS/ELN replatforming, Implementation ingress section | Strong runnable synthetic implementation | Package raw-digest continuity, mapping, identity conflict, and accepted/quarantined fixtures | Domain-companion implementation branch |
 | P0 | Migration reconciliation and approval-bound cutover | LIMS/ELN replatforming, migration and cutover section | Strong runnable synthetic implementation | Package distinct reconciliation results with quality, operations, restore, and approval evidence | Domain-companion implementation branch |
 | P1 | Offline inspection record and ordered resumable envelope | Distributed inspection, record and return sections | Detailed TypeScript-shaped specification | Add executable duplicate-delivery, exhaustion, parking, and human-confirmed extraction cases | Synthetic implementation and test receiver |
@@ -69,6 +69,7 @@ registered artifacts and has one complete signed-out byte-parity observation;
 each optional Gist remains a human-held exact-version decision. Issue #17
 records the first-coordinate skill route, and Issue #20 records its
 secret-material handoff boundary. Issue #18 is the current content receiver for
-replay-safe specimen custody and transactional outbox, then tests whether the
-current shared schema still describes a materially different runnable artifact
-while shared fields remain evidence-earned.
+replay-safe specimen custody and transactional outbox. Its fifth registered
+candidate tests the shared schema across a materially different runnable kind
+while shared fields remain evidence-earned and the four-artifact Pages
+observation remains historical truth until the next accepted projection.

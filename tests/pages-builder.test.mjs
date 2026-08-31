@@ -93,6 +93,18 @@ const expectedPaths = [
   "snippets/document-evidence-extraction/README.md",
   "snippets/document-evidence-extraction/index.html",
   "snippets/index.html",
+  "snippets/specimen-custody-outbox/0.1.0/.python-version",
+  "snippets/specimen-custody-outbox/0.1.0/README.md",
+  "snippets/specimen-custody-outbox/0.1.0/expected/transfer-commit.json",
+  "snippets/specimen-custody-outbox/0.1.0/fixtures/transfer-command.json",
+  "snippets/specimen-custody-outbox/0.1.0/index.html",
+  "snippets/specimen-custody-outbox/0.1.0/pyproject.toml",
+  "snippets/specimen-custody-outbox/0.1.0/snippet.json",
+  "snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py",
+  "snippets/specimen-custody-outbox/0.1.0/tests/test_specimen_custody.py",
+  "snippets/specimen-custody-outbox/0.1.0/uv.lock",
+  "snippets/specimen-custody-outbox/README.md",
+  "snippets/specimen-custody-outbox/index.html",
 ];
 
 async function withProjection(action) {
@@ -185,6 +197,12 @@ test("schemas, observations, registry data, and artifact representations preserv
         "snippets/document-evidence-core-patterns/0.1.1/gist/10-observed-effect-reconciliation.md",
       ),
     );
+    const authoredCustodySource = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py",
+      ),
+    );
 
     assert.deepEqual(
       await readFile(resolve(output, "schemas/0.1.0/registry-artifact.schema.json")),
@@ -231,6 +249,15 @@ test("schemas, observations, registry data, and artifact representations preserv
       ),
       authoredSuccessorCompanion,
     );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py",
+        ),
+      ),
+      authoredCustodySource,
+    );
   });
 });
 
@@ -244,6 +271,10 @@ test("public discovery routes carry collaboration and continuation orientation",
     );
     const companionFamily = await readFile(
       resolve(output, "snippets/document-evidence-core-patterns/index.html"),
+      "utf8",
+    );
+    const custodyFamily = await readFile(
+      resolve(output, "snippets/specimen-custody-outbox/index.html"),
       "utf8",
     );
 
@@ -260,6 +291,11 @@ test("public discovery routes carry collaboration and continuation orientation",
     );
     assert.match(companionFamily, /document-evidence-core-patterns\/0\.1\.0\//u);
     assert.match(companionFamily, /document-evidence-core-patterns\/0\.1\.1\//u);
+    assert.match(
+      custodyFamily,
+      /href="\/snippets\/specimen-custody-outbox\/README\.md"/u,
+    );
+    assert.match(custodyFamily, /specimen-custody-outbox\/0\.1\.0\//u);
   });
 });
 

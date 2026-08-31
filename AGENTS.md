@@ -49,6 +49,9 @@ small real artifact over an abstract inventory.
 
 Registry-specific skills live in [`.agents/skills/`](.agents/skills/):
 
+- `repository-collaboration-cycle` carries one authorized task from current
+  truth through route selection, canonical source, proportionate evidence, and
+  reviewable re-entry;
 - `architecture-convergence-vantages` coordinates bounded technical vantages
   when plausible changes create materially different guarantees;
 - `probe-bearing-exemplar-formation` carries one source-grounded technical
@@ -106,15 +109,18 @@ The `res` line may carry high-variance research that benefits from shared
 history. Keep its claims experimental, merge `main` into it at named
 checkpoints, and move an accepted result through a fresh Issue branch from
 `main`. The receiving pull request carries the selected files and evidence;
-`res` is never merged wholesale into `main`.
+`res` retains the wider exploratory history.
 
 `main` owns authored source. The `docs` branch is builder-owned GitHub Pages
-output for `kindlight.io`; this repository has no cPanel or Cloudflare WAF
-path. Run `npm run check:pages` for two-build byte comparison and
+output for `kindlight.io`; GitHub Pages is this repository's current delivery
+path, while cPanel and Cloudflare WAF belong to Human–AI Systems Exemplars. Run
+`npm run check:pages` for two-build byte comparison and
 `npm run build:pages` for the ignored local projection. Hosted observations
 retain their own delivery evidence.
 
 Versioned operational runbooks live in [`.agents/runbooks/`](.agents/runbooks/).
+Use the Gist Registry source collaboration cycle for a full Issue-to-source-PR
+route. It hands an accepted `main` coordinate to later release owners.
 Use the Pages publication runbook after a reviewed source change reaches
 `main` and the current task grants the fitting projection actions. The runbook
 orders source binding, deterministic build, artifact observation, `docs`

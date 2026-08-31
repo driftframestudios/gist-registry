@@ -53,4 +53,8 @@ identity, delivery, and evidence route completed.
 Issue #17 records the accepted first-coordinate formation route. Issue #20
 records the repository-owned source and publication secret-material boundary.
 Issue #18 is the current content path and their first independent
-artifact-formation receiver.
+artifact-formation receiver. Its branch now forms
+`specimen-custody-outbox@0.1.0` as a candidate runnable domain exemplar with a
+proposed Gist source set and reading order. Human technical and publication
+review is the next receiver; the accepted Pages coordinates above remain
+historical until a later projection cycle establishes a successor.

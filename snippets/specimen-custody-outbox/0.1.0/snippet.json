@@ -1,0 +1,168 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "specimen-custody-outbox",
+  "version": "0.1.0",
+  "artifactKind": "domain_exemplar",
+  "standing": "candidate",
+  "title": "Specimen custody and transactional outbox",
+  "summary": "A realistic synthetic conformance model aligns tenant-scoped specimen custody, attributable events, replay outcomes, and content-bound outbox messages through one accepted state change.",
+  "use": {
+    "practicalQuestion": "How can a custody transfer remain attributable, tenant-scoped, replay-safe, and atomically aligned with event and outbox state under retries, stale callers, and an interrupted commit?",
+    "changedAbility": "A collaborator can inspect one complete command identity, exact replay, changed-intent reconciliation, optimistic state protection, and atomic custody/event/replay/outbox recovery in runnable Python.",
+    "readers": [
+      "AI collaborators implementing or reviewing retry-bearing domain commands",
+      "Technical practitioners evaluating transactional outbox and custody-state boundaries"
+    ],
+    "capabilities": [
+      "bind_command_meaning",
+      "replay_recorded_outcome",
+      "reconcile_changed_intent",
+      "align_domain_event_outbox",
+      "preserve_pre_call_state"
+    ]
+  },
+  "provenance": {
+    "class": "authorized_source_synthesis",
+    "description": "A separately reviewed public adaptation synthesized from authorized specimen-custody semantics, a rollback-capable in-memory transaction conformance model, and a durable SQL transaction route, using realistic synthetic identities and commands.",
+    "temporalScope": "This version is a current portable Python 3.12 conformance exemplar. Durable database execution remains a named later implementation and evidence route.",
+    "sourceKeys": [
+      "authorized-source:specimen-custody-semantics",
+      "authorized-source:transactional-outbox-conformance",
+      "authorized-source:durable-sql-transfer-route",
+      "realistic-synthetic:specimen-custody"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Focused tests establish one in-memory unit-of-work model for tenant and capability checks, optimistic version and current-source guards, exact replay, changed-command reconciliation, tenant-scoped content-bound outbox identity, payload snapshots, competing-call serialization, and complete pre-call-state preservation after an injected outbox-write failure in the resolved Python 3.12 environment."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/specimen-custody-outbox/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "runtime_version", "path": ".python-version", "declaredMediaType": "text/plain"},
+    {"role": "dependency_definition", "path": "pyproject.toml", "declaredMediaType": "application/toml"},
+    {"role": "dependency_lock", "path": "uv.lock", "declaredMediaType": "application/toml"},
+    {"role": "source", "path": "src/specimen_custody.py", "declaredMediaType": "text/x-python"},
+    {"role": "test", "path": "tests/test_specimen_custody.py", "declaredMediaType": "text/x-python"},
+    {"role": "fixture", "path": "fixtures/transfer-command.json", "declaredMediaType": "application/json"},
+    {"role": "expected_contract", "path": "expected/transfer-commit.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Python >=3.12,<3.13; standard-library runtime behavior",
+    "dependenciesPath": "uv.lock",
+    "commands": [
+      {
+        "name": "run",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/specimen-custody-outbox/0.1.0 --locked python snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py snippets/specimen-custody-outbox/0.1.0/fixtures/transfer-command.json",
+        "establishes": "Produces one deterministic applied-transfer document from the realistic synthetic fixture."
+      },
+      {
+        "name": "test",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/specimen-custody-outbox/0.1.0 --locked python -m unittest discover -s snippets/specimen-custody-outbox/0.1.0/tests -v",
+        "establishes": "Exercises tenant and capability boundaries, exact replay, reconciliation, atomic publication, collisions, fault restoration, and process-local concurrency."
+      },
+      {
+        "name": "lint",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/specimen-custody-outbox/0.1.0 --locked ruff check snippets/specimen-custody-outbox/0.1.0/src snippets/specimen-custody-outbox/0.1.0/tests",
+        "establishes": "Returns focused Python syntax, import, correctness, modernization, and maintainability diagnostics."
+      }
+    ],
+    "fixtures": ["fixtures/transfer-command.json"],
+    "expectedResults": ["expected/transfer-commit.json"],
+    "environmentNotes": [
+      "The runtime uses the Python standard library; the development lock supplies Ruff for the repository lint route.",
+      "The process-local lock serializes calls to one repository instance while snapshot reads remain available during injected-fault observation.",
+      "The fixture uses aware fixed time, realistic synthetic identities, and canonical JSON for deterministic comparison."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Which fields give one transfer identity its complete meaning?",
+      "Which observable state proves exact replay produced zero additional effects?",
+      "Do custody, event, replay, and outbox values become accepted together under every injected step?",
+      "Which guarantees move to the durable database receiver?"
+    ],
+    "decisionRules": [
+      "Bind every meaning-bearing field and canonical payload snapshot to the transfer fingerprint.",
+      "Return the recorded receipt before current-state checks when transfer identity and fingerprint agree.",
+      "Route changed meaning and stale state to explicit reconciliation while preserving accepted state.",
+      "Publish custody, event, replay, and outbox effects through one final immutable-state reference change."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "One attributable command meaning, one recorded outcome, and one atomic custody/event/replay/outbox effect inside the demonstrated unit of work."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "Separately mutated domain and delivery state leaves retries to infer whether an interrupted operation completed and which meaning owns an identity."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Tenant and capability checks, stale-state reconciliation, immutable payload capture, and detached candidate publication preserve the accepted state boundary."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Normalize one complete command meaning, store its outcome, and commit domain, event, replay, and outbox effects in one unit of work."
+      },
+      {
+        "mode": "review",
+        "instruction": "Compare exact replay, changed identity, stale caller, content collision, and injected-failure paths against the complete accepted snapshot."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Carry the demonstrated invariants into one durable database transaction with tenant-scoped unique keys and fitting isolation evidence."
+      }
+    ],
+    "codeExemplarGranularity": "One self-contained domain transaction with one realistic synthetic fixture, deterministic expected result, focused unit tests, and a named durable implementation route.",
+    "complexityAndAllocation": "Command and outbox payloads are canonicalized once; transfer calls serialize per repository instance; copy-on-write maps trade bounded allocation for a single legible publication point and exact rollback-by-discard behavior."
+  },
+  "boundaries": {
+    "evidence": "The checks establish in-process semantic replay, one-instance serialized mutation, immutable payload capture, optimistic stale-state behavior, complete custody/event/replay/outbox agreement, and rollback-by-discard under injected Python events in the resolved environment.",
+    "trust": "The fixture and identities are realistic synthetic material. Role capabilities are an explicit conformance policy, and SHA-256 supplies content comparison while authenticity remains with a separate trust mechanism.",
+    "transfer": "A durable receiver selects its database, isolation level, transaction protocol, unique keys, operational authorization, clock policy, broker delivery, consumer acknowledgement, and process-interruption evidence before adaptation."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A changed command can reuse a tenant-scoped transfer identity after an earlier outcome was recorded.",
+      "A stale caller can present an earlier version or custody source.",
+      "An occupied outbox identity can carry different canonical content.",
+      "A candidate commit can stop after any detached write or attempt same-instance re-entry."
+    ],
+    "recoveryMoves": [
+      "Return the changed fields and both fingerprints for explicit reconciliation.",
+      "Return the stale condition while preserving the complete accepted snapshot.",
+      "Keep the occupied message and report the content collision.",
+      "Discard the candidate maps, preserve accepted state, and retry from the same recorded command when appropriate."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:implementation-track",
+      "reason": "A reviewed LIMS/ELN Implementation companion can route technical readers to this complete, runnable custody and transactional-outbox model."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "This first runnable domain exemplar tests the shared envelope across a third artifact kind and supplies cross-kind evidence about Gist-candidate metadata."
+    }
+  ],
+  "extensions": {
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        {"publicationName": "00-README.md", "sourcePath": "README.md"},
+        {"publicationName": "specimen_custody.py", "sourcePath": "src/specimen_custody.py"},
+        {"publicationName": "test_specimen_custody.py", "sourcePath": "tests/test_specimen_custody.py"},
+        {"publicationName": "transfer-command.json", "sourcePath": "fixtures/transfer-command.json"},
+        {"publicationName": "transfer-commit.json", "sourcePath": "expected/transfer-commit.json"}
+      ]
+    }
+  }
+}

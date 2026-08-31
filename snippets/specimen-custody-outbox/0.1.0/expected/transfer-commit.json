@@ -1,0 +1,54 @@
+{
+  "commandFingerprint": "c7eb26dcd8eacfe64e46922e3302fd1f5dff040f4268a413f278d5dbd29f94b3",
+  "custody": {
+    "currentSource": "analysis-bench-2",
+    "specimenId": "specimen-control-042",
+    "tenantId": "tenant-north",
+    "version": 5
+  },
+  "event": {
+    "acceptedVersion": 5,
+    "actorId": "operator-17",
+    "actorRole": "custody_coordinator",
+    "awareAt": "2026-08-31T14:30:00.000000Z",
+    "commandFingerprint": "c7eb26dcd8eacfe64e46922e3302fd1f5dff040f4268a413f278d5dbd29f94b3",
+    "destination": "analysis-bench-2",
+    "eventId": "custody-transfer:transfer-0001",
+    "priorSource": "cold-storage-a",
+    "priorVersion": 4,
+    "reason": "Move the synthetic control specimen into the scheduled analysis handoff.",
+    "specimenId": "specimen-control-042",
+    "tenantId": "tenant-north",
+    "transferId": "transfer-0001"
+  },
+  "outbox": {
+    "contentSha256": "6f0029152d6cbd33b3052e787cb23c0f5bbeea439e43e7af74941d8dae03aff4",
+    "messageId": "custody-transfer:transfer-0001",
+    "payload": {
+      "acceptedVersion": 5,
+      "actor": {
+        "id": "operator-17",
+        "role": "custody_coordinator"
+      },
+      "awareAt": "2026-08-31T14:30:00.000000Z",
+      "commandFingerprint": "c7eb26dcd8eacfe64e46922e3302fd1f5dff040f4268a413f278d5dbd29f94b3",
+      "destination": "analysis-bench-2",
+      "eventId": "custody-transfer:transfer-0001",
+      "eventType": "specimen.custody.transferred.v1",
+      "payload": {
+        "carrier": "synthetic-rack-7",
+        "temperatureBand": "controlled-cold"
+      },
+      "priorSource": "cold-storage-a",
+      "priorVersion": 4,
+      "reason": "Move the synthetic control specimen into the scheduled analysis handoff.",
+      "specimenId": "specimen-control-042",
+      "tenantId": "tenant-north",
+      "transferId": "transfer-0001"
+    },
+    "tenantId": "tenant-north",
+    "topic": "specimen.custody.transferred.v1"
+  },
+  "status": "applied",
+  "transferId": "transfer-0001"
+}
