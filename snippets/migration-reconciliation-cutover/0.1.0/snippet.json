@@ -1,0 +1,190 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "migration-reconciliation-cutover",
+  "version": "0.1.0",
+  "artifactKind": "domain_exemplar",
+  "standing": "candidate",
+  "title": "Migration reconciliation and approval-bound cutover",
+  "summary": "A realistic synthetic process-local conformance model reconciles immutable migration generations and atomically publishes active, prior, approval-consumption, receipt, and event state for one exactly bound cutover request.",
+  "use": {
+    "practicalQuestion": "How can a process-local migration reconcile exact active and candidate generations, bind a supplied approval record whose declared approver differs from the actor to the same report and restore evidence, and publish activation, recovery, event, and replay state through one atomic state change?",
+    "changedAbility": "A collaborator can inspect strict Python-value admission, structured identities, epoch-based candidate staging, lifetime generation identity, complete reconciliation, supplied restore comparison, coordinator-clock approval evaluation, one process-local activation, and exact request-and-original-approval receipt replay in runnable Python.",
+    "readers": [
+      "AI collaborators implementing or reviewing migration and cutover activation boundaries",
+      "Technical practitioners coordinating migration, approval, recovery, and durable execution evidence"
+    ],
+    "capabilities": [
+      "snapshot_migration_generations",
+      "reconcile_generation_state",
+      "compare_supplied_restore_evidence",
+      "bind_cutover_request",
+      "evaluate_supplied_approval",
+      "activate_generation_atomically",
+      "replay_cutover_receipt",
+      "preserve_prior_generation"
+    ]
+  },
+  "provenance": {
+    "class": "authorized_source_synthesis",
+    "description": "A separately reviewed public adaptation synthesized from authorized LIMS/ELN specification, implementation, and visitor-reading roles using realistic synthetic generations, approval records, and recovery observations.",
+    "temporalScope": "This version is a current portable Python 3.12 conformance exemplar with one process-local activation effect. Durable migration, authenticated approval, clean-environment restore, production authority transfer, and accountable domain acceptance remain named later implementation and evidence routes.",
+    "sourceKeys": [
+      "authorized-source:lims-eln-program-specification",
+      "authorized-source:lims-eln-enterprise-implementation",
+      "authorized-source:lims-eln-site-reading",
+      "realistic-synthetic:migration-reconciliation-cutover"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Focused tests establish immutable nested record and generation capture, structured tenant-scoped reconciliation partitions, epoch compare-and-set staging, lifetime generation-ID and digest consistency, deterministic digest chains, exact request and supplied approval binding, half-open approval-window decisions, typed stale, conflict, evidence-return, and denial decisions, one process-local copy-on-write activation, exact request-and-original-approval receipt replay, and accepted-state preservation across tested publication interruptions in the resolved Python 3.12 environment. Source inspection establishes strict Python-value admission, the final compare-before-publish, and response-hook placement after lock release."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/migration-reconciliation-cutover/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "runtime_version", "path": ".python-version", "declaredMediaType": "text/plain"},
+    {"role": "dependency_definition", "path": "pyproject.toml", "declaredMediaType": "application/toml"},
+    {"role": "dependency_lock", "path": "uv.lock", "declaredMediaType": "application/toml"},
+    {"role": "source", "path": "src/migration_cutover.py", "declaredMediaType": "text/x-python"},
+    {"role": "test", "path": "tests/test_migration_cutover.py", "declaredMediaType": "text/x-python"},
+    {"role": "fixture", "path": "fixtures/reconciled-cutover.json", "declaredMediaType": "application/json"},
+    {"role": "fixture", "path": "fixtures/returned-for-evidence.json", "declaredMediaType": "application/json"},
+    {"role": "expected_contract", "path": "expected/cutover-evaluation.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Python >=3.12,<3.13; standard-library runtime behavior",
+    "dependenciesPath": "uv.lock",
+    "commands": [
+      {
+        "name": "run",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/migration-reconciliation-cutover/0.1.0 --locked python snippets/migration-reconciliation-cutover/0.1.0/src/migration_cutover.py snippets/migration-reconciliation-cutover/0.1.0/fixtures/reconciled-cutover.json snippets/migration-reconciliation-cutover/0.1.0/fixtures/returned-for-evidence.json",
+        "establishes": "Produces one deterministic aggregate with reconciliation, restore, request, approval, activation, replay, evidence-return, and final-state observations."
+      },
+      {
+        "name": "test",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/migration-reconciliation-cutover/0.1.0 --locked python -m unittest discover -s snippets/migration-reconciliation-cutover/0.1.0/tests -v",
+        "establishes": "Exercises immutable generation capture, structured reconciliation, epoch and generation-identity conflicts, restore comparison, approval binding and time decisions, atomic activation, exact request-and-original-approval replay, and publication-interruption recovery."
+      },
+      {
+        "name": "lint",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/migration-reconciliation-cutover/0.1.0 --locked ruff check snippets/migration-reconciliation-cutover/0.1.0/src snippets/migration-reconciliation-cutover/0.1.0/tests",
+        "establishes": "Returns focused Python syntax, import, correctness, modernization, and maintainability diagnostics."
+      }
+    ],
+    "fixtures": [
+      "fixtures/reconciled-cutover.json",
+      "fixtures/returned-for-evidence.json"
+    ],
+    "expectedResults": ["expected/cutover-evaluation.json"],
+    "environmentNotes": [
+      "The runtime uses the Python standard library; the development lock supplies Ruff for the repository lint route.",
+      "One coordinator lock serializes calls while detached immutable maps and a final state-reference comparison make the process-local publication boundary inspectable.",
+      "The coordinator owns approval evaluation time, applies the half-open interval [approved_at, expires_at), and invokes the response hook after releasing its state lock.",
+      "The fixtures use realistic synthetic generations, aware fixed times, and the artifact's Python 3.12 canonical-JSON profile for deterministic comparison."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Which identities and digests give one cutover request its complete meaning?",
+      "Does reconciliation classify every active and candidate identity exactly once?",
+      "Does a completed request replay only with its exact original approval record before renewed time evaluation?",
+      "Which identity, restore, quality, durable-execution, and production-recovery claims move to receiving systems?"
+    ],
+    "decisionRules": [
+      "Admit text-keyed finite Python JSON values, snapshot caller-owned record payloads, and order each structured identity before computing its canonical digest.",
+      "Keep matching, missing, divergent, and extra identities distinct until reconciliation is complete.",
+      "Stage through an epoch compare-and-set, retain every observed generation ID-to-digest binding, and keep active and prior generations in their established roles.",
+      "Bind the current epoch, active and candidate generations, report, restore evidence, operation, actor, request, declared-distinct approver, and half-open approval window before activation.",
+      "Compare the accepted state reference before publishing active, prior, request, approval-consumption, receipt, and event state through one process-local state reference; deliver the response after lock release."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "One accepted generation transition and one recorded receipt whose reconciliation, restore evidence, exact request-and-approval pair, prior generation, and event remain linked through the artifact's declared digest profile."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "Equal record counts establish volume; matching, missing, divergent, and extra identities retain the distinctions needed for a legible activation decision, while the recorded receipt distinguishes completed activation from a request that still awaits evidence."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Prepare the request, approval consumption, receipt, event, active generation, and prior-generation recovery state away from the accepted snapshot, then publish them through one process-local state reference."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Reconcile immutable generations, bind the exact report and restore observation into one request, and publish every activation effect through one unit of work."
+      },
+      {
+        "mode": "review",
+        "instruction": "Compare exact request-and-original-approval replay, changed request or approval identity, stale state, generation role and digest conflicts, incomplete reconciliation, restore variance, approval scope and time, every pre-publication interruption, and post-publication response loss against the complete snapshot."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Carry the demonstrated state transition into durable migration, identity, approval, restore, event, and rollback systems with fitting transaction and operational evidence."
+      }
+    ],
+    "codeExemplarGranularity": "One self-contained migration-reconciliation and approval-bound activation with two realistic synthetic fixtures, deterministic expected output, focused unit tests, and named operational evidence receivers.",
+    "complexityAndAllocation": "Canonical records, generations, reports, and decision objects favor explicit immutable snapshots and reproducible digests. Detached map copies trade bounded allocation for one legible process-local publication point and exact pre-publication recovery."
+  },
+  "boundaries": {
+    "evidence": "The checks establish process-local immutable generation capture, structured reconciliation, epoch and generation-identity consistency, supplied restore comparison, approval-record and half-open-window evaluation, one-instance atomic activation, exact request-and-original-approval replay, and tested interruption recovery in the resolved environment. Source inspection establishes strict Python-value admission and post-lock response-hook placement.",
+    "trust": "The fixtures, identities, approvals, and observations are realistic synthetic material. SHA-256 under the declared Python 3.12 canonical-JSON profile supplies content comparison; authenticated identity, accountable authorization, source attestation, observed clean restore, and domain acceptance remain separate trust mechanisms. Cross-language byte equality requires an explicitly conforming profile.",
+    "transfer": "A durable receiver selects its database, isolation and transaction model, source-freeze protocol, cross-process coordination, approval and identity service, observed restore rehearsal, domain acceptance thresholds, effect execution, authority transfer, rollback procedure, and production evidence before adaptation."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A candidate generation identity can arrive with changed canonical content.",
+      "Active and candidate generations can contain missing, divergent, or extra identities, or supplied restore evidence can remain incomplete.",
+      "Current state, request meaning, approval identity, approval scope, or approval time can differ from the prepared plan.",
+      "Activation publication can stop before the state swap or its response can be lost after publication."
+    ],
+    "recoveryMoves": [
+      "Preserve the accepted generation and issue a distinct candidate identity for changed content.",
+      "Return the complete reconciliation or restore route while the accepted generation remains available.",
+      "Return the typed changed fields or reason and form a current request or approval from an eligible approver distinct from the actor when appropriate.",
+      "Retry from the accepted snapshot after a pre-publication interruption, or replay the recorded receipt with the exact original request-and-approval pair after post-publication response loss."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:implementation-track",
+      "reason": "A reviewed LIMS/ELN Implementation companion can route technical readers to this complete migration-reconciliation and approval-bound cutover model."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "This third runnable domain exemplar tests the shared envelope and supplies a fourth materially different Gist-candidate experiment; schema promotion remains with a reader that depends on the shared field."
+    }
+  ],
+  "extensions": {
+    "sourceCoordinates": [
+      {
+        "sourceKey": "urn:source-key:lims-eln-program-specification",
+        "capturedRevision": "23e6ea973f6bd5cc5caa46de10aed589816af9b5",
+        "role": "semantic_contract"
+      },
+      {
+        "sourceKey": "urn:source-key:lims-eln-enterprise-implementation",
+        "capturedRevision": "ac33876eba2dff1ad803d9a7175c1e956036c226",
+        "role": "runnable_ancestry"
+      }
+    ],
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        {"publicationName": "00-README.md", "sourcePath": "README.md"},
+        {"publicationName": "migration_cutover.py", "sourcePath": "src/migration_cutover.py"},
+        {"publicationName": "test_migration_cutover.py", "sourcePath": "tests/test_migration_cutover.py"},
+        {"publicationName": "reconciled-cutover.json", "sourcePath": "fixtures/reconciled-cutover.json"},
+        {"publicationName": "returned-for-evidence.json", "sourcePath": "fixtures/returned-for-evidence.json"},
+        {"publicationName": "cutover-evaluation.json", "sourcePath": "expected/cutover-evaluation.json"}
+      ]
+    }
+  }
+}
