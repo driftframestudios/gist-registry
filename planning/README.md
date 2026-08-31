@@ -1,21 +1,21 @@
 # Current planning terrain
 
-Current work follows the remaining settlement owners, the accepted
-first-coordinate and secret-boundary records, and the current content
-receiver:
+Current live receivers are:
 
-- #1 — canonical registry core and first document-evidence artifact;
-- #3 — collaboration ground, branch topology, and `main` to `docs`
-  publication;
-- #4 — current exact-version schema projection and `kindlight.io` retrieval;
-- #6 — observed media type and hosted-byte evidence after the first signed-out
-  request;
-- #17 — probe-bearing exemplar formation for first reviewable registry
-  coordinates;
-- #20 — canary-proven secret-material inspection for source and publication
-  handoffs; and
-- #18 — replay-safe specimen custody and transactional outbox as the first
-  independent domain companion.
+- #1 — canonical registry core and first-projection settlement;
+- #3 — current immutable-tag and `main` to `docs` publication front;
+- #4 — exact-version schema projection and retrieval settlement; and
+- #6 — the exercised delivery-observation model and its conditional receiver
+  for a response change that affects interpretation or recovery.
+
+Accepted path records supply this terrain:
+
+- #17 — accepted probe-bearing exemplar formation for first reviewable
+  registry coordinates;
+- #20 — accepted canary-proven secret-material inspection for source and
+  publication handoffs; and
+- #18 — accepted replay-safe specimen custody and transactional outbox as the
+  first independent domain companion.
 
 [`SCHEMA-NURSERY.md`](../SCHEMA-NURSERY.md) is the current design note for the
 schema attempt. The exercised `main` to `docs` route now carries deterministic
@@ -52,9 +52,13 @@ identity, delivery, and evidence route completed.
 
 Issue #17 records the accepted first-coordinate formation route. Issue #20
 records the repository-owned source and publication secret-material boundary.
-Issue #18 is the current content path and their first independent
-artifact-formation receiver. Its branch now forms
-`specimen-custody-outbox@0.1.0` as a candidate runnable domain exemplar with a
-proposed Gist source set and reading order. Human technical and publication
-review is the next receiver; the accepted Pages coordinates above remain
-historical until a later projection cycle establishes a successor.
+Issue #18 and pull request #22 accepted
+`specimen-custody-outbox@0.1.0` at
+`main@4aeb88a97b9f1ffd1ec83c5cd8afd5a697f279e4` as their first independent
+artifact-formation receiver. The manifest carries a proposed Gist source set
+and reading order; a flattened Gist projection remains a distinct human-held
+publication choice. Issue #3 receives the immutable artifact coordinate and
+the next consolidated Pages projection. Its existing receipt preserves the
+prior source, generated `docs`, and signed-out observation coordinate; the
+successor receipt will establish that relationship for the newly accepted
+source.

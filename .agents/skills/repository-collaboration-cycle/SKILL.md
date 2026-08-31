@@ -96,6 +96,12 @@ surfaces, exact normalized checks, evidence reach, recovery coordinate,
 environment difference, and next receiver. Review-ready is a complete outcome
 when merge authority remains human-held.
 
+Before handback, compare the Issue-owned acceptance language with the
+implemented evidence boundary. When source truth refines a material term,
+bring the criterion and result into agreement through the Issue body or one
+concise transition comment while the pull request remains the evidence
+receipt.
+
 ## Operating sequence
 
 1. Reconstruct current Git, GitHub, instruction, planning, and source truth.

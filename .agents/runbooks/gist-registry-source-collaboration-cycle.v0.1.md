@@ -1,7 +1,7 @@
 ---
 title: Gist Registry source collaboration cycle
-version: 0.1.0
-status: working
+version: 0.1.1
+status: exercised
 audience: ai_collaborators
 source_band: public_possible
 task_type: repository_collaboration
@@ -296,10 +296,16 @@ Issue's milestone and the smallest meaningful label set. The body names:
 - recovery coordinate; and
 - next receiver plus exact re-entry action.
 
+Compare the Issue-owned acceptance terms with the implemented evidence
+boundary before handback. When source truth refines a material term, update
+the criterion or place one concise transition comment on the Issue. The pull
+request remains the sufficient evidence receipt.
+
 **Checkpoint:** One review surface contains the complete proposed change and
 enough evidence for its next decision. The exact index and complete local
 source boundary have named clean secret-material dispositions after their
-fresh canaries.
+fresh canaries. The Issue acceptance language and pull-request evidence
+describe the same material result and boundary.
 
 **Recovery and stop:** A changed base, failed hosted check, or review finding
 returns to the matching owner and reruns combined evidence. A review-only
@@ -358,7 +364,9 @@ with their existing controlled receiver.
 
 The runbook releases when one active Issue has one reviewable or accepted
 canonical source result, fitting checks, an exact-index boundary observation,
-one sufficient receiving surface, and a direct continuation. Issue #18 is the
-first live traversal. The runbook remains `working` until a later fresh-context
-cycle establishes that its entry, phases, recovery, and handback supply
-self-contained orientation from current source.
+one sufficient receiving surface, and a direct continuation. Issue #18 and PR
+#22 supplied the first complete traversal. The next fresh-context source cycle
+recovered their accepted coordinate, evidence boundary, issue-chain relation,
+and post-acceptance receivers from current repository ground. Version 0.1.1
+records the resulting acceptance-reconciliation refinement; the exercised
+runbook now rests until another natural use exposes a routing or recovery gap.
