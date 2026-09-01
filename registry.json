@@ -49,6 +49,13 @@
       "artifactKind": "domain_exemplar",
       "manifestPath": "snippets/migration-reconciliation-cutover/0.1.0/snippet.json",
       "canonicalPath": "snippets/migration-reconciliation-cutover/0.1.0"
+    },
+    {
+      "semanticId": "typed-absence-and-wire-shape",
+      "version": "0.1.0",
+      "artifactKind": "code_sample",
+      "manifestPath": "snippets/typed-absence-and-wire-shape/0.1.0/snippet.json",
+      "canonicalPath": "snippets/typed-absence-and-wire-shape/0.1.0"
     }
   ]
 }

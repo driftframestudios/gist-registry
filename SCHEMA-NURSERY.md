@@ -158,3 +158,25 @@ model after its focused source and test evidence passes. Authenticated identity,
 accountable authorization, observed clean restore, durable database execution,
 cross-process coordination, production authority transfer, and operational
 rollback retain their named receiving systems and evidence owners.
+
+## Sixth artifact observation
+
+`typed-absence-and-wire-shape@0.1.0` is the first independently authored
+TypeScript `code_sample`. Its field-level presence meanings, compile-time
+optional-property distinction, descriptor snapshot, JSON-ready output, and
+exact-byte example remain artifact-local. The shared identity, provenance,
+representation, execution, practice, boundary, recovery, and relationship
+layers describe it without absorbing language- or runtime-specific behavior.
+
+This artifact supplies a fifth materially different
+`extensions.gistCandidate` use: a README, TypeScript source, runtime and type
+tests, fixture, and expected result with proposed publication names. It also
+exercises an npm dependency lock beside the existing `uv` locks. The shared
+execution envelope accommodates both because each manifest names its runtime,
+artifact-relative lock, commands, fixtures, and expected results.
+
+The manifest records `verified` standing for passive same-realm record
+projection in the resolved Node.js and TypeScript environment. API schema,
+generated-client behavior, transport, persistence, executable proxies,
+cross-realm objects, authorization, and downstream acceptance retain their
+receiving systems and evidence owners.

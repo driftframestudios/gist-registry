@@ -6,7 +6,9 @@ Current live receivers are:
 - #3 — current immutable-tag and `main` to `docs` publication front;
 - #4 — exact-version schema projection and retrieval settlement; and
 - #6 — the exercised delivery-observation model and its conditional receiver
-  for a response change that affects interpretation or recovery.
+  for a response change that affects interpretation or recovery; and
+- #31 — typed absence and JSON-ready wire shape as the current exact-version
+  source receiver.
 
 Accepted path records supply this terrain:
 
@@ -19,7 +21,9 @@ Accepted path records supply this terrain:
 - #24 — accepted raw-byte-preserving instrument ingress, identity convergence,
   and reviewable quarantine as the second domain companion; and
 - #27 — accepted migration reconciliation and approval-bound process-local
-  cutover as the third domain companion.
+  cutover as the third domain companion; and
+- #32 — accepted Registry adaptation of the contextual jargon scan at
+  `main@41acb11779a2ffdbd193fdd837a043d50211e123`.
 
 [`SCHEMA-NURSERY.md`](../SCHEMA-NURSERY.md) is the current design note for the
 schema attempt. The exercised `main` to `docs` route now carries deterministic
@@ -89,3 +93,9 @@ observation for transaction-boundary evidence mapping. Issue #3 receives the
 small portable skill and its source-cycle routing because that Issue already
 owns collaboration ground and skills cultivation. Optional Gist publication
 remains a separate human-held exact-version action.
+
+Issue #31 now receives the independently authored
+`typed-absence-and-wire-shape@0.1.0` source candidate. Its acceptance hands an
+immutable exact-version coordinate and consolidated Pages projection to #3;
+the Context Canvas Implementation placement follows through the linked HASE
+receiver, and optional Gist publication remains a separate human-held action.

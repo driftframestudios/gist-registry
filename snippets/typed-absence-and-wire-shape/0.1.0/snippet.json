@@ -1,0 +1,175 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "typed-absence-and-wire-shape",
+  "version": "0.1.0",
+  "artifactKind": "code_sample",
+  "standing": "candidate",
+  "title": "Typed absence and wire shape",
+  "summary": "A domain-neutral TypeScript adapter preserves omission, explicit clear, an intentionally empty object, and meaningful falsy values as distinct JSON update instructions.",
+  "use": {
+    "practicalQuestion": "How can a JSON update boundary preserve the difference among an omitted field, an explicit clear, an intentionally empty collection, and meaningful falsy values?",
+    "changedAbility": "A collaborator can inspect and run one strict object-to-JSON adapter that assigns field-level meaning before serialization, keeps every admitted presence state distinct, and returns structured error paths that name the responsible field.",
+    "readers": [
+      "AI collaborators implementing or reviewing JSON update boundaries",
+      "Technical practitioners evaluating optional-field and serialization behavior"
+    ],
+    "capabilities": [
+      "preserve_omitted_properties",
+      "represent_explicit_clear",
+      "retain_empty_collections",
+      "retain_meaningful_falsy_values",
+      "reject_unrepresentable_undefined",
+      "detach_wire_snapshots"
+    ]
+  },
+  "provenance": {
+    "class": "independent_synthetic_authoring",
+    "description": "Recurring human practice with JSON integrations informs this independently authored, company-neutral exemplar. Its code, names, and route-configuration fixtures are realistic synthetic material; operational schemas, private locators, endpoints, credentials, production records, and employer code remain with their authorized owners.",
+    "temporalScope": "This version is a portable Node.js 22 and TypeScript 5.9.3 example of one in-memory object-to-JSON boundary. Network transport, persistence, generated clients, schema evolution, and authorization remain receiving-system concerns.",
+    "sourceKeys": [
+      "independent-authoring:typed-absence-wire-shape",
+      "realistic-synthetic:route-configuration"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Strict compilation and focused Node.js tests establish admitted optional-property types, exact fixture and expected bytes, one enumerable descriptor snapshot, own-property presence, JSON round-trip behavior, negative-zero normalization, detached frozen null-prototype output, structured error paths, and explicit rejection of unknown, symbolic, accessor-backed, undefined, misplaced-null, and invalid field values in the resolved environment."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/typed-absence-and-wire-shape/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_definition", "path": "package.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_lock", "path": "package-lock.json", "declaredMediaType": "application/json"},
+    {"role": "compiler_configuration", "path": "tsconfig.json", "declaredMediaType": "application/json"},
+    {"role": "build_configuration", "path": "tsconfig.build.json", "declaredMediaType": "application/json"},
+    {"role": "runner", "path": "run-example.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/typed-absence.ts", "declaredMediaType": "text/typescript"},
+    {"role": "test", "path": "tests/typed-absence.test.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "type_test", "path": "tests/typed-absence.type-test.ts", "declaredMediaType": "text/typescript"},
+    {"role": "fixture", "path": "fixtures/presence-cases.json", "declaredMediaType": "application/json"},
+    {"role": "expected_contract", "path": "expected/wire-shape.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Node.js >=22; dependency-free runtime behavior; TypeScript 5.9.3 for strict compilation",
+    "dependenciesPath": "package-lock.json",
+    "commands": [
+      {
+        "name": "prepare",
+        "command": "npm --prefix snippets/typed-absence-and-wire-shape/0.1.0 ci --ignore-scripts",
+        "establishes": "Installs the exact development compiler recorded by the artifact-local lock without running package lifecycle scripts."
+      },
+      {
+        "name": "typecheck",
+        "command": "npm --prefix snippets/typed-absence-and-wire-shape/0.1.0 run typecheck",
+        "establishes": "Checks strict optional-property, read-only output, and field-specific null behavior without emitting files."
+      },
+      {
+        "name": "test",
+        "command": "npm --prefix snippets/typed-absence-and-wire-shape/0.1.0 test",
+        "establishes": "Builds the adapter and exercises presence, exact bytes, round trip, descriptor admission, negative-zero normalization, projection coverage, detachment, null-prototype output, structured error paths, object shape, and field validation."
+      },
+      {
+        "name": "run",
+        "command": "npm --prefix snippets/typed-absence-and-wire-shape/0.1.0 run example",
+        "establishes": "Prints the fixture's admitted wire shape in the exact bytes recorded by the expected result."
+      }
+    ],
+    "fixtures": ["fixtures/presence-cases.json"],
+    "expectedResults": ["expected/wire-shape.json"],
+    "environmentNotes": [
+      "The runtime adapter imports no third-party package; the artifact-local development lock supplies the exact TypeScript compiler.",
+      "The example covers passive same-realm plain records and enumerable own data properties under one JavaScript process; executable proxies and cross-realm objects remain receiving-boundary questions."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Which fields distinguish omission, explicit clear, and an intentionally empty value?",
+      "Does the receiving transport preserve every state admitted by the source type?",
+      "Can validation inspect object shape without invoking caller-supplied accessors?",
+      "Which meanings belong to the named presence case rather than JavaScript truthiness?"
+    ],
+    "decisionRules": [
+      "Assign presence meaning per field before projecting a wire object.",
+      "Use own-property inspection to distinguish omission from a present value.",
+      "Reject present undefined at a JSON boundary and preserve admitted falsy values exactly.",
+      "Detach admitted nested data before returning a stable wire snapshot."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "One presence-meaning map and one explicit projector preserve every meaning-bearing presence state through the object-to-JSON boundary."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "Truthiness checks and broad defaulting collapse zero, false, an empty string, omission, and explicit clear into fewer states than the receiving contract provides."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "One enumerable descriptor snapshot, field-level parsers, strict optional-property types, structured error paths, detached null-prototype objects, and focused round-trip tests keep each instruction legible."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Name each field's presence policy, then project only admitted own data properties into a detached wire object."
+      },
+      {
+        "mode": "review",
+        "instruction": "Exercise omission, null, empty object, zero, false, empty string, present undefined, unknown keys, accessors, and invalid field types."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Carry the same meanings through the API schema, generated client, transport, persistence layer, and receiver before adapting this example."
+      }
+    ],
+    "codeExemplarGranularity": "One self-contained TypeScript object-to-JSON adapter with a composite realistic synthetic fixture, an exact expected result, runtime tests, and compile-time contract tests.",
+    "complexityAndAllocation": "The projector performs one bounded pass over top-level keys, field-specific validation, and one bounded pass over headers. It allocates a detached header object and output object so the accepted snapshot remains stable after caller mutation."
+  },
+  "boundaries": {
+    "evidence": "The checks establish the declared optional-property and object-to-JSON behavior for passive same-realm plain records, enumerable own data properties, the listed presence meanings, JSON-stable negative zero, structured error paths, and null-prototype output in the resolved Node.js and TypeScript environment.",
+    "trust": "The route configuration and values are realistic synthetic material. The example establishes representation behavior; authenticated origin, caller authority, and business acceptance remain separate trust decisions.",
+    "transfer": "A receiving system selects its API schema, generated-client contract, validation messages, authorization, schema evolution, concurrency, transport, and persistence behavior, then verifies that every admitted presence state survives the complete route."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A caller can supply a present value that JSON cannot represent.",
+      "Broad defaulting can replace meaningful zero, false, or empty-string instructions.",
+      "An accessor or caller-owned nested object can make projection depend on later or implicit behavior.",
+      "A receiving layer can collapse states that the source adapter keeps distinct."
+    ],
+    "recoveryMoves": [
+      "Return the exact field owner and require an admitted JSON value.",
+      "Apply the named presence meaning and retain each admitted falsy value.",
+      "Read enumerable own data properties and detach nested data into the accepted snapshot.",
+      "Add an end-to-end conformance case at every transport or persistence boundary that transforms the patch."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "receiver",
+      "target": "human-ai-systems-exemplars:issue-160",
+      "reason": "A reviewed Context Canvas Implementation companion can route technical readers to this complete typed absence and wire-shape example."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "This runnable TypeScript code sample tests the shared envelope, artifact-local dependency lock, and ordered Gist-candidate shape without requiring schema promotion."
+    }
+  ],
+  "extensions": {
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        {"publicationName": "00-README.md", "sourcePath": "README.md"},
+        {"publicationName": "typed-absence.ts", "sourcePath": "src/typed-absence.ts"},
+        {"publicationName": "typed-absence.test.mjs", "sourcePath": "tests/typed-absence.test.mjs"},
+        {"publicationName": "typed-absence.type-test.ts", "sourcePath": "tests/typed-absence.type-test.ts"},
+        {"publicationName": "presence-cases.json", "sourcePath": "fixtures/presence-cases.json"},
+        {"publicationName": "wire-shape.json", "sourcePath": "expected/wire-shape.json"}
+      ]
+    }
+  }
+}
