@@ -29,6 +29,7 @@ const repositoryRoot = resolve(dirname(modulePath), "..");
 export const projectionFormatVersion = "0.1.0";
 export const projectionOwner = "gist-registry-pages-builder";
 export const canonicalOrigin = "https://kindlight.io";
+export const siteAuthorName = "Vikrant Varun Kudesia";
 const sourceRepositoryOrigin = "https://github.com/driftframestudios/gist-registry";
 export const defaultOutputRoot = resolve(repositoryRoot, ".artifacts/pages");
 
@@ -184,6 +185,7 @@ function pageShell({ title, description, outputPath, body }) {
     '  <meta name="viewport" content="width=device-width, initial-scale=1">',
     "  <title>" + escapeHtml(title) + " · Gist Registry</title>",
     '  <meta name="description" content="' + escapeHtml(description) + '">',
+    '  <meta name="author" content="' + escapeHtml(siteAuthorName) + '">',
     '  <meta name="robots" content="index,follow">',
     '  <link rel="canonical" href="' + escapeHtml(canonicalUrl) + '">',
     '  <link rel="stylesheet" href="/assets/site.css">',
@@ -204,6 +206,9 @@ function pageShell({ title, description, outputPath, body }) {
     "  </main>",
     "  <footer>",
     canaryMarkup(),
+    '    <p class="site-author">Gist Registry author: <a rel="author" href="/AUTHORS">' +
+      escapeHtml(siteAuthorName) +
+      "</a>.</p>",
     '    <p class="copyright">© 2026 Driftframe Studios, Limited Liability Company. Code is available under Apache-2.0.</p>',
     "  </footer>",
     "</body>",
@@ -257,6 +262,7 @@ const siteCss = [
   "pre code { padding: 0; background: transparent; }",
   "footer { padding-block: 2.5rem 1rem; border-top: 1px solid var(--line); color: var(--muted); }",
   ".canary-stack pre { margin: 0; padding: 0; border: 0; background: transparent; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.78rem; }",
+  ".site-author { margin: 2rem 0 0; font-size: 0.82rem; }",
   ".copyright { margin: 2rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.82rem; }",
   "@media (max-width: 38rem) {",
   "  .site-header { align-items: flex-start; flex-direction: column; }",

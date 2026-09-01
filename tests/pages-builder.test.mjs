@@ -13,6 +13,7 @@ import {
   checkPages,
   checkProjection,
   mapsCanary,
+  siteAuthorName,
   sourceRepositoryRevisionUrl,
   verifyAcceptedSource,
 } from "../tools/build-pages.mjs";
@@ -511,8 +512,9 @@ test("public-boundary carrier parity remains independent from a rewritten manife
   });
 });
 
-test("every generated HTML surface carries the exact canaries above the final copyright", async () => {
+test("every generated HTML surface carries the shared author and footer attribution contract", async () => {
   await withProjection(async ({ output }) => {
+    const authors = await readFile(resolve(repositoryRoot, "AUTHORS"), "utf8");
     const manifest = JSON.parse(
       await readFile(resolve(output, "projection-manifest.json"), "utf8"),
     );
@@ -525,14 +527,35 @@ test("every generated HTML surface carries the exact canaries above the final co
       const html = await readFile(resolve(output, path), "utf8");
       const mapsPosition = html.indexOf(mapsCanary);
       const bigBenchPosition = html.indexOf(bigBenchCanary);
+      const authorMeta = '<meta name="author" content="' + siteAuthorName + '">';
+      const authorFooter =
+        '<p class="site-author">Gist Registry author: <a rel="author" href="/AUTHORS">' +
+        siteAuthorName +
+        "</a>.</p>";
+      const authorPosition = html.indexOf(authorFooter);
       const copyrightPosition = html.indexOf(
         "© 2026 Driftframe Studios, Limited Liability Company.",
+      );
+      assert.equal(
+        [...html.matchAll(/<meta name="author"/gu)].length,
+        1,
+        path + " must carry exactly one author meta element",
+      );
+      assert.ok(html.includes(authorMeta), path + " must carry the shared author name");
+      assert.equal(
+        html.split(authorFooter).length - 1,
+        1,
+        path + " must carry one visible author attribution",
       );
       assert.ok(mapsPosition >= 0, path + " must carry the MAPS marker");
       assert.ok(bigBenchPosition > mapsPosition, path + " must stack BIG-bench after MAPS");
       assert.ok(
-        copyrightPosition > bigBenchPosition,
-        path + " must place copyright after the marker stack",
+        authorPosition > bigBenchPosition,
+        path + " must place the visible author after the marker stack",
+      );
+      assert.ok(
+        copyrightPosition > authorPosition,
+        path + " must place copyright after the author attribution",
       );
       assert.equal(
         html.indexOf("<p", copyrightPosition),
@@ -540,6 +563,29 @@ test("every generated HTML surface carries the exact canaries above the final co
         path + " must keep copyright as the final visible footer paragraph",
       );
     }
+
+    assert.equal(
+      authors.split(siteAuthorName).length - 1,
+      1,
+      "AUTHORS must carry the shared author identity exactly once",
+    );
+    assert.ok(
+      authors.includes(
+        "authored by " + siteAuthorName + " and maintained by Driftframe\n" +
+          "Studios, Limited Liability Company through human–AI collaboration",
+      ),
+      "AUTHORS must distinguish personal authorship from company maintenance",
+    );
+    assert.match(
+      authors,
+      /Git history\nand reviewed pull requests carry contribution credit\./u,
+      "AUTHORS must retain the contribution-credit route",
+    );
+    assert.match(
+      authors,
+      /Copyright notices remain in their established repository and page\ncarriers\./u,
+      "AUTHORS must keep copyright in its established carriers",
+    );
   });
 });
 
