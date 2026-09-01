@@ -30,6 +30,13 @@ repository-owned implementation. A fresh synthetic canary proves the pinned
 reader and sanitized-output path before a named tree, exact index, local-ref
 history, or generated artifact receives interpretation.
 
+The repository-local
+[`publication-selection.json`](publication-selection.json) records public
+package standing separately from technical evidence standing. The generated
+Pages catalog contains only complete public-ready packages. Instructions that
+still depend on a broader repository-owner package continue in this private
+workbench until that exact dependency closure can travel with them.
+
 | Skill | Use it when | Standing |
 | --- | --- | --- |
 | [Architecture convergence vantages](architecture-convergence-vantages/SKILL.md) | Several plausible technical changes create different concurrency, recovery, portability, evidence, or publication guarantees | Exercised through filesystem-promotion, exact-excerpt, and instrument-ingress cycles; source-and-test rotation now shapes its guarantee map and release event |
@@ -38,7 +45,7 @@ history, or generated artifact receives interpretation.
 | [Secret-boundary inspection](secret-boundary-inspection/SKILL.md) | Source, an exact proposed index, locally available history, or a generated artifact is preparing for a repository or publication handoff | Received portable contract with a Gist Registry-owned Betterleaks implementation and Pages artifact route |
 | [Contextual jargon scan](contextual-jargon-scan/SKILL.md) | Registry orientation, artifact documentation, or human-readable projection copy may rely on local shorthand | Exercised portable contract with Registry-specific code, coordinate, schema, and deterministic-projection boundaries |
 | [Transaction boundary evidence mapping](transaction-boundary-evidence-mapping/SKILL.md) | Several state changes must become visible together, or retry correctness depends on whether publication occurred | Formed from accepted custody/outbox, ingress/quarantine, and migration/cutover decisions that changed identity, freshness, effect, replay, and recovery architecture |
-| [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Initial instruction-only skill; first receiving use reached the accepted document-evidence `0.1.1` source and exact companion |
+| [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Exercised through the accepted document-evidence `0.1.1` source and exact companion |
 
 “Vantage” means a bounded attention instrument specified by a question,
 evidence source, observable return, and stopping event. Mechanism-centered

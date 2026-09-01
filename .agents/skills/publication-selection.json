@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1",
+  "repository": "gist-registry",
+  "schemaRef": "schemas/skills/0.1.0/public-skill-catalog.schema.json",
+  "projectionBase": "https://kindlight.io/skills/",
+  "publicationPolicy": {
+    "catalogScope": "Every repository skill appears in this repository-only selection. Only public-ready entries appear in public artifacts.",
+    "sourceRule": "A public-ready entry carries its exact instruction source and every supporting file selected for publication.",
+    "possibleRule": "A public-possible entry stays wholly outside public HTML, JSON, source copies, manifests, and links until its complete source package is ready for the same audience.",
+    "readinessRule": "Public-ready describes a publication-safe, coherent source package with a receiving use. Evidence standing remains explicit in the generated exchange projection.",
+    "authorityRule": "Each SKILL.md remains semantic authority. The generated JSON is an exchange projection, and current intent plus granted authority governs each use."
+  },
+  "skills": [
+    {
+      "name": "architecture-convergence-vantages",
+      "sourcePath": ".agents/skills/architecture-convergence-vantages/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md"
+      ],
+      "readinessNote": "The skill and its conditional filesystem reference have shaped accepted source-and-test convergence cycles."
+    },
+    {
+      "name": "contextual-jargon-scan",
+      "sourcePath": ".agents/skills/contextual-jargon-scan/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [],
+      "readinessNote": "The portable contract has been exercised against Registry prose and deterministic projection boundaries."
+    },
+    {
+      "name": "probe-bearing-exemplar-formation",
+      "sourcePath": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [],
+      "readinessNote": "The route received a complete first-coordinate source cycle and public-safe artifact boundary."
+    },
+    {
+      "name": "repository-collaboration-cycle",
+      "sourcePath": ".agents/skills/repository-collaboration-cycle/SKILL.md",
+      "publicationStanding": "public_possible",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/runbooks/gist-registry-pages-publication.v0.1.md",
+        ".agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md"
+      ],
+      "readinessNote": "The skill is exercised. Its operational runbook package still resolves through a broader private repository-owner closure, so the complete public source package remains in preparation."
+    },
+    {
+      "name": "secret-boundary-inspection",
+      "sourcePath": ".agents/skills/secret-boundary-inspection/SKILL.md",
+      "publicationStanding": "public_possible",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/runbooks/gist-registry-pages-publication.v0.1.md",
+        "README.md"
+      ],
+      "readinessNote": "The skill is exercised. Its complete implementation-specific scanner, configuration, runbook, and repository-orientation closure remains in preparation as one public package."
+    },
+    {
+      "name": "transaction-boundary-evidence-mapping",
+      "sourcePath": ".agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [],
+      "readinessNote": "The contract formed from three accepted domain cycles with distinct identity, freshness, replay, publication, and recovery behavior."
+    },
+    {
+      "name": "versioned-exemplar-successor",
+      "sourcePath": ".agents/skills/versioned-exemplar-successor/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [],
+      "readinessNote": "The route received the accepted document-evidence successor and exact derived companion."
+    }
+  ]
+}

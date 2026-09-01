@@ -21,6 +21,11 @@ import { checkRootReadmeCanaryPrefix } from "./check-public-boundary.mjs";
 import { checkDeliveryObservations } from "./check-delivery-observations.mjs";
 import { checkRegistry } from "./check-registry.mjs";
 import { checkSchemaNursery } from "./check-schema.mjs";
+import {
+  loadPublicSkills,
+  publicSkillInputPaths,
+  validatePublicSkillCatalog,
+} from "./public-skills.mjs";
 
 const execFileAsync = promisify(execFile);
 const modulePath = fileURLToPath(import.meta.url);
@@ -196,6 +201,7 @@ function pageShell({ title, description, outputPath, body }) {
     '    <a class="site-name" href="/">Gist Registry</a>',
     '    <nav aria-label="Primary">',
     '      <a href="/snippets/">Artifacts</a>',
+    '      <a href="/skills/">Skills</a>',
     '      <a href="/schemas/gist-registry/">Schemas</a>',
     '      <a href="/observations/delivery/">Observations</a>',
     '      <a href="/data-use/">Data use</a>',
@@ -340,12 +346,13 @@ function canonicalSchemaPath(schema, label) {
   return path;
 }
 
-async function collectSourceModel(root) {
-  const [, , , deliveryObservations] = await Promise.all([
+async function collectSourceModel(root, sourceSha) {
+  const [, , , deliveryObservations, publicSkills] = await Promise.all([
     checkRootReadmeCanaryPrefix({ root }),
     checkRegistry({ root }),
     checkSchemaNursery({ root }),
     checkDeliveryObservations({ root }),
+    loadPublicSkills({ root, sourceSha }),
   ]);
 
   const registryBytes = await readSourceBytes(root, "registry.json", "registry.json");
@@ -424,6 +431,18 @@ async function collectSourceModel(root) {
     sourcePath: deliveryObservations.schema.sourcePath,
     bytes: deliveryObservations.schema.bytes,
   });
+  assert.equal(
+    schemas.has(publicSkills.schema.$id),
+    false,
+    "public skill schema must have a distinct identity",
+  );
+  schemas.set(publicSkills.schema.$id, {
+    canonicalPath: canonicalSchemaPath(publicSkills.schema, "public skill schema"),
+    digest: sha256(publicSkills.schemaBytes),
+    schema: publicSkills.schema,
+    sourcePath: "schemas/skills/0.1.0/public-skill-catalog.schema.json",
+    bytes: publicSkills.schemaBytes,
+  });
 
   return {
     registry,
@@ -431,6 +450,7 @@ async function collectSourceModel(root) {
     artifacts,
     carriers,
     deliveryObservations,
+    publicSkills,
     schemas: [...schemas.values()],
   };
 }
@@ -446,6 +466,7 @@ function publicationInputs(model) {
     "tools/check-public-boundary.mjs",
     "tools/check-registry.mjs",
     "tools/check-schema.mjs",
+    "tools/public-skills.mjs",
     ...model.carriers.keys(),
     ...model.schemas.map(schema => schema.sourcePath),
     model.deliveryObservations.readme.sourcePath,
@@ -455,6 +476,7 @@ function publicationInputs(model) {
       artifact.familyReadmePath,
       ...artifact.representations.map(representation => representation.sourcePath),
     ]),
+    ...publicSkillInputPaths(model.publicSkills),
   ];
 }
 
@@ -742,7 +764,7 @@ function deliveryObservationsPage(deliveryObservations, outputPath) {
   });
 }
 
-function rootPage(artifacts, schemas, deliveryObservations, sourceSha, outputPath) {
+function rootPage(artifacts, schemas, deliveryObservations, publicSkills, sourceSha, outputPath) {
   return pageShell({
     title: "Versioned technical artifacts",
     description: "A public retrieval projection for technical artifacts that grow through versioned collaboration.",
@@ -762,6 +784,11 @@ function rootPage(artifacts, schemas, deliveryObservations, sourceSha, outputPat
         escapeHtml(schemas.length) +
         " exercised exact-version contract" +
         (schemas.length === 1 ? "" : "s") +
+        " currently available.</p></article>",
+      '<article class="card"><h2><a href="/skills/">Collaboration skills</a></h2><p>' +
+        escapeHtml(publicSkills.catalog.skills.length) +
+        " exact public source package" +
+        (publicSkills.catalog.skills.length === 1 ? "" : "s") +
         " currently available.</p></article>",
       '<article class="card"><h2><a href="/observations/delivery/">Delivery observations</a></h2><p>' +
         escapeHtml(deliveryObservations.observationCount) +
@@ -796,6 +823,88 @@ function dataUsePage(outputPath) {
   });
 }
 
+function publicSkillsPage(publicSkills, outputPath) {
+  const cards = publicSkills.catalog.skills
+    .map(skill =>
+      [
+        '<article class="card">',
+        '<p class="eyebrow">Collaboration skill · ' +
+          escapeHtml(skill.evidenceStanding.replaceAll("_", " ")) +
+          "</p>",
+        '<h2><a href="/skills/' + escapeHtml(skill.name) + '/">' +
+          escapeHtml(skill.title) +
+          "</a></h2>",
+        "<p>" + escapeHtml(skill.description) + "</p>",
+        "</article>",
+      ].join("\n"),
+    )
+    .join("\n");
+  return pageShell({
+    title: "Collaboration skills",
+    description: "Repository-local collaboration skills with exact public source packages.",
+    outputPath,
+    body: [
+      '<p class="eyebrow">Public-ready collaboration instructions</p>',
+      "<h1>Collaboration skills</h1>",
+      '<p class="lede">Each listed skill has a complete public source package: the exact instruction file, its selected dependencies, and SHA-256 bindings to this source revision.</p>',
+      "<p>Skills make a recurring job easier to recognize and carry. Current intent, repository evidence, and granted authority continue to govern each use.</p>",
+      '<p><a href="/skills/index.json">Read the typed skill catalog</a>.</p>',
+      '<div class="grid">' + cards + "</div>",
+    ].join("\n"),
+  });
+}
+
+function publicSkillPage(skill, sourceRevision, outputPath) {
+  const dependencies = skill.dependencies.length
+    ? [
+        "<h2>Dependencies</h2>",
+        '<ul class="file-list">',
+        ...skill.dependencies.map(dependency =>
+          '<li><a href="' +
+          escapeHtml(dependency.publishedPath) +
+          '"><code>' +
+          escapeHtml(dependency.repositoryPath) +
+          "</code></a> · <code>sha256:" +
+          escapeHtml(dependency.sha256) +
+          '</code> · <a href="' +
+          escapeHtml(dependency.repositoryUrl) +
+          '">Inspect on GitHub</a></li>',
+        ),
+        "</ul>",
+      ].join("\n")
+    : "<p>This skill has no separate source-package dependencies.</p>";
+  return pageShell({
+    title: skill.title,
+    description: skill.description,
+    outputPath,
+    body: [
+      '<p class="eyebrow">Collaboration skill · ' +
+        escapeHtml(skill.evidenceStanding.replaceAll("_", " ")) +
+        "</p>",
+      "<h1>" + escapeHtml(skill.title) + "</h1>",
+      '<p class="lede">' + escapeHtml(skill.description) + "</p>",
+      "<h2>Exact source</h2>",
+      '<dl class="metadata">',
+      "<dt>Source revision</dt><dd><code>" +
+        escapeHtml(sourceRevision) +
+        "</code></dd>",
+      '<dt>Instruction</dt><dd><a href="' +
+        escapeHtml(skill.source.publishedPath) +
+        '"><code>' +
+        escapeHtml(skill.source.repositoryPath) +
+        "</code></a></dd>",
+      "<dt>SHA-256</dt><dd><code>" + escapeHtml(skill.source.sha256) + "</code></dd>",
+      '<dt>Repository view</dt><dd><a href="' +
+        escapeHtml(skill.source.repositoryUrl) +
+        '">Inspect this file on GitHub</a></dd>',
+      "</dl>",
+      "<p>The local source link opens the byte-preserving kindlight.io copy. GitHub access follows the repository’s current visibility.</p>",
+      dependencies,
+      '<p><a href="/skills/">Return to collaboration skills</a></p>',
+    ].join("\n"),
+  });
+}
+
 function sitemap(urls) {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -809,7 +918,7 @@ function sitemap(urls) {
 }
 
 async function populateProjection({ root, output, sourceSha, sourceBinding }) {
-  const model = await collectSourceModel(root);
+  const model = await collectSourceModel(root, sourceSha);
   if (sourceBinding === "accepted")
     await verifyAcceptedSource({
       root,
@@ -862,6 +971,35 @@ async function populateProjection({ root, output, sourceSha, sourceBinding }) {
       claims,
     );
     generatedPages.push(versionIndex);
+  }
+
+  for (const skill of model.publicSkills.publicReady)
+    for (const file of skill.files)
+      await writeSharedBytes(output, file.publishedPath, file.bytes, claims);
+
+  const skillIndex = "skills/index.html";
+  await writeBytes(
+    output,
+    "skills/index.json",
+    model.publicSkills.catalogBytes,
+    claims,
+  );
+  await writeText(
+    output,
+    skillIndex,
+    publicSkillsPage(model.publicSkills, skillIndex),
+    claims,
+  );
+  generatedPages.push(skillIndex);
+  for (const skill of model.publicSkills.catalog.skills) {
+    const skillPath = "skills/" + skill.name + "/index.html";
+    await writeText(
+      output,
+      skillPath,
+      publicSkillPage(skill, model.publicSkills.catalog.sourceRevision, skillPath),
+      claims,
+    );
+    generatedPages.push(skillPath);
   }
 
   const byFamily = new Map();
@@ -954,6 +1092,7 @@ async function populateProjection({ root, output, sourceSha, sourceBinding }) {
         model.artifacts,
         model.schemas,
         model.deliveryObservations,
+        model.publicSkills,
         sourceSha,
         rootIndex,
       ),
@@ -1123,7 +1262,7 @@ export async function checkProjection({ root = repositoryRoot, output }) {
   const actualFiles = await inventory(resolvedOutput);
   assert.deepEqual(actualFiles, manifest.files, "projection manifest must describe every other file");
 
-  const model = await collectSourceModel(resolve(root));
+  const model = await collectSourceModel(resolve(root), manifest.sourceRevision);
   assert.deepEqual(
     await readFile(resolve(resolvedOutput, "registry.json")),
     model.registryBytes,
@@ -1170,6 +1309,43 @@ export async function checkProjection({ root = repositoryRoot, output }) {
       carrier.bytes,
       carrier.projectionPath + " must preserve authored observation bytes",
     );
+
+  const projectedSkillCatalogBytes = await readFile(
+    resolve(resolvedOutput, "skills/index.json"),
+  );
+  assert.deepEqual(
+    projectedSkillCatalogBytes,
+    model.publicSkills.catalogBytes,
+    "projected skill catalog must preserve the validated generated bytes",
+  );
+  const projectedSkillCatalog = await readJsonBytes(
+    projectedSkillCatalogBytes,
+    "skills/index.json",
+  );
+  validatePublicSkillCatalog(model.publicSkills.schema, projectedSkillCatalog);
+  for (const skill of model.publicSkills.publicReady)
+    for (const file of skill.files)
+      assert.deepEqual(
+        await readFile(resolve(resolvedOutput, file.publishedPath)),
+        file.bytes,
+        file.publishedPath + " must preserve exact skill source bytes",
+      );
+
+  const allProjectedPaths = [
+    ...actualFiles.map(file => file.path),
+    "projection-manifest.json",
+  ];
+  for (const path of allProjectedPaths) {
+    const bytes = await readFile(resolve(resolvedOutput, path));
+    for (const withheldTerm of model.publicSkills.withheldTerms)
+      assert.equal(
+        bytes.toString("utf8").toLocaleLowerCase("en-US").includes(
+          withheldTerm.toLocaleLowerCase("en-US"),
+        ),
+        false,
+        path + " must not name or title a skill outside the public-ready set",
+      );
+  }
 
   return {
     fileCount: actualFiles.length + 1,

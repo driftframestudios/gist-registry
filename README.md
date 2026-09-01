@@ -179,6 +179,22 @@ provides the preceding route from current truth through one exact-version
 source pull request. It hands accepted projection work to the Pages runbook
 while immutable tagging and optional Gist creation retain their own grants.
 
+### Public collaboration skills
+
+The repository-local [skill selection](.agents/skills/publication-selection.json)
+records every current skill while its `SKILL.md` remains the full instruction
+source. The Pages builder publishes only skills whose named source and
+supporting files are ready for public use. Each published file keeps its exact
+bytes, repository path, source revision, and SHA-256 digest.
+
+[`/skills/`](https://kindlight.io/skills/) is the human-readable catalog.
+[`/skills/index.json`](https://kindlight.io/skills/index.json) is the
+machine-readable catalog, checked against the versioned
+[public skill catalog schema](schemas/skills/0.1.0/public-skill-catalog.schema.json).
+Skills still gathering public-ready source and supporting files stay in the
+repository workbench and outside generated HTML, JSON, source copies, links,
+and the projection manifest.
+
 ## Run the current checks
 
 The registry uses dependencies where they protect named behavior:
@@ -207,13 +223,14 @@ local projection into the ignored `.artifacts/pages/` directory with:
 
 ```sh
 npm run check:pages
+npm run check:public-skills
 npm run build:pages
 ```
 
-The projection preserves every registered representation byte-for-byte, carries
-the current schema both at its manifest-relative path and canonical `$id`
-path, and records the accepted source revision plus SHA-256 for every other
-output file. The separate
+The projection preserves every registered representation and public skill
+source package byte-for-byte, carries each current schema at its
+repository-relative path and canonical `$id` path, and records the accepted
+source revision plus SHA-256 for every other output file. The separate
 [`observations/delivery/`](observations/delivery/README.md) family preserves
 small, public-safe records of named signed-out HTTPS observations without
 changing the artifact or schema whose delivery was observed. Collaboration
