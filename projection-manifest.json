@@ -2,7 +2,7 @@
   "projectionFormatVersion": "0.1.0",
   "projectionOwner": "gist-registry-pages-builder",
   "canonicalOrigin": "https://kindlight.io",
-  "sourceRevision": "502fe9c108bc077bdf41a4313f8dcee24bac7a92",
+  "sourceRevision": "a8ac561e9ef4ca8091e421e5a47f0e2bc719e6e9",
   "sourceStanding": "accepted_revision",
   "fileScope": "Every projection file except projection-manifest.json itself.",
   "files": [
@@ -44,7 +44,7 @@
     {
       "path": "index.html",
       "bytes": 3097,
-      "sha256": "3cb6f5b7dce66f85fac5c99965cc59fc82b4f469c999c2dda0fa105296bcee18"
+      "sha256": "384a43bd291a4abe1f0375aafec07ded0341f14c83a0625dd745e6473ca20801"
     },
     {
       "path": "observations/delivery/README.md",
@@ -68,8 +68,8 @@
     },
     {
       "path": "registry.json",
-      "bytes": 2034,
-      "sha256": "f648e96487ecd9ed16b555dc5f31cfb4ec70ee74ca12cd2f99ba9d871da62704"
+      "bytes": 2313,
+      "sha256": "570c804576d32f4fc50cc984fe21eec33ebae179e5188848746e8a9ac60106f0"
     },
     {
       "path": "robots.txt",
@@ -89,7 +89,7 @@
     {
       "path": "schemas/gist-registry/0.1.0/index.html",
       "bytes": 2796,
-      "sha256": "70c3acd6007d09d9645d14523b5581abae47d2336800151422e8c8bae4b28306"
+      "sha256": "2bbebba387218eecfa5d7253dad436388296c7768953de66c272e89d05c41414"
     },
     {
       "path": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
@@ -104,7 +104,7 @@
     {
       "path": "schemas/gist-registry/delivery-observation/0.1.0/index.html",
       "bytes": 2793,
-      "sha256": "49de428964d2d9a5004eb8101055e52752826621b78ce3aeffd9402caef644d2"
+      "sha256": "77fc80b3aa88702aae5f4262ad02d774bb11e6b74cd8c0045c35e4fe0df4f2ac"
     },
     {
       "path": "schemas/gist-registry/index.html",
@@ -113,8 +113,8 @@
     },
     {
       "path": "sitemap.xml",
-      "bytes": 1628,
-      "sha256": "bdbea5b1f4255de49b61fa36cf32ecb6cca460bb6ff7cac739fbc12084669e3d"
+      "bytes": 1802,
+      "sha256": "0006db14e6e1361c1134060d8793d0375b57b2fe9046c192d78a6304b7b99fdb"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/README.md",
@@ -139,7 +139,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/index.html",
       "bytes": 5401,
-      "sha256": "069467c3717394ed91e1142e6ecfb24d6ec8e8dae4e9bb5bac5171fd02f10e2e"
+      "sha256": "5fa8ff7c0a189101e348c33395dc1ed4467ddd15aaa2a27eb9bbad2fe63f5679"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
@@ -169,7 +169,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/index.html",
       "bytes": 5857,
-      "sha256": "1f7dbdd9db629995bfe3faf49112716c4ba83474246edd0ebce2303afb3855f9"
+      "sha256": "5a42850bbf63dff0eca66023b2059720327395b821af7bd632e51b51884f9ab5"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
@@ -234,7 +234,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.0/index.html",
       "bytes": 10036,
-      "sha256": "e68c5d96a39a9521eae06c0433787bd04d8b9278367705f2a32500096d8f1ab3"
+      "sha256": "3e46a85257138551aae99962e7645da8d1414a77d6b40d01b9250f6b50a9a980"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
@@ -309,7 +309,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.1/index.html",
       "bytes": 11544,
-      "sha256": "5b7e8764a612f9ca48a93495dbc5bec5b6a8afd4d10534bcc64734860d98556e"
+      "sha256": "a6739d63ab6ea18a38b34f7bc70aa946eb4b33359824f60d95bf0687f16e5c9b"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.1/pyproject.toml",
@@ -358,8 +358,8 @@
     },
     {
       "path": "snippets/index.html",
-      "bytes": 4683,
-      "sha256": "13240aaaf8667a37df42d9adc1830db34b758086ec8aba44020db5837516af78"
+      "bytes": 5094,
+      "sha256": "e44a1904eee68b827e4e15e8f7e46cada2736c83139fbd872b9ac9ce3f82d6ef"
     },
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/.python-version",
@@ -389,7 +389,7 @@
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/index.html",
       "bytes": 9001,
-      "sha256": "7a62da9fa2528c4dfea43283da674d6ce6c6b65bb1ac5644e42e63719d9463c9"
+      "sha256": "b0e956badd27f3f5a4d684a352cb9d9437984efa5cd2d95d531a52bcc76d4186"
     },
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/pyproject.toml",
@@ -454,7 +454,7 @@
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/index.html",
       "bytes": 9674,
-      "sha256": "d4c3f0bb153933a8199202370a5007ba28449da8fc5e118554f8701cb2257740"
+      "sha256": "50356cd24c698546a4b7e4f7270db4dfbe98966edfd2cc3570b8c8b0bc25b4dd"
     },
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/pyproject.toml",
@@ -514,7 +514,7 @@
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/index.html",
       "bytes": 8119,
-      "sha256": "5aa2d92f3a1eaad923efcec4c15856d314b43ac16e3cd9c62655a60cb61dd406"
+      "sha256": "3b7328d3f80405cf8f5b1037ad8f785a1eaaf3528f35a673e274853b42ceaacf"
     },
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/pyproject.toml",
@@ -550,6 +550,81 @@
       "path": "snippets/specimen-custody-outbox/index.html",
       "bytes": 2258,
       "sha256": "fc135e44b904643f53a2fb9ebe90687108a0704e7150b951418b907424a6eafd"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/README.md",
+      "bytes": 5072,
+      "sha256": "9744c39cfa2c0986e64dc68641d868600ec48f0d6283a7fe4f142cc1e382dace"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/expected/wire-shape.json",
+      "bytes": 106,
+      "sha256": "61025e30b195481832fdd9f2133d68ee2bcc780760536bc51a36e17195eaff29"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/fixtures/presence-cases.json",
+      "bytes": 106,
+      "sha256": "61025e30b195481832fdd9f2133d68ee2bcc780760536bc51a36e17195eaff29"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/index.html",
+      "bytes": 9251,
+      "sha256": "16af1e07a9967ad257f30d471ea9b43e9d019b65925d1b8c42ce4385f810d2e2"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/package-lock.json",
+      "bytes": 790,
+      "sha256": "91d7320358fe2b9a1d01a5b7be09e648d8647793e4117d6bb768403ed605ca67"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/package.json",
+      "bytes": 428,
+      "sha256": "cee6f5a7c5e5090fe68d9f758de3f66685b729131cbe254f9745cef431622af9"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/run-example.mjs",
+      "bytes": 404,
+      "sha256": "7570d4da3d20880d8329db82caca139f42e1e6dfb0a78e73a592425f128fe9b2"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/snippet.json",
+      "bytes": 11410,
+      "sha256": "7c062cee869cfda14d181db531b5063b1dedb7c05c568e25064bbb5e70f7e0f6"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/src/typed-absence.ts",
+      "bytes": 6311,
+      "sha256": "0ba8e5c425bf5c25058861a1cb6406c209f53a0168fba19c84352bbb664a7893"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/tests/typed-absence.test.mjs",
+      "bytes": 7831,
+      "sha256": "6e0ed670a6a249327207fe40ad961c76001a261b18181cc9a5be9a233c5b659f"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/tests/typed-absence.type-test.ts",
+      "bytes": 904,
+      "sha256": "1287a1b424e89a6c94015d05da1f5dfb6bdb18bc79ecc75cf7127613d3181baf"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/tsconfig.build.json",
+      "bytes": 214,
+      "sha256": "019f375bdbedd6f9e29cca1d63320eae1c6d2c8839913d0d43231eb2d7eed772"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/0.1.0/tsconfig.json",
+      "bytes": 518,
+      "sha256": "3d03c325f140ca20387f31b7532100421fbbbdaadbf875ec77e64574dc56eea7"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/README.md",
+      "bytes": 902,
+      "sha256": "bb23df9fd156dc6ae4b56f7ea41520d7edcc0447b8ecd8e2290c751f127cae85"
+    },
+    {
+      "path": "snippets/typed-absence-and-wire-shape/index.html",
+      "bytes": 2213,
+      "sha256": "c3150a304778d3ff3cef8945d6b21f309bad7fce121401d6be4594c9fd1d7fec"
     }
   ]
 }
