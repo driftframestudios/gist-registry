@@ -47,7 +47,23 @@ const expectedPaths = [
   "schemas/gist-registry/delivery-observation/0.1.0/delivery-observation.schema.json",
   "schemas/gist-registry/delivery-observation/0.1.0/index.html",
   "schemas/gist-registry/index.html",
+  "schemas/gist-registry/skills/0.1.0/index.html",
+  "schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json",
+  "schemas/skills/0.1.0/public-skill-catalog.schema.json",
   "sitemap.xml",
+  "skills/architecture-convergence-vantages/index.html",
+  "skills/contextual-jargon-scan/index.html",
+  "skills/index.html",
+  "skills/index.json",
+  "skills/probe-bearing-exemplar-formation/index.html",
+  "skills/source/.agents/skills/architecture-convergence-vantages/SKILL.md",
+  "skills/source/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
+  "skills/source/.agents/skills/contextual-jargon-scan/SKILL.md",
+  "skills/source/.agents/skills/probe-bearing-exemplar-formation/SKILL.md",
+  "skills/source/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
+  "skills/source/.agents/skills/versioned-exemplar-successor/SKILL.md",
+  "skills/transaction-boundary-evidence-mapping/index.html",
+  "skills/versioned-exemplar-successor/index.html",
   "snippets/document-evidence-core-patterns/0.1.0/README.md",
   "snippets/document-evidence-core-patterns/0.1.0/gist/00-README.md",
   "snippets/document-evidence-core-patterns/0.1.0/gist/10-same-byte-capture.md",
@@ -407,6 +423,62 @@ test("public discovery routes carry collaboration and continuation orientation",
   });
 });
 
+test("public skill routes expose only the selected exact source packages", async () => {
+  await withProjection(async ({ output }) => {
+    const catalog = JSON.parse(await readFile(resolve(output, "skills/index.json"), "utf8"));
+    const expectedNames = [
+      "architecture-convergence-vantages",
+      "contextual-jargon-scan",
+      "probe-bearing-exemplar-formation",
+      "transaction-boundary-evidence-mapping",
+      "versioned-exemplar-successor",
+    ];
+    assert.deepEqual(catalog.skills.map(skill => skill.name), expectedNames);
+    assert.equal(catalog.sourceRevision, fixedSourceRevision);
+
+    for (const skill of catalog.skills) {
+      const html = await readFile(
+        resolve(output, "skills", skill.name, "index.html"),
+        "utf8",
+      );
+      assert.ok(html.includes('href="' + skill.source.publishedPath + '"'));
+      assert.ok(html.includes('href="' + skill.source.repositoryUrl + '"'));
+      assert.ok(html.includes(skill.source.sha256));
+      assert.deepEqual(
+        await readFile(resolve(output, skill.source.publishedPath.slice(1))),
+        await readFile(resolve(repositoryRoot, skill.source.repositoryPath)),
+      );
+      for (const dependency of skill.dependencies) {
+        assert.ok(html.includes('href="' + dependency.publishedPath + '"'));
+        assert.ok(html.includes(dependency.sha256));
+        assert.deepEqual(
+          await readFile(resolve(output, dependency.publishedPath.slice(1))),
+          await readFile(resolve(repositoryRoot, dependency.repositoryPath)),
+        );
+      }
+    }
+
+    const manifest = await readFile(resolve(output, "projection-manifest.json"), "utf8");
+    const catalogHtml = await readFile(resolve(output, "skills/index.html"), "utf8");
+    for (const withheldName of [
+      "repository-collaboration-cycle",
+      "Repository collaboration cycle",
+      "secret-boundary-inspection",
+      "Secret boundary inspection",
+    ]) {
+      assert.equal(manifest.toLocaleLowerCase("en-US").includes(
+        withheldName.toLocaleLowerCase("en-US"),
+      ), false);
+      assert.equal(catalogHtml.toLocaleLowerCase("en-US").includes(
+        withheldName.toLocaleLowerCase("en-US"),
+      ), false);
+      assert.equal(JSON.stringify(catalog).toLocaleLowerCase("en-US").includes(
+        withheldName.toLocaleLowerCase("en-US"),
+      ), false);
+    }
+  });
+});
+
 test("artifact file inspection links retain local bytes and bind GitHub to the source revision", async () => {
   await withProjection(async ({ output }) => {
     const registry = JSON.parse(await readFile(resolve(repositoryRoot, "registry.json"), "utf8"));
@@ -508,6 +580,27 @@ test("public-boundary carrier parity remains independent from a rewritten manife
     await assert.rejects(
       checkProjection({ root: repositoryRoot, output }),
       /AI-DATA-USE\.md must preserve authored public-boundary bytes/u,
+    );
+  });
+});
+
+test("skill source parity remains independent from a rewritten projection manifest", async () => {
+  await withProjection(async ({ output }) => {
+    const sourcePath =
+      "skills/source/.agents/skills/contextual-jargon-scan/SKILL.md";
+    const changedBytes = Buffer.from("changed skill source\n", "utf8");
+    await writeFile(resolve(output, sourcePath), changedBytes);
+
+    const manifestPath = resolve(output, "projection-manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    const entry = manifest.files.find(file => file.path === sourcePath);
+    entry.bytes = changedBytes.length;
+    entry.sha256 = createHash("sha256").update(changedBytes).digest("hex");
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+
+    await assert.rejects(
+      checkProjection({ root: repositoryRoot, output }),
+      /must preserve exact skill source bytes/u,
     );
   });
 });

@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - ".agents/runbooks/**"
+      - ".agents/skills/**"
       - ".betterleaks.toml"
       - ".gitignore"
       - ".github/workflows/registry-checks.yml"

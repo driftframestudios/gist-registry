@@ -9,6 +9,7 @@
   "scripts": {
     "build:pages": "node tools/build-pages.mjs",
     "check:pages": "node tools/build-pages.mjs --check",
+    "check:public-skills": "node tools/check-public-skills.mjs",
     "observe:pages": "node tools/observe-pages.mjs",
     "check:delivery-observations": "node tools/check-delivery-observations.mjs",
     "check:public-boundary": "node tools/check-public-boundary.mjs",
@@ -32,7 +33,7 @@
     "check:python-lock:instrument-ingress-integrity:0.1.0": "uv --cache-dir .artifacts/uv-cache lock --project snippets/instrument-ingress-integrity/0.1.0 --check",
     "check:python-lock:migration-reconciliation-cutover:0.1.0": "uv --cache-dir .artifacts/uv-cache lock --project snippets/migration-reconciliation-cutover/0.1.0 --check",
     "check:python-lock": "npm run check:python-lock:0.1.0 && npm run check:python-lock:0.1.1 && npm run check:python-lock:specimen-custody-outbox:0.1.0 && npm run check:python-lock:instrument-ingress-integrity:0.1.0 && npm run check:python-lock:migration-reconciliation-cutover:0.1.0",
-    "test:node": "node --test tests/*.test.mjs && npm run test:secret-material && npm run check:public-boundary && npm run check:registry && npm run check:schema && npm run check:delivery-observations && npm run check:pages",
+    "test:node": "node --test tests/*.test.mjs && npm run test:secret-material && npm run check:public-boundary && npm run check:registry && npm run check:schema && npm run check:delivery-observations && npm run check:public-skills && npm run check:pages",
     "test:secret-material": "node --test tests/security/secret-material.test.mjs",
     "lint:python:0.1.0": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked ruff check snippets/document-evidence-extraction/0.1.0/src snippets/document-evidence-extraction/0.1.0/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked ruff format --check snippets/document-evidence-extraction/0.1.0/src snippets/document-evidence-extraction/0.1.0/tests",
     "lint:python:0.1.1": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.1 --locked ruff check snippets/document-evidence-extraction/0.1.1/src snippets/document-evidence-extraction/0.1.1/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.1 --locked ruff format --check snippets/document-evidence-extraction/0.1.1/src snippets/document-evidence-extraction/0.1.1/tests",
