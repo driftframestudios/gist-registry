@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kindlight.io/schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json",
+  "title": "Gist Registry public skill catalog",
+  "description": "A repository-local exchange projection for exact public-ready skill source packages.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "$schema",
+    "repository",
+    "canonicalUrl",
+    "sourceRevision",
+    "publicationScope",
+    "skills"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "$schema": { "const": "https://kindlight.io/schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json" },
+    "repository": { "const": "gist-registry" },
+    "canonicalUrl": { "const": "https://kindlight.io/skills/index.json" },
+    "sourceRevision": { "$ref": "#/$defs/sha1" },
+    "publicationScope": {
+      "const": "Every listed entry has public-ready standing and an exact source package in this projection."
+    },
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/skill" }
+    }
+  },
+  "$defs": {
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "pathBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repositoryPath", "publishedPath", "sha256", "repositoryUrl"],
+      "properties": {
+        "repositoryPath": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "publishedPath": {
+          "type": "string",
+          "pattern": "^/skills/source/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "repositoryUrl": { "type": "string", "format": "uri" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "title",
+        "description",
+        "publicationStanding",
+        "evidenceStanding",
+        "canonicalUrl",
+        "source"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "publicationStanding": { "const": "public_ready" },
+        "evidenceStanding": { "enum": ["instruction_only", "exercised"] },
+        "canonicalUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://kindlight\\.io/skills/[a-z0-9-]+/$"
+        },
+        "source": { "$ref": "#/$defs/pathBinding" },
+        "dependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/pathBinding" }
+        }
+      }
+    }
+  }
+}
