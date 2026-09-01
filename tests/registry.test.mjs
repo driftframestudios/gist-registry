@@ -25,6 +25,10 @@ const migrationManifestPath = resolve(
   repositoryRoot,
   "snippets/migration-reconciliation-cutover/0.1.0/snippet.json",
 );
+const typedAbsenceManifestPath = resolve(
+  repositoryRoot,
+  "snippets/typed-absence-and-wire-shape/0.1.0/snippet.json",
+);
 const companionManifestPaths = new Map([
   [
     "0.1.0",
@@ -274,6 +278,57 @@ test("migration cutover keeps activation evidence and authority owners distinct"
       role: "runnable_ancestry",
     },
   ]);
+  assert.deepEqual(
+    manifest.relationships.map(relationship => relationship.type),
+    ["receiver", "schema_nursery"],
+  );
+});
+
+test("typed absence keeps wire meanings and Gist source order explicit", async () => {
+  const manifest = await json(typedAbsenceManifestPath);
+  const declaredPaths = new Set(
+    manifest.representations.map(representation => representation.path),
+  );
+  const gistFiles = manifest.extensions.gistCandidate.orderedFiles;
+
+  assert.equal(manifest.artifactKind, "code_sample");
+  assert.equal(manifest.standing, "candidate");
+  assert.equal(manifest.technicalVeracity.status, "verified");
+  assert.deepEqual(manifest.execution.fixtures, [
+    "fixtures/presence-cases.json",
+  ]);
+  assert.deepEqual(manifest.execution.expectedResults, [
+    "expected/wire-shape.json",
+  ]);
+  assert.deepEqual(gistFiles, [
+    { publicationName: "00-README.md", sourcePath: "README.md" },
+    {
+      publicationName: "typed-absence.ts",
+      sourcePath: "src/typed-absence.ts",
+    },
+    {
+      publicationName: "typed-absence.test.mjs",
+      sourcePath: "tests/typed-absence.test.mjs",
+    },
+    {
+      publicationName: "typed-absence.type-test.ts",
+      sourcePath: "tests/typed-absence.type-test.ts",
+    },
+    {
+      publicationName: "presence-cases.json",
+      sourcePath: "fixtures/presence-cases.json",
+    },
+    {
+      publicationName: "wire-shape.json",
+      sourcePath: "expected/wire-shape.json",
+    },
+  ]);
+  for (const file of gistFiles) {
+    assert.ok(
+      declaredPaths.has(file.sourcePath),
+      file.sourcePath + " must be one declared canonical representation",
+    );
+  }
   assert.deepEqual(
     manifest.relationships.map(relationship => relationship.type),
     ["receiver", "schema_nursery"],

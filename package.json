@@ -22,6 +22,10 @@
     "security:secrets:history": "node tools/scan-secret-material.mjs history",
     "security:secrets:artifact": "node tools/scan-secret-material.mjs artifact",
     "security:secrets:pages": "node tools/scan-secret-material.mjs artifact .artifacts/pages",
+    "prepare:typescript:typed-absence-and-wire-shape:0.1.0": "npm --prefix snippets/typed-absence-and-wire-shape/0.1.0 ci --ignore-scripts",
+    "typecheck:typescript:typed-absence-and-wire-shape:0.1.0": "npm --prefix snippets/typed-absence-and-wire-shape/0.1.0 run typecheck",
+    "test:typescript:typed-absence-and-wire-shape:0.1.0": "npm run prepare:typescript:typed-absence-and-wire-shape:0.1.0 && npm run typecheck:typescript:typed-absence-and-wire-shape:0.1.0 && npm --prefix snippets/typed-absence-and-wire-shape/0.1.0 test",
+    "test:typescript": "npm run test:typescript:typed-absence-and-wire-shape:0.1.0",
     "check:python-lock:0.1.0": "uv --cache-dir .artifacts/uv-cache lock --project snippets/document-evidence-extraction/0.1.0 --check",
     "check:python-lock:0.1.1": "uv --cache-dir .artifacts/uv-cache lock --project snippets/document-evidence-extraction/0.1.1 --check",
     "check:python-lock:specimen-custody-outbox:0.1.0": "uv --cache-dir .artifacts/uv-cache lock --project snippets/specimen-custody-outbox/0.1.0 --check",
@@ -42,7 +46,7 @@
     "test:python:instrument-ingress-integrity:0.1.0": "uv --cache-dir .artifacts/uv-cache run --project snippets/instrument-ingress-integrity/0.1.0 --locked python -m unittest discover -s snippets/instrument-ingress-integrity/0.1.0/tests -v",
     "test:python:migration-reconciliation-cutover:0.1.0": "uv --cache-dir .artifacts/uv-cache run --project snippets/migration-reconciliation-cutover/0.1.0 --locked python -m unittest discover -s snippets/migration-reconciliation-cutover/0.1.0/tests -v",
     "test:python": "npm run test:python:0.1.0 && npm run test:python:0.1.1 && npm run test:python:specimen-custody-outbox:0.1.0 && npm run test:python:instrument-ingress-integrity:0.1.0 && npm run test:python:migration-reconciliation-cutover:0.1.0",
-    "test": "npm run test:node && npm run check:python-lock && npm run lint:python && npm run test:python"
+    "test": "npm run test:node && npm run test:typescript && npm run check:python-lock && npm run lint:python && npm run test:python"
   },
   "devDependencies": {
     "ajv": "8.20.0",

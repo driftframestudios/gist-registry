@@ -19,7 +19,7 @@ failure-and-recovery evidence, and exact teaching companions through
 constructive human–AI collaboration. Each accepted version remains a stable
 coordinate; successors carry what later collaboration learns.
 
-The repository is the private authored-source and collaboration carrier.
+The repository is the authored-source and collaboration carrier.
 Apache-2.0 governs its code; its selected public boundary is the allowlisted
 GitHub Pages projection on `docs`. Repository visibility, Pages activation,
 and creation of a public or unlisted Gist are distinct publication actions.
@@ -89,10 +89,8 @@ from both accepted implementations:
 Each companion is a `code_excerpt`. Version `0.1.0` makes same-byte capture and
 the demonstrated single-failure restoration case compact. Version `0.1.1`
 makes observed-effect reconciliation and complete-caller recovery ownership
-compact. The complete artifact remains the runnable evidence owner. The PR #14
-publication observation at
-`docs@2b996ccd5d0f487eaa590d8822ada6203dfbae0e` carries the accepted `0.1.0`
-companion. The next consolidated Pages cycle can receive `0.1.1`; human review
+compact. The complete artifact remains the runnable evidence owner. The
+consolidated Pages projection carries both exact companions; human review
 retains the optional Gist publication decision for each exact version.
 
 ## First independent domain companion
@@ -128,6 +126,22 @@ concurrent callers, parser and mapper faults, and every candidate commit
 interruption. A governed object-store and durable inbox transaction is the
 next receiver for restart, cross-process, configured-instrument, and
 scientific-qualification claims.
+
+## Typed absence and JSON-ready output
+
+[`typed-absence-and-wire-shape@0.1.0`](snippets/typed-absence-and-wire-shape/0.1.0/README.md)
+is an independently authored, domain-neutral `code_sample`. Its route patch
+keeps omission, explicit `null`, a present empty object, `0`, `false`, and an
+empty string available as distinct update instructions.
+
+The TypeScript source takes one descriptor snapshot of passive same-realm
+records, admits enumerable own data properties, applies field-level meaning,
+normalizes negative zero to the JSON-stable retry value, and returns detached
+null-prototype output. Strict compilation and focused runtime checks cover the
+source types, exact example bytes, JSON round trip, projection coverage,
+object shape, error ownership, and caller-mutation boundary. APIs, generated
+clients, transport, persistence, and authorization remain named transfer
+decisions.
 
 ## Canonical path and projection roles
 
@@ -167,16 +181,19 @@ while immutable tagging and optional Gist creation retain their own grants.
 
 ## Run the current checks
 
-The registry uses two dependencies where they protect named behavior:
+The registry uses dependencies where they protect named behavior:
 
 - Ajv validates the complete Draft 2020-12 artifact contract rather than a
   hand-written approximation; and
-- the artifact environment is locked with `uv`, with Ruff providing a fast
-  Python diagnostic and formatting route.
+- TypeScript supplies strict compile-time checks for the typed-absence sample,
+  with its exact compiler held by the artifact-local npm lock; and
+- Python artifact environments are locked with `uv`, with Ruff providing a
+  focused diagnostic and formatting route.
 
-The reference local toolchain is Node.js 22 or newer, Python 3.12, and `uv`
-0.11.33. Confirm `node --version`, `python3.12 --version`, and `uv --version`,
-then install the Node dependencies and run the complete fast path:
+The reference local toolchain is Node.js 22 or newer, TypeScript 5.9.3,
+Python 3.12, and `uv` 0.11.33. Confirm `node --version`,
+`python3.12 --version`, and `uv --version`, then install the root Node
+dependencies and run the complete fast path:
 
 ```sh
 npm ci
@@ -351,3 +368,9 @@ process-local raw-capture, identity, normalization, replay, quarantine,
 concurrency, and fault-recovery claim. Durable raw-object storage, inbox and
 measurement transactions, configured source authenticity, and scientific
 mapping qualification remain with their named receivers.
+
+The typed-absence exemplar is independently authored from recurring human
+practice with JSON integrations. Its company-neutral route fields and
+realistic synthetic values own the demonstrated object-to-JSON claim. API
+schemas, generated clients, transport behavior, persistence, authorization,
+and business acceptance remain with their receiving systems.

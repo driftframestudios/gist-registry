@@ -134,6 +134,21 @@ const expectedPaths = [
   "snippets/specimen-custody-outbox/0.1.0/uv.lock",
   "snippets/specimen-custody-outbox/README.md",
   "snippets/specimen-custody-outbox/index.html",
+  "snippets/typed-absence-and-wire-shape/0.1.0/README.md",
+  "snippets/typed-absence-and-wire-shape/0.1.0/expected/wire-shape.json",
+  "snippets/typed-absence-and-wire-shape/0.1.0/fixtures/presence-cases.json",
+  "snippets/typed-absence-and-wire-shape/0.1.0/index.html",
+  "snippets/typed-absence-and-wire-shape/0.1.0/package-lock.json",
+  "snippets/typed-absence-and-wire-shape/0.1.0/package.json",
+  "snippets/typed-absence-and-wire-shape/0.1.0/run-example.mjs",
+  "snippets/typed-absence-and-wire-shape/0.1.0/snippet.json",
+  "snippets/typed-absence-and-wire-shape/0.1.0/src/typed-absence.ts",
+  "snippets/typed-absence-and-wire-shape/0.1.0/tests/typed-absence.test.mjs",
+  "snippets/typed-absence-and-wire-shape/0.1.0/tests/typed-absence.type-test.ts",
+  "snippets/typed-absence-and-wire-shape/0.1.0/tsconfig.build.json",
+  "snippets/typed-absence-and-wire-shape/0.1.0/tsconfig.json",
+  "snippets/typed-absence-and-wire-shape/README.md",
+  "snippets/typed-absence-and-wire-shape/index.html",
 ];
 
 async function withProjection(action) {
@@ -244,6 +259,12 @@ test("schemas, observations, registry data, and artifact representations preserv
         "snippets/migration-reconciliation-cutover/0.1.0/src/migration_cutover.py",
       ),
     );
+    const authoredTypedAbsenceSource = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/typed-absence-and-wire-shape/0.1.0/src/typed-absence.ts",
+      ),
+    );
 
     assert.deepEqual(
       await readFile(resolve(output, "schemas/0.1.0/registry-artifact.schema.json")),
@@ -317,6 +338,15 @@ test("schemas, observations, registry data, and artifact representations preserv
       ),
       authoredMigrationSource,
     );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/typed-absence-and-wire-shape/0.1.0/src/typed-absence.ts",
+        ),
+      ),
+      authoredTypedAbsenceSource,
+    );
   });
 });
 
@@ -338,6 +368,10 @@ test("public discovery routes carry collaboration and continuation orientation",
     );
     const migrationFamily = await readFile(
       resolve(output, "snippets/migration-reconciliation-cutover/index.html"),
+      "utf8",
+    );
+    const typedAbsenceFamily = await readFile(
+      resolve(output, "snippets/typed-absence-and-wire-shape/index.html"),
       "utf8",
     );
 
@@ -364,6 +398,11 @@ test("public discovery routes carry collaboration and continuation orientation",
       /href="\/snippets\/migration-reconciliation-cutover\/README\.md"/u,
     );
     assert.match(migrationFamily, /migration-reconciliation-cutover\/0\.1\.0\//u);
+    assert.match(
+      typedAbsenceFamily,
+      /href="\/snippets\/typed-absence-and-wire-shape\/README\.md"/u,
+    );
+    assert.match(typedAbsenceFamily, /typed-absence-and-wire-shape\/0\.1\.0\//u);
   });
 });
 

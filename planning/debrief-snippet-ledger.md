@@ -30,10 +30,11 @@ authority.
 
 | Priority | Companion | Visitor placement | Source standing | Public adaptation | Next receiver |
 | --- | --- | --- | --- | --- | --- |
+| P0 | Typed absence and JSON-ready wire shape | FMI-adjacent Debrief, Implementation section | `typed-absence-and-wire-shape@0.1.0` candidate formed through #31 with strict compilation and focused presence, exact-byte, round-trip, object-shape, detachment, and validation evidence | Independently authored domain-neutral README, TypeScript source, runtime and type tests, fixture, and expected result form a proposed Gist publication set and reading order | Review and source acceptance through #31; immutable tag and Pages projection through #3; optional Gist publication remains human-held |
 | P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Accepted exact companions at the `0.1.0` and `0.1.1` evidence boundaries; PR #14 observed `0.1.0` at `docs@2b996cc` | Ordered public-safe excerpts are ready | Consolidated Pages projection, then the human-held exact Gist-publication decision |
 | P0 | Replay-safe specimen custody and transactional outbox | LIMS/ELN replatforming, Implementation custody section | Accepted `specimen-custody-outbox@0.1.0` at `main@4aeb88a` with candidate maturity and verified in-memory transfer, replay, reconciliation, collision, concurrency, and fault evidence | Canonical README, source, test, fixture, and expected result form a proposed Gist publication set and reading order | Immutable tag and consolidated Pages projection through #3; optional Gist publication remains human-held |
 | P0 | Instrument ingress with raw-byte integrity and quarantine | LIMS/ELN replatforming, Implementation ingress section | Accepted `instrument-ingress-integrity@0.1.0` at `main@4596bb6` with candidate maturity and verified byte, identity, mapping, replay, concurrency, and fault evidence | Canonical README, source, test, two raw fixtures, and expected aggregate form a proposed Gist publication set and reading order | Consolidated Pages projection through #3; optional Gist publication remains human-held |
-| P0 | Migration reconciliation and approval-bound cutover | LIMS/ELN replatforming, migration and cutover section | `migration-reconciliation-cutover@0.1.0` candidate formed through #27 with focused generation, reconciliation, restore, request, approval, activation, replay, and publication-recovery evidence | Canonical README, source, test, reconciled and returned-for-evidence fixtures, and expected aggregate form a proposed Gist publication set and reading order | Review and source acceptance through #27; immutable tag and Pages projection through #3; optional Gist publication remains human-held |
+| P0 | Migration reconciliation and approval-bound cutover | LIMS/ELN replatforming, migration and cutover section | Accepted `migration-reconciliation-cutover@0.1.0` through #27 with focused generation, reconciliation, restore, request, approval, activation, replay, and publication-recovery evidence | Canonical README, source, test, reconciled and returned-for-evidence fixtures, and expected aggregate form a proposed Gist publication set and reading order | Optional Gist publication remains human-held |
 | P1 | Offline inspection record and ordered resumable envelope | Distributed inspection, record and return sections | Detailed TypeScript-shaped specification | Add executable duplicate-delivery, exhaustion, parking, and human-confirmed extraction cases | Synthetic implementation and test receiver |
 | P1 | Inspectable initiative-range calculation | Initiative costing, “How the range is formed” | Working single-file calculator | Extract a pure calculation module with lower/upper-bound fixtures | Calculator extraction branch |
 | P1 | Coverage-ledger orchestration packet | Research atlas, beside the compact start packet | Strong research sequence and bounded packet | Add a machine-readable ledger, finite worker returns, coverage/disconfirmation review, and settlement condition | Multi-agent orchestration example branch |
@@ -64,15 +65,16 @@ standing is established.
 ## Re-entry
 
 Both document-evidence versions and their exact companions are accepted with
-immutable tags. The consolidated projection at `docs@a6554f6` carries the four
-registered artifacts and has one complete signed-out byte-parity observation;
-each optional Gist remains a human-held exact-version decision. Issue #17
+immutable tags. The current projection at `docs@8d25a4a` carries seven
+registered artifacts and their public inspection links; each optional Gist
+remains a human-held exact-version decision. Issue #17
 records the first-coordinate skill route, and Issue #20 records its
 secret-material handoff boundary. Issue #18 accepted replay-safe specimen
 custody and transactional outbox through pull request #22, and Issue #24
 accepted raw-byte-preserving instrument ingress through pull request #25.
-Issue #27 is the current migration reconciliation and cutover-decision source
-receiver. These domain exemplars exercise the shared schema across materially
-different mechanisms while shared fields remain evidence-earned. Issue #3
-carries each consolidated Pages publication receipt, and every optional Gist
-remains a human-held exact-version decision.
+Issue #27 accepted migration reconciliation and approval-bound cutover through
+pull request #28. Issue #31 is the current typed-absence source receiver. These
+artifacts exercise the shared schema across materially different mechanisms
+while shared fields remain evidence-earned. Issue #3 carries each consolidated
+Pages publication receipt, and every optional Gist remains a human-held
+exact-version decision.
