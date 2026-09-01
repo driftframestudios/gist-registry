@@ -60,6 +60,9 @@ Registry-specific skills live in [`.agents/skills/`](.agents/skills/):
   question into a public-safe first registry coordinate with focused evidence;
 - `secret-boundary-inspection` produces a canary-proven, scope-explicit
   secret-material receipt or a private finding route; and
+- `contextual-jargon-scan` distinguishes precise artifact language from
+  replaceable local shorthand while preserving code, coordinates, schema
+  vocabulary, and principal-level mechanisms; and
 - `versioned-exemplar-successor` carries a material strengthening into new
   runnable source and exact derived teaching surfaces while accepted versions
   remain immutable.
