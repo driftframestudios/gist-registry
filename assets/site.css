@@ -42,6 +42,7 @@ pre { overflow-x: auto; padding: 1rem; border: 1px solid var(--line); background
 pre code { padding: 0; background: transparent; }
 footer { padding-block: 2.5rem 1rem; border-top: 1px solid var(--line); color: var(--muted); }
 .canary-stack pre { margin: 0; padding: 0; border: 0; background: transparent; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.78rem; }
+.site-author { margin: 2rem 0 0; font-size: 0.82rem; }
 .copyright { margin: 2rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.82rem; }
 @media (max-width: 38rem) {
   .site-header { align-items: flex-start; flex-direction: column; }
