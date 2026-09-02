@@ -180,3 +180,19 @@ projection in the resolved Node.js and TypeScript environment. API schema,
 generated-client behavior, transport, persistence, executable proxies,
 cross-realm objects, authorization, and downstream acceptance retain their
 receiving systems and evidence owners.
+
+## Seventh artifact observation
+
+`lims-eln-enterprise-implementation@0.3.2` is the first
+`repository_exemplar`. It carries one complete Python file from an accepted
+external repository release and a compact machine-readable coordinate for the
+annotated tag, commit, tree, archive digest, release observation, source and
+test blobs, license, attribution, and explicit public projection boundary.
+
+The open `artifactKind`, optional `execution`, ordinary representation list,
+and bounded `extensions.repositoryRelease` record accommodate this use. The
+represented `release-coordinate.json` owns the detailed external identity;
+the extension gives a manifest reader the shortest route to that carrier and
+selected file. A later, materially different repository exemplar or shared
+consumer can show which external-release fields deserve a common schema
+contract. The current envelope therefore remains at `0.1.0`.

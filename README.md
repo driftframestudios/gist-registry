@@ -143,6 +143,23 @@ object shape, error ownership, and caller-mutation boundary. APIs, generated
 clients, transport, persistence, and authorization remain named transfer
 decisions.
 
+## An exact file from an accepted repository release
+
+[`lims-eln-enterprise-implementation@0.3.2`](snippets/lims-eln-enterprise-implementation/0.3.2/README.md)
+is the first `repository_exemplar`. It publishes the complete 94-line
+in-memory idempotency ledger from the accepted Enterprise Implementation
+`v0.3.2` release. A machine-readable coordinate binds the annotated tag,
+commit, tree, reproducible archive digest, source Git blob and SHA-256,
+implementation test evidence, license, attribution, and later release
+observation.
+
+The implementation repository retains authority for the complete release and
+its behavioral evidence. Gist Registry provides the selected public bytes,
+typed discovery record, and concise guide. A production implementation can
+use the example to preserve tenant-scoped reservation, exact replay,
+changed-content collision, pending ownership, and recorded outcome recovery
+while selecting its own durable transaction and coordination model.
+
 ## Canonical path and projection roles
 
 ```text

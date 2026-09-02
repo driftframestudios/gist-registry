@@ -126,6 +126,13 @@ const expectedPaths = [
   "snippets/instrument-ingress-integrity/0.1.0/uv.lock",
   "snippets/instrument-ingress-integrity/README.md",
   "snippets/instrument-ingress-integrity/index.html",
+  "snippets/lims-eln-enterprise-implementation/0.3.2/README.md",
+  "snippets/lims-eln-enterprise-implementation/0.3.2/index.html",
+  "snippets/lims-eln-enterprise-implementation/0.3.2/release-coordinate.json",
+  "snippets/lims-eln-enterprise-implementation/0.3.2/snippet.json",
+  "snippets/lims-eln-enterprise-implementation/0.3.2/source/idempotency.py",
+  "snippets/lims-eln-enterprise-implementation/README.md",
+  "snippets/lims-eln-enterprise-implementation/index.html",
   "snippets/migration-reconciliation-cutover/0.1.0/.python-version",
   "snippets/migration-reconciliation-cutover/0.1.0/README.md",
   "snippets/migration-reconciliation-cutover/0.1.0/expected/cutover-evaluation.json",
@@ -270,6 +277,18 @@ test("schemas, observations, registry data, and artifact representations preserv
         "snippets/instrument-ingress-integrity/0.1.0/src/instrument_ingress.py",
       ),
     );
+    const authoredRepositoryCoordinate = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/lims-eln-enterprise-implementation/0.3.2/release-coordinate.json",
+      ),
+    );
+    const authoredRepositoryExcerpt = await readFile(
+      resolve(
+        repositoryRoot,
+        "snippets/lims-eln-enterprise-implementation/0.3.2/source/idempotency.py",
+      ),
+    );
     const authoredMigrationSource = await readFile(
       resolve(
         repositoryRoot,
@@ -350,6 +369,24 @@ test("schemas, observations, registry data, and artifact representations preserv
       await readFile(
         resolve(
           output,
+          "snippets/lims-eln-enterprise-implementation/0.3.2/release-coordinate.json",
+        ),
+      ),
+      authoredRepositoryCoordinate,
+    );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
+          "snippets/lims-eln-enterprise-implementation/0.3.2/source/idempotency.py",
+        ),
+      ),
+      authoredRepositoryExcerpt,
+    );
+    assert.deepEqual(
+      await readFile(
+        resolve(
+          output,
           "snippets/migration-reconciliation-cutover/0.1.0/src/migration_cutover.py",
         ),
       ),
@@ -381,6 +418,10 @@ test("public discovery routes carry collaboration and continuation orientation",
     );
     const custodyFamily = await readFile(
       resolve(output, "snippets/specimen-custody-outbox/index.html"),
+      "utf8",
+    );
+    const repositoryExemplarFamily = await readFile(
+      resolve(output, "snippets/lims-eln-enterprise-implementation/index.html"),
       "utf8",
     );
     const migrationFamily = await readFile(
@@ -415,6 +456,14 @@ test("public discovery routes carry collaboration and continuation orientation",
       /href="\/snippets\/migration-reconciliation-cutover\/README\.md"/u,
     );
     assert.match(migrationFamily, /migration-reconciliation-cutover\/0\.1\.0\//u);
+    assert.match(
+      repositoryExemplarFamily,
+      /href="\/snippets\/lims-eln-enterprise-implementation\/README\.md"/u,
+    );
+    assert.match(
+      repositoryExemplarFamily,
+      /lims-eln-enterprise-implementation\/0\.3\.2\//u,
+    );
     assert.match(
       typedAbsenceFamily,
       /href="\/snippets\/typed-absence-and-wire-shape\/README\.md"/u,
