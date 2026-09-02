@@ -2,7 +2,7 @@
   "projectionFormatVersion": "0.1.0",
   "projectionOwner": "gist-registry-pages-builder",
   "canonicalOrigin": "https://kindlight.io",
-  "sourceRevision": "60a37573b2be6ef423130c45b07639165acc11f8",
+  "sourceRevision": "c13826a6198db7ee95edc6b7dd0b271383c8c18d",
   "sourceStanding": "accepted_revision",
   "fileScope": "Every projection file except projection-manifest.json itself.",
   "files": [
@@ -44,7 +44,7 @@
     {
       "path": "index.html",
       "bytes": 3443,
-      "sha256": "49918ea25cc3b89dc79a01e68261b33491a80dd30e865ce5fb84a79ba575fcf3"
+      "sha256": "acccecbcad962ba664e4b40c6c4feec146bb4d31177a2d35976d4a5e34575785"
     },
     {
       "path": "observations/delivery/README.md",
@@ -68,8 +68,8 @@
     },
     {
       "path": "registry.json",
-      "bytes": 2313,
-      "sha256": "570c804576d32f4fc50cc984fe21eec33ebae179e5188848746e8a9ac60106f0"
+      "bytes": 2618,
+      "sha256": "24ff64569bcdaa392355da38a844c66dfe3d5822c82bdbc7008ee0ddd75f0ec9"
     },
     {
       "path": "robots.txt",
@@ -89,7 +89,7 @@
     {
       "path": "schemas/gist-registry/0.1.0/index.html",
       "bytes": 2999,
-      "sha256": "94f3696f047d085ba4712447650586d582d6bd222afdac37d276b69ec278dde1"
+      "sha256": "9aa37bb546d36e59eb364a72dbce145f618e197da949526f232f54a70fa2e439"
     },
     {
       "path": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
@@ -104,7 +104,7 @@
     {
       "path": "schemas/gist-registry/delivery-observation/0.1.0/index.html",
       "bytes": 2996,
-      "sha256": "c01c2c87d72ed03430ba6135a8248be278fc123da4549bd15268c5cecf744d5f"
+      "sha256": "c6c393070c94b212ca8069a42c5b1f8691d235c2b43b279895f588c8b53fc706"
     },
     {
       "path": "schemas/gist-registry/index.html",
@@ -114,7 +114,7 @@
     {
       "path": "schemas/gist-registry/skills/0.1.0/index.html",
       "bytes": 2872,
-      "sha256": "a2580e25992bebf5545aab8f3763c2b5099b41d25b07d3ba9cab483f6b72144c"
+      "sha256": "7f8e0fecc911b365096fb0986ea5ff7cb9d3d807cc7546cafc72e0d0fe3afe8a"
     },
     {
       "path": "schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json",
@@ -128,18 +128,18 @@
     },
     {
       "path": "sitemap.xml",
-      "bytes": 2358,
-      "sha256": "b4b442be34a052ed7489937a75d40299583cb35e763f457bedf2b5d0175a051f"
+      "bytes": 2544,
+      "sha256": "91cfea0fa1c97d8d2c07760023bbd3cc211b5ea13a883703856c8955aff3dc3a"
     },
     {
       "path": "skills/architecture-convergence-vantages/index.html",
       "bytes": 3709,
-      "sha256": "a376730d0b0502d3056145e77286bbf251f6fbde6b010f088dbe41ad53fe5651"
+      "sha256": "8450199317b52cfa478986e44ca6df093ef5e183a606b209604c92fe2557dfd3"
     },
     {
       "path": "skills/contextual-jargon-scan/index.html",
       "bytes": 3112,
-      "sha256": "f0a46fd48e1dca929869450fd90689c6d968e8e9202ae831ba4fdae949ef4b26"
+      "sha256": "0babdbbf5b6ed388f716adee81d67d46d2133b618b309ce4d1d665b0b68a1bdf"
     },
     {
       "path": "skills/index.html",
@@ -149,12 +149,12 @@
     {
       "path": "skills/index.json",
       "bytes": 6394,
-      "sha256": "4c5e51c11027075841fb5e5f55e51402818852a86b86426c9fc104ed3033bd81"
+      "sha256": "e86d4e39c982649906bfb3080b6018ef7be71559f2c9c320723bd2c261b70f10"
     },
     {
       "path": "skills/probe-bearing-exemplar-formation/index.html",
       "bytes": 3110,
-      "sha256": "8aa88496f534c732fab11a9e71973235e22681ec499f805e0ea59c947c3995e7"
+      "sha256": "c73897fccbff8495d266aaf47c5970fe0d235f612baa9102ad28c4252dd9ad26"
     },
     {
       "path": "skills/source/.agents/skills/architecture-convergence-vantages/SKILL.md",
@@ -189,12 +189,12 @@
     {
       "path": "skills/transaction-boundary-evidence-mapping/index.html",
       "bytes": 3166,
-      "sha256": "71778c35185e25d97a054240d6d84a3c37ed234f286f4b43a3ebca0bfca83c42"
+      "sha256": "d17ba58b4ebb7592aa8430b789e8c4758fa71dd44497861d1a6609a9a31398df"
     },
     {
       "path": "skills/versioned-exemplar-successor/index.html",
       "bytes": 3126,
-      "sha256": "1e235c3f0dd88611036481c6b63eb3d520a28f14d185e7367ba03e93788daa77"
+      "sha256": "4f4fe47cb8bda50d5cf912445225eaf957c54310a82e665a373edd102d793940"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/README.md",
@@ -219,7 +219,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/index.html",
       "bytes": 5604,
-      "sha256": "409d8121fba138ddd17f9ab97d45ef43fab31eeadc3c73aacfad41efbdb5835b"
+      "sha256": "bdc5700bea670ec645810f2d91786b7623a88f1cc830b2cc9eea6a39eafe8172"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
@@ -249,7 +249,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/index.html",
       "bytes": 6060,
-      "sha256": "6b069001346a2fd96bb21d0d3c25beed382099ee30666dbd612320a537caa381"
+      "sha256": "32704a0cf50a189f04204ea030f65a59a47f3d6795d604ed84b9915b87f55f96"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
@@ -314,7 +314,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.0/index.html",
       "bytes": 10239,
-      "sha256": "bb6729a64bdf42fa66dabccc3842d23a787b8cc6601d165f9c5656af80ddceb0"
+      "sha256": "6879bfec9fb186e29b0c9b0612544cfc8765ab10c3970ccd9d77d2497d400831"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
@@ -389,7 +389,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.1/index.html",
       "bytes": 11747,
-      "sha256": "ead31844f9d406548f8720d7322b85e0f1f61c5b66fcac489df4ac74270fe2b0"
+      "sha256": "437a1a9d209f6a5fbcf3f0273b7bc41795a7ad0ff74f3c42f6f80ec623bdd150"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.1/pyproject.toml",
@@ -438,8 +438,8 @@
     },
     {
       "path": "snippets/index.html",
-      "bytes": 5297,
-      "sha256": "18a5e8eb8c76ea78beb7b3d3b0aeff700b3c4ad21163f72d12098f637f3d8c5f"
+      "bytes": 5770,
+      "sha256": "adf9e71d05420991698ca301ec5b2b69bbc4a521682a425c7a007398b70886b9"
     },
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/.python-version",
@@ -469,7 +469,7 @@
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/index.html",
       "bytes": 9204,
-      "sha256": "a7b556daf2a968e5b0331b81400c4cc8f872b225446e20d5e82f27362db74d0e"
+      "sha256": "1dae7d65d30443207e74de2ee7de22dc01c2d73319fad1dfc1d723c657dc5740"
     },
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/pyproject.toml",
@@ -507,6 +507,41 @@
       "sha256": "e5aaf50f5f467a86bacde22509e33b54427893caa0d70939ab3a975f782a2aa4"
     },
     {
+      "path": "snippets/lims-eln-enterprise-implementation/0.3.2/README.md",
+      "bytes": 3294,
+      "sha256": "722635bf9e24d825b7f25e13489184fe0e31459ff6d9ddf53624b647d8ab6391"
+    },
+    {
+      "path": "snippets/lims-eln-enterprise-implementation/0.3.2/index.html",
+      "bytes": 5601,
+      "sha256": "9db47259f165507c7d17bccb149d19e7a887644ecae5991e74af0799bd4f9fc1"
+    },
+    {
+      "path": "snippets/lims-eln-enterprise-implementation/0.3.2/release-coordinate.json",
+      "bytes": 4811,
+      "sha256": "a0f2b68e77349fbaaa3bb9a3d072d18d40d9f9be2a4e946621be90d1852b6083"
+    },
+    {
+      "path": "snippets/lims-eln-enterprise-implementation/0.3.2/snippet.json",
+      "bytes": 8268,
+      "sha256": "a70b74755ddf055ca2fbae0c90b0a00fd04bc4f364e6ab8b4373868db99e0d33"
+    },
+    {
+      "path": "snippets/lims-eln-enterprise-implementation/0.3.2/source/idempotency.py",
+      "bytes": 2964,
+      "sha256": "217936e75fb1704825108ea4bc0aa6f4027e1e94e5196e340b829d9eb0117543"
+    },
+    {
+      "path": "snippets/lims-eln-enterprise-implementation/README.md",
+      "bytes": 1243,
+      "sha256": "b453cbc15997f1df3793f17b2dda0f40947d8bf2a6e83f94b5ea0b5a0e592c4b"
+    },
+    {
+      "path": "snippets/lims-eln-enterprise-implementation/index.html",
+      "bytes": 2542,
+      "sha256": "8a19a1550682949990bbd76779a8753ae83348baf150247819f96df8af0cd0c1"
+    },
+    {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/.python-version",
       "bytes": 5,
       "sha256": "7b55f8e67b5623c4bef3fa691288da9437d79d3aba156de48d481db32ac7d16d"
@@ -534,7 +569,7 @@
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/index.html",
       "bytes": 9877,
-      "sha256": "bebbd4fab4c4bd11b34899639717cb250d147266f31a61df05b464390257e038"
+      "sha256": "a2184988588ab83c601836530100b9919f66994acaf9decae3a45d44a7a6c12b"
     },
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/pyproject.toml",
@@ -594,7 +629,7 @@
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/index.html",
       "bytes": 8322,
-      "sha256": "5912cced507d1d93eba24b99b4cd5cb128891b01a5761099b5374473b3e87414"
+      "sha256": "151f80f7a6b82c4c156b5e9745ec89a9d134d35784e9f2d82fa1bfe4b1da3ffa"
     },
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/pyproject.toml",
@@ -649,7 +684,7 @@
     {
       "path": "snippets/typed-absence-and-wire-shape/0.1.0/index.html",
       "bytes": 9454,
-      "sha256": "a7305d0d584964c893f6337eb3e24ebe41a5f7f5d06ca58a628416a9c1937d7a"
+      "sha256": "414b6bab393b28fbdd1f07fb281611dbfcbe3be015dc97901e27bbe54b6ca7fc"
     },
     {
       "path": "snippets/typed-absence-and-wire-shape/0.1.0/package-lock.json",

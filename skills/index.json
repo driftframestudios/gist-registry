@@ -3,7 +3,7 @@
   "$schema": "https://kindlight.io/schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json",
   "repository": "gist-registry",
   "canonicalUrl": "https://kindlight.io/skills/index.json",
-  "sourceRevision": "60a37573b2be6ef423130c45b07639165acc11f8",
+  "sourceRevision": "c13826a6198db7ee95edc6b7dd0b271383c8c18d",
   "publicationScope": "Every listed entry has public-ready standing and an exact source package in this projection.",
   "skills": [
     {
@@ -17,14 +17,14 @@
         "repositoryPath": ".agents/skills/architecture-convergence-vantages/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/architecture-convergence-vantages/SKILL.md",
         "sha256": "ded73eed82ad3ce48d8c008b6fb7799b6787d0e25381b121bea4f4adb4a32d5f",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/60a37573b2be6ef423130c45b07639165acc11f8/.agents/skills/architecture-convergence-vantages/SKILL.md"
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/c13826a6198db7ee95edc6b7dd0b271383c8c18d/.agents/skills/architecture-convergence-vantages/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
           "publishedPath": "/skills/source/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
           "sha256": "45fe584da4bec3195e07f34257600d472bdcfcb2edbb714be9d7a111ff5994e0",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/60a37573b2be6ef423130c45b07639165acc11f8/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/c13826a6198db7ee95edc6b7dd0b271383c8c18d/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md"
         }
       ]
     },
@@ -39,7 +39,7 @@
         "repositoryPath": ".agents/skills/contextual-jargon-scan/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/contextual-jargon-scan/SKILL.md",
         "sha256": "897557f83607b23c82eb2029f31b0ae30a3819e1590b250cd4dfef877577eae7",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/60a37573b2be6ef423130c45b07639165acc11f8/.agents/skills/contextual-jargon-scan/SKILL.md"
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/c13826a6198db7ee95edc6b7dd0b271383c8c18d/.agents/skills/contextual-jargon-scan/SKILL.md"
       },
       "dependencies": []
     },
@@ -54,7 +54,7 @@
         "repositoryPath": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/probe-bearing-exemplar-formation/SKILL.md",
         "sha256": "afaf2abe0dc5e88cbc404f3d1fe9b0dcaa9becf4e350acd39995429cbac3c633",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/60a37573b2be6ef423130c45b07639165acc11f8/.agents/skills/probe-bearing-exemplar-formation/SKILL.md"
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/c13826a6198db7ee95edc6b7dd0b271383c8c18d/.agents/skills/probe-bearing-exemplar-formation/SKILL.md"
       },
       "dependencies": []
     },
@@ -69,7 +69,7 @@
         "repositoryPath": ".agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
         "sha256": "5302b522eeb46d7afd7c6da043f9a858870c5fb560dc28467b309bd046828a3d",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/60a37573b2be6ef423130c45b07639165acc11f8/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md"
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/c13826a6198db7ee95edc6b7dd0b271383c8c18d/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md"
       },
       "dependencies": []
     },
@@ -84,7 +84,7 @@
         "repositoryPath": ".agents/skills/versioned-exemplar-successor/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/versioned-exemplar-successor/SKILL.md",
         "sha256": "74fca2cb1e918410ca72a0eda6165567d70fed49dc8367e6ea38a2bb0153f270",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/60a37573b2be6ef423130c45b07639165acc11f8/.agents/skills/versioned-exemplar-successor/SKILL.md"
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/c13826a6198db7ee95edc6b7dd0b271383c8c18d/.agents/skills/versioned-exemplar-successor/SKILL.md"
       },
       "dependencies": []
     }

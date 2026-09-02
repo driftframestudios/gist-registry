@@ -1,0 +1,102 @@
+{
+  "coordinateFormatVersion": "0.1.0",
+  "recordKind": "repository_release",
+  "sourceAuthority": {
+    "repository": "driftframestudios/lims-eln-enterprise-implementation",
+    "repositoryRole": "enterprise_implementation",
+    "releaseAuthority": "source_repository",
+    "releaseUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/tree/v0.3.2"
+  },
+  "releaseSubject": {
+    "release": "0.3.2",
+    "tag": "v0.3.2",
+    "tagObjectOid": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+    "commitOid": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+    "treeOid": "eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+    "archiveFormat": "git-tar",
+    "archiveSha256": "0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
+  },
+  "releaseObservation": {
+    "carrierCommitOid": "b3fcf07445bc0c049daa00b03d6fe583962085cf",
+    "path": "receipts/promotion-observation-v0.3.2.json",
+    "gitBlobOid": "75730b9e0f272169dd136cd2364c162d1c7bda0d",
+    "bytes": 3086,
+    "sha256": "f1e65be6a701bee526c6481fe65e18bc0a2d6df0150c418f7a76457039cb3061",
+    "promotionState": "release_observed",
+    "evidenceMode": "observed",
+    "assuranceStage": "verified",
+    "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/blob/b3fcf07445bc0c049daa00b03d6fe583962085cf/receipts/promotion-observation-v0.3.2.json"
+  },
+  "licenseCarrier": {
+    "spdxIdentifier": "Apache-2.0",
+    "path": "LICENSE",
+    "gitBlobOid": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "bytes": 11357,
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/blob/fe0bd2a08ac1697ce18ca583d9631faae7db7132/LICENSE"
+  },
+  "attributionCarrier": {
+    "path": "AUTHORS",
+    "gitBlobOid": "57ca1f2b2388cf1a57ac0d8216a47d01aab46bc7",
+    "bytes": 470,
+    "sha256": "63c6673baa090ed6abbc83fa026794c27ac2de85c663bfd53cac7ba977ff9829",
+    "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/blob/fe0bd2a08ac1697ce18ca583d9631faae7db7132/AUTHORS"
+  },
+  "selectedRepresentation": {
+    "relationship": "byte_identical_projection",
+    "sourcePath": "src/lims_eln_implementation/idempotency.py",
+    "projectedPath": "source/idempotency.py",
+    "gitMode": "100644",
+    "gitBlobOid": "b6d27293153aec3af868cbfa7c9a3d9e5d28ae12",
+    "bytes": 2964,
+    "lines": 94,
+    "sha256": "217936e75fb1704825108ea4bc0aa6f4027e1e94e5196e340b829d9eb0117543",
+    "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/blob/fe0bd2a08ac1697ce18ca583d9631faae7db7132/src/lims_eln_implementation/idempotency.py"
+  },
+  "sourceEvidence": [
+    {
+      "path": "tests/test_lifecycle.py",
+      "gitBlobOid": "6ac180b3f1d5ea89a1a6620d22ee590468a82bb5",
+      "bytes": 5756,
+      "sha256": "f15359d2438bb518d09d6842d013def12a2fc0cfb4ee6c727a8f29ff79bfaf33",
+      "focusedTests": [
+        "test_exact_registration_replay_returns_recorded_outcome",
+        "test_changed_content_on_stable_command_identity_is_a_collision",
+        "test_matching_in_progress_command_fails_closed",
+        "test_failed_idempotency_commit_rolls_back_specimen"
+      ],
+      "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/blob/fe0bd2a08ac1697ce18ca583d9631faae7db7132/tests/test_lifecycle.py"
+    },
+    {
+      "path": "tests/test_vendors.py",
+      "gitBlobOid": "f589ebea317dc6425771bf72f3f8fb7ad3911096",
+      "bytes": 3746,
+      "sha256": "bf8f16e8a66ef85c3ad39b21a7fe4d000284cd342affb7158745b604e489fb49",
+      "focusedTests": [
+        "test_timeout_after_commit_resolves_by_authoritative_readback",
+        "test_timeout_before_commit_keeps_reservation_pending",
+        "test_exact_request_replay_reuses_outcome",
+        "test_changed_payload_on_request_identity_is_a_collision",
+        "test_tenant_identity_participates_in_vendor_key"
+      ],
+      "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/blob/fe0bd2a08ac1697ce18ca583d9631faae7db7132/tests/test_vendors.py"
+    }
+  ],
+  "focusedEvidenceResult": {
+    "testCount": 9,
+    "result": "ok",
+    "sourceState": "exact_tag_archive"
+  },
+  "publicationBoundary": {
+    "selectionDate": "2026-09-02",
+    "sourceRepositoryVisibilityAtSelection": "private",
+    "registryProjection": "public_github_pages",
+    "authorizationRecord": "gist-registry:issue-35",
+    "authorizedMaterial": [
+      "selected_source_representation",
+      "immutable_release_and_observation_coordinates",
+      "license_and_attribution_coordinates"
+    ]
+  },
+  "receivingUse": "Inspect a compact idempotency mechanism, reproduce its source identity, and return to the complete accepted release before adapting its behavior."
+}

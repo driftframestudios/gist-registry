@@ -1,0 +1,144 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "lims-eln-enterprise-implementation",
+  "version": "0.3.2",
+  "artifactKind": "repository_exemplar",
+  "standing": "candidate",
+  "title": "LIMS/ELN Enterprise Implementation 0.3.2 release exemplar",
+  "summary": "One accepted enterprise implementation release, its observed Git identity, and a complete process-local idempotency file remain inspectable through stable, reproducible coordinates.",
+  "use": {
+    "practicalQuestion": "How can another collaboration team inspect an accepted LIMS/ELN implementation release and one consequential mechanism through stable, reproducible coordinates?",
+    "changedAbility": "A collaborator can resolve the release subject, reproduce its Git archive digest, inspect its later release observation, and compare one public Python file byte for byte with the owning release.",
+    "readers": [
+      "AI collaborators orienting to a released enterprise implementation",
+      "Technical practitioners evaluating release identity, source authority, and replay boundaries"
+    ],
+    "capabilities": [
+      "resolve_accepted_release",
+      "reproduce_release_archive",
+      "inspect_exact_source_file",
+      "preserve_release_authority"
+    ]
+  },
+  "provenance": {
+    "class": "accepted_external_release_projection",
+    "description": "A Registry discovery projection of an Apache-2.0 release and one byte-identical implementation file. The implementation repository retains release, runtime, test, license, and attribution authority.",
+    "temporalScope": "This record binds immutable release v0.3.2 and its later release-observation record. Post-release development and the Program repository's separate release state remain distinct.",
+    "sourceKeys": [
+      "source-release:lims-eln-enterprise-implementation:v0_3_2",
+      "source-file:lims-eln-enterprise-implementation:idempotency"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "source_supported",
+    "basis": "The implementation repository records an annotated v0.3.2 tag, accepted commit and tree, reproducible Git archive SHA-256, successful hosted validation, and a later verified release observation. The carried idempotency file is byte-identical to the tagged source, and nine selected tests passed against a fresh archive of that exact tag."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/lims-eln-enterprise-implementation/0.3.2",
+  "representations": [
+    {
+      "role": "orientation",
+      "path": "README.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "manifest",
+      "path": "snippet.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "release_coordinate",
+      "path": "release-coordinate.json",
+      "declaredMediaType": "application/json",
+      "sha256": "a0f2b68e77349fbaaa3bb9a3d072d18d40d9f9be2a4e946621be90d1852b6083"
+    },
+    {
+      "role": "source_excerpt",
+      "path": "source/idempotency.py",
+      "declaredMediaType": "text/x-python",
+      "sha256": "217936e75fb1704825108ea4bc0aa6f4027e1e94e5196e340b829d9eb0117543"
+    }
+  ],
+  "practice": {
+    "reviewQuestions": [
+      "Which fields form the stable reservation identity?",
+      "How does the ledger distinguish exact replay, changed content, and work already in progress?",
+      "Which result becomes recoverable after commit?",
+      "Which transaction and coordination guarantees move to a durable implementation?"
+    ],
+    "decisionRules": [
+      "Scope each stable key by tenant before deciding who may execute.",
+      "Bind the stable key to a content digest and route changed content to a new command identity.",
+      "Return the recorded outcome for an exact completed replay and surface active ownership for pending work.",
+      "Restore the complete prior ledger snapshot when the in-memory reference transaction stops."
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Define stable identity, content identity, reservation state, committed outcome, and recovery ownership together."
+      },
+      {
+        "mode": "review",
+        "instruction": "Exercise exact replay, changed-content collision, in-progress ownership, tenant separation, commit failure, and ambiguous external outcomes."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Preserve the demonstrated decisions while selecting durable uniqueness, isolation, leases, fencing, and restart recovery for the production implementation."
+      }
+    ],
+    "codeExemplarGranularity": "One complete 94-line Python file, one machine-readable release coordinate, and exact pointers to nine tests in the accepted implementation release.",
+    "complexityAndAllocation": "The in-memory ledger uses one tenant-and-key dictionary lookup for reservation and copies its entries for transaction snapshots. A durable implementation owns storage, concurrency, lease, fencing, and restart behavior."
+  },
+  "boundaries": {
+    "evidence": "The record establishes the named Git objects, reproducible archive digest, later release observation, nine-test exact-tag result, and byte identity of the carried source file. Complete implementation behavior remains established by the owning repository's release validation and tests.",
+    "trust": "The checked release observation records valid merge and annotated-tag verification; local SHA-256 and Git-object comparisons reproduce the release archive and selected files. Configured environments and accountable production acceptance remain with their named owners.",
+    "transfer": "A receiving team returns to the exact owning release, its tests, and its release documentation before adapting the excerpt, then selects a durable synchronization and transaction model for multi-process use."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A copied source file can drift from the immutable release while retaining a familiar path.",
+      "A release tag, later observation, license file, and attribution file can be collapsed into one incomplete coordinate.",
+      "A process-local dictionary can be mistaken for durable multi-process coordination.",
+      "A stable key bound only to caller identity can replay changed work as though it were the original command."
+    ],
+    "recoveryMoves": [
+      "Reproduce the recorded source SHA-256 and Git blob before accepting a copied representation.",
+      "Resolve the release subject and later observation independently, then compare every named file digest.",
+      "Return durability, isolation, lease, fencing, and restart claims to the database-backed implementation.",
+      "Bind stable identity to semantic content and allocate a new command identity when that content changes."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "source_release",
+      "target": "driftframestudios/lims-eln-enterprise-implementation@v0.3.2",
+      "reason": "The implementation repository retains the accepted release, complete runtime, tests, and release evidence.",
+      "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/tree/v0.3.2"
+    },
+    {
+      "type": "receiver",
+      "target": "lims-eln-program-specification:constellation-hub",
+      "reason": "The Program hub can link this Registry coordinate after the selected public projection is accepted."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "This first repository exemplar exercises external release coordinates through the existing extension envelope before a shared schema field is promoted."
+    }
+  ],
+  "extensions": {
+    "repositoryRelease": {
+      "coordinatePath": "release-coordinate.json",
+      "repository": "driftframestudios/lims-eln-enterprise-implementation",
+      "repositoryRole": "enterprise_implementation",
+      "releaseTag": "v0.3.2",
+      "sourceCommit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+      "sourceExcerpt": {
+        "representationPath": "source/idempotency.py",
+        "sourcePath": "src/lims_eln_implementation/idempotency.py",
+        "sha256": "217936e75fb1704825108ea4bc0aa6f4027e1e94e5196e340b829d9eb0117543"
+      }
+    }
+  }
+}
