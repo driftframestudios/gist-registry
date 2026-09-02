@@ -8,7 +8,9 @@ Current live receivers are:
 - #6 — the exercised delivery-observation model and its conditional receiver
   for a response change that affects interpretation or recovery; and
 - #31 — typed absence and JSON-ready wire shape as the current exact-version
-  source receiver.
+  source receiver; and
+- #35 — the first accepted external repository release and exact source-file
+  projection as a `repository_exemplar`.
 
 Accepted path records supply this terrain:
 
@@ -99,3 +101,11 @@ Issue #31 now receives the independently authored
 immutable exact-version coordinate and consolidated Pages projection to #3;
 the Context Canvas Implementation placement follows through the linked HASE
 receiver, and optional Gist publication remains a separate human-held action.
+
+Issue #35 now receives
+`lims-eln-enterprise-implementation@0.3.2`. Its source branch carries one
+byte-identical idempotency file, immutable release and observation
+coordinates, license and attribution bindings, and the focused Registry and
+Pages evidence needed for review. Acceptance hands the deterministic public
+projection to #3; the Program constellation hub remains a later receiving
+link.

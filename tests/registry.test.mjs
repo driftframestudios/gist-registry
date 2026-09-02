@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -28,6 +29,19 @@ const migrationManifestPath = resolve(
 const typedAbsenceManifestPath = resolve(
   repositoryRoot,
   "snippets/typed-absence-and-wire-shape/0.1.0/snippet.json",
+);
+const repositoryExemplarRoot = resolve(
+  repositoryRoot,
+  "snippets/lims-eln-enterprise-implementation/0.3.2",
+);
+const repositoryExemplarManifestPath = resolve(repositoryExemplarRoot, "snippet.json");
+const repositoryExemplarCoordinatePath = resolve(
+  repositoryExemplarRoot,
+  "release-coordinate.json",
+);
+const repositoryExemplarSourcePath = resolve(
+  repositoryExemplarRoot,
+  "source/idempotency.py",
 );
 const companionManifestPaths = new Map([
   [
@@ -75,6 +89,17 @@ const schemaPath = resolve(repositoryRoot, "schemas/0.1.0/registry-artifact.sche
 
 async function json(path) {
   return JSON.parse(await readFile(path, "utf8"));
+}
+
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function gitBlobOid(bytes) {
+  return createHash("sha1")
+    .update(Buffer.from(`blob ${bytes.length}\0`, "utf8"))
+    .update(bytes)
+    .digest("hex");
 }
 
 function pythonBlocks(markdown) {
@@ -134,6 +159,150 @@ test("the first schema attempt validates every registered exact version", async 
     artifactCount: registry.entries.length,
     instances: registry.entries.map(entry => entry.semanticId + "@" + entry.version),
   });
+});
+
+test("the repository exemplar binds one exact source file to the observed release", async () => {
+  const [manifest, coordinate, coordinateBytes, sourceBytes] = await Promise.all([
+    json(repositoryExemplarManifestPath),
+    json(repositoryExemplarCoordinatePath),
+    readFile(repositoryExemplarCoordinatePath),
+    readFile(repositoryExemplarSourcePath),
+  ]);
+  const release = coordinate.releaseSubject;
+  const observation = coordinate.releaseObservation;
+  const source = coordinate.selectedRepresentation;
+
+  assert.equal(manifest.artifactKind, "repository_exemplar");
+  assert.equal(manifest.standing, "candidate");
+  assert.equal(manifest.technicalVeracity.status, "source_supported");
+  assert.equal(manifest.execution, undefined);
+  assert.deepEqual(
+    manifest.representations.map(representation => [
+      representation.role,
+      representation.path,
+    ]),
+    [
+      ["orientation", "README.md"],
+      ["manifest", "snippet.json"],
+      ["release_coordinate", "release-coordinate.json"],
+      ["source_excerpt", "source/idempotency.py"],
+    ],
+  );
+
+  assert.equal(coordinate.coordinateFormatVersion, "0.1.0");
+  assert.equal(coordinate.recordKind, "repository_release");
+  assert.equal(
+    coordinate.sourceAuthority.repository,
+    "driftframestudios/lims-eln-enterprise-implementation",
+  );
+  assert.equal(coordinate.sourceAuthority.releaseAuthority, "source_repository");
+  assert.deepEqual(release, {
+    release: "0.3.2",
+    tag: "v0.3.2",
+    tagObjectOid: "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+    commitOid: "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+    treeOid: "eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+    archiveFormat: "git-tar",
+    archiveSha256: "0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16",
+  });
+  assert.equal(observation.carrierCommitOid, "b3fcf07445bc0c049daa00b03d6fe583962085cf");
+  assert.equal(observation.gitBlobOid, "75730b9e0f272169dd136cd2364c162d1c7bda0d");
+  assert.equal(
+    observation.sha256,
+    "f1e65be6a701bee526c6481fe65e18bc0a2d6df0150c418f7a76457039cb3061",
+  );
+  assert.equal(observation.promotionState, "release_observed");
+  assert.equal(observation.evidenceMode, "observed");
+  assert.equal(observation.assuranceStage, "verified");
+  assert.notEqual(
+    observation.carrierCommitOid,
+    release.commitOid,
+    "the later release observation retains its own carrier coordinate",
+  );
+
+  assert.equal(source.sourcePath, "src/lims_eln_implementation/idempotency.py");
+  assert.equal(source.projectedPath, "source/idempotency.py");
+  assert.equal(source.bytes, sourceBytes.length);
+  assert.equal(source.lines, sourceBytes.toString("utf8").split("\n").length - 1);
+  assert.equal(source.lines, 94);
+  assert.equal(source.sha256, sha256(sourceBytes));
+  assert.equal(source.gitBlobOid, gitBlobOid(sourceBytes));
+  assert.equal(
+    source.sha256,
+    "217936e75fb1704825108ea4bc0aa6f4027e1e94e5196e340b829d9eb0117543",
+  );
+  assert.equal(source.gitBlobOid, "b6d27293153aec3af868cbfa7c9a3d9e5d28ae12");
+
+  assert.equal(coordinate.licenseCarrier.spdxIdentifier, "Apache-2.0");
+  assert.equal(coordinate.licenseCarrier.path, "LICENSE");
+  assert.equal(
+    coordinate.licenseCarrier.sha256,
+    "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+  );
+  assert.equal(coordinate.attributionCarrier.path, "AUTHORS");
+  assert.equal(
+    coordinate.attributionCarrier.sha256,
+    "63c6673baa090ed6abbc83fa026794c27ac2de85c663bfd53cac7ba977ff9829",
+  );
+  assert.deepEqual(
+    coordinate.sourceEvidence.map(evidence => ({
+      path: evidence.path,
+      gitBlobOid: evidence.gitBlobOid,
+      bytes: evidence.bytes,
+      sha256: evidence.sha256,
+    })),
+    [
+      {
+        path: "tests/test_lifecycle.py",
+        gitBlobOid: "6ac180b3f1d5ea89a1a6620d22ee590468a82bb5",
+        bytes: 5756,
+        sha256: "f15359d2438bb518d09d6842d013def12a2fc0cfb4ee6c727a8f29ff79bfaf33",
+      },
+      {
+        path: "tests/test_vendors.py",
+        gitBlobOid: "f589ebea317dc6425771bf72f3f8fb7ad3911096",
+        bytes: 3746,
+        sha256: "bf8f16e8a66ef85c3ad39b21a7fe4d000284cd342affb7158745b604e489fb49",
+      },
+    ],
+  );
+  assert.equal(
+    coordinate.sourceEvidence.reduce(
+      (count, evidence) => count + evidence.focusedTests.length,
+      0,
+    ),
+    coordinate.focusedEvidenceResult.testCount,
+  );
+  assert.deepEqual(coordinate.focusedEvidenceResult, {
+    testCount: 9,
+    result: "ok",
+    sourceState: "exact_tag_archive",
+  });
+  assert.equal(coordinate.publicationBoundary.registryProjection, "public_github_pages");
+  assert.equal(coordinate.publicationBoundary.authorizationRecord, "gist-registry:issue-35");
+
+  const coordinateRepresentation = manifest.representations.find(
+    representation => representation.role === "release_coordinate",
+  );
+  const sourceRepresentation = manifest.representations.find(
+    representation => representation.role === "source_excerpt",
+  );
+  assert.equal(coordinateRepresentation.sha256, sha256(coordinateBytes));
+  assert.equal(sourceRepresentation.sha256, source.sha256);
+  assert.equal(
+    manifest.extensions.repositoryRelease.coordinatePath,
+    "release-coordinate.json",
+  );
+  assert.equal(manifest.extensions.repositoryRelease.sourceCommit, release.commitOid);
+  assert.equal(
+    manifest.extensions.repositoryRelease.sourceExcerpt.sha256,
+    source.sha256,
+  );
+  assert.equal(
+    manifest.relationships.find(relationship => relationship.type === "source_release")
+      ?.target,
+    "driftframestudios/lims-eln-enterprise-implementation@v0.3.2",
+  );
 });
 
 test("the domain exemplar records one runnable boundary and proposed Gist source order", async () => {

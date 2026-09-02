@@ -44,6 +44,13 @@
       "canonicalPath": "snippets/instrument-ingress-integrity/0.1.0"
     },
     {
+      "semanticId": "lims-eln-enterprise-implementation",
+      "version": "0.3.2",
+      "artifactKind": "repository_exemplar",
+      "manifestPath": "snippets/lims-eln-enterprise-implementation/0.3.2/snippet.json",
+      "canonicalPath": "snippets/lims-eln-enterprise-implementation/0.3.2"
+    },
+    {
       "semanticId": "migration-reconciliation-cutover",
       "version": "0.1.0",
       "artifactKind": "domain_exemplar",
