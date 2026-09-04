@@ -2,7 +2,7 @@
   "projectionFormatVersion": "0.1.0",
   "projectionOwner": "gist-registry-pages-builder",
   "canonicalOrigin": "https://kindlight.io",
-  "sourceRevision": "c13826a6198db7ee95edc6b7dd0b271383c8c18d",
+  "sourceRevision": "c2cf4a359006ef094a9947fa6dcec0eaa26405ea",
   "sourceStanding": "accepted_revision",
   "fileScope": "Every projection file except projection-manifest.json itself.",
   "files": [
@@ -44,7 +44,7 @@
     {
       "path": "index.html",
       "bytes": 3443,
-      "sha256": "acccecbcad962ba664e4b40c6c4feec146bb4d31177a2d35976d4a5e34575785"
+      "sha256": "01bbc41bc5ed6b013e03addb0862d9ec1107bd9d0b3ee5c2251772938b7d815d"
     },
     {
       "path": "observations/delivery/README.md",
@@ -89,7 +89,7 @@
     {
       "path": "schemas/gist-registry/0.1.0/index.html",
       "bytes": 2999,
-      "sha256": "9aa37bb546d36e59eb364a72dbce145f618e197da949526f232f54a70fa2e439"
+      "sha256": "95ee954b846a0d26b6142b69e018595ad8784ef6beb1b131309b45cf1d01ddf6"
     },
     {
       "path": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
@@ -104,7 +104,7 @@
     {
       "path": "schemas/gist-registry/delivery-observation/0.1.0/index.html",
       "bytes": 2996,
-      "sha256": "c6c393070c94b212ca8069a42c5b1f8691d235c2b43b279895f588c8b53fc706"
+      "sha256": "a7a6a5099c7af5e4f6ed2902bf42fc1c034256809ae2c96eacf3c5fc8114d883"
     },
     {
       "path": "schemas/gist-registry/index.html",
@@ -114,7 +114,7 @@
     {
       "path": "schemas/gist-registry/skills/0.1.0/index.html",
       "bytes": 2872,
-      "sha256": "7f8e0fecc911b365096fb0986ea5ff7cb9d3d807cc7546cafc72e0d0fe3afe8a"
+      "sha256": "c636da9c438bce81536b3a781d428d850961f8af7860e124dde12168ab53c89c"
     },
     {
       "path": "schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json",
@@ -134,12 +134,12 @@
     {
       "path": "skills/architecture-convergence-vantages/index.html",
       "bytes": 3709,
-      "sha256": "8450199317b52cfa478986e44ca6df093ef5e183a606b209604c92fe2557dfd3"
+      "sha256": "edbbea46b93533c81008541049a170e7cfd701030a628aa7fda36c66875d95b1"
     },
     {
       "path": "skills/contextual-jargon-scan/index.html",
       "bytes": 3112,
-      "sha256": "0babdbbf5b6ed388f716adee81d67d46d2133b618b309ce4d1d665b0b68a1bdf"
+      "sha256": "cf08a5b1effa594813090662c195d51e4ca8cbdf3a232ffc4772571445d73fbe"
     },
     {
       "path": "skills/index.html",
@@ -149,17 +149,17 @@
     {
       "path": "skills/index.json",
       "bytes": 6394,
-      "sha256": "e86d4e39c982649906bfb3080b6018ef7be71559f2c9c320723bd2c261b70f10"
+      "sha256": "539c3347fd6183469ca52878da9c48a4f167266f9816e69f60b92c75ea25e9ab"
     },
     {
       "path": "skills/probe-bearing-exemplar-formation/index.html",
       "bytes": 3110,
-      "sha256": "c73897fccbff8495d266aaf47c5970fe0d235f612baa9102ad28c4252dd9ad26"
+      "sha256": "5151c807cac6c740e637fe90a5be3dbfed91966b1d21dc6aa0c9f3b535eb9054"
     },
     {
       "path": "skills/source/.agents/skills/architecture-convergence-vantages/SKILL.md",
-      "bytes": 9103,
-      "sha256": "ded73eed82ad3ce48d8c008b6fb7799b6787d0e25381b121bea4f4adb4a32d5f"
+      "bytes": 9105,
+      "sha256": "2c640ffc0c761a231bcb92ee09bbbfaf3fbf7750fa60ce299b005773247039c8"
     },
     {
       "path": "skills/source/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
@@ -168,8 +168,8 @@
     },
     {
       "path": "skills/source/.agents/skills/contextual-jargon-scan/SKILL.md",
-      "bytes": 7844,
-      "sha256": "897557f83607b23c82eb2029f31b0ae30a3819e1590b250cd4dfef877577eae7"
+      "bytes": 7836,
+      "sha256": "c48e6501f305ddf189f1ed3857a00de6f4cb3d99c3bf842a80a1900f722511c3"
     },
     {
       "path": "skills/source/.agents/skills/probe-bearing-exemplar-formation/SKILL.md",
@@ -179,22 +179,22 @@
     {
       "path": "skills/source/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
       "bytes": 9470,
-      "sha256": "5302b522eeb46d7afd7c6da043f9a858870c5fb560dc28467b309bd046828a3d"
+      "sha256": "c105f246ee7af396d229854223078e6a1fde1347cd00c15bf3ba2e106fa4219e"
     },
     {
       "path": "skills/source/.agents/skills/versioned-exemplar-successor/SKILL.md",
-      "bytes": 6560,
-      "sha256": "74fca2cb1e918410ca72a0eda6165567d70fed49dc8367e6ea38a2bb0153f270"
+      "bytes": 6556,
+      "sha256": "18979742d7488ec44cb787e67577b0bb112b68694c56eb465999a60973aacb3f"
     },
     {
       "path": "skills/transaction-boundary-evidence-mapping/index.html",
       "bytes": 3166,
-      "sha256": "d17ba58b4ebb7592aa8430b789e8c4758fa71dd44497861d1a6609a9a31398df"
+      "sha256": "dd7d26cf9a1a2d241671379ff00547fbbe6df980389622267c281c88e8de4328"
     },
     {
       "path": "skills/versioned-exemplar-successor/index.html",
       "bytes": 3126,
-      "sha256": "4f4fe47cb8bda50d5cf912445225eaf957c54310a82e665a373edd102d793940"
+      "sha256": "75d87d1f00282b4e41ea4979dc2e2694bf902e34fc8874c75a0923b18267bf56"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/README.md",
@@ -219,7 +219,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/index.html",
       "bytes": 5604,
-      "sha256": "bdc5700bea670ec645810f2d91786b7623a88f1cc830b2cc9eea6a39eafe8172"
+      "sha256": "20fb4e403dec11f4d9ea0e23b31208e9cac8c8d1dfd8470d3d57055d09ea8683"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
@@ -249,7 +249,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/index.html",
       "bytes": 6060,
-      "sha256": "32704a0cf50a189f04204ea030f65a59a47f3d6795d604ed84b9915b87f55f96"
+      "sha256": "9fa448cc525fe14fa6184171a45836404682139802a63e71d21c00351cc298cd"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
@@ -314,7 +314,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.0/index.html",
       "bytes": 10239,
-      "sha256": "6879bfec9fb186e29b0c9b0612544cfc8765ab10c3970ccd9d77d2497d400831"
+      "sha256": "5233f62d21a84d98bf05e68f605e152492f8ad694a978e28bb28efe051ce3a91"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
@@ -389,7 +389,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.1/index.html",
       "bytes": 11747,
-      "sha256": "437a1a9d209f6a5fbcf3f0273b7bc41795a7ad0ff74f3c42f6f80ec623bdd150"
+      "sha256": "33fbef071dbadee68aa284cebd34a5bd1af7c7e522e1b0fdebe395ccf460aed5"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.1/pyproject.toml",
@@ -469,7 +469,7 @@
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/index.html",
       "bytes": 9204,
-      "sha256": "1dae7d65d30443207e74de2ee7de22dc01c2d73319fad1dfc1d723c657dc5740"
+      "sha256": "3dbc35cd9f9e8af1e767a65ed487ece7e4b8634db052cdd2b98329131925b400"
     },
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/pyproject.toml",
@@ -514,7 +514,7 @@
     {
       "path": "snippets/lims-eln-enterprise-implementation/0.3.2/index.html",
       "bytes": 5601,
-      "sha256": "9db47259f165507c7d17bccb149d19e7a887644ecae5991e74af0799bd4f9fc1"
+      "sha256": "3d90c86fc3952e24d948629b4d74d779fabb19c04b462abd43df87c225942039"
     },
     {
       "path": "snippets/lims-eln-enterprise-implementation/0.3.2/release-coordinate.json",
@@ -569,7 +569,7 @@
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/index.html",
       "bytes": 9877,
-      "sha256": "a2184988588ab83c601836530100b9919f66994acaf9decae3a45d44a7a6c12b"
+      "sha256": "73e1d0d968327f1f87c45c6cd737ee03365d830c326fa0f69fa6453ad2e4be2b"
     },
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/pyproject.toml",
@@ -629,7 +629,7 @@
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/index.html",
       "bytes": 8322,
-      "sha256": "151f80f7a6b82c4c156b5e9745ec89a9d134d35784e9f2d82fa1bfe4b1da3ffa"
+      "sha256": "ccc9e081ec606a44739fae7e381c16f618dfb47cbf492c59ceca776a635b5112"
     },
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/pyproject.toml",
@@ -684,7 +684,7 @@
     {
       "path": "snippets/typed-absence-and-wire-shape/0.1.0/index.html",
       "bytes": 9454,
-      "sha256": "414b6bab393b28fbdd1f07fb281611dbfcbe3be015dc97901e27bbe54b6ca7fc"
+      "sha256": "629bfaf12de709438a4bfeff036a80ebd97c96b6160cee227a8b3ab231190469"
     },
     {
       "path": "snippets/typed-absence-and-wire-shape/0.1.0/package-lock.json",

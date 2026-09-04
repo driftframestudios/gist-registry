@@ -84,14 +84,14 @@ active work.
 
 ## Scenario: A source-supported excerpt reveals a stronger architecture
 
-Given an accepted version and exact companion demonstrate recovery for one
-injected filesystem failure<br>
-And review identifies concurrency, rollback-failure, or crash states outside
-that evidence<br>
-When the stronger implementation is selected<br>
-Then the accepted version remains intact<br>
-And a runnable successor owns the revised state machine and tests<br>
-And its companion carries only exact selections from that successor
+- Given an accepted version and exact companion demonstrate recovery for one
+  injected filesystem failure
+- And review identifies concurrency, rollback-failure, or crash states outside
+  that evidence
+- When the stronger implementation is selected
+- Then the accepted version remains intact
+- And a runnable successor owns the revised state machine and tests
+- And its companion carries only exact selections from that successor
 
 ## Completion
 
