@@ -110,13 +110,13 @@ implementation or review check easier to retrieve.
 
 ## Scenario: A local simplification changes freshness
 
-Given code repeats a filesystem status query and a proposed local boolean would
-reduce one system call<br>
-When the state-and-concurrency vantage observes that the boolean carries an
-older path state into later control flow<br>
-Then synthesis records a readability or measured-syscall optimization<br>
-And concurrency standing follows the filesystem primitive or coordination
-protocol that creates the desired state
+- Given code repeats a filesystem status query and a proposed local boolean would
+  reduce one system call
+- When the state-and-concurrency vantage observes that the boolean carries an
+  older path state into later control flow
+- Then synthesis records a readability or measured-syscall optimization
+- And concurrency standing follows the filesystem primitive or coordination
+  protocol that creates the desired state
 
 ## Conditional context
 

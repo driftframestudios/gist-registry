@@ -225,6 +225,21 @@ test("private locators and house annotations stop at the source-package boundary
   }
 });
 
+test("a public-ready source package uses ordinary Markdown structure", async () => {
+  await withSkillFixture(async root => {
+    const skillPath = resolve(
+      root,
+      ".agents/skills/contextual-jargon-scan/SKILL.md",
+    );
+    const source = await readFile(skillPath, "utf8");
+    await writeFile(skillPath, source + "\nA visible break tag<br>\n", "utf8");
+    await assert.rejects(
+      loadPublicSkills({ root, sourceSha: fixedSourceRevision }),
+      /must use ordinary Markdown structure instead of HTML break tags/u,
+    );
+  });
+});
+
 test("a withheld skill title stays outside every public-ready source package", async () => {
   await withSkillFixture(async root => {
     const skillPath = resolve(
