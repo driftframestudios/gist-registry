@@ -16,6 +16,7 @@ const skillNamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const sourceRevisionPattern = /^[a-f0-9]{40}$/u;
 const safeRelativePathPattern = /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\).+$/u;
 const localMarkdownLinkPattern = /\[[^\]]*\]\(([^)]+)\)/gu;
+const htmlBreakPattern = /<br(?=[\s/>])[^>]*>/iu;
 const privateLocatorPatterns = [
   { label: "private Notion locator", pattern: /https?:\/\/(?:www\.)?notion\.(?:so|site)\b/iu },
   { label: "user-specific filesystem path", pattern: /(?:file:\/\/)?\/Users\//u },
@@ -118,6 +119,11 @@ function parseSkillSource(bytes, expectedName, label) {
 }
 
 function assertPublicTextSafe(source, label) {
+  assert.equal(
+    htmlBreakPattern.test(source),
+    false,
+    label + " must use ordinary Markdown structure instead of HTML break tags",
+  );
   for (const candidate of privateLocatorPatterns)
     assert.equal(
       candidate.pattern.test(source),

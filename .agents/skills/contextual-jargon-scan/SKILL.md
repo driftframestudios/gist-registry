@@ -100,12 +100,12 @@ The return contains:
 
 ### Scenario: One term carries exact and vague meanings
 
-Given `boundary` names a verified serialization contract in one passage<br>
-And the same word loosely stands for an unspecified transition elsewhere<br>
-When the occurrences are classified<br>
-Then the exact contract term remains, with a local definition when useful<br>
-And the vague occurrence names the systems, field policy, or responsibility handoff it actually means<br>
-And completion depends on reader legibility rather than eliminating the word family
+- Given `boundary` names a verified serialization contract in one passage
+- And the same word loosely stands for an unspecified transition elsewhere
+- When the occurrences are classified
+- Then the exact contract term remains, with a local definition when useful
+- And the vague occurrence names the systems, field policy, or responsibility handoff it actually means
+- And completion depends on reader legibility rather than eliminating the word family
 
 ## Completion
 

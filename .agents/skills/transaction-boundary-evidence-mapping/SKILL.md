@@ -158,12 +158,12 @@ observation that could establish it.
 
 ## Scenario: A response is lost after publication
 
-Given one operation has published its complete effect set and recorded the
-request meaning that produced it<br>
-When the caller retries after losing the response<br>
-Then the same meaning returns the recorded outcome without another effect<br>
-And changed meaning returns the comparison and reconciliation route while the
-accepted state remains available
+- Given one operation has published its complete effect set and recorded the
+  request meaning that produced it
+- When the caller retries after losing the response
+- Then the same meaning returns the recorded outcome without another effect
+- And changed meaning returns the comparison and reconciliation route while the
+  accepted state remains available
 
 ## Completion
 
