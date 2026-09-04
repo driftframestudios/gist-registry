@@ -246,6 +246,22 @@ test("a public-ready source package uses ordinary Markdown structure", async () 
   }
 });
 
+test("a similarly named custom element remains valid source text", async () => {
+  await withSkillFixture(async root => {
+    const skillPath = resolve(
+      root,
+      ".agents/skills/contextual-jargon-scan/SKILL.md",
+    );
+    const source = await readFile(skillPath, "utf8");
+    await writeFile(
+      skillPath,
+      source + "\n<br-example>Named example</br-example>\n",
+      "utf8",
+    );
+    await loadPublicSkills({ root, sourceSha: fixedSourceRevision });
+  });
+});
+
 test("a withheld skill title stays outside every public-ready source package", async () => {
   await withSkillFixture(async root => {
     const skillPath = resolve(
