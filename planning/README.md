@@ -1,24 +1,34 @@
 # Current planning terrain
 
-Current live receivers are:
+Current implementation receivers are:
+
+- #43 — a portable API contract and resilient client exemplar for
+  synthetic-system collaboration;
+- #44 — source-neutral multi-label classification and synthetic policy
+  assignment; and
+- #45 — the layered README graph, complete family catalog, normalized state
+  axes, and public evaluator entrance.
+
+Current settlement and observation receivers are:
 
 - #1 — canonical registry core and first-projection settlement;
-- #3 — stable repository-operations settlement after the accepted immutable-tag
-  and `main` to `docs` publication route;
+- #3 — stable repository-operations settlement after accepted immutable-tag
+  and `main` to `docs` publication routes;
 - #4 — exact-version schema projection and retrieval settlement;
 - #6 — the exercised delivery-observation model and its conditional receiver
-  for a response change that affects interpretation or recovery;
+  when a response change affects interpretation or recovery; and
 - #31 — accepted typed absence and JSON-ready wire shape awaiting human
-  closure after its named downstream-use receiver completed; and
-- #41 — the current cold-session entry, resolver-safe orientation, and planning
-  reconciliation receiver.
+  closure after its named downstream-use receiver completed.
 
 Current accepted repository and projection coordinates are
-`main@c2cf4a359006ef094a9947fa6dcec0eaa26405ea` and
+`main@3424d45983a2365eeba582914cbe634ebe7e1607` and
 `docs@5594bda0dee55afbd9974f72568687e54e7de97b`. The projection manifest binds
-those revisions and records 148 generated files, including 147 addressable
-routes. A later source acceptance or projection receipt supersedes this
-headline while the records below retain their historical standing.
+the preceding accepted source `c2cf4a359006ef094a9947fa6dcec0eaa26405ea`
+and records 148 generated files, including 147 addressable routes. The newer
+`main` coordinate adds the accepted cold-session orientation route and remains
+awaiting its next separately authorized Pages projection. A later source
+acceptance or projection receipt supersedes this headline while the records
+below retain their historical standing.
 
 Accepted path records supply this terrain:
 
@@ -36,7 +46,10 @@ Accepted path records supply this terrain:
   `main@41acb11779a2ffdbd193fdd837a043d50211e123`; and
 - #35 — accepted external-repository release and exact source-file projection
   as the first `repository_exemplar`, through pull request #38 at
-  `main@c13826a6198db7ee95edc6b7dd0b271383c8c18d`.
+  `main@c13826a6198db7ee95edc6b7dd0b271383c8c18d`; and
+- #41 — accepted cold-session entry, resolver-safe orientation, and planning
+  reconciliation through pull request #42 at
+  `main@3424d45983a2365eeba582914cbe634ebe7e1607`.
 
 [`SCHEMA-NURSERY.md`](../SCHEMA-NURSERY.md) is the current design note for the
 schema attempt. The exercised `main` to `docs` route now carries deterministic
@@ -124,9 +137,14 @@ coordinates, license and attribution bindings, and focused Registry and Pages
 evidence. The deterministic public projection has reached #3; the Program
 constellation hub remains a later receiving link.
 
-Issue #41 receives the first cold-session entry runbook and its provider-neutral
-orientation source selection. Its acceptance boundary is one fresh-session
-traversal, closed local fallbacks, a locator-safe selection contract, and a
-current planning map. Repository source and live GitHub state retain behavior
-authority; authorized connectors may add decision-changing Registry and Field
-Guide context by semantic identity.
+Issue #41 and pull request #42 accepted the first cold-session entry runbook and
+its provider-neutral orientation source selection. The accepted boundary
+includes one fresh-session traversal, closed local fallbacks, a locator-safe
+selection contract, and a current planning map. Repository source and live
+GitHub state retain behavior authority; authorized connectors may add
+decision-changing Registry and Field Guide context by semantic identity.
+
+Issue #45 receives the next mutable orientation layer. Its scope keeps exact
+version bytes intact while making all seven artifact families, their distinct
+state axes, the quickest repository proof, and the JSON registry alternate
+available from the repository and public evaluator entrances.

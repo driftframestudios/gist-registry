@@ -64,6 +64,7 @@ const expectedPaths = [
   "skills/source/.agents/skills/versioned-exemplar-successor/SKILL.md",
   "skills/transaction-boundary-evidence-mapping/index.html",
   "skills/versioned-exemplar-successor/index.html",
+  "snippets/README.md",
   "snippets/document-evidence-core-patterns/0.1.0/README.md",
   "snippets/document-evidence-core-patterns/0.1.0/gist/00-README.md",
   "snippets/document-evidence-core-patterns/0.1.0/gist/10-same-byte-capture.md",
@@ -409,6 +410,7 @@ test("public discovery routes carry collaboration and continuation orientation",
   await withProjection(async ({ output }) => {
     const root = await readFile(resolve(output, "index.html"), "utf8");
     const artifacts = await readFile(resolve(output, "snippets/index.html"), "utf8");
+    const artifactSourceGuide = await readFile(resolve(output, "snippets/README.md"));
     const extractionFamily = await readFile(
       resolve(output, "snippets/document-evidence-extraction/index.html"),
       "utf8",
@@ -436,15 +438,29 @@ test("public discovery routes carry collaboration and continuation orientation",
 
     assert.match(root, /a durable coordinate from its first legible form/u);
     assert.match(root, /every accepted coordinate remains available/u);
-    assert.match(artifacts, /the next useful collaboration/u);
+    assert.match(root, /Evaluate or reuse/u);
+    assert.match(root, /7 registered families with 9 exact-version packages/u);
+    assert.match(root, /rel="alternate" type="application\/json"/u);
+    assert.match(artifacts, /Choose a family by the mechanism you need/u);
+    assert.match(artifacts, /machine-readable exact-version catalog/u);
+    assert.equal(
+      [...artifacts.matchAll(/<article class="card">/gu)].length,
+      7,
+      "artifact discovery must render one card per registered family",
+    );
+    assert.deepEqual(
+      artifactSourceGuide,
+      await readFile(resolve(repositoryRoot, "snippets/README.md")),
+    );
     assert.match(
       extractionFamily,
       /href="\/snippets\/document-evidence-extraction\/README\.md"/u,
     );
     assert.match(
       extractionFamily,
-      /The family README names its purpose and current continuation/u,
+      /Registry acceptance, manifest maturity, family continuation/u,
     );
+    assert.match(extractionFamily, /Registry standing<\/dt><dd>Registered · 2 exact versions/u);
     assert.match(companionFamily, /document-evidence-core-patterns\/0\.1\.0\//u);
     assert.match(companionFamily, /document-evidence-core-patterns\/0\.1\.1\//u);
     assert.match(
@@ -595,6 +611,9 @@ test("artifact file inspection links retain local bytes and bind GitHub to the s
 
       assert.match(html, /filename opens the byte-preserving kindlight\.io projection/u);
       assert.match(html, /access follows the repository’s current visibility/u);
+      assert.match(html, /Registry standing<\/dt><dd>Registered exact version/u);
+      assert.match(html, /Manifest maturity<\/dt><dd><code>candidate<\/code>/u);
+      assert.match(html, /rel="alternate" type="application\/json"/u);
       assert.equal(html.includes('target="_blank"'), false);
     }
   });

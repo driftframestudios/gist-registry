@@ -27,15 +27,26 @@ Repository source remains canonical. The PR #14 publication observation at
 companion. A published Gist becomes a convenience projection of one accepted
 version and receives its own revision-and-digest observation after publication.
 
-## Continuation
+## Current state
 
-- **Standing:** `settled`
-- **Current form:**
-  [`document-evidence-core-patterns@0.1.1`](0.1.1/)
-- **Present use:** Exact source-and-test selections orient a reader to the
-  observed-effect and caller-retained recovery architecture at the accepted
-  `0.1.1` evidence boundary. Version `0.1.0` remains the concise same-byte and
-  single-failure reading.
+| Axis | Standing | Meaning |
+| --- | --- | --- |
+| Registry acceptance | `0.1.0` and `0.1.1` accepted | Both source-mapped companions are registered at immutable reviewed coordinates |
+| Manifest maturity | `candidate` | Each exact `snippet.json` records the maturity of its own selected excerpt package |
+| Continuation | `settled` | The two accepted companions cover the current baseline and successor teaching jobs |
+| Publication | Pages projected | Both exact companions are publicly retrievable; optional Gist creation remains a separate human-held action |
+
+**Current coordinate:**
+[`document-evidence-core-patterns@0.1.1`](0.1.1/README.md). Version
+[`0.1.0`](0.1.0/README.md) remains the concise same-byte and single-failure
+reading.
+
+## Next evidence-bearing route
+
+Exact source-and-test selections orient a reader to the observed-effect and
+caller-retained recovery architecture at the accepted `0.1.1` boundary. A
+later companion version becomes useful when a new accepted source successor
+creates another compact mechanism worth reading independently.
 
 This standing belongs to the companion's narrow orientation job. Runnable
 source, focused tests, immutable tags, exact companions, Pages delivery, and

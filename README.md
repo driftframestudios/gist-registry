@@ -25,6 +25,63 @@ GitHub Pages projection on `docs`. Repository visibility, Pages activation,
 and creation of a public or unlisted Gist are distinct publication actions.
 Human review retains those decisions.
 
+## Current state
+
+`main` owns accepted authored source. The builder-owned `docs` branch carries
+the most recent reviewed Pages projection at [kindlight.io](https://kindlight.io/).
+Seven artifact families and nine exact versions are registered. Every exact
+manifest currently records `candidate` technical maturity, while source
+acceptance, continuation, publication, and hosted observation retain their own
+state axes.
+
+The [current planning terrain](planning/README.md) names live Issue receivers
+and exact accepted and published coordinates. GitHub Issues remain the current
+work-state authority.
+
+## Choose your route
+
+| Reader job | Start here | What it supplies |
+| --- | --- | --- |
+| Evaluate or reuse an implementation | [Artifact family catalog](snippets/README.md) | Seven families grouped by mechanism, current coordinate, continuation, and evidence-bearing next route |
+| Retrieve exact versions programmatically | [`registry.json`](registry.json) | Semantic IDs, versions, artifact kinds, manifest paths, and canonical paths |
+| Run the smallest repository proof | [Quickest proof](#quickest-proof) | Registry, path, manifest, representation, and digest agreement |
+| Contribute one artifact or successor | [`AGENTS.md`](AGENTS.md), then the [source collaboration cycle](.agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md) | Current-truth reconstruction, source ownership, evidence, and review-ready handback |
+| Re-enter a cold or resumed session | [Cold-session entry runbook](.agents/runbooks/gist-registry-cold-session-entry.v0.1.md) | One classified work front and a bounded task capsule |
+| Inspect public collaboration skills | [Registry skill catalog](.agents/skills/README.md) | Evidence standing, public-package standing, and each full instruction source |
+| Inspect shared data contracts | [Schema catalog](schemas/README.md) | Authored schema identities, consumers, versioning, and delivery-observation route |
+| Publish accepted source | [Pages publication runbook](.agents/runbooks/gist-registry-pages-publication.v0.1.md) | Deterministic build, `docs` reception, live parity, and handback |
+
+## Artifact families
+
+| Family | Kind | Current coordinate | Useful when |
+| --- | --- | --- | --- |
+| [Document evidence extraction](snippets/document-evidence-extraction/README.md) | `code_sample` | `0.1.1` | Deterministic evidence analysis and recovery-aware filesystem promotion matter |
+| [Document evidence core patterns](snippets/document-evidence-core-patterns/README.md) | `code_excerpt` | `0.1.1` | A compact, source-mapped reading of same-byte capture or recovery architecture is useful |
+| [Specimen custody and transactional outbox](snippets/specimen-custody-outbox/README.md) | `domain_exemplar` | `0.1.0` | Custody state, exact replay, event history, and an aligned outbox must move together |
+| [Instrument ingress integrity](snippets/instrument-ingress-integrity/README.md) | `domain_exemplar` | `0.1.0` | Raw bytes, acquisition identity, scientific mapping, retry, and quarantine need distinct owners |
+| [Migration reconciliation and approval-bound cutover](snippets/migration-reconciliation-cutover/README.md) | `domain_exemplar` | `0.1.0` | Reconciliation, restore evidence, approval, publication, replay, and response recovery share one cutover boundary |
+| [Typed absence and wire shape](snippets/typed-absence-and-wire-shape/README.md) | `code_sample` | `0.1.0` | Omission, `null`, empty values, zero, and false must remain distinct JSON instructions |
+| [LIMS/ELN Enterprise Implementation release exemplar](snippets/lims-eln-enterprise-implementation/README.md) | `repository_exemplar` | `0.3.2` | An exact accepted release file, its provenance, and upstream evidence need one portable coordinate |
+
+The [complete family catalog](snippets/README.md) explains how to read registry
+acceptance, exact-manifest maturity, continuation, publication, and delivery
+observation without collapsing them into one status.
+
+## Quickest proof
+
+With Node.js 22 or newer, install the pinned root dependencies and check the
+complete registry graph:
+
+```sh
+npm ci
+npm run check:registry
+```
+
+The command establishes that every registry entry resolves to one exact
+manifest and that each declared representation, path, digest, and local schema
+relationship agrees. Artifact runtime behavior, Pages delivery, optional Gist
+publication, and downstream suitability retain their focused observations.
+
 ## Why this repository exists
 
 For engineers moving toward principal practice, the important unit is larger
@@ -35,130 +92,18 @@ still open; bounded collaboration then strengthens what the evidence supports
 and routes material behavior changes into a successor version.
 
 The first lived case began with
-[`document-evidence-extraction@0.1.0`](snippets/document-evidence-extraction/0.1.0/README.md)
-and a focused question about filesystem replacement. Several architectural
-vantages separated symlink behavior, writer coordination, interruption
-recovery, and test architecture. Review calibrated the current promotion
-guarantee to one injected `OSError` restoration case under cooperative
-single-writer use, preserved `0.1.0` at that demonstrated boundary, formed an
-[exact excerpt companion derived from `0.1.0`](snippets/document-evidence-core-patterns/README.md)
-and the initial [provisional collaboration skills](.agents/skills/README.md). The
-accepted `0.1.1` successor and its immutable tag carry the stronger source and
-tests. A matching exact companion selects the observed-effect and
-caller-retained recovery relationships from that accepted source. Source
-acceptance, manifest maturity, immutable coordinates, and publication remain
-separate. This
-preservation–calibration–successor route is the registry's exemplar pattern.
+[`document-evidence-extraction@0.1.0`](snippets/document-evidence-extraction/0.1.0/README.md).
+Review calibrated its demonstrated guarantee, preserved the accepted bytes,
+and formed the stronger `0.1.1` successor plus exact excerpt companions. That
+preservation–calibration–successor route remains the registry's exemplar
+pattern. [Registry skills](.agents/skills/README.md) preserve the reusable
+collaboration contracts while exact source and focused tests retain technical
+authority.
 
 Family READMEs describe continuation as `seeded`, `interstitial`, or `settled`.
-The standing is an orientation coordinate: it names the current form and the
-next useful collaboration. Acceptance, publication, and technical evidence
-retain their separate owners. Every standing remains available for execution,
-study, adaptation, forks, and successors. The [current planning
-terrain](planning/README.md) names the live receivers and re-entry route.
-
-## Start with the first vertical slice
-
-The first artifact is a participant-account-supported representative
-reconstruction of a 2018–2019 enterprise document-evidence workflow:
-
-- canonical ID: `document-evidence-extraction`;
-- accepted versions: `0.1.0` and `0.1.1`;
-- current accepted form: `0.1.1`, with `candidate` maturity recorded in its
-  exact manifest;
-- source family: [`snippets/document-evidence-extraction/`](snippets/document-evidence-extraction/README.md);
-- registry record: [`registry.json`](registry.json); and
-- schema-nursery reading: [`SCHEMA-NURSERY.md`](SCHEMA-NURSERY.md).
-
-The example separates local OCR collection from deterministic analysis. A
-captured synthetic OCR fixture keeps the ordinary test route independent of a
-machine-specific Tesseract installation, while the image-intake command remains
-available for a local OCR observation.
-
-The compact Debrief companion family selects source-and-test relationships
-from both accepted implementations:
-
-- canonical ID: `document-evidence-core-patterns`;
-- accepted versions: `0.1.0` and `0.1.1`;
-- current form:
-  [`snippets/document-evidence-core-patterns/0.1.1/`](snippets/document-evidence-core-patterns/0.1.1/README.md);
-  and
-- Gist-ready file set:
-  [`gist/`](snippets/document-evidence-core-patterns/0.1.1/gist/).
-
-Each companion is a `code_excerpt`. Version `0.1.0` makes same-byte capture and
-the demonstrated single-failure restoration case compact. Version `0.1.1`
-makes observed-effect reconciliation and complete-caller recovery ownership
-compact. The complete artifact remains the runnable evidence owner. The
-consolidated Pages projection carries both exact companions; human review
-retains the optional Gist publication decision for each exact version.
-
-## First independent domain companion
-
-[`specimen-custody-outbox@0.1.0`](snippets/specimen-custody-outbox/0.1.0/README.md)
-is the registry's first runnable `domain_exemplar`. Its realistic synthetic
-transfer aligns tenant, actor, capability, optimistic custody state, exact
-replay, changed-intent reconciliation, attributable event history, and a
-content-bound outbox through one in-memory unit of work. Focused tests exercise
-competing calls and injected failure while comparing the complete accepted
-snapshot.
-
-The artifact's evidence boundary is intentionally process-local. A durable
-database implementation is the next owner for isolation, persistence,
-cross-process concurrency, and broker-delivery claims. The manifest records a
-proposed compact Gist source set and reading order; human review retains the
-exact-version projection and publication decision.
-
-## Raw-byte-preserving instrument ingress
-
-[`instrument-ingress-integrity@0.1.0`](snippets/instrument-ingress-integrity/0.1.0/README.md)
-is the registry's second runnable `domain_exemplar`. It keeps delivery
-identity, logical acquisition identity, and raw-byte SHA-256 in distinct
-roles. A strict JSON and decimal pipeline links accepted scientific meaning to
-its exact source bytes; expected intake or mapping differences retain a
-reviewable quarantine record and constructive recovery route.
-
-The process-local repository parses outside its lock, repeats identity checks,
-and publishes detached raw, receipt, acquisition, and outcome maps once.
-Focused tests exercise exact accepted and quarantined replay, duplicate
-deliveries, equal-byte acquisitions, identity changes, digest collisions,
-concurrent callers, parser and mapper faults, and every candidate commit
-interruption. A governed object-store and durable inbox transaction is the
-next receiver for restart, cross-process, configured-instrument, and
-scientific-qualification claims.
-
-## Typed absence and JSON-ready output
-
-[`typed-absence-and-wire-shape@0.1.0`](snippets/typed-absence-and-wire-shape/0.1.0/README.md)
-is an independently authored, domain-neutral `code_sample`. Its route patch
-keeps omission, explicit `null`, a present empty object, `0`, `false`, and an
-empty string available as distinct update instructions.
-
-The TypeScript source takes one descriptor snapshot of passive same-realm
-records, admits enumerable own data properties, applies field-level meaning,
-normalizes negative zero to the JSON-stable retry value, and returns detached
-null-prototype output. Strict compilation and focused runtime checks cover the
-source types, exact example bytes, JSON round trip, projection coverage,
-object shape, error ownership, and caller-mutation boundary. APIs, generated
-clients, transport, persistence, and authorization remain named transfer
-decisions.
-
-## An exact file from an accepted repository release
-
-[`lims-eln-enterprise-implementation@0.3.2`](snippets/lims-eln-enterprise-implementation/0.3.2/README.md)
-is the first `repository_exemplar`. It publishes the complete 94-line
-in-memory idempotency ledger from the accepted Enterprise Implementation
-`v0.3.2` release. A machine-readable coordinate binds the annotated tag,
-commit, tree, reproducible archive digest, source Git blob and SHA-256,
-implementation test evidence, license, attribution, and later release
-observation.
-
-The implementation repository retains authority for the complete release and
-its behavioral evidence. Gist Registry provides the selected public bytes,
-typed discovery record, and concise guide. A production implementation can
-use the example to preserve tenant-scoped reservation, exact replay,
-changed-content collision, pending ownership, and recorded outcome recovery
-while selecting its own durable transaction and coordination model.
+The standing names the current form and next useful collaboration. Every
+standing remains available for execution, study, adaptation, forks, and
+successors.
 
 ## Canonical path and projection roles
 
@@ -422,8 +367,20 @@ concurrency, and fault-recovery claim. Durable raw-object storage, inbox and
 measurement transactions, configured source authenticity, and scientific
 mapping qualification remain with their named receivers.
 
+The migration-cutover exemplar uses realistic synthetic identities and
+records. Its versioned source and focused suite own the process-local
+reconciliation, approval, publication, replay, and response-recovery claim.
+Durable coordination, persistence, operational identity, and production
+cutover evidence remain with their named receivers.
+
 The typed-absence exemplar is independently authored from recurring human
 practice with JSON integrations. Its company-neutral route fields and
 realistic synthetic values own the demonstrated object-to-JSON claim. API
 schemas, generated clients, transport behavior, persistence, authorization,
 and business acceptance remain with their receiving systems.
+
+The LIMS/ELN release exemplar reproduces one exact file from an accepted
+upstream release with its public provenance, license, attribution, digest, and
+focused upstream evidence coordinates. The implementation repository retains
+authority for the complete release and runtime claim; this registry owns the
+selected portable representation and discovery route.

@@ -193,6 +193,7 @@ function pageShell({ title, description, outputPath, body }) {
     '  <meta name="author" content="' + escapeHtml(siteAuthorName) + '">',
     '  <meta name="robots" content="index,follow">',
     '  <link rel="canonical" href="' + escapeHtml(canonicalUrl) + '">',
+    '  <link rel="alternate" type="application/json" title="Gist Registry exact-version catalog" href="/registry.json">',
     '  <link rel="stylesheet" href="/assets/site.css">',
     "</head>",
     "<body>",
@@ -357,6 +358,10 @@ async function collectSourceModel(root, sourceSha) {
 
   const registryBytes = await readSourceBytes(root, "registry.json", "registry.json");
   const registry = await readJsonBytes(registryBytes, "registry.json");
+  const artifactCatalogReadme = {
+    sourcePath: "snippets/README.md",
+    bytes: await readSourceBytes(root, "snippets/README.md", "snippets/README.md"),
+  };
   const carriers = new Map();
   for (const path of ["AI-DATA-USE.md", "AUTHORS", "LICENSE", "robots.txt"])
     carriers.set(path, await readSourceBytes(root, path, path));
@@ -447,6 +452,7 @@ async function collectSourceModel(root, sourceSha) {
   return {
     registry,
     registryBytes,
+    artifactCatalogReadme,
     artifacts,
     carriers,
     deliveryObservations,
@@ -461,6 +467,7 @@ function publicationInputs(model) {
     "package.json",
     "package-lock.json",
     "registry.json",
+    model.artifactCatalogReadme.sourcePath,
     "tools/build-pages.mjs",
     "tools/check-delivery-observations.mjs",
     "tools/check-public-boundary.mjs",
@@ -481,7 +488,7 @@ function publicationInputs(model) {
 }
 
 function artifactFamilyPage(semanticId, versions, outputPath) {
-  const title = versions[0].manifest.title;
+  const title = versions.at(-1).manifest.title;
   const cards = versions
     .map(
       ({ entry, manifest }) =>
@@ -489,7 +496,7 @@ function artifactFamilyPage(semanticId, versions, outputPath) {
           '<article class="card">',
           '<p class="eyebrow">' +
             escapeHtml(manifest.artifactKind.replaceAll("_", " ")) +
-            " · " +
+            " · manifest maturity " +
             escapeHtml(manifest.standing) +
             "</p>",
           "<h2><a href=\"/snippets/" +
@@ -506,15 +513,24 @@ function artifactFamilyPage(semanticId, versions, outputPath) {
     .join("\n");
   return pageShell({
     title,
-    description: "Accepted and candidate versions of " + title + ".",
+    description: "Registered exact versions of " + title + ".",
     outputPath,
     body: [
-      '<p class="eyebrow">Versioned artifact family</p>',
+      '<p class="eyebrow">Registered artifact family</p>',
       "<h1>" + escapeHtml(title) + "</h1>",
-      '<p class="lede">Each version keeps its runnable files, manifest, evidence boundary, and exact source bytes together. The family README names its purpose and current continuation.</p>',
+      '<p class="lede">Each registered version keeps its runnable files, manifest, evidence boundary, and exact source bytes together. Registry acceptance, manifest maturity, family continuation, publication, and delivery observation remain distinct state axes.</p>',
+      '<dl class="metadata">',
+      "<dt>Registry standing</dt><dd>Registered · " +
+        escapeHtml(versions.length) +
+        " exact version" +
+        (versions.length === 1 ? "" : "s") +
+        "</dd>",
+      '<dt>Continuation</dt><dd>Read the mutable family source guide for the current form and next evidence-bearing route</dd>',
+      '<dt>Machine record</dt><dd><a href="/registry.json"><code>registry.json</code></a></dd>',
+      "</dl>",
       '<p><a href="/snippets/' +
         escapeHtml(semanticId) +
-        '/README.md">Read the family README</a></p>',
+        '/README.md">Read the family source guide</a></p>',
       '<div class="grid">' + cards + "</div>",
       "<p><a href=\"/snippets/\">Return to all artifacts</a></p>",
     ].join("\n"),
@@ -570,7 +586,7 @@ function artifactVersionPage(artifact, sourceSha, outputPath) {
     body: [
       '<p class="eyebrow">' +
         escapeHtml(manifest.artifactKind.replaceAll("_", " ")) +
-        " · " +
+        " · manifest maturity " +
         escapeHtml(manifest.standing) +
         "</p>",
       "<h1>" + escapeHtml(manifest.title) + "</h1>",
@@ -578,6 +594,8 @@ function artifactVersionPage(artifact, sourceSha, outputPath) {
       "<h2>Use</h2>",
       '<dl class="metadata">',
       "<dt>Version</dt><dd><code>" + escapeHtml(entry.version) + "</code></dd>",
+      "<dt>Registry standing</dt><dd>Registered exact version</dd>",
+      "<dt>Manifest maturity</dt><dd><code>" + escapeHtml(manifest.standing) + "</code></dd>",
       "<dt>Practical question</dt><dd>" + escapeHtml(manifest.use.practicalQuestion) + "</dd>",
       "<dt>Changed ability</dt><dd>" + escapeHtml(manifest.use.changedAbility) + "</dd>",
       "<dt>Schema</dt><dd><a href=\"" +
@@ -609,39 +627,53 @@ function artifactVersionPage(artifact, sourceSha, outputPath) {
 }
 
 function allArtifactsPage(artifacts, outputPath) {
-  const cards = artifacts
-    .map(
-      ({ entry, manifest }) =>
-        [
+  const byFamily = new Map();
+  for (const artifact of artifacts) {
+    const family = byFamily.get(artifact.entry.semanticId) ?? [];
+    family.push(artifact);
+    byFamily.set(artifact.entry.semanticId, family);
+  }
+  const cards = [...byFamily]
+    .sort(([left], [right]) => compareText(left, right))
+    .map(([semanticId, versions]) => {
+      versions.sort((left, right) => compareText(left.entry.version, right.entry.version));
+      const { manifest } = versions.at(-1);
+      const versionList = versions.map(({ entry }) => entry.version).join(", ");
+      const maturity = [...new Set(versions.map(artifact => artifact.manifest.standing))]
+        .sort(compareText)
+        .join(", ");
+      return [
           '<article class="card">',
-          '<p class="eyebrow">' +
+          '<p class="eyebrow">Registered family · ' +
             escapeHtml(manifest.artifactKind.replaceAll("_", " ")) +
-            " · " +
-            escapeHtml(manifest.standing) +
             "</p>",
           "<h2><a href=\"/snippets/" +
-            escapeHtml(entry.semanticId) +
-            "/" +
-            escapeHtml(entry.version) +
+            escapeHtml(semanticId) +
             '/\">' +
             escapeHtml(manifest.title) +
             "</a></h2>",
           "<p>" + escapeHtml(manifest.summary) + "</p>",
-          "<p><code>" +
-            escapeHtml(entry.semanticId + "@" + entry.version) +
-            "</code></p>",
+          '<dl class="metadata">',
+          "<dt>Exact versions</dt><dd><code>" + escapeHtml(versionList) + "</code></dd>",
+          "<dt>Manifest maturity</dt><dd><code>" + escapeHtml(maturity) + "</code></dd>",
+          '<dt>Continuation</dt><dd><a href="/snippets/' +
+            escapeHtml(semanticId) +
+            '/README.md">Read the family source guide</a></dd>',
+          "</dl>",
           "</article>",
-        ].join("\n"),
-    )
+      ].join("\n");
+    })
     .join("\n");
   return pageShell({
     title: "Artifacts",
-    description: "Versioned technical artifacts with exact files and evidence boundaries.",
+    description: "Registered technical-artifact families with exact files and evidence boundaries.",
     outputPath,
     body: [
       '<p class="eyebrow">Public retrieval projection</p>',
       "<h1>Artifacts</h1>",
-      '<p class="lede">Each artifact keeps a stable semantic identity, exact version, declared representations, and a focused verification route. Its family README names the current form and the next useful collaboration.</p>',
+      '<p class="lede">Choose a family by the mechanism you need. Each family leads to registered exact versions, declared representations, a focused verification route, and a mutable continuation guide.</p>',
+      '<p><a href="/snippets/README.md">Read the artifact family source guide</a> or <a href="/registry.json">retrieve the machine-readable exact-version catalog</a>.</p>',
+      "<p>Registry acceptance, exact-manifest maturity, family continuation, publication, and delivery observation answer different questions and remain separately visible.</p>",
       '<div class="grid">' + cards + "</div>",
     ].join("\n"),
   });
@@ -765,6 +797,7 @@ function deliveryObservationsPage(deliveryObservations, outputPath) {
 }
 
 function rootPage(artifacts, schemas, deliveryObservations, publicSkills, sourceSha, outputPath) {
+  const familyCount = new Set(artifacts.map(artifact => artifact.entry.semanticId)).size;
   return pageShell({
     title: "Versioned technical artifacts",
     description: "A public retrieval projection for technical artifacts that grow through versioned collaboration.",
@@ -774,12 +807,19 @@ function rootPage(artifacts, schemas, deliveryObservations, publicSkills, source
       "<h1>Durable technical material, version by version.</h1>",
       '<p class="lede">Gist Registry gives useful technical material a durable coordinate from its first legible form. Constructive collaboration can add architectural vantages, focused tests, evidence, and successor versions while every accepted coordinate remains available to inspect, run, fork, or extend.</p>',
       '<p>This site serves selected runnable artifacts, exact schema bytes, and the evidence boundaries needed to reuse them. Authored meaning remains with the accepted source; this is its deterministic retrieval projection.</p>',
+      "<h2>Evaluate or reuse</h2>",
+      '<ol><li>Choose a mechanism in the <a href="/snippets/">artifact family catalog</a>.</li><li>Read the family source guide, then select one registered exact version.</li><li>Run its focused command and keep the stated evidence and transfer boundary beside the result.</li></ol>',
+      '<p><a href="/snippets/README.md">Read the complete source guide</a> or <a href="/registry.json">retrieve the JSON exact-version catalog</a>.</p>',
       '<div class="grid">',
       '<article class="card"><h2><a href="/snippets/">Artifacts</a></h2><p>' +
+        escapeHtml(familyCount) +
+        " registered famil" +
+        (familyCount === 1 ? "y" : "ies") +
+        " with " +
         escapeHtml(artifacts.length) +
-        " accepted or candidate exact-version package" +
+        " exact-version package" +
         (artifacts.length === 1 ? "" : "s") +
-        " currently available.</p></article>",
+        ".</p></article>",
       '<article class="card"><h2><a href="/schemas/gist-registry/">Schemas</a></h2><p>' +
         escapeHtml(schemas.length) +
         " exercised exact-version contract" +
@@ -939,6 +979,12 @@ async function populateProjection({ root, output, sourceSha, sourceBinding }) {
     ),
     writeText(output, "assets/site.css", siteCss, claims),
     writeBytes(output, "registry.json", model.registryBytes, claims),
+    writeBytes(
+      output,
+      model.artifactCatalogReadme.sourcePath,
+      model.artifactCatalogReadme.bytes,
+      claims,
+    ),
     writeBytes(
       output,
       "AI-DATA-USE.md",
@@ -1267,6 +1313,11 @@ export async function checkProjection({ root = repositoryRoot, output }) {
     await readFile(resolve(resolvedOutput, "registry.json")),
     model.registryBytes,
     "projected registry.json must preserve authored bytes",
+  );
+  assert.deepEqual(
+    await readFile(resolve(resolvedOutput, model.artifactCatalogReadme.sourcePath)),
+    model.artifactCatalogReadme.bytes,
+    "projected artifact family catalog must preserve authored bytes",
   );
   for (const schema of model.schemas) {
     assert.deepEqual(
