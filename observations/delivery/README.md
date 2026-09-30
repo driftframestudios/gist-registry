@@ -5,6 +5,11 @@ named, immutable source and projection. The authored schema, generated Pages
 projection, and observed response keep distinct identities so a future
 collaborator can see which equality was measured and when.
 
+Start with [`index.json`](index.json) for machine-readable discovery. Return to
+the [schema catalog](../../schemas/README.md) for the authored observation
+contract or the [root README](../../README.md) for the complete source and
+publication route.
+
 Each accepted observation has one immutable JSON record under `records/` and
 one compact discovery entry in `index.json`. A later observation appends a new
 record and index entry. Git history and reviewed pull requests preserve the

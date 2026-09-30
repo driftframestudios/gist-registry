@@ -1,9 +1,9 @@
 # Registry skills
 
-Registry skills are provisional collaboration affordances. They make a
-transferable job easy to discover. Current intent, runnable source, focused
-checks, and granted tool authority retain truth, priority, permission, and
-evidence roles.
+Registry skills are collaboration affordances with explicit evidence and
+publication standing. They make a transferable job easy to discover. Current
+intent, runnable source, focused checks, and granted tool authority retain
+truth, priority, permission, and evidence roles.
 
 The first skills formed from the registry's initial lived collaboration and
 the Practitioner Probe source family:
@@ -37,15 +37,20 @@ Pages catalog contains only complete public-ready packages. Instructions that
 still depend on a broader repository-owner package continue in this private
 workbench until that exact dependency closure can travel with them.
 
-| Skill | Use it when | Standing |
-| --- | --- | --- |
-| [Architecture convergence vantages](architecture-convergence-vantages/SKILL.md) | Several plausible technical changes create different concurrency, recovery, portability, evidence, or publication guarantees | Exercised through filesystem-promotion, exact-excerpt, and instrument-ingress cycles; source-and-test rotation now shapes its guarantee map and release event |
-| [Probe-bearing exemplar formation](probe-bearing-exemplar-formation/SKILL.md) | A public-safe code sample, Practitioner Probe, or domain exemplar is ready for its first reviewable registry version | First source-owning execution through Issue #18 |
-| [Repository collaboration cycle](repository-collaboration-cycle/SKILL.md) | A cold or resumed collaborator is expected to carry one authorized repository task through orientation, implementation, evidence, and reviewable re-entry | Exercised through Issue #18 / PR #22 and a fresh-context Issue #3 source cycle |
-| [Secret-boundary inspection](secret-boundary-inspection/SKILL.md) | Source, an exact proposed index, locally available history, or a generated artifact is preparing for a repository or publication handoff | Received portable contract with a Gist Registry-owned Betterleaks implementation and Pages artifact route |
-| [Contextual jargon scan](contextual-jargon-scan/SKILL.md) | Registry orientation, artifact documentation, or human-readable projection copy may rely on local shorthand | Exercised portable contract with Registry-specific code, coordinate, schema, and deterministic-projection boundaries |
-| [Transaction boundary evidence mapping](transaction-boundary-evidence-mapping/SKILL.md) | Several state changes must become visible together, or retry correctness depends on whether publication occurred | Formed from accepted custody/outbox, ingress/quarantine, and migration/cutover decisions that changed identity, freshness, effect, replay, and recovery architecture |
-| [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Exercised through the accepted document-evidence `0.1.1` source and exact companion |
+| Skill | Use it when | Evidence | Public package |
+| --- | --- | --- | --- |
+| [Architecture convergence vantages](architecture-convergence-vantages/SKILL.md) | Several plausible technical changes create different concurrency, recovery, portability, evidence, or publication guarantees | Exercised through filesystem-promotion, exact-excerpt, and instrument-ingress cycles | `public_ready` with its filesystem-state reference |
+| [Probe-bearing exemplar formation](probe-bearing-exemplar-formation/SKILL.md) | A public-safe code sample, Practitioner Probe, or domain exemplar is ready for its first reviewable registry version | Exercised through Issue #18 | `public_ready` |
+| [Repository collaboration cycle](repository-collaboration-cycle/SKILL.md) | A cold or resumed collaborator is expected to carry one authorized repository task through orientation, implementation, evidence, and reviewable re-entry | Exercised through Issue #18 / PR #22 and a fresh-context Issue #3 source cycle | `public_possible`; the operational runbook closure remains in this repository workbench |
+| [Secret-boundary inspection](secret-boundary-inspection/SKILL.md) | Source, an exact proposed index, locally available history, or a generated artifact is preparing for a repository or publication handoff | Exercised with the repository-owned Betterleaks implementation and Pages artifact route | `public_possible`; the scanner, configuration, runbook, and repository orientation travel as one later package |
+| [Contextual jargon scan](contextual-jargon-scan/SKILL.md) | Registry orientation, artifact documentation, or human-readable projection copy may rely on local shorthand | Exercised against Registry prose and deterministic projection boundaries | `public_ready` |
+| [Transaction boundary evidence mapping](transaction-boundary-evidence-mapping/SKILL.md) | Several state changes must become visible together, or retry correctness depends on whether publication occurred | Formed from accepted custody/outbox, ingress/quarantine, and migration/cutover decisions | `public_ready` |
+| [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Exercised through the accepted document-evidence `0.1.1` source and exact companion | `public_ready` |
+
+[`publication-selection.json`](publication-selection.json) is the
+machine-readable selection owner. `SKILL.md` remains the semantic instruction
+source. The Pages builder publishes only complete `public_ready` source
+packages and records their exact repository revision and SHA-256 bindings.
 
 “Vantage” means a bounded attention instrument specified by a question,
 evidence source, observable return, and stopping event. Mechanism-centered

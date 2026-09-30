@@ -1,16 +1,22 @@
 # Document evidence extraction
 
-Accepted baseline: [`0.1.0`](0.1.0/README.md).
-
-Accepted successor: [`0.1.1`](0.1.1/README.md). Its exact manifest records
-`candidate` maturity, separately from source acceptance and the immutable tag.
-
 This artifact reconstructs a four-stage 2018–2019 workflow from a
 participant-account-supported description using realistic synthetic material.
 It is a portable implementation example, not recovered production source.
 
-Earlier accepted versions will remain at their exact versioned paths. The
-registry record identifies the current accepted coordinate after human review.
+## Current state
+
+| Axis | Standing | Meaning |
+| --- | --- | --- |
+| Registry acceptance | `0.1.0` and `0.1.1` accepted | Both exact versions are registered; their immutable tags preserve the reviewed coordinates |
+| Manifest maturity | `candidate` | Each exact `snippet.json` records the evidence maturity of its own version |
+| Continuation | `settled` | `0.1.1` supplies the current runnable form at its stated writer and recovery boundary |
+| Publication | Pages projected | Both accepted versions are publicly retrievable; optional Gist creation remains a separate human-held action |
+
+**Current coordinate:**
+[`document-evidence-extraction@0.1.1`](0.1.1/README.md). The
+[`0.1.0` baseline](0.1.0/README.md) remains available at its exact accepted
+coordinate.
 
 ## Why this family matters
 
@@ -32,11 +38,10 @@ durability, and platform-specific hardening retain distinct future probes.
 Source acceptance, manifest maturity, immutable tagging, and publication remain
 separately legible.
 
-## Continuation
+## Next evidence-bearing route
 
-- **Standing:** `settled`
-- **Current form:** [`document-evidence-extraction@0.1.1`](0.1.1/)
-- **Present use:** The accepted successor supplies the complete runnable source
-  and focused evidence for trusted-parent, cooperative-writer promotion across
-  file and directory carriers. Broader writer, durability, descriptor, reader,
-  and platform models retain their named probes.
+The accepted successor supplies complete runnable source and focused evidence
+for trusted-parent, cooperative-writer promotion across file and directory
+carriers. Broader writer, durability, descriptor, reader, and platform models
+retain their named probes and can form a successor when one of those models
+changes the demonstrated guarantee.

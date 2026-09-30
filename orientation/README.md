@@ -6,6 +6,18 @@ The catalog carries semantic identity, reader job, current standing, and a
 repository-local fallback. An authorized resolver supplies an exact Notion,
 MCP, or Obsidian retrieval coordinate.
 
+## Repository entrances
+
+- The [root README](../README.md) gives a first-time evaluator purpose, current
+  state, reader routes, and the quickest proof.
+- The [artifact family catalog](../snippets/README.md) selects one technical
+  mechanism and its current exact coordinate.
+- This directory adds external practice context when it can change the active
+  decision.
+- The [cold-session entry runbook](../.agents/runbooks/gist-registry-cold-session-entry.v0.1.md)
+  orders re-entry and hands one bounded task capsule to the source or Pages
+  owner.
+
 The desired route is:
 
 ```text
