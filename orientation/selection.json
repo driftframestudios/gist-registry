@@ -1,0 +1,610 @@
+{
+  "formatVersion": "0.1.0",
+  "repository": "gist-registry",
+  "records": [
+    {
+      "id": "gr-orient-001",
+      "title": "Registry Orientation & Information Radiator",
+      "semanticKey": "@driftframe/registry/orientation-information-radiator",
+      "expectedParentTitle": "Enterprise Human-AI Practitioner Registry",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "family-router",
+      "readerJob": "Select a fitting Registry family when the current technical or collaboration concern has no clear home.",
+      "applyWhen": ["family-selection", "unclear-source-family"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-cold-session-entry.v0.1.md"
+        }
+      ],
+      "localFallback": "Classify the current concern from repository source and select one route from the cold-session entry runbook.",
+      "reentryCondition": "Reload the Registry router when no local route names the current concern or the source-family standing changes."
+    },
+    {
+      "id": "gr-orient-002",
+      "title": "Practitioner Probes",
+      "semanticKey": "@driftframe/practitioner-probes",
+      "expectedParentTitle": "Enterprise Human-AI Practitioner Registry",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "probe-family-selector",
+      "readerJob": "Select the smallest technical layer or cross-cutting concern that can change the implementation or review decision.",
+      "applyWhen": ["artifact-formation", "route-selection", "technical-review"],
+      "selectionDepth": "default",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "skill",
+          "path": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md"
+        },
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md"
+        }
+      ],
+      "localFallback": "Name one practical question, its mechanism, the observation that can answer it, and the receiving use before forming source.",
+      "reentryCondition": "Reload the family when a different technical layer or cross-cutting concern can change the selected route."
+    },
+    {
+      "id": "gr-orient-003",
+      "title": "Start Here — How to Use the Probes",
+      "semanticKey": "@driftframe/practitioner-probes/start-here",
+      "expectedParentTitle": "Practitioner Probes",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "probe-use-orientation",
+      "readerJob": "Use probe anatomy, technical-veracity standing, review surfaces, and instruction yield as one bounded technical judgment route.",
+      "applyWhen": ["artifact-formation", "probe-selection", "technical-review"],
+      "selectionDepth": "default",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "skill",
+          "path": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md"
+        }
+      ],
+      "localFallback": "Carry the practical question, technical core, review surface, veracity standing, and instruction yield into one reviewable artifact decision.",
+      "reentryCondition": "Reload this orientation when probe anatomy or technical-veracity vocabulary changes the artifact contract."
+    },
+    {
+      "id": "gr-orient-004",
+      "title": "Cross-Cutting — Verification Under AI Assistance",
+      "semanticKey": "@driftframe/probes/cross-cutting-verification-under-ai-assistance",
+      "expectedParentTitle": "Practitioner Probes",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "verification-contract",
+      "readerJob": "Connect plausible AI-assisted output with named contracts, distinguishing checks, and evidence-calibrated acceptance.",
+      "applyWhen": ["ai-assisted-change", "evidence-selection", "technical-review"],
+      "selectionDepth": "default",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md"
+        }
+      ],
+      "localFallback": "Pair each asserted behavior with a source mechanism, plausible contrast, observable oracle, and explicit evidence boundary.",
+      "reentryCondition": "Reload the source when a new AI-assisted failure shape or acceptance boundary changes the fitting observation."
+    },
+    {
+      "id": "gr-orient-005",
+      "title": "Behavior- and Goal-Driven Development — Verifiable Outcomes & Testable Loops",
+      "semanticKey": "@driftframe/field-guide/behavior-goal-driven-development",
+      "expectedParentTitle": "Human-AI Collaboration Field Guide",
+      "sourceFamily": "human-ai-collaboration-field-guide",
+      "role": "behavior-loop",
+      "readerJob": "Define the desired behavior, plausible failure, distinguishing oracle, and stable adjacent behavior before broad implementation.",
+      "applyWhen": ["acceptance-design", "artifact-formation", "test-selection"],
+      "selectionDepth": "default",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md"
+        }
+      ],
+      "localFallback": "State one changed ability, one consequential contrast, and the smallest observation that can distinguish the intended result.",
+      "reentryCondition": "Reload the source when acceptance remains plausible but insufficiently observable."
+    },
+    {
+      "id": "gr-orient-006",
+      "title": "Data Contract Integrity & Primitive Selection — Start Here",
+      "semanticKey": "@driftframe/practitioner-probes/data-contract-integrity-and-primitive-selection",
+      "expectedParentTitle": "Practitioner Probes",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "data-contract-probe",
+      "readerJob": "Choose primitives and state meanings that survive serialization, schema evolution, storage, and migration boundaries.",
+      "applyWhen": ["primitive-selection", "schema-evolution", "serialization"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "repository-source",
+          "path": "SCHEMA-NURSERY.md"
+        },
+        {
+          "kind": "repository-source",
+          "path": "snippets/typed-absence-and-wire-shape/0.1.0/README.md"
+        }
+      ],
+      "localFallback": "Name each state and primitive meaning before selecting its wire, schema, storage, or migration representation.",
+      "reentryCondition": "Reload the source when a receiving boundary collapses states or creates new shared schema pressure."
+    },
+    {
+      "id": "gr-orient-007",
+      "title": "Cross-Cutting — Replay & Idempotency",
+      "semanticKey": "@driftframe/practitioner-probes/cross-cutting/replay-and-idempotency",
+      "expectedParentTitle": "Practitioner Probes",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "replay-probe",
+      "readerJob": "Distinguish first acceptance, exact replay, changed meaning, active ownership, and post-publication recovery.",
+      "applyWhen": ["duplicate-delivery", "idempotency", "retry"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "skill",
+          "path": ".agents/skills/transaction-boundary-evidence-mapping/SKILL.md"
+        }
+      ],
+      "localFallback": "Define semantic identity and recorded outcome, then exercise exact replay, changed meaning, and response loss as distinct states.",
+      "reentryCondition": "Reload the source when retry meaning, publication timing, or recovery ownership changes."
+    },
+    {
+      "id": "gr-orient-008",
+      "title": "Cross-Cutting — Serialization Boundary Integrity",
+      "semanticKey": "@driftframe/probes/cross-cutting-serialization-boundary-integrity",
+      "expectedParentTitle": "Practitioner Probes",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "serialization-probe",
+      "readerJob": "Keep meaning, validation, trust, and failure ownership legible across a wire-format boundary.",
+      "applyWhen": ["serialization", "trust-boundary", "wire-format"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "repository-source",
+          "path": "snippets/typed-absence-and-wire-shape/0.1.0/README.md"
+        },
+        {
+          "kind": "skill",
+          "path": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md"
+        }
+      ],
+      "localFallback": "Name admitted meanings, rejected shapes, validation ownership, and the observation that proves the wire round trip.",
+      "reentryCondition": "Reload the source when another serializer, transport, or trust boundary changes the admitted state space."
+    },
+    {
+      "id": "gr-orient-009",
+      "title": "Cross-Cutting — Declared State ≠ Running State",
+      "semanticKey": "@driftframe/probes/cross-cutting-declared-vs-running-state",
+      "expectedParentTitle": "Practitioner Probes",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "state-drift-probe",
+      "readerJob": "Separate declared configuration, remembered state, generated projection, and observed runtime behavior.",
+      "applyWhen": ["configuration-drift", "generated-state", "runtime-observation"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "skill",
+          "path": ".agents/skills/architecture-convergence-vantages/SKILL.md"
+        },
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-pages-publication.v0.1.md"
+        }
+      ],
+      "localFallback": "Map authored declaration, accepted source, generated bytes, delivery state, and observed response as distinct coordinates.",
+      "reentryCondition": "Reload the source when a declaration and its running or delivered state diverge."
+    },
+    {
+      "id": "gr-orient-010",
+      "title": "Cross-Cutting — Ownership & Ordering",
+      "semanticKey": "@driftframe/probes/cross-cutting/ownership-and-ordering",
+      "expectedParentTitle": "Practitioner Probes",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "coordination-probe",
+      "readerJob": "Identify the owner, order, serialization point, and evidence boundary for shared state and concurrent work.",
+      "applyWhen": ["concurrency", "ordering", "shared-state"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "skill",
+          "path": ".agents/skills/transaction-boundary-evidence-mapping/SKILL.md"
+        }
+      ],
+      "localFallback": "Name each actor, accepted pre-state, aligned effect, publication point, and forced-overlap observation.",
+      "reentryCondition": "Reload the source when actor count, ordering, or coordination authority changes."
+    },
+    {
+      "id": "gr-orient-011",
+      "title": "Material Verification — Connect Checks to Behavior, Fault & Observable Evidence",
+      "semanticKey": null,
+      "expectedParentTitle": "Enterprise Human-AI Practitioner Registry",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "material-verification",
+      "readerJob": "Connect a check with the behavior, plausible fault, oracle, and decision it can materially distinguish.",
+      "applyWhen": ["coverage", "digest", "test-selection", "workflow-check"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md"
+        }
+      ],
+      "localFallback": "State what each check establishes first, then route the adjacent claim to its fitting source or observation.",
+      "reentryCondition": "Reload the source when a passing check leaves the material acceptance question unresolved."
+    },
+    {
+      "id": "gr-orient-012",
+      "title": "Prototype Standing & Synthetic Fixture Honesty — Evidence Before Appearance",
+      "semanticKey": null,
+      "expectedParentTitle": "Enterprise Human-AI Practitioner Registry",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "prototype-evidence-boundary",
+      "readerJob": "Keep demonstration quality, synthetic-fixture provenance, technical evidence, and production standing distinct.",
+      "applyWhen": ["prototype", "synthetic-fixture", "technical-veracity"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "skill",
+          "path": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md"
+        }
+      ],
+      "localFallback": "Name fixture provenance, technical-veracity standing, demonstrated behavior, and the receiving environment that owns production claims.",
+      "reentryCondition": "Reload the source when presentation quality could be mistaken for a stronger evidence or deployment standing."
+    },
+    {
+      "id": "gr-orient-013",
+      "title": "Source Authority & Access Mapping — Evidence Coverage Before Synthesis",
+      "semanticKey": null,
+      "expectedParentTitle": "Enterprise Human-AI Practitioner Registry",
+      "sourceFamily": "enterprise-human-ai-practitioner-registry",
+      "role": "source-authority-map",
+      "readerJob": "Trace a claim through semantic owner, source, projection, delivery, access, and receiving use before synthesis.",
+      "applyWhen": ["cross-repository", "external-source", "source-authority"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "repository-source",
+          "path": "README.md"
+        },
+        {
+          "kind": "repository-source",
+          "path": "BRANCHING.md"
+        }
+      ],
+      "localFallback": "Map source, artifact contract, registry discovery, generated projection, delivery, and publication as separate owners.",
+      "reentryCondition": "Reload the source when an unavailable source or changed access boundary can alter the synthesis."
+    },
+    {
+      "id": "gr-orient-014",
+      "title": "Publication Boundaries and Proportionate Review",
+      "semanticKey": "@driftframe/field-guide/publication-boundaries-proportionate-review",
+      "expectedParentTitle": "Human-AI Collaboration Field Guide",
+      "sourceFamily": "human-ai-collaboration-field-guide",
+      "role": "publication-boundary",
+      "readerJob": "Match audience change, source standing, review depth, and disclosure to the material publication consequence.",
+      "applyWhen": ["gist-publication", "pages-publication", "public-metadata", "release"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-pages-publication.v0.1.md"
+        },
+        {
+          "kind": "skill",
+          "path": ".agents/skills/secret-boundary-inspection/SKILL.md"
+        }
+      ],
+      "localFallback": "Treat source acceptance, immutable identity, Pages projection, hosted delivery, and optional Gist creation as separately granted actions.",
+      "reentryCondition": "Reload the source when audience, disclosure, publication carrier, or approval standing changes."
+    },
+    {
+      "id": "gr-orient-015",
+      "title": "Repository Re-Entry",
+      "semanticKey": "@driftframe/field-watch/repository-reentry",
+      "expectedParentTitle": "Field Watch",
+      "sourceFamily": "field-watch",
+      "role": "reentry-context",
+      "readerJob": "Recover current source and collaboration standing when connector-resolved lineage materially changes the route.",
+      "applyWhen": ["resumed-session", "stale-plan", "status-reconciliation"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-cold-session-entry.v0.1.md"
+        },
+        {
+          "kind": "repository-source",
+          "path": "AGENTS.md"
+        }
+      ],
+      "localFallback": "Let current Git, GitHub, runnable source, and generated manifests lead while planning retains prospective context.",
+      "reentryCondition": "Reload the external source when private lineage changes a current owner or next move that repository evidence cannot resolve."
+    },
+    {
+      "id": "gr-orient-016",
+      "title": "Goal Fidelity Under Partial Context",
+      "semanticKey": "@driftframe/field-guide/goal-fidelity-under-partial-context",
+      "expectedParentTitle": "Human-AI Collaboration Field Guide",
+      "sourceFamily": "human-ai-collaboration-field-guide",
+      "role": "goal-fidelity",
+      "readerJob": "Keep checks, catalogs, validators, and collaboration machinery proportional to the receiving behavior or decision.",
+      "applyWhen": ["scope-expansion", "tooling-decision", "workload-calibration"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-cold-session-entry.v0.1.md"
+        }
+      ],
+      "localFallback": "Select the smallest source change and observation that create the named receiving ability, then release adjacent machinery.",
+      "reentryCondition": "Reload the source when supporting machinery begins to outgrow the material receiving job."
+    },
+    {
+      "id": "gr-orient-017",
+      "title": "Proportionate Recovery Routing — Smallest Adequate Move, Verified Return",
+      "semanticKey": null,
+      "expectedParentTitle": "Human-AI Collaboration Field Guide",
+      "sourceFamily": "human-ai-collaboration-field-guide",
+      "role": "recovery-routing",
+      "readerJob": "Select the smallest adequate recovery move and preserve one verified return after stale context, source loss, or authority confusion.",
+      "applyWhen": ["authority-confusion", "repeated-failure", "stale-continuation"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-cold-session-entry.v0.1.md"
+        }
+      ],
+      "localFallback": "Return to the last verified source coordinate, name the missing signal, and continue through the smallest owner that can establish it.",
+      "reentryCondition": "Reload the source when repeated recovery work reveals a materially different failure geometry."
+    },
+    {
+      "id": "gr-orient-018",
+      "title": "Semantic Attractor Design — Negation-Aware Instructions",
+      "semanticKey": "@driftframe/field-guide/semantic-attractor-design",
+      "expectedParentTitle": "Human-AI Collaboration Field Guide",
+      "sourceFamily": "human-ai-collaboration-field-guide",
+      "role": "instruction-writing",
+      "readerJob": "Lead instructions with the desired verifiable state and pair load-bearing safety or privacy boundaries with their replacement behavior.",
+      "applyWhen": ["instruction-writing", "public-prose", "runbook-authoring"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "repository-source",
+          "path": "AGENTS.md"
+        },
+        {
+          "kind": "skill",
+          "path": ".agents/skills/contextual-jargon-scan/SKILL.md"
+        }
+      ],
+      "localFallback": "State the desired behavior directly, preserve meaningful boundaries, and lead each evidence statement with what the observation establishes.",
+      "reentryCondition": "Reload the source when instruction polarity or a recurring failure token changes collaborator behavior."
+    },
+    {
+      "id": "gr-orient-019",
+      "title": "Designing AI Skills as Situated Collaboration Affordances",
+      "semanticKey": "@driftframe/field-guide/designing-ai-skills-as-situated-collaboration-affordances",
+      "expectedParentTitle": "Human-AI Collaboration Field Guide",
+      "sourceFamily": "human-ai-collaboration-field-guide",
+      "role": "skill-design",
+      "readerJob": "Assess whether a recurring collaboration job has earned a portable skill contract and a complete dependency closure.",
+      "applyWhen": ["skill-authoring", "skill-revision", "skill-routing"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "repository-source",
+          "path": ".agents/skills/README.md"
+        }
+      ],
+      "localFallback": "Use the current skill catalog, keep one result owner, and form a new route only when a distinct trigger, result, and completion recur.",
+      "reentryCondition": "Reload the source when changing a repository skill or preparing a transferable public package."
+    },
+    {
+      "id": "gr-orient-020",
+      "title": "AI Collaboration Runbooks — Known Paths, Bounded Authority & Calm Return",
+      "semanticKey": "@driftframe/field-watch/ai-collaboration-runbooks",
+      "expectedParentTitle": "Field Watch",
+      "sourceFamily": "field-watch",
+      "role": "runbook-design",
+      "readerJob": "Shape a settled multi-phase route with explicit entry, authority, evidence, recovery, stop, and handback.",
+      "applyWhen": ["runbook-authoring", "runbook-revision"],
+      "selectionDepth": "conditional",
+      "accessStanding": "connector-unverified",
+      "publicationStanding": "public-possible-signed-out-unverified",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "repository-source",
+          "path": ".agents/runbooks/README.md"
+        }
+      ],
+      "localFallback": "Lead with the desired receiving state, then name entry, owners, phases, checks, recovery, stop, and one safe handback.",
+      "reentryCondition": "Reload the source when a known route changes owners, phases, or recovery semantics."
+    },
+    {
+      "id": "gr-orient-021",
+      "title": "FMI & Genomic Re-Platforming Visitor Depth — Cross-Platform Collaboration Docket",
+      "semanticKey": "@driftframe/context-canvas/fmi-genomic-visitor-depth-docket",
+      "expectedParentTitle": "Enterprise Human-AI Practitioner Registry",
+      "sourceFamily": "context-canvas-coordination",
+      "role": "neutral-sample-overlay",
+      "readerJob": "Coordinate a Context Canvas mechanism with an independently authored, domain-neutral, exact-version Gist Registry sample.",
+      "applyWhen": ["context-canvas-companion", "cross-repository", "neutral-sample"],
+      "selectionDepth": "authorized-overlay",
+      "accessStanding": "authorized-workspace-only",
+      "publicationStanding": "internal-coordination",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "repository-source",
+          "path": "snippets/typed-absence-and-wire-shape/0.1.0/README.md"
+        },
+        {
+          "kind": "repository-source",
+          "path": "snippets/lims-eln-enterprise-implementation/0.3.2/README.md"
+        }
+      ],
+      "localFallback": "Keep the Registry sample independently authored, synthetic, domain-neutral, runnable, exact-versioned, and bounded by its own evidence.",
+      "reentryCondition": "Reload the authorized overlay when a Context Canvas receiving page or neutral-sample contract changes."
+    },
+    {
+      "id": "gr-orient-022",
+      "title": "Tranche 02 — Pair Visitor Depth with Neutral Gist-Registry Samples",
+      "semanticKey": null,
+      "expectedParentTitle": "FMI & Genomic Re-Platforming Visitor Depth — Cross-Platform Collaboration Docket",
+      "sourceFamily": "context-canvas-coordination",
+      "role": "neutral-sample-tranche",
+      "readerJob": "Apply the neutral-sample contract to one named visitor mechanism and preserve separate source and publication authority.",
+      "applyWhen": ["context-canvas-companion", "neutral-sample", "visitor-placement"],
+      "selectionDepth": "authorized-overlay",
+      "accessStanding": "authorized-workspace-only",
+      "publicationStanding": "internal-coordination",
+      "observedOn": "2026-09-29",
+      "localRoutes": [
+        {
+          "kind": "skill",
+          "path": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md"
+        },
+        {
+          "kind": "runbook",
+          "path": ".agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md"
+        }
+      ],
+      "localFallback": "Name the visitor mechanism, form a neutral standalone artifact, establish its runnable evidence, and leave placement and publication with their receiving owners.",
+      "reentryCondition": "Reload the authorized tranche when a named visitor receiver is ready to accept a Registry coordinate."
+    }
+  ],
+  "profiles": [
+    {
+      "id": "artifact-formation",
+      "title": "Artifact formation",
+      "readerJob": "Form a first reviewable coordinate with a practical question, focused evidence, honest standing, and one receiving use.",
+      "recordIds": [
+        "gr-orient-002",
+        "gr-orient-003",
+        "gr-orient-004",
+        "gr-orient-005",
+        "gr-orient-011",
+        "gr-orient-012"
+      ],
+      "selectionRule": "Load the core four, then select the smallest additional record whose mechanism can change the artifact shape or evidence boundary."
+    },
+    {
+      "id": "cold-session-core",
+      "title": "Cold-session core",
+      "readerJob": "Begin from a compact technical judgment and verification footing before selecting one contribution route.",
+      "recordIds": [
+        "gr-orient-002",
+        "gr-orient-003",
+        "gr-orient-004",
+        "gr-orient-005"
+      ],
+      "selectionRule": "Load these four records when workspace context can change the decision; use their local fallbacks while connector context rests."
+    },
+    {
+      "id": "context-canvas-neutral-sample",
+      "title": "Context Canvas neutral sample",
+      "readerJob": "Pair one visitor mechanism with a separately authoritative, neutral Registry sample through an authorized cross-platform route.",
+      "recordIds": [
+        "gr-orient-002",
+        "gr-orient-004",
+        "gr-orient-021",
+        "gr-orient-022"
+      ],
+      "selectionRule": "Use only when authorized workspace access and a named Context Canvas receiver are both present."
+    },
+    {
+      "id": "public-handoff",
+      "title": "Public handoff",
+      "readerJob": "Prepare an accepted source or named artifact for a separately granted audience change.",
+      "recordIds": [
+        "gr-orient-004",
+        "gr-orient-011",
+        "gr-orient-013",
+        "gr-orient-014",
+        "gr-orient-018"
+      ],
+      "selectionRule": "Load the publication and source-authority records, then use the repository-owned secret and Pages routes for actual handoff evidence."
+    },
+    {
+      "id": "runnable-transaction",
+      "title": "Runnable transaction exemplar",
+      "readerJob": "Make identity, aligned effects, ordering, publication, replay, and recovery observable in one runnable artifact.",
+      "recordIds": [
+        "gr-orient-002",
+        "gr-orient-004",
+        "gr-orient-005",
+        "gr-orient-007",
+        "gr-orient-008",
+        "gr-orient-010",
+        "gr-orient-011"
+      ],
+      "selectionRule": "Load only the records whose failure interval or evidence owner can change the current transaction contract."
+    },
+    {
+      "id": "skill-runbook-authoring",
+      "title": "Skill and runbook authoring",
+      "readerJob": "Shape a reusable collaboration method while current source, authority, and receiving work retain priority.",
+      "recordIds": [
+        "gr-orient-016",
+        "gr-orient-018",
+        "gr-orient-019",
+        "gr-orient-020"
+      ],
+      "selectionRule": "Load when the task explicitly changes reusable instruction routing; ordinary source work continues through repository-local skills and runbooks."
+    }
+  ]
+}

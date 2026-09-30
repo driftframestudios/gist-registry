@@ -228,6 +228,7 @@ test("the projection has one exact allowlisted inventory and complete digest man
     assert.equal(manifest.files.some(file => file.path === "projection-manifest.json"), false);
     assert.equal(actualPaths.some(path => path.startsWith(".github/")), false);
     assert.equal(actualPaths.some(path => path.startsWith("planning/")), false);
+    assert.equal(actualPaths.some(path => path.startsWith("orientation/")), false);
     assert.equal(actualPaths.includes("AGENTS.md"), false);
     assert.equal(actualPaths.includes("README.md"), false);
   });

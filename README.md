@@ -191,6 +191,15 @@ the [Gist Registry Pages publication runbook](.agents/runbooks/gist-registry-pag
 provides the re-entry route through build, observation, `docs` promotion, and
 public handback.
 
+The [Gist Registry cold-session entry
+runbook](.agents/runbooks/gist-registry-cold-session-entry.v0.1.md) supplies the
+preceding welcome mat: reconstruct current Git, GitHub, source, and projection
+truth; classify the work as implementation, settlement, observation, or held
+publication; and form one task capsule. The provider-neutral
+[orientation source selection](orientation/README.md) points an authorized
+Notion, MCP, or Obsidian resolver toward the smallest useful Registry or Field
+Guide context while keeping a complete repository-local fallback.
+
 The [Gist Registry source collaboration cycle](.agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md)
 provides the preceding route from current truth through one exact-version
 source pull request. It hands accepted projection work to the Pages runbook
@@ -232,6 +241,16 @@ dependencies and run the complete fast path:
 npm ci
 npm test
 ```
+
+The focused orientation contract is also available as:
+
+```sh
+npm run check:orientation
+```
+
+It establishes semantic-record identity, profile closure, repository-local
+fallback paths, and the tracked locator boundary. Provider access and page
+standing retain their own connector observations.
 
 `npm test` asks `uv` to create or refresh the artifact-local environments from
 their committed locks. It also builds the Pages projection twice in isolated

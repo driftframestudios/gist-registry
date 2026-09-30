@@ -41,6 +41,11 @@ the intended source base. Read [`AGENTS.md`](../../AGENTS.md),
 exists, [`SCHEMA-NURSERY.md`](../../SCHEMA-NURSERY.md) when an artifact or
 schema enters scope, and the live Issue or pull request.
 
+When the session has yet to distinguish implementation from settlement,
+observation, or held publication, begin with the [Gist Registry cold-session
+entry](gist-registry-cold-session-entry.v0.1.md). Its task capsule supplies the
+selected source route; this runbook continues from that established front.
+
 ```sh
 git status --short --branch
 git branch --show-current

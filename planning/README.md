@@ -3,14 +3,22 @@
 Current live receivers are:
 
 - #1 — canonical registry core and first-projection settlement;
-- #3 — current immutable-tag and `main` to `docs` publication front;
-- #4 — exact-version schema projection and retrieval settlement; and
+- #3 — stable repository-operations settlement after the accepted immutable-tag
+  and `main` to `docs` publication route;
+- #4 — exact-version schema projection and retrieval settlement;
 - #6 — the exercised delivery-observation model and its conditional receiver
-  for a response change that affects interpretation or recovery; and
-- #31 — typed absence and JSON-ready wire shape as the current exact-version
-  source receiver; and
-- #35 — the first accepted external repository release and exact source-file
-  projection as a `repository_exemplar`.
+  for a response change that affects interpretation or recovery;
+- #31 — accepted typed absence and JSON-ready wire shape awaiting human
+  closure after its named downstream-use receiver completed; and
+- #41 — the current cold-session entry, resolver-safe orientation, and planning
+  reconciliation receiver.
+
+Current accepted repository and projection coordinates are
+`main@c2cf4a359006ef094a9947fa6dcec0eaa26405ea` and
+`docs@5594bda0dee55afbd9974f72568687e54e7de97b`. The projection manifest binds
+those revisions and records 148 generated files, including 147 addressable
+routes. A later source acceptance or projection receipt supersedes this
+headline while the records below retain their historical standing.
 
 Accepted path records supply this terrain:
 
@@ -25,7 +33,10 @@ Accepted path records supply this terrain:
 - #27 — accepted migration reconciliation and approval-bound process-local
   cutover as the third domain companion; and
 - #32 — accepted Registry adaptation of the contextual jargon scan at
-  `main@41acb11779a2ffdbd193fdd837a043d50211e123`.
+  `main@41acb11779a2ffdbd193fdd837a043d50211e123`; and
+- #35 — accepted external-repository release and exact source-file projection
+  as the first `repository_exemplar`, through pull request #38 at
+  `main@c13826a6198db7ee95edc6b7dd0b271383c8c18d`.
 
 [`SCHEMA-NURSERY.md`](../SCHEMA-NURSERY.md) is the current design note for the
 schema attempt. The exercised `main` to `docs` route now carries deterministic
@@ -96,16 +107,26 @@ small portable skill and its source-cycle routing because that Issue already
 owns collaboration ground and skills cultivation. Optional Gist publication
 remains a separate human-held exact-version action.
 
-Issue #31 now receives the independently authored
-`typed-absence-and-wire-shape@0.1.0` source candidate. Its acceptance hands an
-immutable exact-version coordinate and consolidated Pages projection to #3;
-the Context Canvas Implementation placement follows through the linked HASE
-receiver, and optional Gist publication remains a separate human-held action.
+Issue #31 and pull request #33 accepted
+`typed-absence-and-wire-shape@0.1.0` at
+`main@a8ac561e9ef4ca8091e421e5a47f0e2bc719e6e9`. The immutable
+`snippet/typed-absence-and-wire-shape/v0.1.0` tag resolves to that merge, and
+the consolidated Pages receipt is complete. The named Human–AI Systems
+Exemplars receiver is complete, leaving human Issue closure as the exact current
+receiver. Optional Gist publication remains a separate human-held action and
+is not a closure prerequisite.
 
-Issue #35 now receives
-`lims-eln-enterprise-implementation@0.3.2`. Its source branch carries one
-byte-identical idempotency file, immutable release and observation
-coordinates, license and attribution bindings, and the focused Registry and
-Pages evidence needed for review. Acceptance hands the deterministic public
-projection to #3; the Program constellation hub remains a later receiving
-link.
+Issue #35 and pull request #38 accepted
+`lims-eln-enterprise-implementation@0.3.2` at
+`main@c13826a6198db7ee95edc6b7dd0b271383c8c18d`. The accepted record carries
+one byte-identical idempotency file, immutable release and observation
+coordinates, license and attribution bindings, and focused Registry and Pages
+evidence. The deterministic public projection has reached #3; the Program
+constellation hub remains a later receiving link.
+
+Issue #41 receives the first cold-session entry runbook and its provider-neutral
+orientation source selection. Its acceptance boundary is one fresh-session
+traversal, closed local fallbacks, a locator-safe selection contract, and a
+current planning map. Repository source and live GitHub state retain behavior
+authority; authorized connectors may add decision-changing Registry and Field
+Guide context by semantic identity.

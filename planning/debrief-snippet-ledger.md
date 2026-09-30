@@ -26,11 +26,11 @@ A GitHub Gist is a convenience projection. The registered artifact retains
 editable meaning, tests, history, exact-version identity, and recovery
 authority.
 
-## Candidate inventory
+## Companion inventory
 
 | Priority | Companion | Visitor placement | Source standing | Public adaptation | Next receiver |
 | --- | --- | --- | --- | --- | --- |
-| P0 | Typed absence and JSON-ready wire shape | FMI-adjacent Debrief, Implementation section | `typed-absence-and-wire-shape@0.1.0` candidate formed through #31 with strict compilation and focused presence, exact-byte, round-trip, object-shape, detachment, and validation evidence | Independently authored domain-neutral README, TypeScript source, runtime and type tests, fixture, and expected result form a proposed Gist publication set and reading order | Review and source acceptance through #31; immutable tag and Pages projection through #3; optional Gist publication remains human-held |
+| P0 | Typed absence and JSON-ready wire shape | FMI-adjacent Debrief, Implementation section | Accepted `typed-absence-and-wire-shape@0.1.0` through PR #33 at `main@a8ac561` with strict compilation and focused presence, exact-byte, round-trip, object-shape, detachment, and validation evidence | Independently authored domain-neutral README, TypeScript source, runtime and type tests, fixture, and expected result form the accepted Pages set and a proposed Gist publication order; the named visitor receiver is complete | Human closure of #31; optional Gist publication remains separately human-held |
 | P0 | Document evidence core patterns | Document-evidence Debrief, beside the complete Implementation companion | Accepted exact companions at the `0.1.0` and `0.1.1` evidence boundaries; PR #14 observed `0.1.0` at `docs@2b996cc` | Ordered public-safe excerpts are ready | Consolidated Pages projection, then the human-held exact Gist-publication decision |
 | P0 | Replay-safe specimen custody and transactional outbox | LIMS/ELN replatforming, Implementation custody section | Accepted `specimen-custody-outbox@0.1.0` at `main@4aeb88a` with candidate maturity and verified in-memory transfer, replay, reconciliation, collision, concurrency, and fault evidence | Canonical README, source, test, fixture, and expected result form a proposed Gist publication set and reading order | Immutable tag and consolidated Pages projection through #3; optional Gist publication remains human-held |
 | P0 | Instrument ingress with raw-byte integrity and quarantine | LIMS/ELN replatforming, Implementation ingress section | Accepted `instrument-ingress-integrity@0.1.0` at `main@4596bb6` with candidate maturity and verified byte, identity, mapping, replay, concurrency, and fault evidence | Canonical README, source, test, two raw fixtures, and expected aggregate form a proposed Gist publication set and reading order | Consolidated Pages projection through #3; optional Gist publication remains human-held |
@@ -65,7 +65,7 @@ standing is established.
 ## Re-entry
 
 Both document-evidence versions and their exact companions are accepted with
-immutable tags. The current projection at `docs@8d25a4a` carries seven
+immutable tags. The current projection at `docs@5594bda` carries nine
 registered artifacts and their public inspection links; each optional Gist
 remains a human-held exact-version decision. Issue #17
 records the first-coordinate skill route, and Issue #20 records its
@@ -73,8 +73,9 @@ secret-material handoff boundary. Issue #18 accepted replay-safe specimen
 custody and transactional outbox through pull request #22, and Issue #24
 accepted raw-byte-preserving instrument ingress through pull request #25.
 Issue #27 accepted migration reconciliation and approval-bound cutover through
-pull request #28. Issue #31 is the current typed-absence source receiver. These
-artifacts exercise the shared schema across materially different mechanisms
-while shared fields remain evidence-earned. Issue #3 carries each consolidated
-Pages publication receipt, and every optional Gist remains a human-held
-exact-version decision.
+pull request #28. Issue #31 accepted typed absence through pull request #33;
+its immutable tag, Pages projection, signed-out observation, and named visitor
+receiver are complete, leaving human Issue closure. These artifacts exercise
+the shared schema across materially different mechanisms while shared fields
+remain evidence-earned. Issue #3 carries each consolidated Pages publication
+receipt, and every optional Gist remains a human-held exact-version decision.
