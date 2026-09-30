@@ -15,6 +15,15 @@ small real artifact over an abstract inventory.
   state.
 - Preserve unrelated work already present.
 
+A cold session, or a resumed session whose work front is stale or unestablished,
+begins with the [Gist Registry cold-session entry
+runbook](.agents/runbooks/gist-registry-cold-session-entry.v0.1.md). The
+[orientation source selection](orientation/README.md) supplies semantic
+knowledge pointers and repository-local fallbacks when external practice
+context can change the decision. Exact provider locators stay with an
+authorized resolver; current source, tests, manifests, and live GitHub state
+retain repository authority.
+
 ## Let the schema learn from artifacts
 
 - Read [`SCHEMA-NURSERY.md`](SCHEMA-NURSERY.md) before changing the artifact
@@ -124,6 +133,9 @@ path, while cPanel and Cloudflare WAF belong to Human–AI Systems Exemplars. Ru
 retain their own delivery evidence.
 
 Versioned operational runbooks live in [`.agents/runbooks/`](.agents/runbooks/).
+Use the cold-session entry runbook to reconstruct current truth, classify an
+implementation, settlement, observation, or held-publication front, and form
+one task capsule.
 Use the Gist Registry source collaboration cycle for a full Issue-to-source-PR
 route. It hands an accepted `main` coordinate to later release owners.
 Use the Pages publication runbook after a reviewed source change reaches
