@@ -68,6 +68,17 @@
       "readinessNote": "The contract formed from three accepted domain cycles with distinct identity, freshness, replay, publication, and recovery behavior."
     },
     {
+      "name": "typed-error-recovery-contracts",
+      "sourcePath": ".agents/skills/typed-error-recovery-contracts/SKILL.md",
+      "publicationStanding": "public_possible",
+      "evidenceStanding": "instruction_only",
+      "dependencies": [
+        ".agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md",
+        ".agents/skills/typed-error-recovery-contracts/references/python-exception-boundaries.md"
+      ],
+      "readinessNote": "The draft has a source-reading exercise; receiving implementation, focused counterexamples, and independent review remain its next evidence gate. Publication remains held."
+    },
+    {
       "name": "versioned-exemplar-successor",
       "sourcePath": ".agents/skills/versioned-exemplar-successor/SKILL.md",
       "publicationStanding": "public_ready",

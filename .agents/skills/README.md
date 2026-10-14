@@ -46,6 +46,7 @@ workbench until that exact dependency closure can travel with them.
 | [Contextual jargon scan](contextual-jargon-scan/SKILL.md) | Registry orientation, artifact documentation, or human-readable projection copy may rely on local shorthand | Exercised against Registry prose and deterministic projection boundaries | `public_ready` |
 | [Transaction boundary evidence mapping](transaction-boundary-evidence-mapping/SKILL.md) | Several state changes must become visible together, or retry correctness depends on whether publication occurred | Formed from accepted custody/outbox, ingress/quarantine, and migration/cutover decisions | `public_ready` |
 | [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | A material strengthening needs a new runnable artifact version and exact derived teaching surfaces | Exercised through the accepted document-evidence `0.1.1` source and exact companion | `public_ready` |
+| [Typed error and recovery contracts](typed-error-recovery-contracts/SKILL.md) | Generic exceptions obscure admission, stale state, execution failure, or recovery | Initial source-reading exercise; refinement checks remain pending | `public_possible`; instruction-only draft |
 
 [`publication-selection.json`](publication-selection.json) is the
 machine-readable selection owner. `SKILL.md` remains the semantic instruction
