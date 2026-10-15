@@ -21,6 +21,16 @@ description: Carries a material technical strengthening from an accepted registr
 - **Foregrounds:** Immutable history, current behavior authority, veracity standing, exact derivation, and projection timing.
 - **Material result:** A receiver can run the stronger behavior and trace every teaching claim to its owner.
 
+## Inputs and default route
+
+Bring the accepted version/tag, its manifest and source, the new counterexample
+or receiving requirement, and the intended stronger guarantee. Resolve the
+current family pointer and active work before choosing a new coordinate.
+Use the registry's version policy to select the successor; a guessed semantic
+version increment supplies no compatibility decision. The default scope is
+one affected family with unchanged accepted versions and only the companions
+whose claims depend on the strengthened behavior.
+
 ## Rules
 
 ### Rule: Runnable source owns the guarantee
@@ -69,6 +79,14 @@ Exact-version manifests retain artifact identity and evidence standing. The
 family README owns pause and re-entry context; branches and pull requests show
 active work.
 
+### Rule: Successor evidence includes its compatibility relation
+
+Name which inputs, outputs, supported environments, or failure outcomes change.
+Preserve representative prior behavior where compatibility is claimed, then
+exercise the new distinguishing case. A comparison can accept an intentional
+break when the new coordinate and receiving migration route make it explicit.
+Reused test counts alone leave that relation unspecified.
+
 ## Operating sequence
 
 1. **Reconstruct authority:** Confirm branch, accepted tag, source bytes, focused tests, companion mappings, and current projections.
@@ -92,6 +110,21 @@ active work.
 - Then the accepted version remains intact
 - And a runnable successor owns the revised state machine and tests
 - And its companion carries only exact selections from that successor
+
+## Conditional context and recovery
+
+Load [successor and projection recovery](references/successor-and-projection-recovery.md)
+when accepted bytes, mutable family discovery, generated output, or a hosted
+observation disagree. It separates repair of a candidate from recovery of an
+already accepted coordinate.
+
+A failed successor proof leaves the prior version reproducible and the family
+route at its last accepted form. Repair the candidate's owning source and
+repeat the affected evidence before regenerating companions. After a partial
+publication, reconcile each actual destination to its observed source and
+digest before retrying; preserve accepted source and use the destination's
+authorized rollback or completion route. The handback names the remaining
+action and receiver rather than inferring publication from a successful build.
 
 ## Completion
 

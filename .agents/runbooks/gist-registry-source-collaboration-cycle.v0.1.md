@@ -33,6 +33,17 @@ The current task grant retains mutation and external-action authority. The
 active Issue retains outcome and acceptance. This runbook orders source work;
 it supplies neither merge nor publication authority.
 
+## Portable contract binding
+
+This runbook implements the [repository collaboration cycle](../skills/repository-collaboration-cycle/SKILL.md)
+for Gist Registry. Bind a task with the package's
+[adapter worksheet](../skills/repository-collaboration-cycle/references/repository-adapter.md):
+the current-owners table below supplies canonical source and policy; each
+ordered phase supplies commands, checkpoints and recovery; the task's PR
+supplies its actual revision, selected scope and observation. The Registry's
+exact-version, schema and Pages rules stay with these local owners. A receiving
+repository binds its own accepted implementation to the same portable contract.
+
 ## Entry condition
 
 Begin with an active repository task or Issue and enough access to establish

@@ -20,6 +20,16 @@ description: Classifies potentially specialist or inside wording within a bounde
 - **Interactions:** `probe-bearing-exemplar-formation` owns first-coordinate artifact formation. `versioned-exemplar-successor` owns material behavior strengthening. `architecture-convergence-vantages` owns competing guarantee designs. Source, focused tests, and manifests retain technical authority.
 - **Rest or release when:** A term already performs an exact or useful job, or changing it requires a source-owner or artifact decision outside the current task. Record the fitting receiver only when the deferral changes continuation.
 
+## Inputs and default scope
+
+Start with the changed files, intended reader, one reading task, and any exact
+vocabulary owner. When no word family is supplied, select candidates from an
+actual reading difficulty in those files. The default is a local prose pass;
+repository-wide counts and new lint rules need a separate receiving need.
+Keep quoted/source text identifiable before editing. An unavailable definition
+leaves that occurrence retained with a named source question while other
+occurrences continue through review.
+
 ## Registry profile
 
 - Primary corpora include family and exact-version READMEs, Gist-oriented Markdown, repository orientation, and human-readable Pages copy.
@@ -106,6 +116,19 @@ The return contains:
 - Then the exact contract term remains, with a local definition when useful
 - And the vague occurrence names the systems, field policy, or responsibility handoff it actually means
 - And completion depends on reader legibility rather than eliminating the word family
+
+## Conditional context and recovery
+
+Load [classification and recovery cases](references/classification-and-recovery.md)
+when one term crosses prose, code, governed labels, or independent projections.
+The cases supply a small occurrence record and a disagreement route rather
+than a prohibited-word list.
+
+If a revision loses a technical distinction, restore the affected passage and
+add the smallest definition or example beside the retained term. If a source
+owner disputes a term, return that occurrence with its context and reader job;
+keep independently accepted edits available. A rescan locates remaining uses,
+while the receiving paragraph and its own checks determine completion.
 
 ## Completion
 

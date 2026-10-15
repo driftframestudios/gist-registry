@@ -38,7 +38,9 @@
       "sourcePath": ".agents/skills/contextual-jargon-scan/SKILL.md",
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
-      "dependencies": [],
+      "dependencies": [
+        ".agents/skills/contextual-jargon-scan/references/classification-and-recovery.md"
+      ],
       "readinessNote": "The portable contract has been exercised against Registry prose and deterministic projection boundaries."
     },
     {
@@ -112,19 +114,22 @@
       "sourcePath": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md",
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
-      "dependencies": [],
+      "dependencies": [
+        ".agents/skills/probe-bearing-exemplar-formation/references/formation-evidence-and-recovery.md"
+      ],
       "readinessNote": "The route received a complete first-coordinate source cycle and public-safe artifact boundary."
     },
     {
       "name": "repository-collaboration-cycle",
       "sourcePath": ".agents/skills/repository-collaboration-cycle/SKILL.md",
-      "publicationStanding": "public_possible",
+      "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
-        ".agents/runbooks/gist-registry-pages-publication.v0.1.md",
-        ".agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md"
+        ".agents/skills/repository-collaboration-cycle/exercises/receiving-task.md",
+        ".agents/skills/repository-collaboration-cycle/references/repository-adapter.md",
+        ".agents/skills/repository-collaboration-cycle/references/source-work-cycle.md"
       ],
-      "readinessNote": "The skill is exercised. Its operational runbook package still resolves through a broader private repository-owner closure, so the complete public source package remains in preparation."
+      "readinessNote": "Complete portable contract and native-adapter package exercised through HASE PR #488, with real finding/interruption recovery, exact source binding and independent review; broader cold-start transfer remains a separate observation."
     },
     {
       "name": "scientific-figure-composition",
@@ -155,13 +160,17 @@
     {
       "name": "secret-boundary-inspection",
       "sourcePath": ".agents/skills/secret-boundary-inspection/SKILL.md",
-      "publicationStanding": "public_possible",
+      "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
-        ".agents/runbooks/gist-registry-pages-publication.v0.1.md",
-        "README.md"
+        ".agents/skills/secret-boundary-inspection/exercises/README.md",
+        ".agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+        ".agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+        ".agents/skills/secret-boundary-inspection/references/embedded-metadata.md",
+        ".agents/skills/secret-boundary-inspection/references/evidence-and-recovery.md",
+        ".agents/skills/secret-boundary-inspection/references/receiver-adapter-contract.md"
       ],
-      "readinessNote": "The skill is exercised. Its complete implementation-specific scanner, configuration, runbook, and repository-orientation closure remains in preparation as one public package."
+      "readinessNote": "Complete portable contract and native-adapter package exercised through HASE PR #488, with real finding/interruption recovery, exact source binding and independent review; broader cold-start transfer remains a separate observation."
     },
     {
       "name": "spatial-support-and-change-visualization",
@@ -185,7 +194,9 @@
       "sourcePath": ".agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
-      "dependencies": [],
+      "dependencies": [
+        ".agents/skills/transaction-boundary-evidence-mapping/references/failure-intervals-and-evidence.md"
+      ],
       "readinessNote": "The contract formed from three accepted domain cycles with distinct identity, freshness, replay, publication, and recovery behavior."
     },
     {
@@ -206,7 +217,9 @@
       "sourcePath": ".agents/skills/versioned-exemplar-successor/SKILL.md",
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
-      "dependencies": [],
+      "dependencies": [
+        ".agents/skills/versioned-exemplar-successor/references/successor-and-projection-recovery.md"
+      ],
       "readinessNote": "The route received the accepted document-evidence successor and exact derived companion."
     },
     {

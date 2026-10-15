@@ -11,6 +11,7 @@ includes its references and declared exercise files.
 2. **Repair a runtime boundary.** Choose typed errors, resource ownership, admission or transaction mapping according to the operation's actual failure. Bring the source, an independent expected result and one counterexample.
 3. **Compare alternatives.** Use controlled context for the comparison contract and parity-bound measurement for equivalent work. Run the [SQL measurement exercise](../../snippets/postgresql-pending-outbox-query/0.1.0/exercises/parity-bound-query-plans.md) for a concrete receiving example.
 4. **Keep a useful result.** Exemplar formation creates the first version; versioned successors preserve an accepted coordinate while new evidence strengthens the next one.
+5. **Complete a repository handoff.** Bind the repository collaboration cycle to the receiver's source owners and commands, then use secret-boundary inspection for the exact material crossing the handoff.
 
 ## Scientific visualization
 
@@ -44,22 +45,29 @@ composition route separates visual inspection from automated geometry checks.
 | Strengthen an artifact while preserving earlier bytes | [Versioned exemplar successor](versioned-exemplar-successor/SKILL.md) | Accepted document-evidence successor and companion |
 | Replace context-dependent shorthand with clear language | [Contextual jargon scan](contextual-jargon-scan/SKILL.md) | Registry prose and projection use |
 
-All sixteen packages above are selected as `public_ready` with `exercised`
-evidence standing. “Exercised” refers to the recorded receiving use and
-controls; it leaves broader competence and universal effectiveness unspecified.
-The [publication selection](publication-selection.json) owns package membership;
+## Repository operations
+
+| Job | Skill | Receiving implementation |
+| --- | --- | --- |
+| Carry an authorized task from current truth to one reviewed result | [Repository collaboration cycle](repository-collaboration-cycle/SKILL.md) | Bind the receiving repository's accepted runbook or source-owned commands through the included adapter worksheet |
+| Observe credential-shaped material before a named handoff | [Secret-boundary inspection](secret-boundary-inspection/SKILL.md) | Bind the receiver's scanner, configuration and exact scope; prove the canary and preserve finding/error/clean distinctions |
+
+The complete portable packages include their adapter contracts and bounded
+exercises. Repository commands remain explicit receiving inputs. HASE's
+[source orientation task](https://github.com/driftframestudios/human-ai-systems-exemplars/pull/488)
+exercises both through its native implementation, including a real finding,
+interruption and recovery. That changed-repository use, synthetic controls,
+independent review and future independent cold-start transfer have distinct
+evidence meanings.
+
+All eighteen packages are selected as `public_ready` with `exercised` evidence
+standing. “Exercised” refers to the recorded receiving use and controls; broader
+competence and universal effectiveness remain unspecified. The
+[publication selection](publication-selection.json) owns package membership;
 each `SKILL.md` owns instructions. The Pages exchange catalog binds exact source
-revision, files and digests.
-
-## Repository workbench
-
-Two exercised operational contracts retain `public_possible` standing while
-their broader implementation packages receive a complete public boundary:
-[repository collaboration cycle](repository-collaboration-cycle/SKILL.md)
-and [secret-boundary inspection](secret-boundary-inspection/SKILL.md).
-Their runbook/scanner dependencies stay together under their repository owner;
-[Issue #56](https://github.com/driftframestudios/gist-registry/issues/56) owns the receiving-package decision.
-The generated public catalog carries the selected sixteen complete packages.
+revision, files and digests. [Issue #56](https://github.com/driftframestudios/gist-registry/issues/56)
+owns the portable operation package and its release; [Issue #58](https://github.com/driftframestudios/gist-registry/issues/58)
+owns the eighteen-package depth review against the HASE authoring precedent.
 
 ## How the contracts formed
 

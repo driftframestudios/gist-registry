@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
@@ -62,8 +62,10 @@ const expectedPaths = [
   "skills/omics-coordinate-and-measurement-views/index.html",
   "skills/parity-bound-workload-measurement/index.html",
   "skills/probe-bearing-exemplar-formation/index.html",
+  "skills/repository-collaboration-cycle/index.html",
   "skills/scientific-figure-composition/index.html",
   "skills/scientific-scale-and-transform-fidelity/index.html",
+  "skills/secret-boundary-inspection/index.html",
   "skills/source/.agents/skills/architecture-convergence-vantages/SKILL.md",
   "skills/source/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
   "skills/source/.agents/skills/bounded-representation-admission/SKILL.md",
@@ -71,6 +73,7 @@ const expectedPaths = [
   "skills/source/.agents/skills/bounded-representation-admission/exercises/exercise.py",
   "skills/source/.agents/skills/bounded-representation-admission/references/admission-design-and-evidence.md",
   "skills/source/.agents/skills/contextual-jargon-scan/SKILL.md",
+  "skills/source/.agents/skills/contextual-jargon-scan/references/classification-and-recovery.md",
   "skills/source/.agents/skills/controlled-context-comparison/SKILL.md",
   "skills/source/.agents/skills/controlled-context-comparison/exercises/README.md",
   "skills/source/.agents/skills/controlled-context-comparison/exercises/exercise.py",
@@ -98,6 +101,11 @@ const expectedPaths = [
   "skills/source/.agents/skills/parity-bound-workload-measurement/exercises/exercise.py",
   "skills/source/.agents/skills/parity-bound-workload-measurement/references/design-and-evidence.md",
   "skills/source/.agents/skills/probe-bearing-exemplar-formation/SKILL.md",
+  "skills/source/.agents/skills/probe-bearing-exemplar-formation/references/formation-evidence-and-recovery.md",
+  "skills/source/.agents/skills/repository-collaboration-cycle/SKILL.md",
+  "skills/source/.agents/skills/repository-collaboration-cycle/exercises/receiving-task.md",
+  "skills/source/.agents/skills/repository-collaboration-cycle/references/repository-adapter.md",
+  "skills/source/.agents/skills/repository-collaboration-cycle/references/source-work-cycle.md",
   "skills/source/.agents/skills/scientific-figure-composition/SKILL.md",
   "skills/source/.agents/skills/scientific-figure-composition/exercises/verify.py",
   "skills/source/.agents/skills/scientific-figure-composition/references/delivery-and-inspection.md",
@@ -108,6 +116,13 @@ const expectedPaths = [
   "skills/source/.agents/skills/scientific-scale-and-transform-fidelity/references/evidence-and-exercises.md",
   "skills/source/.agents/skills/scientific-scale-and-transform-fidelity/references/intervals-colors-and-density.md",
   "skills/source/.agents/skills/scientific-scale-and-transform-fidelity/references/signed-and-logarithmic-transforms.md",
+  "skills/source/.agents/skills/secret-boundary-inspection/SKILL.md",
+  "skills/source/.agents/skills/secret-boundary-inspection/exercises/README.md",
+  "skills/source/.agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+  "skills/source/.agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+  "skills/source/.agents/skills/secret-boundary-inspection/references/embedded-metadata.md",
+  "skills/source/.agents/skills/secret-boundary-inspection/references/evidence-and-recovery.md",
+  "skills/source/.agents/skills/secret-boundary-inspection/references/receiver-adapter-contract.md",
   "skills/source/.agents/skills/spatial-support-and-change-visualization/SKILL.md",
   "skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/README.md",
   "skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/comparisons.json",
@@ -118,12 +133,14 @@ const expectedPaths = [
   "skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/values.csv",
   "skills/source/.agents/skills/spatial-support-and-change-visualization/references/support-and-evidence.md",
   "skills/source/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
+  "skills/source/.agents/skills/transaction-boundary-evidence-mapping/references/failure-intervals-and-evidence.md",
   "skills/source/.agents/skills/typed-error-recovery-contracts/SKILL.md",
   "skills/source/.agents/skills/typed-error-recovery-contracts/exercises/README.md",
   "skills/source/.agents/skills/typed-error-recovery-contracts/exercises/exercise.py",
   "skills/source/.agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md",
   "skills/source/.agents/skills/typed-error-recovery-contracts/references/python-exception-boundaries.md",
   "skills/source/.agents/skills/versioned-exemplar-successor/SKILL.md",
+  "skills/source/.agents/skills/versioned-exemplar-successor/references/successor-and-projection-recovery.md",
   "skills/source/.agents/skills/visualization-question-routing/SKILL.md",
   "skills/source/.agents/skills/visualization-question-routing/exercises/README.md",
   "skills/source/.agents/skills/visualization-question-routing/exercises/exercise.py",
@@ -290,6 +307,33 @@ async function git(root, arguments_) {
     encoding: "utf8",
   });
   return stdout.trim();
+}
+
+const fixtureExcludedPaths = new Set([
+  ".git", ".artifacts", ".tools", "node_modules", ".venv", "__pycache__",
+]);
+
+async function copyAuthoredSource(sourceRoot, root) {
+  await cp(sourceRoot, root, {
+    recursive: true,
+    filter: path => !relative(sourceRoot, path).split(/[\\/]/u)
+      .some(part => fixtureExcludedPaths.has(part)),
+  });
+}
+
+async function copyProjectionSource(sourceRoot, root) {
+  await execFileAsync("git", ["clone", "--no-hardlinks", "--no-checkout", "--quiet", sourceRoot, root]);
+  const refs = new Map((await git(sourceRoot, ["for-each-ref", "--format=%(refname) %(objectname)",
+    "refs/remotes/origin/main", "refs/remotes/origin/docs", "refs/heads/main", "refs/heads/docs",
+  ])).split("\n").map(line => line.split(" ")));
+  // A detached CI checkout can hold delivery branches only as remote-tracking refs.
+  for (const branch of ["main", "docs"]) {
+    const revision = refs.get(`refs/remotes/origin/${branch}`) ?? refs.get(`refs/heads/${branch}`);
+    assert.match(revision ?? "", /^[a-f0-9]{40}$/u, `source must retain ${branch}`);
+    await git(root, ["fetch", "--quiet", "--no-tags", sourceRoot,
+      `+${revision}:refs/remotes/origin/${branch}`]);
+  }
+  await copyAuthoredSource(sourceRoot, root);
 }
 
 test("the public projection is deterministic for one source revision", async () => {
@@ -594,8 +638,10 @@ test("public skill routes expose only the selected exact source packages", async
   "omics-coordinate-and-measurement-views",
   "parity-bound-workload-measurement",
   "probe-bearing-exemplar-formation",
+  "repository-collaboration-cycle",
   "scientific-figure-composition",
   "scientific-scale-and-transform-fidelity",
+  "secret-boundary-inspection",
   "spatial-support-and-change-visualization",
   "transaction-boundary-evidence-mapping",
   "typed-error-recovery-contracts",
@@ -629,23 +675,90 @@ test("public skill routes expose only the selected exact source packages", async
 
     const manifest = await readFile(resolve(output, "projection-manifest.json"), "utf8");
     const catalogHtml = await readFile(resolve(output, "skills/index.html"), "utf8");
-    for (const withheldName of [
-      "repository-collaboration-cycle",
-      "Repository collaboration cycle",
-      "secret-boundary-inspection",
-      "Secret boundary inspection",
-    ]) {
-      assert.equal(manifest.toLocaleLowerCase("en-US").includes(
-        withheldName.toLocaleLowerCase("en-US"),
-      ), false);
-      assert.equal(catalogHtml.toLocaleLowerCase("en-US").includes(
-        withheldName.toLocaleLowerCase("en-US"),
-      ), false);
-      assert.equal(JSON.stringify(catalog).toLocaleLowerCase("en-US").includes(
-        withheldName.toLocaleLowerCase("en-US"),
-      ), false);
+    for (const name of ["repository-collaboration-cycle", "secret-boundary-inspection"]) {
+      assert.ok(manifest.includes(`skills/${name}/index.html`));
+      assert.ok(catalogHtml.includes(`/skills/${name}/`));
     }
   });
+});
+
+test("projection fixtures retain delivery history from a detached remote-only checkout", async () => {
+  const container = await mkdtemp(join(tmpdir(), "gist-registry-ci-projection-"));
+  const source = resolve(container, "ci-source");
+  const root = resolve(container, "fixture");
+  const output = resolve(container, "pages");
+  try {
+    // Mirror the existing refs once, then reproduce the checkout shape used by CI.
+    await execFileAsync("git", ["clone", "--mirror", "--no-hardlinks", "--quiet",
+      repositoryRoot, resolve(source, ".git")]);
+    await git(source, ["config", "core.bare", "false"]);
+    await git(source, ["update-ref", "--no-deref", "HEAD", await git(repositoryRoot, ["rev-parse", "HEAD"])]);
+    const localRefs = await git(source, ["for-each-ref", "--format=%(refname) %(objectname)", "refs/heads"]);
+    for (const line of localRefs.split("\n").filter(Boolean)) {
+      const [ref, revision] = line.split(" ");
+      if (["refs/heads/main", "refs/heads/docs"].includes(ref)) {
+        await git(source, ["update-ref", ref.replace("refs/heads/", "refs/remotes/origin/"), revision]);
+      }
+      await git(source, ["update-ref", "-d", ref]);
+    }
+    assert.equal(await git(source, ["for-each-ref", "--format=%(refname)", "refs/heads"]), "");
+    await assert.rejects(git(source, ["symbolic-ref", "--quiet", "HEAD"]));
+    await copyAuthoredSource(repositoryRoot, source);
+    await copyProjectionSource(source, root);
+    for (const branch of ["main", "docs"]) {
+      assert.equal(await git(root, ["rev-parse", `refs/remotes/origin/${branch}`]),
+        await git(source, ["rev-parse", `refs/remotes/origin/${branch}`]));
+    }
+    await buildPages({ root, output, sourceSha: fixedSourceRevision, sourceBinding: "test" });
+    await checkProjection({ root, output });
+  } finally {
+    await rm(container, { recursive: true, force: true });
+  }
+});
+
+test("a newly withheld package stays outside the complete generated projection", async () => {
+  const container = await mkdtemp(join(tmpdir(), "gist-registry-withheld-projection-"));
+  const root = resolve(container, "source");
+  const output = resolve(container, "pages");
+  try {
+    // The projection also validates historical delivery evidence against source Git objects.
+    await copyProjectionSource(repositoryRoot, root);
+    const name = "private-calibration-recipe";
+    const sourcePath = `.agents/skills/${name}/SKILL.md`;
+    await mkdir(resolve(root, `.agents/skills/${name}`));
+    await writeFile(resolve(root, sourcePath), [
+      "---", `name: ${name}`,
+      "description: Calibrates a private fixture. Applies during this projection test.",
+      "---", "", "# Private calibration recipe", "",
+    ].join("\n"));
+    const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
+    const selection = JSON.parse(await readFile(selectionPath, "utf8"));
+    selection.skills.push({ name, sourcePath, publicationStanding: "public_possible",
+      evidenceStanding: "instruction_only", dependencies: [], readinessNote: "Private fixture." });
+    selection.skills.sort((left, right) => left.name.localeCompare(right.name));
+    await writeFile(selectionPath, JSON.stringify(selection, null, 2) + "\n");
+    await buildPages({ root, output, sourceSha: fixedSourceRevision, sourceBinding: "test" });
+    await checkProjection({ root, output });
+    const manifest = JSON.parse(await readFile(resolve(output, "projection-manifest.json"), "utf8"));
+    const paths = [...manifest.files.map(file => file.path), "projection-manifest.json"];
+    assert.equal(paths.some(path => path.includes(name)), false);
+    for (const path of paths) {
+      const text = (await readFile(resolve(output, path), "utf8")).toLocaleLowerCase("en-US");
+      assert.equal(text.includes(name), false, path);
+      assert.equal(text.includes("private calibration recipe"), false, path);
+    }
+    // A generated carrier with the withheld title fails the same boundary check.
+    const target = resolve(output, "skills/index.html");
+    const changed = Buffer.from((await readFile(target, "utf8")) + "Private calibration recipe");
+    await writeFile(target, changed);
+    const entry = manifest.files.find(file => file.path === "skills/index.html");
+    entry.bytes = changed.length;
+    entry.sha256 = createHash("sha256").update(changed).digest("hex");
+    await writeFile(resolve(output, "projection-manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+    await assert.rejects(checkProjection({ root, output }), /must not name or title a skill outside the public-ready set/u);
+  } finally {
+    await rm(container, { recursive: true, force: true });
+  }
 });
 
 test("artifact file inspection links retain local bytes and bind GitHub to the source revision", async () => {
