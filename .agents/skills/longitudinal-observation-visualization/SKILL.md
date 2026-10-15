@@ -19,6 +19,16 @@ description: Preserves observation identity, timing, support, and comparison mea
 - **Smallest useful dose:** Stable identity, admitted time, points, an explicit connection policy, and a table.
 - **Interactions:** Question routing chooses the operation; transform and figure-composition contracts receive the resulting values and support. Destination owners inspect their rendered artifact.
 
+## Inputs, defaults and output
+
+Supply the followed unit and stable key, time/value/status records, measurement
+units, observation process, and the reader's comparison. Add cadence, time origin,
+time zone, precision, pairing, or estimand when the selected reading needs them.
+Default to points at admitted observed times; a missing row becomes a missing
+expected visit only when the observation schedule establishes that expectation.
+An unclear tie or timestamp holds connection while the source values remain
+available. The output names the connection/summary policy and its exact values.
+
 ## Rules
 
 ### Rule: Identity and time define each history
@@ -75,6 +85,15 @@ names its aggregation/sampling rule and preserves the original-data route.
 5. **Compose:** Keep points, support, direction, units, and exact-value route visible.
 6. **Observe:** Check an independently specified sequence/gap fixture and inspect the actual destination at its intended size.
 
+## Decisive scenario
+
+### Scenario: Two records share an unresolved visit time
+
+- Given one unit has two measurements at the same reported time and their replicate meaning is unresolved
+- When a connected history is prepared
+- Then both records remain recoverable and their connection is held
+- And the source or analysis owner supplies a replicate/tie policy before a derived trajectory replaces the admitted points
+
 ## Conditional context
 
 Load [time, paths, and evidence](references/time-paths-and-evidence.md) for
@@ -82,7 +101,15 @@ alignment, annual panels, connected scatter, alternatives, and research limits.
 The [receiving exercise](exercises/README.md) supplies runnable synthetic
 counterexamples and a deterministic SVG/CSV companion.
 
-## Completion and re-entry
+## Recovery and re-entry
+
+Keep the source records and last accepted point/table view while cadence, ties,
+alignment, or interpolation remain disputed. Route observation identity and time
+to the source owner; route aggregation or model assumptions to the analysis
+owner. Rebuild the detached view after that decision, then check segmentation
+and every carrier together.
+
+## Completion
 
 The reader can identify whose observations are connected, recover when they
 occurred, distinguish supported values from missing/model-derived values, and

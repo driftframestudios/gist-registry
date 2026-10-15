@@ -1,150 +1,130 @@
 ---
 name: repository-collaboration-cycle
-description: Carries an authorized Gist Registry task from current-truth reconstruction through route selection, exact-version implementation, proportionate evidence, one reviewable source return, and explicit re-entry. Applies when a cold or resumed collaborator is expected to complete a full repository work cycle.
+description: Carries an authorized repository task from current-truth reconstruction through source-owned execution, fitting evidence, one reviewable return, and exact re-entry. Applies when a cold or resumed collaborator should complete a full repository work cycle using the receiving repository's accepted implementation.
 ---
 
 # Repository collaboration cycle
 
 ## Contract
 
-- **What:** A complete Gist Registry source-work cycle with one primary
-  synthesis route, one evidence-calibrated result, and one direct continuation.
-- **When:** A collaborator is expected to orient, select or resume one Issue,
-  form or repair its canonical source, validate the fitting boundary, and
-  deliver a reviewable return.
-- **Boundaries:** The current task grant supplies mutation and external-action
-  authority; the active Issue owns scope and acceptance. Versioned runnable
-  source and focused tests own behavior; `snippet.json` owns the local artifact
-  contract; `registry.json` owns discovery; `SCHEMA-NURSERY.md` owns
-  extension-to-schema reasoning. Merge, immutable tags, `docs` projection,
-  hosted observation, and optional Gist creation retain their existing grants
-  and receivers.
-- **Result:** One review-ready or accepted source coordinate carries the
-  requested material result, fitting checks, evidence boundary, recovery
-  coordinate, and exact next action.
+- **What:** A complete route from a named repository task to one usable change, decision-ready observation, or explicitly held result.
+- **When:** Current-state recovery, source ownership, environment preparation, implementation, checks, and delivery need one synthesis owner.
+- **Boundaries:** The human task grants actions; the active Issue or equivalent work owner supplies scope and acceptance. Runnable source and focused observations establish behavior. The receiving repository owns branch, version, toolchain, inspection, review, and publication mechanisms. The skill supplies a method for selecting and connecting those owners.
+- **Result:** One receiving surface identifies the exact source, material result, evidence and its limits, retained state, next receiver, and direct re-entry action.
 
 ## Fit and attention
 
-- **Useful when:** Work spans orientation, artifact or repository ownership,
-  implementation, several checks, and a pull-request handback.
-- **Poor fit when:** One source reading answers the question, one bounded repair
-  already has sufficient orientation, or the next move depends on an unsettled
-  research result.
-- **Smallest useful dose:** One Issue, one short-lived branch, the nearest
-  behavior owner, the smallest adequate evidence lane, and one receiving
-  surface.
-- **Interactions:** `probe-bearing-exemplar-formation` owns a first artifact
-  coordinate; `architecture-convergence-vantages` selects among materially
-  different guarantees; `transaction-boundary-evidence-mapping` maps aligned
-  effects, publication, replay, and recovery for a selected operation;
-  `versioned-exemplar-successor` owns a material change to an accepted
-  coordinate; `secret-boundary-inspection` owns source and publication handoff
-  inspection. Accepted Pages work transfers to the Gist Registry Pages
-  publication runbook.
-- **Rest or release when:** A protected decision, unresolved architecture,
-  source-authority boundary, or environment capability can materially change
-  the result. Return the last verified coordinate and observable release event.
+- **Useful when:** A collaborator should carry a bounded undertaking through orientation, source work, and a reviewable return.
+- **Direct route when:** One source reading already answers the question or an existing finite task has a complete owner and handback.
+- **Smallest useful dose:** One work owner, one source coordinate, one primary route, the checks that answer acceptance, and one receiving surface.
+- **Foregrounds:** Current truth, material behavior, action authority, evidence meaning, ownership, recovery, and continuation.
+- **May under-attend:** Domain design, product priority, and specialized operational protocols; their owners receive those decisions.
+- **Rest or release when:** The receiver has the promised result, or a material missing fact or authority has a named release event.
+
+## Inputs, defaults, and output
+
+The minimum input names a repository and a material outcome. The collaborator
+recovers the task's source coordinate, instructions, current work owner,
+acceptance, and granted actions from available evidence. A default branch is a
+candidate source, while the task may own a release, integration branch, or
+review head. Preserve the original checkout when another coordinate supplies
+the relevant instructions or behavior.
+
+Bind the receiving implementation through the
+[repository adapter contract](references/repository-adapter.md). An existing
+accepted runbook can supply this binding; a short source-grounded table can
+supply it when no runbook exists. This is an invocation input, with its own
+revision and owner. The portable package carries the complete method and
+requires no particular repository's scripts or publication service.
+
+Begin with source observation inside the granted authority. Missing commands,
+runtime capabilities, or current remote observations remain explicit gaps.
+Continue independent useful work and hold only the action that needs the gap
+resolved. Return a change, finding, or held route with the handback fields in
+the [source-work procedure](references/source-work-cycle.md).
 
 ## Rules
 
-### Rule: Current truth precedes mutation
+### Rule: Current truth supplies the action coordinate
 
-Confirm branch, revision, worktree state, accepted `origin/main`, active Issue
-or pull request, nearest README, and current runnable owner. Preserve unrelated
-work. Cached remote state remains labelled until a network refresh establishes
-live standing.
+Read branch or detached revision, worktree state, nearest instructions, active
+Issue or pull request, and the source that owns the behavior. Reconcile plans
+and earlier records against that source. Label cached remote state until an
+authorized network observation establishes current standing. Unrelated work
+remains at its owner's coordinate.
 
-### Rule: One route owns synthesis
+### Rule: One primary route owns synthesis
 
-Select `direct_action`, `primary_with_bounded_vantages`, or
-`held_for_named_signal`. Bounded vantages may return source readings, focused
-checks, or implementation suggestions; the primary collaborator reconciles
-their premises and retains the complete result.
+Select direct action, primary work with bounded support, or a route held for a
+named signal. A support packet carries an exact premise, action grant, expected
+return, and stop event. The primary collaborator verifies returned source and
+evidence before integrating them. Resting support capacity leaves independent
+primary work available.
 
-### Rule: Version movement follows behavior
+### Rule: The native adapter supplies operational meaning
 
-A useful first form receives a new semantic ID and first version. A material
-strengthening of accepted bytes receives a successor version. Accepted source
-and immutable tags remain unchanged. Wording, mutable family continuation, or
-repository tooling can change at its actual owner. New versions remain
-reserved for material artifact behavior.
+Resolve each selected command to the receiving repository's accepted owner.
+Bind its prerequisites, effects, expected result, failure meaning, and recovery
+route. A command name or successful exit alone supplies less evidence than a
+scope-bound observation. The adapter preserves local policies rather than
+silently importing another repository's branch names, version rules, scanner,
+or deployment route.
 
-### Rule: Canonical owners stay distinct
+### Rule: Preparation follows the evidence question
 
-The family README carries lightweight continuation. The exact-version README
-orients the artifact. `snippet.json` declares its public-safe identity,
-representations, evidence, and boundaries. Source and tests own behavior.
-Fixtures and expected results own deterministic examples. Registry and Pages
-surfaces project those owners rather than replacing them.
+Inspect existing locks, scripts, dependencies, and tools before preparing an
+environment. Install or configure only what the selected authorized check
+needs. Record changes that affect behavior, reproducibility, or disk use.
+Source-only observation can complete without branch creation or installation.
 
-### Rule: Schema pressure begins as observed use
+### Rule: Change the source that owns the result
 
-Read `SCHEMA-NURSERY.md` before changing the envelope. Keep one-artifact needs
-in `extensions`. Promote a field only after materially different artifacts and
-a real reader, check, or projection demonstrate shared use.
+Find the behavior owner, generator, contract, or instruction before editing.
+Follow its version policy: immutable accepted bytes receive the repository's
+successor route, while mutable owners receive direct changes. Generated output
+comes from its builder. A new owner or broader outcome earns a separate
+decision when it changes scope or authority.
 
-### Rule: Evidence follows the claim
+### Rule: Evidence binds the claim and the inspected state
 
-Run the nearest lock, lint, behavior, registry, schema, Pages, and
-secret-material observations that answer the active acceptance question. A
-command result states what it establishes and which adjacent claim remains
-with another owner. Generated `docs` bytes and hosted delivery begin through
-their publication runbook after source acceptance.
+Select focused controls that distinguish the intended mechanism from a
+plausible fault. Run the native aggregate and handoff checks required by the
+receiving repository. Name the exact source, index, tree, or artifact examined.
+State what each observation establishes and which adjacent claim remains
+open. A failed prerequisite, missing scope, or unobserved check stays visible
+through delivery; quieter output cannot promote its standing.
 
-### Rule: One pull request can complete source work
+### Rule: Delivery preserves one useful next move
 
-The pull request names scope, artifact identity or repository owner, changed
-surfaces, exact normalized checks, evidence reach, recovery coordinate,
-environment difference, and next receiver. Review-ready is a complete outcome
-when merge authority remains human-held.
-
-Before handback, compare the Issue-owned acceptance language with the
-implemented evidence boundary. When source truth refines a material term,
-bring the criterion and result into agreement through the Issue body or one
-concise transition comment while the pull request remains the evidence
-receipt.
+One task response, Issue, or pull request carries the durable result. Compare
+its evidence with the work owner's acceptance language and retain any
+remaining criterion explicitly. Review-ready completes a review-authorized
+cycle. Merge, tag, publication, deployment, and other external effects follow
+their existing grants and receivers. Preserve the last verified source and
+accepted external state while those decisions remain held.
 
 ## Operating sequence
 
-1. Reconstruct current Git, GitHub, instruction, planning, and source truth.
-2. Select one primary Issue and classify its route.
-3. Prepare only the toolchain required by the selected checks.
-4. Create or restore one short-lived Issue branch from the verified base.
-5. Load the artifact-formation, successor, convergence, transaction-boundary,
-   or secret-boundary skill whose distinct receiving job applies.
-6. Change the canonical source owner and preserve accepted exact-version bytes.
-7. Reconcile schema-nursery and generated-projection effects while `docs`
-   remains at its accepted coordinate.
-8. Run focused checks during iteration, then the complete fitting source and
-   exact-index boundary.
-9. Deliver one reviewable pull request or a held-state handback.
-10. After accepted source is verified, route tags, Pages, hosted observation,
-    and optional Gist publication through their separately granted receivers.
+1. **Re-enter:** Recover current source, work state, instructions, acceptance, and authority.
+2. **Bind:** Identify native implementation owners and select the applicable adapter entries.
+3. **Classify:** Choose source observation, executed observation, implementation, or a held route; select optional bounded support only when it can change the result.
+4. **Prepare:** Establish the task-owned source and only the environment needed by that route.
+5. **Execute:** Change or inspect the material owner, preserving unrelated work and accepted version policy.
+6. **Verify:** Integrate current support returns and run focused plus required native evidence at the proposed coordinate.
+7. **Deliver:** Place one reviewable result with its receiver at the granted action boundary.
+8. **Release:** Name retained state and exact re-entry; reopen only the phases affected by a changed premise.
 
-## Scenario: A first domain exemplar exercises the whole cycle
+Load the [full procedure](references/source-work-cycle.md) for phase paths,
+checkpoints, concrete recovery branches, and handback fields. Load the
+[receiving exercise](exercises/receiving-task.md) when assessing transfer or
+preparing a fresh-context traversal. Authored scenarios describe intended
+behavior; that exercise records actual receiving evidence separately.
 
-Given one active Issue defines a public-safe first artifact coordinate<br>
-And architecture review has selected an in-memory conformance boundary<br>
-When the cycle forms runnable source, focused fault and concurrency tests,
-manifest, registry entry, and a proposed Gist publication set<br>
-Then one pull request returns the exact source and evidence boundary<br>
-And accepted Pages projection and optional Gist creation remain distinct next
-receivers
+## Completion and re-entry
 
-## Conditional context
-
-Load the [Gist Registry source collaboration
-runbook](../../runbooks/gist-registry-source-collaboration-cycle.v0.1.md) when
-the skill receives a full Issue-to-pull-request task. After accepted source,
-the [Pages publication
-runbook](../../runbooks/gist-registry-pages-publication.v0.1.md) owns generated
-`docs` and hosted-byte continuation.
-
-## Completion
-
-The cycle completes when current truth, active authority, canonical changed
-surface, fitting evidence, public boundary, recovery coordinate, and one exact
-re-entry action are legible from the source branch and its receiving surface.
-A changed Issue, source owner, base revision, environment observation, or
-human-held decision reopens the matching phase while accepted work remains at
-its established coordinate.
+The cycle completes when another collaborator can inspect the result and
+continue from its named coordinate without reconstructing the whole history.
+A changed source, acceptance criterion, adapter, environment, support premise,
+or action grant reopens the affected phase. If a simpler native route fully
+owns the result, use it directly; retire duplicated routing while preserving
+the decision's useful lineage.

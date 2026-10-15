@@ -76,9 +76,12 @@ Registry-specific skills live in [`.agents/skills/`](.agents/skills/):
   runnable source and exact derived teaching surfaces while accepted versions
   remain immutable.
 
-These skills are instruction-only affordance surfaces. Natural receiving
-work supplies revision evidence, and direct reasoning remains the fitting route
-when one source reading or scoped repair answers the question.
+These skills provide reusable instructions; their recorded receiving uses and
+checks establish bounded evidence. The [skill guide](.agents/skills/README.md)
+routes the complete scientific, implementation and repository-operation
+families. Natural receiving work supplies revision evidence, and direct
+reasoning remains the fitting route when one source reading or scoped repair
+answers the question.
 
 ## Keep continuation lightweight
 

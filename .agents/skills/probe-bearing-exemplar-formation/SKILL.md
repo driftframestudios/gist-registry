@@ -45,6 +45,17 @@ description: Forms a first reviewable registry coordinate from a source-grounded
   Keep the candidate in planning with the exact evidence or authority event that
   reopens formation.
 
+## Inputs and defaults
+
+Bring one receiving question, the proposed public source, license/provenance
+standing, a behavior owner, and an observation that could change the claim.
+Select the artifact kind and fields from the receiving registry's current
+schema. The default is one exact version and one runnable entry point or
+source-resolvable excerpt; additional representations need an independent
+reader job. An unavailable runtime yields an explicitly source-reviewed or
+draft claim with a reproducible next check. A public source question stays
+with its owner until the reusable material can be disclosed truthfully.
+
 ## Rules
 
 ### Rule: The practical question leads
@@ -142,6 +153,34 @@ remain human-held.
 8. **Return for review:** Name the current standing, evidence reach, transfer
    boundary, recovery move, and next receiver. Tagging and projection begin
    only through their accepted routes.
+
+## Conditional context and recovery
+
+Load [formation evidence and recovery](references/formation-evidence-and-recovery.md)
+when an excerpt, adaptation, or independently retrieved representation needs
+its source relationship made explicit, or a failed proof changes the candidate.
+The guide distinguishes preserved source bytes from newly authored behavior
+and pairs each with its own observation.
+
+A failed decisive check keeps the candidate at its supported standing. Retain
+the useful source and reproducible counterexample, narrow the claim or repair
+the owning implementation, then repeat the affected proof before deriving
+companions. A license or disclosure gap routes to the source owner; synthetic
+replacement can continue only with its changed provenance stated. Formation
+can finish as an explicit held candidate when that is the authorized result.
+
+## Scenario: A selected query needs its surrounding state
+
+- Given an excerpt shows a query while its claimed correctness depends on a
+  tenant predicate and the meaning of a pending row
+- When the author forms the first runnable package
+- Then the package carries those predicates, a distinguishing fixture, and an
+  independently derived expected result
+- And broader authorization and production-workload claims remain with their
+  named receiving checks
+
+This scenario describes intended behavior; the artifact's actual tests and
+review establish the exercised case.
 
 ## Completion
 

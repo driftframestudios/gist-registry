@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   cp,
   mkdtemp,
+  mkdir,
   readFile,
   rename,
   rm,
@@ -32,8 +33,10 @@ const expectedPublicReady = [
   "omics-coordinate-and-measurement-views",
   "parity-bound-workload-measurement",
   "probe-bearing-exemplar-formation",
+  "repository-collaboration-cycle",
   "scientific-figure-composition",
   "scientific-scale-and-transform-fidelity",
+  "secret-boundary-inspection",
   "spatial-support-and-change-visualization",
   "transaction-boundary-evidence-mapping",
   "typed-error-recovery-contracts",
@@ -273,14 +276,30 @@ test("a similarly named custom element remains valid source text", async () => {
   });
 });
 
-test("a withheld skill title stays outside every public-ready source package", async () => {
+test("a newly withheld skill stays outside the catalog and public source packages", async () => {
   await withSkillFixture(async root => {
-    const skillPath = resolve(
-      root,
-      ".agents/skills/contextual-jargon-scan/SKILL.md",
-    );
+    const name = "private-calibration-recipe";
+    const sourcePath = `.agents/skills/${name}/SKILL.md`;
+    await mkdir(resolve(root, `.agents/skills/${name}`));
+    await writeFile(resolve(root, sourcePath), [
+      "---", `name: ${name}`,
+      "description: Calibrates a private fixture. Applies during this boundary test.",
+      "---", "", "# Private calibration recipe", "",
+    ].join("\n"));
+    const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
+    const selection = await json(selectionPath);
+    selection.skills.push({ name, sourcePath, publicationStanding: "public_possible",
+      evidenceStanding: "instruction_only", dependencies: [], readinessNote: "Private fixture." });
+    selection.skills.sort((left, right) => left.name.localeCompare(right.name));
+    await writeJson(selectionPath, selection);
+    const model = await loadPublicSkills({ root, sourceSha: fixedSourceRevision });
+    assert.deepEqual(model.withheldNames, [name]);
+    assert.deepEqual(model.catalog.skills.map(skill => skill.name), expectedPublicReady);
+    assert.equal(JSON.stringify(model.catalog).includes(name), false);
+
+    const skillPath = resolve(root, ".agents/skills/contextual-jargon-scan/SKILL.md");
     const source = await readFile(skillPath, "utf8");
-    await writeFile(skillPath, source + "\nSecret boundary inspection\n", "utf8");
+    await writeFile(skillPath, source + "\nPrivate calibration recipe\n", "utf8");
     await assert.rejects(
       loadPublicSkills({ root, sourceSha: fixedSourceRevision }),
       /must not name a withheld skill or title/u,

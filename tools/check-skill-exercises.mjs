@@ -27,3 +27,23 @@ for (const [name, script, ...args] of examples) {
     break;
   }
 }
+
+if (!process.exitCode) {
+  const result = spawnSync(process.execPath, [
+    ".agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+  ], { cwd: root, stdio: "inherit" });
+  if (result.status !== 0) {
+    console.error("Skill exercise held: secret-boundary-inspection");
+    process.exitCode = 1;
+  }
+}
+
+if (!process.exitCode) {
+  const result = spawnSync(process.execPath, [
+    "--test", ".agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+  ], { cwd: root, stdio: "inherit" });
+  if (result.status !== 0) {
+    console.error("Skill exercise held: receiver source identity");
+    process.exitCode = 1;
+  }
+}
