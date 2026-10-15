@@ -309,6 +309,33 @@ async function git(root, arguments_) {
   return stdout.trim();
 }
 
+const fixtureExcludedPaths = new Set([
+  ".git", ".artifacts", ".tools", "node_modules", ".venv", "__pycache__",
+]);
+
+async function copyAuthoredSource(sourceRoot, root) {
+  await cp(sourceRoot, root, {
+    recursive: true,
+    filter: path => !relative(sourceRoot, path).split(/[\\/]/u)
+      .some(part => fixtureExcludedPaths.has(part)),
+  });
+}
+
+async function copyProjectionSource(sourceRoot, root) {
+  await execFileAsync("git", ["clone", "--no-hardlinks", "--no-checkout", "--quiet", sourceRoot, root]);
+  const refs = new Map((await git(sourceRoot, ["for-each-ref", "--format=%(refname) %(objectname)",
+    "refs/remotes/origin/main", "refs/remotes/origin/docs", "refs/heads/main", "refs/heads/docs",
+  ])).split("\n").map(line => line.split(" ")));
+  // A detached CI checkout can hold delivery branches only as remote-tracking refs.
+  for (const branch of ["main", "docs"]) {
+    const revision = refs.get(`refs/remotes/origin/${branch}`) ?? refs.get(`refs/heads/${branch}`);
+    assert.match(revision ?? "", /^[a-f0-9]{40}$/u, `source must retain ${branch}`);
+    await git(root, ["fetch", "--quiet", "--no-tags", sourceRoot,
+      `+${revision}:refs/remotes/origin/${branch}`]);
+  }
+  await copyAuthoredSource(sourceRoot, root);
+}
+
 test("the public projection is deterministic for one source revision", async () => {
   const result = await checkPages({
     root: repositoryRoot,
@@ -655,17 +682,47 @@ test("public skill routes expose only the selected exact source packages", async
   });
 });
 
+test("projection fixtures retain delivery history from a detached remote-only checkout", async () => {
+  const container = await mkdtemp(join(tmpdir(), "gist-registry-ci-projection-"));
+  const source = resolve(container, "ci-source");
+  const root = resolve(container, "fixture");
+  const output = resolve(container, "pages");
+  try {
+    // Mirror the existing refs once, then reproduce the checkout shape used by CI.
+    await execFileAsync("git", ["clone", "--mirror", "--no-hardlinks", "--quiet",
+      repositoryRoot, resolve(source, ".git")]);
+    await git(source, ["config", "core.bare", "false"]);
+    await git(source, ["update-ref", "--no-deref", "HEAD", await git(repositoryRoot, ["rev-parse", "HEAD"])]);
+    const localRefs = await git(source, ["for-each-ref", "--format=%(refname) %(objectname)", "refs/heads"]);
+    for (const line of localRefs.split("\n").filter(Boolean)) {
+      const [ref, revision] = line.split(" ");
+      if (["refs/heads/main", "refs/heads/docs"].includes(ref)) {
+        await git(source, ["update-ref", ref.replace("refs/heads/", "refs/remotes/origin/"), revision]);
+      }
+      await git(source, ["update-ref", "-d", ref]);
+    }
+    assert.equal(await git(source, ["for-each-ref", "--format=%(refname)", "refs/heads"]), "");
+    await assert.rejects(git(source, ["symbolic-ref", "--quiet", "HEAD"]));
+    await copyAuthoredSource(repositoryRoot, source);
+    await copyProjectionSource(source, root);
+    for (const branch of ["main", "docs"]) {
+      assert.equal(await git(root, ["rev-parse", `refs/remotes/origin/${branch}`]),
+        await git(source, ["rev-parse", `refs/remotes/origin/${branch}`]));
+    }
+    await buildPages({ root, output, sourceSha: fixedSourceRevision, sourceBinding: "test" });
+    await checkProjection({ root, output });
+  } finally {
+    await rm(container, { recursive: true, force: true });
+  }
+});
+
 test("a newly withheld package stays outside the complete generated projection", async () => {
   const container = await mkdtemp(join(tmpdir(), "gist-registry-withheld-projection-"));
   const root = resolve(container, "source");
   const output = resolve(container, "pages");
-  const excluded = new Set([".git", ".artifacts", ".tools", "node_modules", ".venv", "__pycache__"]);
   try {
     // The projection also validates historical delivery evidence against source Git objects.
-    await execFileAsync("git", ["clone", "--no-hardlinks", "--no-checkout", "--quiet", repositoryRoot, root]);
-    await cp(repositoryRoot, root, { recursive: true,
-      filter: path => !relative(repositoryRoot, path).split(/[\\/]/u).some(part => excluded.has(part)),
-    });
+    await copyProjectionSource(repositoryRoot, root);
     const name = "private-calibration-recipe";
     const sourcePath = `.agents/skills/${name}/SKILL.md`;
     await mkdir(resolve(root, `.agents/skills/${name}`));
