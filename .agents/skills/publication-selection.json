@@ -22,12 +22,90 @@
       "readinessNote": "The skill and its conditional filesystem reference have shaped accepted source-and-test convergence cycles."
     },
     {
+      "name": "bounded-representation-admission",
+      "sourcePath": ".agents/skills/bounded-representation-admission/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/bounded-representation-admission/exercises/README.md",
+        ".agents/skills/bounded-representation-admission/exercises/exercise.py",
+        ".agents/skills/bounded-representation-admission/references/admission-design-and-evidence.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
+    },
+    {
       "name": "contextual-jargon-scan",
       "sourcePath": ".agents/skills/contextual-jargon-scan/SKILL.md",
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [],
       "readinessNote": "The portable contract has been exercised against Registry prose and deterministic projection boundaries."
+    },
+    {
+      "name": "controlled-context-comparison",
+      "sourcePath": ".agents/skills/controlled-context-comparison/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/controlled-context-comparison/exercises/README.md",
+        ".agents/skills/controlled-context-comparison/exercises/exercise.py",
+        ".agents/skills/controlled-context-comparison/references/design-and-evidence.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
+    },
+    {
+      "name": "interruption-safe-resource-ownership",
+      "sourcePath": ".agents/skills/interruption-safe-resource-ownership/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/interruption-safe-resource-ownership/exercises/README.md",
+        ".agents/skills/interruption-safe-resource-ownership/exercises/exercise.py",
+        ".agents/skills/interruption-safe-resource-ownership/references/mechanisms-and-evidence.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
+    },
+    {
+      "name": "longitudinal-observation-visualization",
+      "sourcePath": ".agents/skills/longitudinal-observation-visualization/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/longitudinal-observation-visualization/exercises/README.md",
+        ".agents/skills/longitudinal-observation-visualization/exercises/example.html",
+        ".agents/skills/longitudinal-observation-visualization/exercises/example.svg",
+        ".agents/skills/longitudinal-observation-visualization/exercises/exercise.py",
+        ".agents/skills/longitudinal-observation-visualization/exercises/expected-segments.json",
+        ".agents/skills/longitudinal-observation-visualization/exercises/observations.csv",
+        ".agents/skills/longitudinal-observation-visualization/exercises/values.csv",
+        ".agents/skills/longitudinal-observation-visualization/references/time-paths-and-evidence.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
+    },
+    {
+      "name": "omics-coordinate-and-measurement-views",
+      "sourcePath": ".agents/skills/omics-coordinate-and-measurement-views/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/omics-coordinate-and-measurement-views/exercises/verify.py",
+        ".agents/skills/omics-coordinate-and-measurement-views/references/assay-matrices-and-inference.md",
+        ".agents/skills/omics-coordinate-and-measurement-views/references/evidence-and-exercises.md",
+        ".agents/skills/omics-coordinate-and-measurement-views/references/genomic-coordinates-and-tracks.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
+    },
+    {
+      "name": "parity-bound-workload-measurement",
+      "sourcePath": ".agents/skills/parity-bound-workload-measurement/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/parity-bound-workload-measurement/exercises/README.md",
+        ".agents/skills/parity-bound-workload-measurement/exercises/exercise.py",
+        ".agents/skills/parity-bound-workload-measurement/references/design-and-evidence.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
     },
     {
       "name": "probe-bearing-exemplar-formation",
@@ -49,6 +127,32 @@
       "readinessNote": "The skill is exercised. Its operational runbook package still resolves through a broader private repository-owner closure, so the complete public source package remains in preparation."
     },
     {
+      "name": "scientific-figure-composition",
+      "sourcePath": ".agents/skills/scientific-figure-composition/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/scientific-figure-composition/exercises/verify.py",
+        ".agents/skills/scientific-figure-composition/references/delivery-and-inspection.md",
+        ".agents/skills/scientific-figure-composition/references/evidence-and-exercises.md",
+        ".agents/skills/scientific-figure-composition/references/panel-type-color-and-emphasis.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
+    },
+    {
+      "name": "scientific-scale-and-transform-fidelity",
+      "sourcePath": ".agents/skills/scientific-scale-and-transform-fidelity/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/scientific-scale-and-transform-fidelity/exercises/verify.py",
+        ".agents/skills/scientific-scale-and-transform-fidelity/references/evidence-and-exercises.md",
+        ".agents/skills/scientific-scale-and-transform-fidelity/references/intervals-colors-and-density.md",
+        ".agents/skills/scientific-scale-and-transform-fidelity/references/signed-and-logarithmic-transforms.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
+    },
+    {
       "name": "secret-boundary-inspection",
       "sourcePath": ".agents/skills/secret-boundary-inspection/SKILL.md",
       "publicationStanding": "public_possible",
@@ -58,6 +162,23 @@
         "README.md"
       ],
       "readinessNote": "The skill is exercised. Its complete implementation-specific scanner, configuration, runbook, and repository-orientation closure remains in preparation as one public package."
+    },
+    {
+      "name": "spatial-support-and-change-visualization",
+      "sourcePath": ".agents/skills/spatial-support-and-change-visualization/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/spatial-support-and-change-visualization/exercises/README.md",
+        ".agents/skills/spatial-support-and-change-visualization/exercises/comparisons.json",
+        ".agents/skills/spatial-support-and-change-visualization/exercises/example.html",
+        ".agents/skills/spatial-support-and-change-visualization/exercises/example.svg",
+        ".agents/skills/spatial-support-and-change-visualization/exercises/exercise.py",
+        ".agents/skills/spatial-support-and-change-visualization/exercises/regions.csv",
+        ".agents/skills/spatial-support-and-change-visualization/exercises/values.csv",
+        ".agents/skills/spatial-support-and-change-visualization/references/support-and-evidence.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
     },
     {
       "name": "transaction-boundary-evidence-mapping",
@@ -70,13 +191,15 @@
     {
       "name": "typed-error-recovery-contracts",
       "sourcePath": ".agents/skills/typed-error-recovery-contracts/SKILL.md",
-      "publicationStanding": "public_possible",
-      "evidenceStanding": "instruction_only",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/typed-error-recovery-contracts/exercises/README.md",
+        ".agents/skills/typed-error-recovery-contracts/exercises/exercise.py",
         ".agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md",
         ".agents/skills/typed-error-recovery-contracts/references/python-exception-boundaries.md"
       ],
-      "readinessNote": "The draft has a source-reading exercise; receiving implementation, focused counterexamples, and independent review remain its next evidence gate. Publication remains held."
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
     },
     {
       "name": "versioned-exemplar-successor",
@@ -85,6 +208,20 @@
       "evidenceStanding": "exercised",
       "dependencies": [],
       "readinessNote": "The route received the accepted document-evidence successor and exact derived companion."
+    },
+    {
+      "name": "visualization-question-routing",
+      "sourcePath": ".agents/skills/visualization-question-routing/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/visualization-question-routing/exercises/README.md",
+        ".agents/skills/visualization-question-routing/exercises/exercise.py",
+        ".agents/skills/visualization-question-routing/exercises/records.csv",
+        ".agents/skills/visualization-question-routing/exercises/view-contracts.json",
+        ".agents/skills/visualization-question-routing/references/roles-and-evidence.md"
+      ],
+      "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
     }
   ]
 }

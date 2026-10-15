@@ -864,6 +864,16 @@ function dataUsePage(outputPath) {
 }
 
 function publicSkillsPage(publicSkills, outputPath) {
+  const startingRoutes = [
+    ["visualization-question-routing", "Shape a scientific view", "Name the observation unit and the comparison, then follow the domain and presentation guidance."],
+    ["typed-error-recovery-contracts", "Review a failure boundary", "Bring source, a caller recovery action and an independently expected outcome."],
+    ["parity-bound-workload-measurement", "Compare implementation costs", "Establish equal behavior before measuring the complete operation on a declared workload."],
+    ["probe-bearing-exemplar-formation", "Create a reusable example", "Run a bounded proof and retain its source, counterexample and receiving question."],
+  ].filter(([name]) => publicSkills.catalog.skills.some(skill => skill.name === name))
+    .map(([name, title, description]) =>
+      '<li><a href="/skills/' + name + '/">' + escapeHtml(title) +
+      "</a>. " + escapeHtml(description) + "</li>",
+    );
   const cards = publicSkills.catalog.skills
     .map(skill =>
       [
@@ -888,6 +898,9 @@ function publicSkillsPage(publicSkills, outputPath) {
       "<h1>Collaboration skills</h1>",
       '<p class="lede">Each listed skill has a complete public source package: the exact instruction file, its selected dependencies, and SHA-256 bindings to this source revision.</p>',
       "<p>Skills make a recurring job easier to recognize and carry. Current intent, repository evidence, and granted authority continue to govern each use.</p>",
+      "<h2>Start with one useful move</h2>",
+      "<p>Read one contract and run its smallest exercise. Each skill page links the complete source and its companions.</p>",
+      "<ol>" + startingRoutes.join("\n") + "</ol>",
       '<p><a href="/skills/index.json">Read the typed skill catalog</a>.</p>',
       '<div class="grid">' + cards + "</div>",
     ].join("\n"),

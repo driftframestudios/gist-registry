@@ -1,0 +1,13 @@
+{
+  "tenants": ["SYN-A", "SYN-B"],
+  "specimens": [["SYN-A", "SYN-1"], ["SYN-A", "SYN-2"], ["SYN-B", "SYN-1"]],
+  "messages": [
+    ["SYN-A", "M-1", "SYN-1", "ready"],
+    ["SYN-A", "M-2", "SYN-1", "leased"],
+    ["SYN-A", "M-3", "SYN-1", "recovery_required"],
+    ["SYN-A", "M-4", "SYN-1", "delivered"],
+    ["SYN-A", "M-5", "OTHER-AGGREGATE", "ready"],
+    ["SYN-B", "M-1", "SYN-1", "ready"],
+    ["SYN-B", "M-2", "SYN-1", "ready"]
+  ]
+}

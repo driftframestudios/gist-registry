@@ -1,0 +1,316 @@
+{
+  "artifact": "postgresql-pending-outbox-query@0.1.0",
+  "authority": {
+    "denied_writes": 2,
+    "relational_constraint_controls": 4,
+    "role": "query_reader"
+  },
+  "index": {
+    "keys": [
+      "tenant_id",
+      "aggregate_id"
+    ],
+    "owner": "fixture_owner",
+    "predicate": "(delivery_state <> 'delivered'::text)",
+    "valid": true
+  },
+  "measurement": {
+    "baseline": {
+      "execution_ms": 424.444,
+      "plan": {
+        "Actual Loops": 1,
+        "Actual Rows": 1000,
+        "Actual Startup Time": 0.459,
+        "Actual Total Time": 424.416,
+        "Join Type": "Left",
+        "Node Type": "Nested Loop",
+        "Plan Rows": 1000,
+        "Plan Width": 16,
+        "Plans": [
+          {
+            "Actual Loops": 1,
+            "Actual Rows": 1000,
+            "Actual Startup Time": 0.004,
+            "Actual Total Time": 0.041,
+            "Heap Fetches": 0,
+            "Index Name": "specimen_pkey",
+            "Node Type": "Index Only Scan",
+            "Plan Rows": 1000,
+            "Plan Width": 16,
+            "Relation Name": "specimen",
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 7,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Startup Cost": 0.28,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Total Cost": 45.77
+          },
+          {
+            "Actual Loops": 1000,
+            "Actual Rows": 1,
+            "Actual Startup Time": 0.424,
+            "Actual Total Time": 0.424,
+            "Cache Evictions": 0,
+            "Cache Hits": 0,
+            "Cache Misses": 1000,
+            "Cache Overflows": 0,
+            "Node Type": "Memoize",
+            "Peak Memory Usage": 120,
+            "Plan Rows": 1,
+            "Plan Width": 8,
+            "Plans": [
+              {
+                "Actual Loops": 1000,
+                "Actual Rows": 1,
+                "Actual Startup Time": 0.424,
+                "Actual Total Time": 0.424,
+                "Node Type": "Aggregate",
+                "Plan Rows": 1,
+                "Plan Width": 8,
+                "Plans": [
+                  {
+                    "Actual Loops": 1000,
+                    "Actual Rows": 10,
+                    "Actual Startup Time": 0.02,
+                    "Actual Total Time": 0.423,
+                    "Node Type": "Seq Scan",
+                    "Plan Rows": 3,
+                    "Plan Width": 0,
+                    "Relation Name": "transactional_outbox",
+                    "Rows Removed by Filter": 10997,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Hit Blocks": 89000,
+                    "Shared Read Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Startup Cost": 0.0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0,
+                    "Total Cost": 281.62
+                  }
+                ],
+                "Shared Dirtied Blocks": 0,
+                "Shared Hit Blocks": 89000,
+                "Shared Read Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Startup Cost": 281.63,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Total Cost": 281.64
+              }
+            ],
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 89000,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Startup Cost": 281.64,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Total Cost": 281.65
+          }
+        ],
+        "Shared Dirtied Blocks": 0,
+        "Shared Hit Blocks": 89007,
+        "Shared Read Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Startup Cost": 281.92,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Total Cost": 281429.41
+      },
+      "planning_ms": 0.05
+    },
+    "fixture_writes_during_measurement": 0,
+    "indexed": {
+      "execution_ms": 1.116,
+      "plan": {
+        "Actual Loops": 1,
+        "Actual Rows": 1000,
+        "Actual Startup Time": 0.028,
+        "Actual Total Time": 1.093,
+        "Join Type": "Left",
+        "Node Type": "Nested Loop",
+        "Plan Rows": 1000,
+        "Plan Width": 16,
+        "Plans": [
+          {
+            "Actual Loops": 1,
+            "Actual Rows": 1000,
+            "Actual Startup Time": 0.005,
+            "Actual Total Time": 0.033,
+            "Heap Fetches": 0,
+            "Index Name": "specimen_pkey",
+            "Node Type": "Index Only Scan",
+            "Plan Rows": 1000,
+            "Plan Width": 16,
+            "Relation Name": "specimen",
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 7,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Startup Cost": 0.28,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Total Cost": 45.77
+          },
+          {
+            "Actual Loops": 1000,
+            "Actual Rows": 1,
+            "Actual Startup Time": 0.001,
+            "Actual Total Time": 0.001,
+            "Node Type": "Aggregate",
+            "Plan Rows": 1,
+            "Plan Width": 8,
+            "Plans": [
+              {
+                "Actual Loops": 1000,
+                "Actual Rows": 10,
+                "Actual Startup Time": 0.0,
+                "Actual Total Time": 0.001,
+                "Heap Fetches": 0,
+                "Index Name": "transactional_outbox_pending_specimen_idx",
+                "Node Type": "Index Only Scan",
+                "Plan Rows": 3,
+                "Plan Width": 0,
+                "Relation Name": "transactional_outbox",
+                "Shared Dirtied Blocks": 0,
+                "Shared Hit Blocks": 1986,
+                "Shared Read Blocks": 15,
+                "Shared Written Blocks": 0,
+                "Startup Cost": 0.29,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Total Cost": 4.35
+              }
+            ],
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 1986,
+            "Shared Read Blocks": 15,
+            "Shared Written Blocks": 0,
+            "Startup Cost": 4.35,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Total Cost": 4.36
+          }
+        ],
+        "Shared Dirtied Blocks": 0,
+        "Shared Hit Blocks": 1993,
+        "Shared Read Blocks": 15,
+        "Shared Written Blocks": 0,
+        "Startup Cost": 4.63,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Total Cost": 4418.28
+      },
+      "planning_ms": 0.133
+    },
+    "order": [
+      "baseline",
+      "indexed"
+    ],
+    "samples_per_variant": 1,
+    "statistics": "vacuum analyze before parity and measurements",
+    "timing_scope": "PostgreSQL EXPLAIN ANALYZE; client fetch, Python allocation, index build and cleanup lie outside this timing"
+  },
+  "observed_at_utc": "2026-10-15T16:39:38.756255+00:00",
+  "owned_cluster": {
+    "created": 1,
+    "directories_removed": 1,
+    "stopped": 1
+  },
+  "runtime": {
+    "machine": "arm64",
+    "platform": "Darwin",
+    "postgresql": "17.10",
+    "psycopg": "3.3.6",
+    "python": "3.12.13",
+    "server_version_num": "170010"
+  },
+  "semantic_parity": {
+    "admitted_before_measurement": true,
+    "count_per_specimen": 10,
+    "rows": 1000
+  },
+  "semantics": {
+    "predicate_perturbations_detected": [
+      "tenant_relation",
+      "aggregate_relation",
+      "pending_state"
+    ],
+    "tenants_checked": 4
+  },
+  "settings": {
+    "default_statistics_target": {
+      "unit": null,
+      "value": "100"
+    },
+    "effective_cache_size": {
+      "unit": "8kB",
+      "value": "524288"
+    },
+    "fsync": {
+      "unit": null,
+      "value": "on"
+    },
+    "full_page_writes": {
+      "unit": null,
+      "value": "on"
+    },
+    "jit": {
+      "unit": null,
+      "value": "off"
+    },
+    "max_parallel_workers_per_gather": {
+      "unit": null,
+      "value": "2"
+    },
+    "random_page_cost": {
+      "unit": null,
+      "value": "4"
+    },
+    "seq_page_cost": {
+      "unit": null,
+      "value": "1"
+    },
+    "shared_buffers": {
+      "unit": "8kB",
+      "value": "4096"
+    },
+    "synchronous_commit": {
+      "unit": null,
+      "value": "on"
+    },
+    "work_mem": {
+      "unit": "kB",
+      "value": "4096"
+    }
+  },
+  "source_sha256": {
+    ".python-version": "7b55f8e67b5623c4bef3fa691288da9437d79d3aba156de48d481db32ac7d16d",
+    "expected/semantic.json": "8565cb0a1b170aa3e0da9264d40a974c688851ade19b4b2b78c3662ed7b89de1",
+    "fixtures/semantic.json": "8a2317e86e71a08c45b64663b813089ca6ddb3519a8e27e1cde760236a8390fd",
+    "fixtures/workload.json": "21d7b5d1a21b72234c674790e86cf11ccfdeffedcd57fc9069e5797f435fa2e1",
+    "pyproject.toml": "562e3be7c078eb8318c3766618624e0e6a37698905ef68fd99f1043b231e9afa",
+    "sql/index.sql": "6a89f603374305f914b17ba15d8e1169d34dd2e1ad2af48e35b12051d7445b0a",
+    "sql/query.sql": "bdfdfe5cf4b6922684ccf719e08641d7b995001b2ed3a0391da939f66a9af79d",
+    "sql/schema.sql": "08b2fa597edfc4b987328210c98a7a7b7e114dc82092e8666d48b102e51fdece",
+    "src/owned_cluster.py": "b2d0b17b9a043ad39ccd9ac2b4564fb86b364d49430dd0dc85be1ecedd398bb1",
+    "src/pending_outbox.py": "eeb9e3c1f60e3acbc257874530f119b36dafaf6e9b5307b3ef900cd3d97a8d02",
+    "tests/test_pending_outbox.py": "98710072fc6df5287736dcb299f0db2ba552cc27bcc9bc29e2980e2833116b46",
+    "uv.lock": "13cad4c059bdaad73baf9d1ff1f83f4bcfb878d85a3183b48850c6b51770ca9d"
+  },
+  "table_rows": {
+    "specimen": 1003,
+    "tenant": 3,
+    "transactional_outbox": 11007
+  },
+  "workload": {
+    "delivered_messages": 1000,
+    "distribution": "Uniform round-robin, with ready, leased and recovery_required states cycling by message number; one delivered message per specimen.",
+    "pending_messages": 10000,
+    "pending_per_specimen": 10,
+    "specimens": 1000,
+    "tenant": "SYN-PLAN"
+  }
+}

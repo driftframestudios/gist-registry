@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 580" role="img" aria-labelledby="title desc">
+<title id="title">Compare rates on a shared scale and retain changed support</title>
+<desc id="desc">Schematic regions in 2023 and 2024: North changes from 10 to 20 percent; South from 2 to 0 percent. West has no exposure in 2023 and 5 percent on changed support in 2024; its change is held. Exact counts and denominators accompany the figure.</desc>
+<defs><pattern id="unavailable" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#f2f2f2"/><path d="M0,8 L8,0" stroke="#bbbbbb"/></pattern></defs>
+<rect width="850" height="580" fill="white"/>
+<g font-family="sans-serif" fill="#172b4d">
+<text x="35" y="35" font-size="23">Compare years on one rate scale</text>
+<text x="35" y="65" font-size="16">Schematic synthetic regions • binary events per 100 exposures</text>
+<text x="55" y="105" font-size="21">2023</text>
+<rect data-region="North" data-year="2023" data-rate="10" x="55" y="125" width="160" height="100" fill="#90bdd2" stroke="#172b4d"/>
+<text x="67" y="155" font-size="18">North</text>
+<text x="67" y="183" font-size="20">10%</text>
+<rect data-region="South" data-year="2023" data-rate="2" x="55" y="235" width="160" height="100" fill="#eef5fa" stroke="#172b4d"/>
+<text x="67" y="265" font-size="18">South</text>
+<text x="67" y="293" font-size="20">2%</text>
+<rect data-region="West" data-year="2023" data-rate="unavailable" x="225" y="125" width="150" height="210" fill="url(#unavailable)" stroke="#172b4d"/>
+<text x="237" y="155" font-size="18">West</text>
+<text x="237" y="183" font-size="20">Unavailable</text>
+<text x="465" y="105" font-size="21">2024</text>
+<rect data-region="North" data-year="2024" data-rate="20" x="465" y="125" width="160" height="100" fill="#619fba" stroke="#172b4d"/>
+<text x="477" y="155" font-size="18">North</text>
+<text x="477" y="183" font-size="20">20%</text>
+<rect data-region="South" data-year="2024" data-rate="0" x="465" y="235" width="160" height="100" fill="#eef5fa" stroke="#172b4d"/>
+<text x="477" y="265" font-size="18">South</text>
+<text x="477" y="293" font-size="20">0%</text>
+<rect data-region="West" data-year="2024" data-rate="5" x="635" y="125" width="150" height="210" fill="#c7deeb" stroke="#172b4d"/>
+<text x="647" y="155" font-size="18">West</text>
+<text x="647" y="183" font-size="20">5%</text>
+<text x="647" y="213" font-size="13">Changed support</text>
+<rect x="55" y="370" width="24" height="22" fill="#eef5fa" stroke="#172b4d"/>
+<text x="87" y="387" font-size="15">0 to &lt;5%</text>
+<rect x="230" y="370" width="24" height="22" fill="#c7deeb" stroke="#172b4d"/>
+<text x="262" y="387" font-size="15">5 to &lt;10%</text>
+<rect x="405" y="370" width="24" height="22" fill="#90bdd2" stroke="#172b4d"/>
+<text x="437" y="387" font-size="15">10 to &lt;15%</text>
+<rect x="580" y="370" width="24" height="22" fill="#619fba" stroke="#172b4d"/>
+<text x="612" y="387" font-size="15">15 to 100%</text>
+<text x="35" y="425" font-size="16">North: +10 percentage points. South: −2 percentage points.</text>
+<text x="35" y="455" font-size="15">West comparison held: changed support; 2023 has zero exposure.</text>
+<text x="35" y="485" font-size="15">Hatching means unavailable. A measured zero retains its rate class.</text>
+<text x="35" y="520" font-size="14">Region blocks are schematic; shape and distance carry no geographic measurement.</text>
+<text x="35" y="550" font-size="14">Source: authored synthetic fixture. Counts, exposure, and vintage: values.csv.</text>
+</g></svg>

@@ -132,14 +132,16 @@ establish that the declared evidence can support its claimed standing.
 
 Load [Python exception boundaries](references/python-exception-boundaries.md)
 for Python, Pydantic, cancellation, or validation-diagnostic projection.
-[Architecture convergence](../architecture-convergence-vantages/SKILL.md)
+[Architecture convergence](https://kindlight.io/skills/architecture-convergence-vantages/)
 compares competing mechanisms; [transaction boundary evidence
-mapping](../transaction-boundary-evidence-mapping/SKILL.md) owns multi-effect
+mapping](https://kindlight.io/skills/transaction-boundary-evidence-mapping/) owns multi-effect
 publication and replay. This skill owns failure classification and the
 caller's recovery contract, rather than those peers' complete jobs.
 
-The [initial review exercise](exercises/offline-review-boundary.md) records
-the first application and open observations. Source and focused tests retain
+The [initial review exercise](exercises/offline-review-boundary.md) preserves
+its original source-reading boundary. The [runnable receiving exercise](exercises/README.md)
+applies narrow translation, fixed public feedback, stale identity, and retained
+state to a complete synthetic operation. Source and focused tests retain
 technical authority; authored scenarios establish intended behavior.
 
 ## Completion

@@ -18,7 +18,7 @@ pair owns runtime evidence.
 | Interpretation import | Pair execution standing can contradict aggregate attempted counts | Add a relationship-level bound, using an independent literal counterexample |
 | Interpretation validation | A framework owns model admission | Use framework-native structured codes and an explicit projection API boundary |
 
-## Evidence standing
+## Evidence standing at initial draft creation
 
 These are source-derived decisions from the initial review. Focused execution
 and final implementation review remain pending for the refinement at draft
@@ -33,7 +33,10 @@ defect. Observe rejection timing, exact public type/code, fixed diagnostics,
 and prior-state retention. For interpretation, reject matched execution with
 zero attempted runs and preserve legitimate partially observed pairs. Keep
 normalized results in the receiving PR and link them when they change this
-skill's evidence standing.
+skill's evidence standing. The later [self-contained receiving exercise](README.md)
+adds executable feedback, catch-scope, interruption, and retained-state evidence;
+the receiving pull request records its independent review. The earlier review
+above remains a source-reading observation rather than retroactive execution.
 
 ## Transfer boundary
 

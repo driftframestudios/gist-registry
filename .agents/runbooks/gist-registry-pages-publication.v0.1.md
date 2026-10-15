@@ -20,7 +20,7 @@ addressable projected file.
 Completion is a compact source → projection → delivery relationship:
 
 ```text
-accepted main revision
+accepted main revision + immutable annotated site tag
   → deterministic generated tree and manifest
   → clean named-artifact observation
   → exact docs commit
@@ -103,6 +103,27 @@ remains open.
 build, changed published exact-version byte, or failed test returns to the
 source pull request or owning Issue. Keep the current `docs` tip unchanged.
 
+### Phase 1b — Bind the immutable site release
+
+Choose the next unused `site/vMAJOR.MINOR.PATCH` coordinate. Refresh
+`origin/main`, require the source HEAD to match it, then create and push an
+annotated tag. The current user grant owns this publication action.
+
+```sh
+git fetch origin main --tags
+git tag -a site/v<version> <accepted-main-sha> -m "Site release v<version>"
+git push origin refs/tags/site/v<version>
+npm run check:site-release -- --tag site/v<version>
+```
+
+The gate validates a clean source, an annotated tag at current accepted
+`origin/main`, accepted manifest standing, every projected byte, and equality
+with a fresh source build. A missing or mismatched binding holds promotion.
+The generated manifest stays deterministic; the later release receipt binds
+its digest and delivery coordinate outside the generated tree. If the tag
+already exists, verify its target and reuse it for that exact source. A changed
+source receives a new version. Preserve every earlier tag target.
+
 ### Phase 2 — Observe the publication candidate's secret boundary
 
 **Action mode:** `observation_only` through the repository-owned scanner.
@@ -177,8 +198,17 @@ Pages, domain, DNS, and certificate setting changes.
 Refresh `origin/docs` immediately before push and confirm that the candidate's
 parent is still the current remote tip. Push the single projection commit:
 
+Run the identity gate in the accepted source worktree, then move to the
+separate projection worktree for its parent check and push:
+
 ```sh
-git fetch origin docs
+cd <accepted-source-worktree>
+git fetch origin main docs --tags
+npm run check:site-release -- --tag site/v<version>
+git ls-remote origin refs/tags/site/v<version> 'refs/tags/site/v<version>^{}'
+# Require the peeled remote tag to equal the accepted source SHA.
+cd <clean-docs-worktree>
+# Require HEAD^ to equal origin/docs before the fast-forward push.
 git push origin docs
 ```
 
@@ -198,7 +228,7 @@ grant.
 ### Phase 5 — Observe every addressable public file
 
 **Action mode:** `observation_only` after the Pages build names the promoted
-commit. Repair, republish, and configuration changes receive a fresh grant.
+commit. Repair and republish follow the active task grant; configuration changes retain their named authority.
 
 From the accepted `main` worktree whose `.artifacts/pages/` produced the
 promoted tree, run:
@@ -227,7 +257,7 @@ class to the builder, Pages, or domain owner. Keep raw response material local.
 ### Phase 6 — Return one sufficient transition receipt
 
 **Action mode:** `repair_authorized` when the task grants updates to the active
-Issue or pull-request surface. Issue closure remains a human decision.
+Issue or pull-request surface. Issue settlement follows the current task grant; retained human decisions stay explicit.
 
 Update the current receiving Issue with:
 
@@ -285,3 +315,17 @@ Issue handback. A builder, projection-format, secret-boundary, Pages, domain,
 or observation-contract change reopens the matching phase. A new accepted
 artifact can begin again at Phase 1 while prior exact-version paths and durable
 observations retain their own coordinates.
+
+
+## Site release receipt and recovery
+
+After Phase 5 passes, create a GitHub release at the existing immutable site
+tag. Its body is the single receiving record for the source SHA, projection
+SHA, generated manifest digest, normalized checks, hosted parity and previous
+`docs` recovery coordinate. Link that record from the owning Issue. The source
+release may remain a draft until hosted parity succeeds.
+
+For recovery, verify the earlier recorded complete projection and publish it
+as a new `docs` commit after the same artifact and hosted checks. Preserve site
+tag targets. An interrupted release resumes from its recorded source/tag,
+candidate digest and remote `docs` state, then repeats the next affected gate.

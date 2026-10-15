@@ -63,6 +63,13 @@
       "artifactKind": "code_sample",
       "manifestPath": "snippets/typed-absence-and-wire-shape/0.1.0/snippet.json",
       "canonicalPath": "snippets/typed-absence-and-wire-shape/0.1.0"
+    },
+    {
+      "semanticId": "postgresql-pending-outbox-query",
+      "version": "0.1.0",
+      "artifactKind": "domain_exemplar",
+      "canonicalPath": "snippets/postgresql-pending-outbox-query/0.1.0",
+      "manifestPath": "snippets/postgresql-pending-outbox-query/0.1.0/snippet.json"
     }
   ]
 }

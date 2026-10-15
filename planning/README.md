@@ -1,34 +1,35 @@
 # Current planning terrain
 
-Current implementation receivers are:
+The authorized scientific-practice and tagged-site release has these owners:
 
-- #43 — a portable API contract and resilient client exemplar for
-  synthetic-system collaboration;
-- #44 — source-neutral multi-label classification and synthetic policy
-  assignment; and
-- #45 — the layered README graph, complete family catalog, normalized state
-  axes, and public evaluator entrance.
+- #51 — laddered onboarding, accountable provenance, and current work routes;
+- #52 — question-led scientific visualization skills and executable examples;
+- #53 — interruption-safe ownership and bounded admission skills;
+- #54 — runnable PostgreSQL pending-outbox query and plan evidence;
+- #55 — compatible URI dependency repair;
+- #48 — controlled comparison and parity-bound measurement skills; and
+- #49 — source-tagged Pages promotion and its delivery receipt.
 
-Current settlement and observation receivers are:
+PR #50 supplies the typed-error draft lineage. The current refinement carries
+that draft into an exercised, complete public package. Its successor source
+pull request records independent review and supersession.
 
-- #1 — canonical registry core and first-projection settlement;
-- #3 — stable repository-operations settlement after accepted immutable-tag
-  and `main` to `docs` publication routes;
-- #4 — exact-version schema projection and retrieval settlement;
-- #6 — the exercised delivery-observation model and its conditional receiver
-  when a response change affects interpretation or recovery; and
-- #31 — accepted typed absence and JSON-ready wire shape awaiting human
-  closure after its named downstream-use receiver completed.
+Distinct implementation receivers remain #43 (portable API/client), #44
+(classification/policy assignment), and #47 (exact-arithmetic selection and
+exemplar). The current SQL coordinate and scientific skills support those
+future collaborations while each Issue retains its own acceptance contract.
 
-Current accepted repository and projection coordinates are
-`main@3424d45983a2365eeba582914cbe634ebe7e1607` and
-`docs@5594bda0dee55afbd9974f72568687e54e7de97b`. The projection manifest binds
-the preceding accepted source `c2cf4a359006ef094a9947fa6dcec0eaa26405ea`
-and records 148 generated files, including 147 addressable routes. The newer
-`main` coordinate adds the accepted cold-session orientation route and remains
-awaiting its next separately authorized Pages projection. A later source
-acceptance or projection receipt supersedes this headline while the records
-below retain their historical standing.
+The closure audit finds #1, #3, #4, #6 and #31 ready for the human settlement
+decision at their recorded accepted coordinates. Issue #45 completed the
+README graph and public evaluator entrance; #51 refines its next-use ladder.
+
+At entry to this cycle, accepted source was
+`main@bec5e14c1a10b10ce24c979f780cf1de78694f04`; the previous public projection
+was `docs@5594bda0dee55afbd9974f72568687e54e7de97b`, bound to
+`c2cf4a359006ef094a9947fa6dcec0eaa26405ea`. The next immutable `site/v<version>`
+release and Issue #49 receipt become the current source/projection/delivery
+coordinate. Read live GitHub state and refs at re-entry; these entry coordinates
+preserve history rather than claiming perpetual freshness.
 
 Accepted path records supply this terrain:
 
@@ -144,7 +145,7 @@ selection contract, and a current planning map. Repository source and live
 GitHub state retain behavior authority; authorized connectors may add
 decision-changing Registry and Field Guide context by semantic identity.
 
-Issue #45 receives the next mutable orientation layer. Its scope keeps exact
-version bytes intact while making all seven artifact families, their distinct
+Issue #45 accepted the preceding mutable orientation layer. Its scope kept exact
+version bytes intact while making the then-seven artifact families, their distinct
 state axes, the quickest repository proof, and the JSON registry alternate
 available from the repository and public evaluator entrances.

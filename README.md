@@ -16,7 +16,8 @@ code samples, Practitioner Probes, self-contained prototypes, authentic domain
 exemplars, experiments, runbooks, loop-bearing members, and harness material.
 A small, legible first form can gain architectural vantages, focused tests,
 failure-and-recovery evidence, and exact teaching companions through
-constructive human–AI collaboration. Each accepted version remains a stable
+human-directed work supported by generative AI systems. [AUTHORS](AUTHORS)
+names the authorship, assistance, and decision roles. Each accepted version remains a stable
 coordinate; successors carry what later collaboration learns.
 
 The repository is the authored-source and collaboration carrier.
@@ -29,7 +30,7 @@ Human review retains those decisions.
 
 `main` owns accepted authored source. The builder-owned `docs` branch carries
 the most recent reviewed Pages projection at [kindlight.io](https://kindlight.io/).
-Seven artifact families and nine exact versions are registered. Every exact
+Eight artifact families and ten exact versions are registered. Every exact
 manifest currently records `candidate` technical maturity, while source
 acceptance, continuation, publication, and hosted observation retain their own
 state axes.
@@ -42,7 +43,7 @@ work-state authority.
 
 | Reader job | Start here | What it supplies |
 | --- | --- | --- |
-| Evaluate or reuse an implementation | [Artifact family catalog](snippets/README.md) | Seven families grouped by mechanism, current coordinate, continuation, and evidence-bearing next route |
+| Evaluate or reuse an implementation | [Artifact family catalog](snippets/README.md) | Eight families grouped by mechanism, current coordinate, continuation, and evidence-bearing next route |
 | Retrieve exact versions programmatically | [`registry.json`](registry.json) | Semantic IDs, versions, artifact kinds, manifest paths, and canonical paths |
 | Run the smallest repository proof | [Quickest proof](#quickest-proof) | Registry, path, manifest, representation, and digest agreement |
 | Contribute one artifact or successor | [`AGENTS.md`](AGENTS.md), then the [source collaboration cycle](.agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md) | Current-truth reconstruction, source ownership, evidence, and review-ready handback |
@@ -50,22 +51,6 @@ work-state authority.
 | Inspect public collaboration skills | [Registry skill catalog](.agents/skills/README.md) | Evidence standing, public-package standing, and each full instruction source |
 | Inspect shared data contracts | [Schema catalog](schemas/README.md) | Authored schema identities, consumers, versioning, and delivery-observation route |
 | Publish accepted source | [Pages publication runbook](.agents/runbooks/gist-registry-pages-publication.v0.1.md) | Deterministic build, `docs` reception, live parity, and handback |
-
-## Artifact families
-
-| Family | Kind | Current coordinate | Useful when |
-| --- | --- | --- | --- |
-| [Document evidence extraction](snippets/document-evidence-extraction/README.md) | `code_sample` | `0.1.1` | Deterministic evidence analysis and recovery-aware filesystem promotion matter |
-| [Document evidence core patterns](snippets/document-evidence-core-patterns/README.md) | `code_excerpt` | `0.1.1` | A compact, source-mapped reading of same-byte capture or recovery architecture is useful |
-| [Specimen custody and transactional outbox](snippets/specimen-custody-outbox/README.md) | `domain_exemplar` | `0.1.0` | Custody state, exact replay, event history, and an aligned outbox must move together |
-| [Instrument ingress integrity](snippets/instrument-ingress-integrity/README.md) | `domain_exemplar` | `0.1.0` | Raw bytes, acquisition identity, scientific mapping, retry, and quarantine need distinct owners |
-| [Migration reconciliation and approval-bound cutover](snippets/migration-reconciliation-cutover/README.md) | `domain_exemplar` | `0.1.0` | Reconciliation, restore evidence, approval, publication, replay, and response recovery share one cutover boundary |
-| [Typed absence and wire shape](snippets/typed-absence-and-wire-shape/README.md) | `code_sample` | `0.1.0` | Omission, `null`, empty values, zero, and false must remain distinct JSON instructions |
-| [LIMS/ELN Enterprise Implementation release exemplar](snippets/lims-eln-enterprise-implementation/README.md) | `repository_exemplar` | `0.3.2` | An exact accepted release file, its provenance, and upstream evidence need one portable coordinate |
-
-The [complete family catalog](snippets/README.md) explains how to read registry
-acceptance, exact-manifest maturity, continuation, publication, and delivery
-observation without collapsing them into one status.
 
 ## Quickest proof
 
@@ -81,6 +66,55 @@ The command establishes that every registry entry resolves to one exact
 manifest and that each declared representation, path, digest, and local schema
 relationship agrees. Artifact runtime behavior, Pages delivery, optional Gist
 publication, and downstream suitability retain their focused observations.
+
+
+## Start a useful collaboration
+
+Choose one concrete result, run the smallest example, then ask a focused
+question about its behavior. The family README supplies the deeper contract
+and a return route.
+
+1. **Run a transaction example.** Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run the synthetic custody command:
+
+   ```sh
+   uv --cache-dir .artifacts/uv-cache run \
+     --project snippets/specimen-custody-outbox/0.1.0 --locked \
+     python snippets/specimen-custody-outbox/0.1.0/src/specimen_custody.py \
+     snippets/specimen-custody-outbox/0.1.0/fixtures/transfer-command.json
+   ```
+
+   Read the returned custody, event, and outbox records. Ask a collaborator:
+   “Trace how one accepted transfer keeps these records aligned. Show what an
+   exact retry returns and which injected failure preserves the prior state.”
+   Continue through the [custody family](snippets/specimen-custody-outbox/README.md).
+
+2. **Review a real boundary.** Open [transaction boundary evidence mapping](.agents/skills/transaction-boundary-evidence-mapping/SKILL.md), name one operation in the receiving repository, and supply its source and tests. Ask: “Map the operation's identity, accepted state, visible effects, replay, and recovery. Select one missing observation that would change the design.” The skill supplies a method; the receiving code and its checks establish the result.
+
+3. **Make a scientific comparison readable.** Start with [visualization question routing](.agents/skills/visualization-question-routing/SKILL.md). Declare the record unit, missing values, and the question—for example, “Compare each participant's observed change while keeping the population distribution visible.” Follow the selected domain skill and run its synthetic exercise before adapting the view to the receiving data.
+
+4. **Strengthen a reusable artifact.** Read the current exact-version README, run its focused test command, and bring a counterexample with an independently expected result. [Exemplar formation](.agents/skills/probe-bearing-exemplar-formation/SKILL.md) guides a first artifact; [versioned successors](.agents/skills/versioned-exemplar-successor/SKILL.md) carry a material strengthening forward while earlier accepted bytes remain available.
+
+A useful request names the source, desired behavior, affected reader, evidence,
+and stopping point. Start with a bounded review or example; add a framework
+when the receiving work demonstrates a recurring need.
+
+## Artifact families
+
+| Family | Kind | Current coordinate | Useful when |
+| --- | --- | --- | --- |
+| [Document evidence extraction](snippets/document-evidence-extraction/README.md) | `code_sample` | `0.1.1` | Deterministic evidence analysis and recovery-aware filesystem promotion matter |
+| [Document evidence core patterns](snippets/document-evidence-core-patterns/README.md) | `code_excerpt` | `0.1.1` | A compact, source-mapped reading of same-byte capture or recovery architecture is useful |
+| [Specimen custody and transactional outbox](snippets/specimen-custody-outbox/README.md) | `domain_exemplar` | `0.1.0` | Custody state, exact replay, event history, and an aligned outbox must move together |
+| [Instrument ingress integrity](snippets/instrument-ingress-integrity/README.md) | `domain_exemplar` | `0.1.0` | Raw bytes, acquisition identity, scientific mapping, retry, and quarantine need distinct owners |
+| [Migration reconciliation and approval-bound cutover](snippets/migration-reconciliation-cutover/README.md) | `domain_exemplar` | `0.1.0` | Reconciliation, restore evidence, approval, publication, replay, and response recovery share one cutover boundary |
+| [Typed absence and wire shape](snippets/typed-absence-and-wire-shape/README.md) | `code_sample` | `0.1.0` | Omission, `null`, empty values, zero, and false must remain distinct JSON instructions |
+| [LIMS/ELN Enterprise Implementation release exemplar](snippets/lims-eln-enterprise-implementation/README.md) | `repository_exemplar` | `0.3.2` | An exact accepted release file, its provenance, and upstream evidence need one portable coordinate |
+| [PostgreSQL pending-outbox query](snippets/postgresql-pending-outbox-query/README.md) | `domain_exemplar` | `0.1.0` | Exact tenant counts, relational constraints, partial-index meaning, and observed query plans need a runnable SQL example |
+
+The [complete family catalog](snippets/README.md) explains how to read registry
+acceptance, exact-manifest maturity, continuation, publication, and delivery
+observation without collapsing them into one status.
+
 
 ## Why this repository exists
 
@@ -332,12 +366,13 @@ question.
 The path-filtered Registry checks workflow runs this same route in one
 cancellable job with an eight-minute timeout and no schedule. The independent
 secret-material receiver runs for every pull request with its own four-minute
-ceiling. Workflow YAML cannot enforce a monthly minute ceiling: the
-repository's [Actions usage view](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time)
-is the source for keeping this repository at or below 300 minutes per month,
-and account billing controls remain with the repository owner. Path filtering
-where it fits, concurrency cancellation, and per-job timeouts keep each
-requested observation small.
+ceiling. The repository owner monitors the 300-minute monthly operating target
+through the [Actions usage view](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time)
+and manages metered spending through [account budgets and alerts](https://docs.github.com/en/billing/concepts/budgets-and-alerts).
+Those account controls and the observed usage supply the monthly budget route;
+workflow path filters, concurrency cancellation, and per-job timeouts bound
+each requested observation. Usage minutes and monetary budgets retain their
+distinct units and account scopes.
 
 ## Source and evidence boundary
 

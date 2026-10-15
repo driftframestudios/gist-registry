@@ -68,6 +68,10 @@ object access retain separate boundaries.
 
 ## Sources and transfer
 
+Official mechanics rechecked 2026-10-15. The package's executable exercise uses
+Python 3.11 or later; framework-specific branches remain documentation-grounded
+until a receiving framework exercises them.
+
 Official sources establish language/framework mechanics. Receiving source and
 focused tests establish the local taxonomy, effect boundary, and recovery.
 The design choices above are scoped inferences from those mechanics.

@@ -1,0 +1,54 @@
+{
+  "provenance": "authored synthetic exercise",
+  "contracts": [
+    {
+      "question": "How did A's x change within each observed year?",
+      "reader_task": "compare recurring within-unit change",
+      "data_meaning": "one unit measurement at an observed year/month",
+      "statistical_operation": "select unit A; partition by year; retain raw values",
+      "visual_channel": "month position, year group, observed dots",
+      "form": "year-grouped dots with explicit endpoint connections",
+      "time_role": "group and within-year coordinate",
+      "records": [
+        "r1",
+        "r2",
+        "r5",
+        "r6"
+      ],
+      "limit": "January and March observations establish partial annual support"
+    },
+    {
+      "question": "How does the observed x-y relationship differ by year?",
+      "reader_task": "compare associations within annual subsets",
+      "data_meaning": "paired measures on repeated units",
+      "statistical_operation": "condition on year; retain identities; no inferential fit",
+      "visual_channel": "x and y position, year panel, unit labels",
+      "form": "two common-scale scatter panels",
+      "time_role": "condition",
+      "records": [
+        "r1",
+        "r2",
+        "r3",
+        "r4",
+        "r5",
+        "r6",
+        "r7",
+        "r8"
+      ],
+      "limit": "Repeated units remain dependent; panel appearance supplies no causal adjustment"
+    },
+    {
+      "question": "What exact values were recorded for A in January 2024?",
+      "reader_task": "exact lookup",
+      "data_meaning": "one observed paired measurement",
+      "statistical_operation": "select unit A, year 2024, month 1",
+      "visual_channel": "labeled table cells",
+      "form": "one-row table",
+      "time_role": "condition",
+      "records": [
+        "r5"
+      ],
+      "limit": "Other times remain outside this lookup"
+    }
+  ]
+}
