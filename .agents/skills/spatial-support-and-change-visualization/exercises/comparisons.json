@@ -1,0 +1,14 @@
+{
+  "North": {
+    "state": "comparable",
+    "percentage_points": "10"
+  },
+  "South": {
+    "state": "comparable",
+    "percentage_points": "-2"
+  },
+  "West": {
+    "state": "held_changed_support",
+    "percentage_points": null
+  }
+}

@@ -20,6 +20,7 @@ behavior they exercise.
 | [Migration reconciliation and approval-bound cutover](migration-reconciliation-cutover/README.md) | `domain_exemplar` | `0.1.0` | `seeded` | Migration comparison, approval, activation, replay, and post-publication recovery need one inspectable boundary |
 | [Typed absence and wire shape](typed-absence-and-wire-shape/README.md) | `code_sample` | `0.1.0` | `seeded` | A JSON update contract must preserve omission, `null`, empty values, zero, and false as distinct instructions |
 | [LIMS/ELN Enterprise Implementation release exemplar](lims-eln-enterprise-implementation/README.md) | `repository_exemplar` | `0.3.2` | `seeded` | An exact file from an accepted repository release needs portable provenance and upstream-evidence bindings |
+| [PostgreSQL pending-outbox query](postgresql-pending-outbox-query/README.md) | `domain_exemplar` | `0.1.0` | `seeded` | A bounded SQL query needs independent row expectations, ordinary-role checks, and equal results before index-plan comparison |
 
 ## Read the state axes
 

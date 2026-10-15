@@ -24,10 +24,21 @@ const repositoryBlobBase =
   "https://github.com/driftframestudios/gist-registry/blob/" + fixedSourceRevision + "/";
 const expectedPublicReady = [
   "architecture-convergence-vantages",
+  "bounded-representation-admission",
   "contextual-jargon-scan",
+  "controlled-context-comparison",
+  "interruption-safe-resource-ownership",
+  "longitudinal-observation-visualization",
+  "omics-coordinate-and-measurement-views",
+  "parity-bound-workload-measurement",
   "probe-bearing-exemplar-formation",
+  "scientific-figure-composition",
+  "scientific-scale-and-transform-fidelity",
+  "spatial-support-and-change-visualization",
   "transaction-boundary-evidence-mapping",
+  "typed-error-recovery-contracts",
   "versioned-exemplar-successor",
+  "visualization-question-routing"
 ];
 
 async function json(path) {

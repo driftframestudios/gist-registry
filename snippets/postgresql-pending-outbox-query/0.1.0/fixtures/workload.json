@@ -1,0 +1,8 @@
+{
+  "tenant": "SYN-PLAN",
+  "specimens": 1000,
+  "pending_messages": 10000,
+  "delivered_messages": 1000,
+  "pending_per_specimen": 10,
+  "distribution": "Uniform round-robin, with ready, leased and recovery_required states cycling by message number; one delivered message per specimen."
+}

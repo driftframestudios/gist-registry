@@ -7,6 +7,7 @@
 | `res` | Shared, high-variance research whose experiments benefit from durable branch history | Named freshness checkpoints from `main`; selected results return through a fresh Issue branch |
 | `codex/<issue>-<slug>` and other short-lived branches | One bounded implementation or repair | Pull request to `main`, then deletion after merge |
 | `snippet/<semantic-id>/v<version>` | Immutable accepted artifact coordinate | Tag at the accepted `main` revision |
+| `site/v<version>` | Immutable accepted source for one Pages release | Annotated tag at accepted `main`, before `docs` promotion; release receipt binds the generated manifest and delivery |
 | `schema/v<version>` | Immutable accepted schema coordinate | Tag at the accepted `main` revision |
 
 `docs` is a projection rather than a second authoring line.
@@ -18,18 +19,29 @@ an explicit receiving action after review.
 
 ## Publication movement
 
-The first publication follows one source coordinate through distinct
-observations:
+Each site release follows one source coordinate through distinct observations:
 
-1. accept the source change on `main`;
-2. run `npm run check:pages` to compare two isolated builds;
-3. run `npm run build:pages` to assemble `.artifacts/pages/`;
-4. observe the named generated artifact at the public boundary;
-5. commit that complete allowlisted tree to `docs` as one projection of the
-   accepted `main` revision;
-6. activate GitHub Pages from the `docs` branch root; and
-7. record signed-out status, returned bytes, digest, media type, and
-   cross-origin standing.
+1. Accept reviewed source on `main` and refresh `origin/main`.
+2. Run `npm test` and `npm run build:pages`; the checks include two isolated builds.
+3. Create an annotated immutable `site/vMAJOR.MINOR.PATCH` tag at that source and push the tag. Artifact and schema tags keep their own coordinate systems.
+4. Run `npm run check:site-release -- --tag site/vMAJOR.MINOR.PATCH`. The gate requires a clean source equal to fetched `origin/main`, the annotated tag, accepted manifest identity, complete inventory equality, and equality with a fresh source build.
+5. Observe the generated artifact's secret boundary; assemble the exact tree in a clean `docs` worktree and record the previous `docs` SHA.
+6. Refresh the remote refs, rerun the release gate, confirm the published tag target and current `docs` parent, then push the single projection commit.
+7. Require a completed Pages build for that exact `docs` SHA and signed-out byte parity for every addressable route.
+8. Publish the GitHub release at the existing site tag. Its one receiving receipt binds source tag/SHA, `docs` SHA, manifest digest, checks, hosted observation, scope and recovery coordinate.
+
+Candidate builds remain available before source acceptance and tagging; they
+become promotion-ready only after the gate passes. The release receipt lives
+outside the generated tree, so the manifest has no self-referential digest.
+The gate observes local refs after the operator fetches; the remote tag check
+and fast-forward push establish the receiving remote state.
+
+Tags keep their original target. A repaired source receives the next site
+version. Recovery can restore a previously recorded complete projection in a
+new `docs` commit after its artifact check; the previous release's source tag
+and receipt retain their identity. The initial tagged release records the
+pre-tag `docs` tip as its recovery coordinate. The publication runbook owns
+the exact steps and authorization checks.
 
 The site is served by GitHub Pages directly. cPanel and Cloudflare WAF delivery
 belong to Human–AI Systems Exemplars, not this repository. Pages configuration,

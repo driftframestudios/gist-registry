@@ -1,0 +1,6 @@
+{
+  "SYN-A": [["SYN-1", 3], ["SYN-2", 0]],
+  "SYN-B": [["SYN-1", 2]],
+  "SYN-ABSENT": [],
+  "SYN-A' OR true --": []
+}
