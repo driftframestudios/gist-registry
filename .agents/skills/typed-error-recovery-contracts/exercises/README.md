@@ -1,6 +1,6 @@
 # A complete review boundary
 
-This synthetic receiving operation reads at most its supported 128-byte source,
+This synthetic receiving operation admits sources of at most 128 bytes,
 binds the received bytes to an earlier review digest, admits one small JSON
 shape, invokes an owned calculation, and then replaces process-local accepted
 bytes. The injected reader's own I/O budget is outside this small example; the

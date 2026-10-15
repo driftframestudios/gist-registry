@@ -21,10 +21,11 @@ pair owns runtime evidence.
 ## Evidence standing at initial draft creation
 
 These are source-derived decisions from the initial review. Focused execution
-and final implementation review remain pending for the refinement at draft
-creation. Earlier passing tests establish their earlier revision, rather than
-the proposed changes. This skill remains instruction_only and public_possible
-while the receiving implementation and counterexamples settle.
+and final implementation review were pending for the refinement at draft
+creation. Earlier passing tests established their earlier revision, rather than
+the proposed changes. This skill retained instruction_only and public_possible
+standing at that point while the receiving implementation and counterexamples
+settled.
 
 ## Next observation
 

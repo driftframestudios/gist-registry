@@ -31,3 +31,10 @@ changes no host tuning or interpreter configuration. One local run supports a
 bounded descriptive observation, not an adoption claim for all workloads or an
 energy/carbon result. A natural SQL receiver adds its actual query plans,
 cardinality, I/O, concurrency, and runtime identity through the receiving PR.
+
+The example's ordinary-failure policy retains every completed and failed attempt
+up to its first failure, then stops and withholds a summary. The CLI persists that
+incomplete receipt before exiting nonzero. A deliberate later operation failure
+distinguishes this route from silently losing earlier samples. Caller control
+propagates with its original identity; a durable checkpoint across interruption
+or output-write failure belongs to a separate resource/publication owner.

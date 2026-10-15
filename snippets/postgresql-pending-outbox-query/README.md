@@ -9,10 +9,10 @@ PostgreSQL 17 runner, deliberate predicate failures, and normalized query plans.
 
 | Axis | Standing | Meaning |
 | --- | --- | --- |
-| Registry acceptance | Review candidate | The first exact package is registered for independent source review and release acceptance |
+| Registry acceptance | Registered source | The accepted exact package is discoverable through the registry; its source pull request records independent review |
 | Manifest maturity | `candidate` | The manifest records the bounded PostgreSQL 17.10 evidence |
 | Continuation | `seeded` | The first runnable form supports use and receiver-specific workload exploration |
-| Publication | Release candidate | Tagged Pages publication follows the repository's reviewed release route |
+| Publication | Tagged Pages route | The immutable site release receipt records the accepted source, projected bytes and hosted observation |
 
 **Current coordinate:**
 [`postgresql-pending-outbox-query@0.1.0`](0.1.0/README.md).
