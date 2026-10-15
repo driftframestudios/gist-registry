@@ -3,7 +3,7 @@
   "$schema": "https://kindlight.io/schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json",
   "repository": "gist-registry",
   "canonicalUrl": "https://kindlight.io/skills/index.json",
-  "sourceRevision": "024797b881b030ca83ca3fe5b57cba19e58bb46d",
+  "sourceRevision": "b2a5ce60d3df79d3563bbc5834f818c416ad7b36",
   "publicationScope": "Every listed entry has public-ready standing and an exact source package in this projection.",
   "skills": [
     {
@@ -16,15 +16,15 @@
       "source": {
         "repositoryPath": ".agents/skills/architecture-convergence-vantages/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/architecture-convergence-vantages/SKILL.md",
-        "sha256": "2c640ffc0c761a231bcb92ee09bbbfaf3fbf7750fa60ce299b005773247039c8",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/architecture-convergence-vantages/SKILL.md"
+        "sha256": "afd18423205ae5e28884026fab5b94f82f899905aeab95a5af84a273c6298268",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/architecture-convergence-vantages/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
           "publishedPath": "/skills/source/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
-          "sha256": "45fe584da4bec3195e07f34257600d472bdcfcb2edbb714be9d7a111ff5994e0",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md"
+          "sha256": "b3629fa76f5a92382eb60f05b8ba4ee0a39a69f9268a73012036e47452269530",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md"
         }
       ]
     },
@@ -38,27 +38,27 @@
       "source": {
         "repositoryPath": ".agents/skills/bounded-representation-admission/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/bounded-representation-admission/SKILL.md",
-        "sha256": "e3c6170047b2f8774ab9c4db54d0c58461cd92597828c0873533d1fffd2f0395",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/bounded-representation-admission/SKILL.md"
+        "sha256": "66e31e8118e32d14946f597e022706ddfa6ad8c24b5d36d24e3428ad89f87b10",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/bounded-representation-admission/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/bounded-representation-admission/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/bounded-representation-admission/exercises/README.md",
           "sha256": "7e420ced4ed5d6470ec2e1aaefccb4652318ea3c900aeb0a5d7d766008d0a736",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/bounded-representation-admission/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/bounded-representation-admission/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/bounded-representation-admission/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/bounded-representation-admission/exercises/exercise.py",
           "sha256": "d1118a24b5ccc833aeb1443465598a19d21489da7939bf4d22f09178a8efe036",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/bounded-representation-admission/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/bounded-representation-admission/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/bounded-representation-admission/references/admission-design-and-evidence.md",
           "publishedPath": "/skills/source/.agents/skills/bounded-representation-admission/references/admission-design-and-evidence.md",
           "sha256": "0e135b9fd1d37562fe21b0f7fd5635f0d1af2c13975bc59da48b1febf934f3bb",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/bounded-representation-admission/references/admission-design-and-evidence.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/bounded-representation-admission/references/admission-design-and-evidence.md"
         }
       ]
     },
@@ -72,10 +72,17 @@
       "source": {
         "repositoryPath": ".agents/skills/contextual-jargon-scan/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/contextual-jargon-scan/SKILL.md",
-        "sha256": "c48e6501f305ddf189f1ed3857a00de6f4cb3d99c3bf842a80a1900f722511c3",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/contextual-jargon-scan/SKILL.md"
+        "sha256": "a45d2c77e6df02427ca185ef81a3e5a9c1fd4b6f7c644a15d7f2ac57206deb48",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/contextual-jargon-scan/SKILL.md"
       },
-      "dependencies": []
+      "dependencies": [
+        {
+          "repositoryPath": ".agents/skills/contextual-jargon-scan/references/classification-and-recovery.md",
+          "publishedPath": "/skills/source/.agents/skills/contextual-jargon-scan/references/classification-and-recovery.md",
+          "sha256": "b27c6a741ec6bc15fdf74af55864bb948eb9d4730e622b1350c00e24567fd78c",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/contextual-jargon-scan/references/classification-and-recovery.md"
+        }
+      ]
     },
     {
       "name": "controlled-context-comparison",
@@ -87,27 +94,27 @@
       "source": {
         "repositoryPath": ".agents/skills/controlled-context-comparison/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/controlled-context-comparison/SKILL.md",
-        "sha256": "abbc457b418ed439da3fe0bb885a735956629171042d4200de2c611f7944dfc3",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/controlled-context-comparison/SKILL.md"
+        "sha256": "3ce2f2b79083b2ed8803226409eaae548d19159d55d61e956b2dfdf9cfde81b7",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/controlled-context-comparison/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/controlled-context-comparison/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/controlled-context-comparison/exercises/README.md",
           "sha256": "ad0b322717ce8b94c55a3b0c6fbba7ee14d43f99858935f187ecd784bbada96b",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/controlled-context-comparison/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/controlled-context-comparison/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/controlled-context-comparison/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/controlled-context-comparison/exercises/exercise.py",
           "sha256": "d405857d130795348890b7a5a3d827ec2523641711549d81f6abded76e51ec4e",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/controlled-context-comparison/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/controlled-context-comparison/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/controlled-context-comparison/references/design-and-evidence.md",
           "publishedPath": "/skills/source/.agents/skills/controlled-context-comparison/references/design-and-evidence.md",
           "sha256": "3f64edbd6413e78ea966dc5b3494f765e08b68559a159dd1907e5a71670fd45b",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/controlled-context-comparison/references/design-and-evidence.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/controlled-context-comparison/references/design-and-evidence.md"
         }
       ]
     },
@@ -121,27 +128,27 @@
       "source": {
         "repositoryPath": ".agents/skills/interruption-safe-resource-ownership/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/interruption-safe-resource-ownership/SKILL.md",
-        "sha256": "9ea25f07c0cabba11ea95735d2199edc422e500aa7594ca54c2160afee80c0bc",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/interruption-safe-resource-ownership/SKILL.md"
+        "sha256": "cca1e890bf36e9fa6aa07ed1dc39db5edcbe8cb4441deb25d67240a064d4b892",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/interruption-safe-resource-ownership/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/interruption-safe-resource-ownership/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/interruption-safe-resource-ownership/exercises/README.md",
           "sha256": "ed49e9df05bff419f732cca59d9493bbebc205056259ae9a6567f6e6f67f5e97",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/interruption-safe-resource-ownership/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/interruption-safe-resource-ownership/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/interruption-safe-resource-ownership/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/interruption-safe-resource-ownership/exercises/exercise.py",
           "sha256": "26c7df106f812369ea18175ca4f9449192a65c2eae95b675d240798b88b96fe7",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/interruption-safe-resource-ownership/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/interruption-safe-resource-ownership/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/interruption-safe-resource-ownership/references/mechanisms-and-evidence.md",
           "publishedPath": "/skills/source/.agents/skills/interruption-safe-resource-ownership/references/mechanisms-and-evidence.md",
           "sha256": "3b1d5124d30ef363f2a599ce574f9822c463b43a54c9dfba692516e22f5268f3",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/interruption-safe-resource-ownership/references/mechanisms-and-evidence.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/interruption-safe-resource-ownership/references/mechanisms-and-evidence.md"
         }
       ]
     },
@@ -155,57 +162,57 @@
       "source": {
         "repositoryPath": ".agents/skills/longitudinal-observation-visualization/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/SKILL.md",
-        "sha256": "a89aeee44eebd7428684c1c82b4811fdf1f843c12270c31659e0ee50a8737b5a",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/SKILL.md"
+        "sha256": "9714f388c2d5c65e753eba9db6b7a1b7a8f7f723835bbd7bc9128ae157c281e9",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/exercises/README.md",
           "sha256": "a4cf2c99051af7553a3251ce3b021ef528020fba887189e75c75995213802445",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/exercises/example.html",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/exercises/example.html",
           "sha256": "d0582d5d319f47143d7e7efd92b568341a4864c89764728271a075d86bf1e56f",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/exercises/example.html"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/exercises/example.html"
         },
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/exercises/example.svg",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/exercises/example.svg",
           "sha256": "3a1d64d3a1553335e4fca7ecf7e37e587285a5389bbe9eaebb1f99f05532f460",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/exercises/example.svg"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/exercises/example.svg"
         },
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/exercises/exercise.py",
           "sha256": "5375fc445d7010348ce75b9d2f0efe8d49872bcc0cdea52f4acce10d93e216b5",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/exercises/expected-segments.json",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/exercises/expected-segments.json",
           "sha256": "9c6d3a89501b53f7c7c5b70d52058d73dbea555c083f5e034f42130ed040ad25",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/exercises/expected-segments.json"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/exercises/expected-segments.json"
         },
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/exercises/observations.csv",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/exercises/observations.csv",
           "sha256": "a2f254e3f2ccaf626d49bda602dbdbfd0ee72d9aa2427f594d7bf91fcbe3496a",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/exercises/observations.csv"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/exercises/observations.csv"
         },
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/exercises/values.csv",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/exercises/values.csv",
           "sha256": "a2f254e3f2ccaf626d49bda602dbdbfd0ee72d9aa2427f594d7bf91fcbe3496a",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/exercises/values.csv"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/exercises/values.csv"
         },
         {
           "repositoryPath": ".agents/skills/longitudinal-observation-visualization/references/time-paths-and-evidence.md",
           "publishedPath": "/skills/source/.agents/skills/longitudinal-observation-visualization/references/time-paths-and-evidence.md",
           "sha256": "6bf186f84cc5259d9af9672f05a69ab64cd4d37fc39244d6a10c6fca6021994c",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/longitudinal-observation-visualization/references/time-paths-and-evidence.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/longitudinal-observation-visualization/references/time-paths-and-evidence.md"
         }
       ]
     },
@@ -219,33 +226,33 @@
       "source": {
         "repositoryPath": ".agents/skills/omics-coordinate-and-measurement-views/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/omics-coordinate-and-measurement-views/SKILL.md",
-        "sha256": "af074b898d5d1ff2501df7d3a533eb9ca4893125256f21897ae5d27917b4a911",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/omics-coordinate-and-measurement-views/SKILL.md"
+        "sha256": "c3263bdbca64ac3bae7f2fcf982f5959276cb96bdc931225b4366b5209777f89",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/omics-coordinate-and-measurement-views/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/omics-coordinate-and-measurement-views/exercises/verify.py",
           "publishedPath": "/skills/source/.agents/skills/omics-coordinate-and-measurement-views/exercises/verify.py",
           "sha256": "88648a873d6c1b3492c7538957040f6e5fdf381c4e7197fb7980d0ce39c49b31",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/omics-coordinate-and-measurement-views/exercises/verify.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/omics-coordinate-and-measurement-views/exercises/verify.py"
         },
         {
           "repositoryPath": ".agents/skills/omics-coordinate-and-measurement-views/references/assay-matrices-and-inference.md",
           "publishedPath": "/skills/source/.agents/skills/omics-coordinate-and-measurement-views/references/assay-matrices-and-inference.md",
           "sha256": "3fe7a3d2d1128fd191b68fdc7a46a2bb297a8f9dd624db7ae1897a2897f7f8cc",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/omics-coordinate-and-measurement-views/references/assay-matrices-and-inference.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/omics-coordinate-and-measurement-views/references/assay-matrices-and-inference.md"
         },
         {
           "repositoryPath": ".agents/skills/omics-coordinate-and-measurement-views/references/evidence-and-exercises.md",
           "publishedPath": "/skills/source/.agents/skills/omics-coordinate-and-measurement-views/references/evidence-and-exercises.md",
           "sha256": "0afa245cb7ba0dc0333e7dba6fbcc90a7316cc71e8cfafb37511d4614ffa1efc",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/omics-coordinate-and-measurement-views/references/evidence-and-exercises.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/omics-coordinate-and-measurement-views/references/evidence-and-exercises.md"
         },
         {
           "repositoryPath": ".agents/skills/omics-coordinate-and-measurement-views/references/genomic-coordinates-and-tracks.md",
           "publishedPath": "/skills/source/.agents/skills/omics-coordinate-and-measurement-views/references/genomic-coordinates-and-tracks.md",
           "sha256": "cc2a08ad443cd1a7a3800c031e0f18989da4123222e5555d0d58bab101282ca2",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/omics-coordinate-and-measurement-views/references/genomic-coordinates-and-tracks.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/omics-coordinate-and-measurement-views/references/genomic-coordinates-and-tracks.md"
         }
       ]
     },
@@ -259,27 +266,27 @@
       "source": {
         "repositoryPath": ".agents/skills/parity-bound-workload-measurement/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/parity-bound-workload-measurement/SKILL.md",
-        "sha256": "611a675d60f8da4d9de99b6d1bc0da74cdad3a741b1631e6f27baa6c5237af75",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/parity-bound-workload-measurement/SKILL.md"
+        "sha256": "c670b1dcf849b6eec0724904f44994744c357651a8b7a1d1dff5e732fc5538e8",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/parity-bound-workload-measurement/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/parity-bound-workload-measurement/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/parity-bound-workload-measurement/exercises/README.md",
           "sha256": "aef70ac9717bd33c2b7aa8a7c1eb301b7c1b289984cc3b59c2f1c99c8e2c6859",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/parity-bound-workload-measurement/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/parity-bound-workload-measurement/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/parity-bound-workload-measurement/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/parity-bound-workload-measurement/exercises/exercise.py",
           "sha256": "366ff81ba9519c3064e4f5826ca7fc97b1fddbcf121dfc49002aaf5ec43fedc9",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/parity-bound-workload-measurement/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/parity-bound-workload-measurement/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/parity-bound-workload-measurement/references/design-and-evidence.md",
           "publishedPath": "/skills/source/.agents/skills/parity-bound-workload-measurement/references/design-and-evidence.md",
           "sha256": "a948cde41b8d18b13295dffaf1dff3a44b5db72a8a5ef4b5db1c74caccf45786",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/parity-bound-workload-measurement/references/design-and-evidence.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/parity-bound-workload-measurement/references/design-and-evidence.md"
         }
       ]
     },
@@ -293,10 +300,51 @@
       "source": {
         "repositoryPath": ".agents/skills/probe-bearing-exemplar-formation/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/probe-bearing-exemplar-formation/SKILL.md",
-        "sha256": "afaf2abe0dc5e88cbc404f3d1fe9b0dcaa9becf4e350acd39995429cbac3c633",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/probe-bearing-exemplar-formation/SKILL.md"
+        "sha256": "09c6aed5067725c26e25689d4598f38c30256918145496fcb1726fc2c5ac1652",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/probe-bearing-exemplar-formation/SKILL.md"
       },
-      "dependencies": []
+      "dependencies": [
+        {
+          "repositoryPath": ".agents/skills/probe-bearing-exemplar-formation/references/formation-evidence-and-recovery.md",
+          "publishedPath": "/skills/source/.agents/skills/probe-bearing-exemplar-formation/references/formation-evidence-and-recovery.md",
+          "sha256": "6ebd02739a65d92bb87517fc0aa5b6cec066b0674584370fa790d7d4294621d9",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/probe-bearing-exemplar-formation/references/formation-evidence-and-recovery.md"
+        }
+      ]
+    },
+    {
+      "name": "repository-collaboration-cycle",
+      "title": "Repository collaboration cycle",
+      "description": "Carries an authorized repository task from current-truth reconstruction through source-owned execution, fitting evidence, one reviewable return, and exact re-entry. Applies when a cold or resumed collaborator should complete a full repository work cycle using the receiving repository's accepted implementation.",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "canonicalUrl": "https://kindlight.io/skills/repository-collaboration-cycle/",
+      "source": {
+        "repositoryPath": ".agents/skills/repository-collaboration-cycle/SKILL.md",
+        "publishedPath": "/skills/source/.agents/skills/repository-collaboration-cycle/SKILL.md",
+        "sha256": "79cf0a46c45574118b31f4aab8938a3cb1948a69c47eee9502321a21ee1e41ba",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/repository-collaboration-cycle/SKILL.md"
+      },
+      "dependencies": [
+        {
+          "repositoryPath": ".agents/skills/repository-collaboration-cycle/exercises/receiving-task.md",
+          "publishedPath": "/skills/source/.agents/skills/repository-collaboration-cycle/exercises/receiving-task.md",
+          "sha256": "d71e794366ac5b1898cd164e9a0d687692deda53d498d164f277110da5d98794",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/repository-collaboration-cycle/exercises/receiving-task.md"
+        },
+        {
+          "repositoryPath": ".agents/skills/repository-collaboration-cycle/references/repository-adapter.md",
+          "publishedPath": "/skills/source/.agents/skills/repository-collaboration-cycle/references/repository-adapter.md",
+          "sha256": "020b2a31e9e5a4397cc2f357e1f3422c7f27ba4889e98d7e0caa55165efdd836",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/repository-collaboration-cycle/references/repository-adapter.md"
+        },
+        {
+          "repositoryPath": ".agents/skills/repository-collaboration-cycle/references/source-work-cycle.md",
+          "publishedPath": "/skills/source/.agents/skills/repository-collaboration-cycle/references/source-work-cycle.md",
+          "sha256": "35846a5320eaca56608d381874e6f25d4fd049f408f3a2c7ea9a1ac6d50545ad",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/repository-collaboration-cycle/references/source-work-cycle.md"
+        }
+      ]
     },
     {
       "name": "scientific-figure-composition",
@@ -308,33 +356,33 @@
       "source": {
         "repositoryPath": ".agents/skills/scientific-figure-composition/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/scientific-figure-composition/SKILL.md",
-        "sha256": "eb6e806d37657be39bee40df9e1d0195cc40c5c75d553e047eae0c443ae112df",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-figure-composition/SKILL.md"
+        "sha256": "c3338554555e7c41494b07b534ca0b5a48aba0a11cf9ac5e6041b3316e70df85",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-figure-composition/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/scientific-figure-composition/exercises/verify.py",
           "publishedPath": "/skills/source/.agents/skills/scientific-figure-composition/exercises/verify.py",
           "sha256": "17815ebdb1c418dec673fbc60a07a426ad9711e6c837014a22fdb54adb1bff26",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-figure-composition/exercises/verify.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-figure-composition/exercises/verify.py"
         },
         {
           "repositoryPath": ".agents/skills/scientific-figure-composition/references/delivery-and-inspection.md",
           "publishedPath": "/skills/source/.agents/skills/scientific-figure-composition/references/delivery-and-inspection.md",
           "sha256": "6b471423d35ac6b1f2796a7d72e1bfb154af4de8d22ba7a6874c381360ba2e6d",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-figure-composition/references/delivery-and-inspection.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-figure-composition/references/delivery-and-inspection.md"
         },
         {
           "repositoryPath": ".agents/skills/scientific-figure-composition/references/evidence-and-exercises.md",
           "publishedPath": "/skills/source/.agents/skills/scientific-figure-composition/references/evidence-and-exercises.md",
           "sha256": "5f2a84d432d0d973d14f489ad7df712c3b9c361b48cd9ef45effeebba7b99a5f",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-figure-composition/references/evidence-and-exercises.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-figure-composition/references/evidence-and-exercises.md"
         },
         {
           "repositoryPath": ".agents/skills/scientific-figure-composition/references/panel-type-color-and-emphasis.md",
           "publishedPath": "/skills/source/.agents/skills/scientific-figure-composition/references/panel-type-color-and-emphasis.md",
           "sha256": "2023f5e467eaf3b2a7cd1a5ec311c053a86d0a53513fb651a6e07d8fea653acf",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-figure-composition/references/panel-type-color-and-emphasis.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-figure-composition/references/panel-type-color-and-emphasis.md"
         }
       ]
     },
@@ -348,33 +396,85 @@
       "source": {
         "repositoryPath": ".agents/skills/scientific-scale-and-transform-fidelity/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/scientific-scale-and-transform-fidelity/SKILL.md",
-        "sha256": "57b8f1958e2153b85383cbfa97db10e415f4aee5a6302d924851938d936692b5",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-scale-and-transform-fidelity/SKILL.md"
+        "sha256": "d7d1ded27b8155557ebeb1f923775752a201c443df5aa97dee45f6f639b601fa",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-scale-and-transform-fidelity/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/scientific-scale-and-transform-fidelity/exercises/verify.py",
           "publishedPath": "/skills/source/.agents/skills/scientific-scale-and-transform-fidelity/exercises/verify.py",
           "sha256": "ed8b4152941afc59d2f451e0bd948e38c1cfb3d7579013b22e54b18e168317ba",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-scale-and-transform-fidelity/exercises/verify.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-scale-and-transform-fidelity/exercises/verify.py"
         },
         {
           "repositoryPath": ".agents/skills/scientific-scale-and-transform-fidelity/references/evidence-and-exercises.md",
           "publishedPath": "/skills/source/.agents/skills/scientific-scale-and-transform-fidelity/references/evidence-and-exercises.md",
           "sha256": "218cc49e830ba71edebe1c03e5df52bb00244e0677eb4aeda3ce3a5f91247fdd",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-scale-and-transform-fidelity/references/evidence-and-exercises.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-scale-and-transform-fidelity/references/evidence-and-exercises.md"
         },
         {
           "repositoryPath": ".agents/skills/scientific-scale-and-transform-fidelity/references/intervals-colors-and-density.md",
           "publishedPath": "/skills/source/.agents/skills/scientific-scale-and-transform-fidelity/references/intervals-colors-and-density.md",
           "sha256": "a5b5d35e4c7bdf073c056c82c26fda6d4f8cfb939244f71502ead3265ab65f44",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-scale-and-transform-fidelity/references/intervals-colors-and-density.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-scale-and-transform-fidelity/references/intervals-colors-and-density.md"
         },
         {
           "repositoryPath": ".agents/skills/scientific-scale-and-transform-fidelity/references/signed-and-logarithmic-transforms.md",
           "publishedPath": "/skills/source/.agents/skills/scientific-scale-and-transform-fidelity/references/signed-and-logarithmic-transforms.md",
           "sha256": "5dda9d587208d71e10a7cb68e2fec5477a0c46cf9e19b465f17dd2f19aa42d9a",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/scientific-scale-and-transform-fidelity/references/signed-and-logarithmic-transforms.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/scientific-scale-and-transform-fidelity/references/signed-and-logarithmic-transforms.md"
+        }
+      ]
+    },
+    {
+      "name": "secret-boundary-inspection",
+      "title": "Secret-boundary inspection",
+      "description": "Produces a canary-proven, scope-explicit secret-material observation through a receiving repository's accepted scanner. Applies before source, exact-index, local-history, artifact, or repository handoffs where credential-shaped material could travel.",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "canonicalUrl": "https://kindlight.io/skills/secret-boundary-inspection/",
+      "source": {
+        "repositoryPath": ".agents/skills/secret-boundary-inspection/SKILL.md",
+        "publishedPath": "/skills/source/.agents/skills/secret-boundary-inspection/SKILL.md",
+        "sha256": "93acc8cc8a56302637be08a96a820c907574e0c56a8b35ec5cb5ba3bf673e66d",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/secret-boundary-inspection/SKILL.md"
+      },
+      "dependencies": [
+        {
+          "repositoryPath": ".agents/skills/secret-boundary-inspection/exercises/README.md",
+          "publishedPath": "/skills/source/.agents/skills/secret-boundary-inspection/exercises/README.md",
+          "sha256": "0beeafd62668a9ce4e1ca7eee4518b4ed5b81ab3240f43255496a9cc1733ad38",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/secret-boundary-inspection/exercises/README.md"
+        },
+        {
+          "repositoryPath": ".agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+          "publishedPath": "/skills/source/.agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+          "sha256": "93fe6c8bc5dd7335dc857021b6eaf50f36d9000933c2698497fc33c940573563",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/secret-boundary-inspection/exercises/exercise.mjs"
+        },
+        {
+          "repositoryPath": ".agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+          "publishedPath": "/skills/source/.agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+          "sha256": "9223d8ee9d671337abf0d7f3b43298cfb36fd9ec8117f0c65bf60068365269b0",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs"
+        },
+        {
+          "repositoryPath": ".agents/skills/secret-boundary-inspection/references/embedded-metadata.md",
+          "publishedPath": "/skills/source/.agents/skills/secret-boundary-inspection/references/embedded-metadata.md",
+          "sha256": "412ca806a44169ce9ca364ea4823e7d430dbec55fd8cc6186a4cbcd9e1a4cc19",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/secret-boundary-inspection/references/embedded-metadata.md"
+        },
+        {
+          "repositoryPath": ".agents/skills/secret-boundary-inspection/references/evidence-and-recovery.md",
+          "publishedPath": "/skills/source/.agents/skills/secret-boundary-inspection/references/evidence-and-recovery.md",
+          "sha256": "ec50df711b3d630c46d6af2447212a3f1e338f853be18e8c1f00fca95a98a55e",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/secret-boundary-inspection/references/evidence-and-recovery.md"
+        },
+        {
+          "repositoryPath": ".agents/skills/secret-boundary-inspection/references/receiver-adapter-contract.md",
+          "publishedPath": "/skills/source/.agents/skills/secret-boundary-inspection/references/receiver-adapter-contract.md",
+          "sha256": "6b0ed280691b4d3cd2cc4ae2838117e85f351ba59e10f4a6302a8906d44e93ff",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/secret-boundary-inspection/references/receiver-adapter-contract.md"
         }
       ]
     },
@@ -388,57 +488,57 @@
       "source": {
         "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/SKILL.md",
-        "sha256": "83ba6288f3486fd2aaa6cc00e7059116c98e0e9d64396754b63197ae034843b9",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/SKILL.md"
+        "sha256": "0bf89750aeb8ed2daba10dc8f1108bd682d6b9d130698bb07f55a507b6da6958",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/README.md",
           "sha256": "48148ca7c1bc03f018f0911f2e70c68b49a8b8a098aef77412087466e2f772c1",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/exercises/comparisons.json",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/comparisons.json",
           "sha256": "78cef7a772e26163774fddbab8249df21e2596a7ec35b6ec1e1220499bfff51a",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/exercises/comparisons.json"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/exercises/comparisons.json"
         },
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/exercises/example.html",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/example.html",
           "sha256": "aaac7ae0b94951c782b4a2aea0f88730080095a6f4fe11ddbc403f7a135bf096",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/exercises/example.html"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/exercises/example.html"
         },
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/exercises/example.svg",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/example.svg",
           "sha256": "d63488e71492b38db88a04b0f901d6dc758638746397f1340068e61373d00225",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/exercises/example.svg"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/exercises/example.svg"
         },
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/exercise.py",
           "sha256": "1de5e91b33c39c0f4ce731a02ea73e753f623f360e4caa91f7472a8e9e35f9dd",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/exercises/regions.csv",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/regions.csv",
           "sha256": "c31a153f15f987a7af7fc636ef37759e6a970ba61b85328742f77b4e2baf3580",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/exercises/regions.csv"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/exercises/regions.csv"
         },
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/exercises/values.csv",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/values.csv",
           "sha256": "db28d0f5f1130cfe32b4a39de607a8626352130e7e810c48bcb1105f549b5dcf",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/exercises/values.csv"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/exercises/values.csv"
         },
         {
           "repositoryPath": ".agents/skills/spatial-support-and-change-visualization/references/support-and-evidence.md",
           "publishedPath": "/skills/source/.agents/skills/spatial-support-and-change-visualization/references/support-and-evidence.md",
           "sha256": "29daa8de300dab4e9f9f7a4b35536536626c5299a27e686f375567693b777cf1",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/spatial-support-and-change-visualization/references/support-and-evidence.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/spatial-support-and-change-visualization/references/support-and-evidence.md"
         }
       ]
     },
@@ -452,10 +552,17 @@
       "source": {
         "repositoryPath": ".agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
-        "sha256": "c105f246ee7af396d229854223078e6a1fde1347cd00c15bf3ba2e106fa4219e",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md"
+        "sha256": "4c6bb7ec8a872e245f552fa60cce45d4db129f82545124e4c618c7edcf612a35",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md"
       },
-      "dependencies": []
+      "dependencies": [
+        {
+          "repositoryPath": ".agents/skills/transaction-boundary-evidence-mapping/references/failure-intervals-and-evidence.md",
+          "publishedPath": "/skills/source/.agents/skills/transaction-boundary-evidence-mapping/references/failure-intervals-and-evidence.md",
+          "sha256": "c792855c14bd12a03c1cbce81c634401dafeccc19abb1c4b906f497f5f63adf2",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/transaction-boundary-evidence-mapping/references/failure-intervals-and-evidence.md"
+        }
+      ]
     },
     {
       "name": "typed-error-recovery-contracts",
@@ -467,33 +574,33 @@
       "source": {
         "repositoryPath": ".agents/skills/typed-error-recovery-contracts/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/typed-error-recovery-contracts/SKILL.md",
-        "sha256": "416ca6df50c718ae5715e077bfe7a285b9a2ae8081286ef234f8a77662e01e9f",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/typed-error-recovery-contracts/SKILL.md"
+        "sha256": "51e50583dd75373a125c325502ec8a661d52486d52bbf1aed2d87a66eb507485",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/typed-error-recovery-contracts/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/typed-error-recovery-contracts/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/typed-error-recovery-contracts/exercises/README.md",
           "sha256": "b7849b770b2e82029a4bbedc9a24619c3d0732f983b4fb82ab9c2d0e55a337a2",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/typed-error-recovery-contracts/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/typed-error-recovery-contracts/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/typed-error-recovery-contracts/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/typed-error-recovery-contracts/exercises/exercise.py",
           "sha256": "e3437567c4fd9912c8da6ddb0e4b514d463539ff9dea7f10b6ac9677a51668bd",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/typed-error-recovery-contracts/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/typed-error-recovery-contracts/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md",
           "publishedPath": "/skills/source/.agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md",
           "sha256": "8a07e844739f73512dcd174049d37f026c0221b5ef38cb0971d8130eb2868bcd",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md"
         },
         {
           "repositoryPath": ".agents/skills/typed-error-recovery-contracts/references/python-exception-boundaries.md",
           "publishedPath": "/skills/source/.agents/skills/typed-error-recovery-contracts/references/python-exception-boundaries.md",
           "sha256": "98ec4753a05d685447ebec7207c2e40525c918db411300b98782e13115019c3a",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/typed-error-recovery-contracts/references/python-exception-boundaries.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/typed-error-recovery-contracts/references/python-exception-boundaries.md"
         }
       ]
     },
@@ -507,10 +614,17 @@
       "source": {
         "repositoryPath": ".agents/skills/versioned-exemplar-successor/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/versioned-exemplar-successor/SKILL.md",
-        "sha256": "18979742d7488ec44cb787e67577b0bb112b68694c56eb465999a60973aacb3f",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/versioned-exemplar-successor/SKILL.md"
+        "sha256": "9479ce93e91860324cfc7ee11bd5b207b222210bcd0fd9d3d301c2d2435d3f0e",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/versioned-exemplar-successor/SKILL.md"
       },
-      "dependencies": []
+      "dependencies": [
+        {
+          "repositoryPath": ".agents/skills/versioned-exemplar-successor/references/successor-and-projection-recovery.md",
+          "publishedPath": "/skills/source/.agents/skills/versioned-exemplar-successor/references/successor-and-projection-recovery.md",
+          "sha256": "4bd0e98852597fb3f399f40932f79f194a7c99a35e7059308a7f8e222d73efbe",
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/versioned-exemplar-successor/references/successor-and-projection-recovery.md"
+        }
+      ]
     },
     {
       "name": "visualization-question-routing",
@@ -522,39 +636,39 @@
       "source": {
         "repositoryPath": ".agents/skills/visualization-question-routing/SKILL.md",
         "publishedPath": "/skills/source/.agents/skills/visualization-question-routing/SKILL.md",
-        "sha256": "93c20b583363208998a90d1322521211781255005ab37ce7360fae7438ad2502",
-        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/visualization-question-routing/SKILL.md"
+        "sha256": "6eb38582a3fff92de3bbd4bbbaad7e84972474bb94b37808c412fa7afd7ba387",
+        "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/visualization-question-routing/SKILL.md"
       },
       "dependencies": [
         {
           "repositoryPath": ".agents/skills/visualization-question-routing/exercises/README.md",
           "publishedPath": "/skills/source/.agents/skills/visualization-question-routing/exercises/README.md",
           "sha256": "404128a82448b74e662464db014880926520f1b7c042b3241ccbe9953bbd6702",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/visualization-question-routing/exercises/README.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/visualization-question-routing/exercises/README.md"
         },
         {
           "repositoryPath": ".agents/skills/visualization-question-routing/exercises/exercise.py",
           "publishedPath": "/skills/source/.agents/skills/visualization-question-routing/exercises/exercise.py",
           "sha256": "5a1ca9ef856a331d4e12397972a24c15ce8c4b0d8c48c52c365a98614caddeac",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/visualization-question-routing/exercises/exercise.py"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/visualization-question-routing/exercises/exercise.py"
         },
         {
           "repositoryPath": ".agents/skills/visualization-question-routing/exercises/records.csv",
           "publishedPath": "/skills/source/.agents/skills/visualization-question-routing/exercises/records.csv",
           "sha256": "23c73f3b17aab53e2efbbe7f8f56b277ea7ad01ef1259a401ffb47ea7d5de545",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/visualization-question-routing/exercises/records.csv"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/visualization-question-routing/exercises/records.csv"
         },
         {
           "repositoryPath": ".agents/skills/visualization-question-routing/exercises/view-contracts.json",
           "publishedPath": "/skills/source/.agents/skills/visualization-question-routing/exercises/view-contracts.json",
           "sha256": "4171a1e710fbf010f49931ee4ed7527cbca2a85ba133fbeb3964a1a3376e94b7",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/visualization-question-routing/exercises/view-contracts.json"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/visualization-question-routing/exercises/view-contracts.json"
         },
         {
           "repositoryPath": ".agents/skills/visualization-question-routing/references/roles-and-evidence.md",
           "publishedPath": "/skills/source/.agents/skills/visualization-question-routing/references/roles-and-evidence.md",
           "sha256": "2537569cb8ac098e0b724ea8eab6b2898c693a77f1fd02eab2922630a81b3271",
-          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/024797b881b030ca83ca3fe5b57cba19e58bb46d/.agents/skills/visualization-question-routing/references/roles-and-evidence.md"
+          "repositoryUrl": "https://github.com/driftframestudios/gist-registry/blob/b2a5ce60d3df79d3563bbc5834f818c416ad7b36/.agents/skills/visualization-question-routing/references/roles-and-evidence.md"
         }
       ]
     }

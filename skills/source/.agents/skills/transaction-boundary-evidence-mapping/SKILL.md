@@ -45,6 +45,16 @@ description: Maps a logical operation's meaning, accepted-state dependency, alig
   same mechanism, observable distinction, and receiver without changing the
   implementation or review decision.
 
+## Inputs and default evidence
+
+Start with the operation's callable or command, exact source revision, an
+accepted pre-state, and the caller-visible result. Add the actual storage,
+role, process, and invocation coordinates when execution is available. The
+default map covers one operation and the guarantees it presently claims; a
+source-only review names the next runnable owner. Keep unknown publication
+state distinct from a confirmed rollback or commit, because each admits a
+different retry.
+
 ## Portable operation map
 
 Use the rows that can change the claimed behavior:
@@ -132,6 +142,15 @@ authority, clock truth, and operational recovery remain with their receiving
 systems. State the local guarantee first, then name the adjacent owner and the
 observation that could establish it.
 
+### Rule: Cleanup preserves the primary outcome and exposes retained resources
+
+Map operation failure and cleanup failure separately. Resource release can
+fail after a body succeeded, after it failed, or after its effects committed.
+Retain the primary result or exception, the secondary cleanup diagnostics, and
+the exact owned resources still requiring recovery. An interrupted response
+leaves publication status at the state actually established; cleanup success
+alone cannot decide whether the logical operation should be retried.
+
 ## Operating sequence
 
 1. **Name the result:** State the consumer-visible outcome and consequence
@@ -164,6 +183,20 @@ observation that could establish it.
 - Then the same meaning returns the recorded outcome without another effect
 - And changed meaning returns the comparison and reconciliation route while the
   accepted state remains available
+
+## Conditional context and recovery
+
+Load [failure intervals and evidence](references/failure-intervals-and-evidence.md)
+when a test crosses commit/response/cleanup boundaries or several processes
+share the state. It supplies literal outcome distinctions and targeted fault
+placements; the receiving runtime owns executable tests.
+
+When a fault prevents observation of publication, preserve the operation
+identity and accepted evidence, then query the authoritative outcome record or
+use its documented reconciliation route. Repeat a write only under that
+operation's retry contract. If a cleanup resource remains, identify it through
+the private owner route and hold the affected continuation until ownership is
+resolved. A weaker observation narrows the claim while useful repairs remain.
 
 ## Completion
 

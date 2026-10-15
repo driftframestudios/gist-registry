@@ -19,6 +19,16 @@ description: Preserves spatial support, geography identity, denominators, and te
 - **Smallest useful dose:** One support definition, a comparison question, a fitting map or ordinary chart, and its data companion.
 - **Interactions:** Question routing sets spatial/temporal granularity; longitudinal observation owns unit histories; transform and scientific composition receive the admitted spatial contract.
 
+## Inputs, defaults and output
+
+Supply the geographic support and identity/vintage, time window, quantity and
+units, coordinate reference when geometry is used, and any numerator/denominator
+needed by the comparison. Name the join keys between records and geometry.
+When location serves only as a category, begin with an ordinary chart or table.
+When support is unresolved, retain each source's labeled values and hold the
+cross-support calculation. The output binds the selected comparison to its
+admitted geography, measure, missing states, and recoverable values.
+
 ## Rules
 
 ### Rule: Spatial support precedes geometry
@@ -76,6 +86,15 @@ an original-value route.
 5. **Compose:** Preserve source, period, units, support, legend, and exact values with the figure.
 6. **Observe:** Check a support-changing counterexample and the rendered legend/panels; separate numerical, geospatial, and reader-effectiveness evidence.
 
+## Decisive scenario
+
+### Scenario: A stable region ID carries a changed boundary
+
+- Given two periods reuse a region ID while the region's polygon and population support change
+- When the proposed view calculates their precise regional change
+- Then period-specific values remain available with their respective vintages and the change calculation stays held
+- And the geographic source owner supplies a justified common support or crosswalk before that comparison resumes
+
 ## Conditional context
 
 Load [support and evidence](references/support-and-evidence.md) for spatial
@@ -83,7 +102,14 @@ denominators, trajectories, year panels, alternatives, and task-specific researc
 The [receiving exercise](exercises/README.md) produces a deterministic schematic
 SVG/CSV with independently specified rates and held comparisons.
 
-## Completion and re-entry
+## Recovery and re-entry
+
+Preserve source geometries, their vintages, and original numerators/denominators.
+Use separately labeled period views or a table while a crosswalk, exposure, or
+reference-system decision rests. The geographic or domain owner resolves that
+meaning; the renderer then renews joins, shared scales, and exact companions.
+
+## Completion
 
 The receiver can identify what each spatial value describes, compare the named
 times on an admitted basis, recover values, and locate unresolved geographic or

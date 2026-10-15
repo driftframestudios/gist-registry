@@ -132,6 +132,13 @@ can remain narrowly focused on expected `OSError` subclasses. This cleanup
 covers Python exceptions while the process can execute; persisted recovery
 carries process or host interruption.
 
+That restoration example preserves the original event under its declared
+caller policy. A receiver that gives a later cleanup control signal precedence
+must select that policy explicitly and test both failure orderings. The
+[resource-ownership contract](https://kindlight.io/skills/interruption-safe-resource-ownership/)
+supplies the separate release-attempt and final-failure decision; the selected
+architecture retains its own public exception and recovery-state contract.
+
 ## Marker comments
 
 ```python

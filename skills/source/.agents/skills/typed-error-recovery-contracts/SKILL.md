@@ -21,6 +21,22 @@ description: Designs stable error types, bounded diagnostics, and explicit recov
 - **May under-attend:** Domain policy, distributed guarantees, authorization, and measured performance; those retain their named owners.
 - **Rest or release when:** Another error class or catalog entry would produce the same handling, state, and recovery decision.
 
+## Inputs, defaults, and output
+
+Bring the public caller, operation boundary, current catch bases/codes, input
+and effect owners, last accepted state, diagnostic audience, and required
+recovery choices. Read the actual runtime or framework before assigning
+cancellation, validation, or exception-group behavior. A message that callers
+already parse is a compatibility input even when the new design will replace
+that coupling.
+
+Use the existing exception or outcome shape when it already supplies the
+complete handling decision. When effect standing is uncertain, retain that
+uncertainty and route to reconciliation before assigning success or an
+automatic retry. The output connects each justified failure family to its
+translation site, fixed public projection, retained diagnostic route,
+accepted-state behavior, and distinguishing observation.
+
 ## Rules
 
 ### Rule: Meaning selects the failure shape
@@ -143,6 +159,16 @@ its original source-reading boundary. The [runnable receiving exercise](exercise
 applies narrow translation, fixed public feedback, stale identity, and retained
 state to a complete synthetic operation. Source and focused tests retain
 technical authority; authored scenarios establish intended behavior.
+
+## Recovery and re-entry
+
+A changed exception family, unexpected internal defect, or missing accepted
+state returns to the owning operation and last verified contract. Preserve
+earlier accepted work and authorized diagnostic causes while narrowing the
+public explanation to established facts. A retry follows the declared budget
+and idempotency/reconciliation owner. A changed caller, framework, or effect
+boundary refreshes the taxonomy and compatibility controls before the next
+delivery.
 
 ## Completion
 

@@ -26,6 +26,20 @@ own rejection feedback. [Parity-bound measurement](https://kindlight.io/skills/p
 owns measured alternatives after meaning is preserved. The representation
 owner chooses capacities and captures a stable value for the admitted call.
 
+## Inputs, defaults, and output
+
+Bring one exposed consumer, its supported input forms and native types, the
+first costly operation, existing capacities, ownership lifetime, and required
+producer or saved-output receiver. Read the serializer and numeric runtime
+policy when emitted bytes are part of the contract. Each proposed capacity
+names units, inclusive edge, evidence basis, and the owner who can revise it.
+
+An unspecified limit stays an open receiving policy. Inspect source and
+bounded fixtures first; choose the supported envelope before a costly trial.
+Existing admitted internal values retain their trust and avoid repeated full
+validation. The result is one admission/ownership design, its distinct input
+and output capacities, a typed rejection route, and independent edge evidence.
+
 ## Rules
 
 ### Rule: Name every dimension that changes the cost
@@ -109,7 +123,25 @@ for the cost map, alternatives, language mechanisms, and receiving examples.
 The [small exercise](exercises/exercise.py) and [guide](exercises/README.md)
 demonstrate early budget admission and snapshot ownership.
 
-## Completion and re-entry
+## Scenario: A supported producer exceeds its receiver
+
+- Given a compact supported input expands into repeated report rows and escaped text
+- When the producer emits a valid report that its saved-report receiver rejects
+- Then the owner derives the output envelope from the actual produced shape and selects a supported output policy
+- And a near-capacity producer-to-receiver test checks the same artifact independently
+- And rejected output preserves the prior accepted artifact while a capacity change receives its own evidence
+
+## Recovery and re-entry
+
+An over-capacity input returns the native typed rejection and a bounded next
+move such as reducing the request or selecting an explicitly larger supported
+profile. Preserve accepted state and the input's ownership boundary. If a
+legitimate output fails its receiver, return the mismatch to the shared shape
+owner before raising unrelated input limits. Parser, serializer, runtime,
+profile, or workload changes reopen only the affected budget and roundtrip
+observations.
+
+## Completion
 
 The boundary is ready when supported input and output shapes are explicit,
 rejection arrives before the protected work, one owned value governs the call,

@@ -2,7 +2,7 @@
   "projectionFormatVersion": "0.1.0",
   "projectionOwner": "gist-registry-pages-builder",
   "canonicalOrigin": "https://kindlight.io",
-  "sourceRevision": "024797b881b030ca83ca3fe5b57cba19e58bb46d",
+  "sourceRevision": "b2a5ce60d3df79d3563bbc5834f818c416ad7b36",
   "sourceStanding": "accepted_revision",
   "fileScope": "Every projection file except projection-manifest.json itself.",
   "files": [
@@ -44,7 +44,7 @@
     {
       "path": "index.html",
       "bytes": 3993,
-      "sha256": "430a22f25e6bef1863546ad1ad2a53b2e281ffd090b0d325d7f44dc4aded4d78"
+      "sha256": "ab80bc23e7161db08934d46a5275770dbf2805c9b587324d9ae26e97da654fe7"
     },
     {
       "path": "observations/delivery/README.md",
@@ -89,7 +89,7 @@
     {
       "path": "schemas/gist-registry/0.1.0/index.html",
       "bytes": 3114,
-      "sha256": "c0c303ca725c00d72bf8f6dcc3719f63a2418a2e46f46d5cee7d6baf79335e89"
+      "sha256": "d04b4d8c7835623091587d5cfed455f57b3b66dc071353d23d3d46d4a3a29af1"
     },
     {
       "path": "schemas/gist-registry/0.1.0/registry-artifact.schema.json",
@@ -104,7 +104,7 @@
     {
       "path": "schemas/gist-registry/delivery-observation/0.1.0/index.html",
       "bytes": 3111,
-      "sha256": "e3c6c5c810af438bf69e3b26cfcef60e63381c8c0f02ce88628e5e7d9dcc46d5"
+      "sha256": "a20d36fe07fbb00817534b45a579f70541670592ec0016aedee8b5fb94aee086"
     },
     {
       "path": "schemas/gist-registry/index.html",
@@ -114,7 +114,7 @@
     {
       "path": "schemas/gist-registry/skills/0.1.0/index.html",
       "bytes": 2987,
-      "sha256": "225a0b28077038be20046653a9800709a9269789da5179c7c60ad9d78358012c"
+      "sha256": "8d26e37b433e86a40dc2c3dc2855d28ec865b5685c1a08048d26bf1c3363a57f"
     },
     {
       "path": "schemas/gist-registry/skills/0.1.0/public-skill-catalog.schema.json",
@@ -128,88 +128,98 @@
     },
     {
       "path": "sitemap.xml",
-      "bytes": 3692,
-      "sha256": "51e3d5ca89ea669c53965b4313e53f6d54dbc0b8f8e9c23aa64a2853c1255dc0"
+      "bytes": 3856,
+      "sha256": "d4e14b2a4f6dfd232e546e71ad6b35bf1a36caab29d509c86dd5cfc2295f1e0a"
     },
     {
       "path": "skills/architecture-convergence-vantages/index.html",
       "bytes": 3824,
-      "sha256": "66129f1ce24170c4cf1671594d115175f9bac4cfa051b29b3535117d1d0de5c1"
+      "sha256": "294b573281460255e3a613c50a292c184bbd76341a76de0e5790249c3864221e"
     },
     {
       "path": "skills/bounded-representation-admission/index.html",
       "bytes": 4720,
-      "sha256": "a053c56841b7fbe30b76044d8d45eba731a69f266d47119f2da4adff5cde8e2d"
+      "sha256": "bf9716dee865e8cc8baefabb01c3b916a8b61bb4ff298f9b9b2f07caf445b695"
     },
     {
       "path": "skills/contextual-jargon-scan/index.html",
-      "bytes": 3227,
-      "sha256": "a99a0716441a9c5f763bd2a58d047c5eb4c4d6dfcc1a649e42bd494e737681a7"
+      "bytes": 3726,
+      "sha256": "50ca9b4dae9d506c99766205405dbb4f777fb8ea1595f586f1de680704a4e400"
     },
     {
       "path": "skills/controlled-context-comparison/index.html",
       "bytes": 4643,
-      "sha256": "0c1daef747c432fa8cd8d4ccc6a6856ec02ac082e993416baa2ce4ee4d911591"
+      "sha256": "be2e0ef4e19dc8603066b2797d38cdace62ecdf5cb6e36b63a50c471fd8cdcdb"
     },
     {
       "path": "skills/index.html",
-      "bytes": 10376,
-      "sha256": "9ead200e1a4470d075cac79eeeb3109a9548cdafd59663aeae3b215cc70d6b0c"
+      "bytes": 11321,
+      "sha256": "2276acb2798d0264f56f9bdda6ce1cd147b9c3eb002efbf849c160a9b4afbc3e"
     },
     {
       "path": "skills/index.json",
-      "bytes": 45211,
-      "sha256": "133a1d0303cd31c693c0613d04d86db9819094fd9052c035c9f85395e4b1e9fa"
+      "bytes": 54532,
+      "sha256": "75652134193554eb656fc260adb387ccf815bf626f9b4eca52a5987b10665bdb"
     },
     {
       "path": "skills/interruption-safe-resource-ownership/index.html",
       "bytes": 4704,
-      "sha256": "e8e199ac00185b9562fa98b708cb88d6158fac2fb83c39030a6d326302d89953"
+      "sha256": "2f7531b6e1da3df5b6e0be255f0d805b0c65efd979195921ea6c0908fd41d160"
     },
     {
       "path": "skills/longitudinal-observation-visualization/index.html",
       "bytes": 7301,
-      "sha256": "15123be3226561f86c416e106f639357fac020bdf19447e2bdf47e22f52a3f96"
+      "sha256": "6334fc667e8c3b478d379e80fcd78fb709c052fd964b1eaca18bb15d63881d74"
     },
     {
       "path": "skills/omics-coordinate-and-measurement-views/index.html",
       "bytes": 5498,
-      "sha256": "815456276e836c1e2991412bbaefb9a61b10cb19991bfaa81dc3e8ae8f5bc641"
+      "sha256": "92405928c1d678103b6bd733b1088e6435f17538f74b819c96dfdb076cd2aade"
     },
     {
       "path": "skills/parity-bound-workload-measurement/index.html",
       "bytes": 4645,
-      "sha256": "140352a428fedfc49a0195c2056996c9fd92a54d1d6f002978a7ca3987d02c4c"
+      "sha256": "f35ed43089d54d560d41c2a863eb68f48fad013cd2217b8e96b0cc383b028108"
     },
     {
       "path": "skills/probe-bearing-exemplar-formation/index.html",
-      "bytes": 3225,
-      "sha256": "1c92c8cf0ae22870bf9c5c93999433a0e254d19e9846d39e7b28e35081bf6cd4"
+      "bytes": 3766,
+      "sha256": "5c196cfba123041f018356e8bd611bf535239bf3aa4210b7fbd9fb298c163b3d"
+    },
+    {
+      "path": "skills/repository-collaboration-cycle/index.html",
+      "bytes": 4833,
+      "sha256": "f7123ec850b51e4d1392bd7b101880f1eaa1054fc74eb5df7e66362f56cbc7ac"
     },
     {
       "path": "skills/scientific-figure-composition/index.html",
       "bytes": 5210,
-      "sha256": "c8c6279b6eef3d542813769df248ba1fad04577fa97e4ce92d9eb174102e2c3f"
+      "sha256": "9c80dfff22f12a7b2c71a9278294cecdf4214b3f4a955f43b5edc8b1c7497456"
     },
     {
       "path": "skills/scientific-scale-and-transform-fidelity/index.html",
       "bytes": 5487,
-      "sha256": "e4b5855fa0801626532da013e5abd86e52a5b7008249ce4c1e400aa9a7f95b6b"
+      "sha256": "832fc78fb0efba222df69845af324114368cbde062e2da3e684516c41d32de37"
+    },
+    {
+      "path": "skills/secret-boundary-inspection/index.html",
+      "bytes": 6121,
+      "sha256": "9846f1d3b250c750430c02705642b3c769cba404da3166b6fab44bc3ec1323c2"
     },
     {
       "path": "skills/source/.agents/skills/architecture-convergence-vantages/SKILL.md",
-      "bytes": 9105,
-      "sha256": "2c640ffc0c761a231bcb92ee09bbbfaf3fbf7750fa60ce299b005773247039c8"
+      "bytes": 10782,
+      "sha256": "afd18423205ae5e28884026fab5b94f82f899905aeab95a5af84a273c6298268"
     },
     {
       "path": "skills/source/.agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md",
-      "bytes": 13349,
-      "sha256": "45fe584da4bec3195e07f34257600d472bdcfcb2edbb714be9d7a111ff5994e0"
+      "bytes": 13825,
+      "sha256": "b3629fa76f5a92382eb60f05b8ba4ee0a39a69f9268a73012036e47452269530"
     },
     {
       "path": "skills/source/.agents/skills/bounded-representation-admission/SKILL.md",
-      "bytes": 6791,
-      "sha256": "e3c6170047b2f8774ab9c4db54d0c58461cd92597828c0873533d1fffd2f0395"
+      "bytes": 8607,
+      "sha256": "66e31e8118e32d14946f597e022706ddfa6ad8c24b5d36d24e3428ad89f87b10"
     },
     {
       "path": "skills/source/.agents/skills/bounded-representation-admission/exercises/README.md",
@@ -228,13 +238,18 @@
     },
     {
       "path": "skills/source/.agents/skills/contextual-jargon-scan/SKILL.md",
-      "bytes": 7836,
-      "sha256": "c48e6501f305ddf189f1ed3857a00de6f4cb3d99c3bf842a80a1900f722511c3"
+      "bytes": 9052,
+      "sha256": "a45d2c77e6df02427ca185ef81a3e5a9c1fd4b6f7c644a15d7f2ac57206deb48"
+    },
+    {
+      "path": "skills/source/.agents/skills/contextual-jargon-scan/references/classification-and-recovery.md",
+      "bytes": 3098,
+      "sha256": "b27c6a741ec6bc15fdf74af55864bb948eb9d4730e622b1350c00e24567fd78c"
     },
     {
       "path": "skills/source/.agents/skills/controlled-context-comparison/SKILL.md",
-      "bytes": 4336,
-      "sha256": "abbc457b418ed439da3fe0bb885a735956629171042d4200de2c611f7944dfc3"
+      "bytes": 8397,
+      "sha256": "3ce2f2b79083b2ed8803226409eaae548d19159d55d61e956b2dfdf9cfde81b7"
     },
     {
       "path": "skills/source/.agents/skills/controlled-context-comparison/exercises/README.md",
@@ -253,8 +268,8 @@
     },
     {
       "path": "skills/source/.agents/skills/interruption-safe-resource-ownership/SKILL.md",
-      "bytes": 6734,
-      "sha256": "9ea25f07c0cabba11ea95735d2199edc422e500aa7594ca54c2160afee80c0bc"
+      "bytes": 8488,
+      "sha256": "cca1e890bf36e9fa6aa07ed1dc39db5edcbe8cb4441deb25d67240a064d4b892"
     },
     {
       "path": "skills/source/.agents/skills/interruption-safe-resource-ownership/exercises/README.md",
@@ -273,8 +288,8 @@
     },
     {
       "path": "skills/source/.agents/skills/longitudinal-observation-visualization/SKILL.md",
-      "bytes": 5443,
-      "sha256": "a89aeee44eebd7428684c1c82b4811fdf1f843c12270c31659e0ee50a8737b5a"
+      "bytes": 6809,
+      "sha256": "9714f388c2d5c65e753eba9db6b7a1b7a8f7f723835bbd7bc9128ae157c281e9"
     },
     {
       "path": "skills/source/.agents/skills/longitudinal-observation-visualization/exercises/README.md",
@@ -318,8 +333,8 @@
     },
     {
       "path": "skills/source/.agents/skills/omics-coordinate-and-measurement-views/SKILL.md",
-      "bytes": 6495,
-      "sha256": "af074b898d5d1ff2501df7d3a533eb9ca4893125256f21897ae5d27917b4a911"
+      "bytes": 9126,
+      "sha256": "c3263bdbca64ac3bae7f2fcf982f5959276cb96bdc931225b4366b5209777f89"
     },
     {
       "path": "skills/source/.agents/skills/omics-coordinate-and-measurement-views/exercises/verify.py",
@@ -343,8 +358,8 @@
     },
     {
       "path": "skills/source/.agents/skills/parity-bound-workload-measurement/SKILL.md",
-      "bytes": 3986,
-      "sha256": "611a675d60f8da4d9de99b6d1bc0da74cdad3a741b1631e6f27baa6c5237af75"
+      "bytes": 8804,
+      "sha256": "c670b1dcf849b6eec0724904f44994744c357651a8b7a1d1dff5e732fc5538e8"
     },
     {
       "path": "skills/source/.agents/skills/parity-bound-workload-measurement/exercises/README.md",
@@ -363,13 +378,38 @@
     },
     {
       "path": "skills/source/.agents/skills/probe-bearing-exemplar-formation/SKILL.md",
-      "bytes": 7784,
-      "sha256": "afaf2abe0dc5e88cbc404f3d1fe9b0dcaa9becf4e350acd39995429cbac3c633"
+      "bytes": 9837,
+      "sha256": "09c6aed5067725c26e25689d4598f38c30256918145496fcb1726fc2c5ac1652"
+    },
+    {
+      "path": "skills/source/.agents/skills/probe-bearing-exemplar-formation/references/formation-evidence-and-recovery.md",
+      "bytes": 4035,
+      "sha256": "6ebd02739a65d92bb87517fc0aa5b6cec066b0674584370fa790d7d4294621d9"
+    },
+    {
+      "path": "skills/source/.agents/skills/repository-collaboration-cycle/SKILL.md",
+      "bytes": 8022,
+      "sha256": "79cf0a46c45574118b31f4aab8938a3cb1948a69c47eee9502321a21ee1e41ba"
+    },
+    {
+      "path": "skills/source/.agents/skills/repository-collaboration-cycle/exercises/receiving-task.md",
+      "bytes": 8420,
+      "sha256": "d71e794366ac5b1898cd164e9a0d687692deda53d498d164f277110da5d98794"
+    },
+    {
+      "path": "skills/source/.agents/skills/repository-collaboration-cycle/references/repository-adapter.md",
+      "bytes": 6407,
+      "sha256": "020b2a31e9e5a4397cc2f357e1f3422c7f27ba4889e98d7e0caa55165efdd836"
+    },
+    {
+      "path": "skills/source/.agents/skills/repository-collaboration-cycle/references/source-work-cycle.md",
+      "bytes": 11386,
+      "sha256": "35846a5320eaca56608d381874e6f25d4fd049f408f3a2c7ea9a1ac6d50545ad"
     },
     {
       "path": "skills/source/.agents/skills/scientific-figure-composition/SKILL.md",
-      "bytes": 5814,
-      "sha256": "eb6e806d37657be39bee40df9e1d0195cc40c5c75d553e047eae0c443ae112df"
+      "bytes": 7849,
+      "sha256": "c3338554555e7c41494b07b534ca0b5a48aba0a11cf9ac5e6041b3316e70df85"
     },
     {
       "path": "skills/source/.agents/skills/scientific-figure-composition/exercises/verify.py",
@@ -393,8 +433,8 @@
     },
     {
       "path": "skills/source/.agents/skills/scientific-scale-and-transform-fidelity/SKILL.md",
-      "bytes": 6185,
-      "sha256": "57b8f1958e2153b85383cbfa97db10e415f4aee5a6302d924851938d936692b5"
+      "bytes": 8582,
+      "sha256": "d7d1ded27b8155557ebeb1f923775752a201c443df5aa97dee45f6f639b601fa"
     },
     {
       "path": "skills/source/.agents/skills/scientific-scale-and-transform-fidelity/exercises/verify.py",
@@ -417,9 +457,44 @@
       "sha256": "5dda9d587208d71e10a7cb68e2fec5477a0c46cf9e19b465f17dd2f19aa42d9a"
     },
     {
+      "path": "skills/source/.agents/skills/secret-boundary-inspection/SKILL.md",
+      "bytes": 9377,
+      "sha256": "93acc8cc8a56302637be08a96a820c907574e0c56a8b35ec5cb5ba3bf673e66d"
+    },
+    {
+      "path": "skills/source/.agents/skills/secret-boundary-inspection/exercises/README.md",
+      "bytes": 4213,
+      "sha256": "0beeafd62668a9ce4e1ca7eee4518b4ed5b81ab3240f43255496a9cc1733ad38"
+    },
+    {
+      "path": "skills/source/.agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+      "bytes": 7024,
+      "sha256": "93fe6c8bc5dd7335dc857021b6eaf50f36d9000933c2698497fc33c940573563"
+    },
+    {
+      "path": "skills/source/.agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+      "bytes": 5898,
+      "sha256": "9223d8ee9d671337abf0d7f3b43298cfb36fd9ec8117f0c65bf60068365269b0"
+    },
+    {
+      "path": "skills/source/.agents/skills/secret-boundary-inspection/references/embedded-metadata.md",
+      "bytes": 1357,
+      "sha256": "412ca806a44169ce9ca364ea4823e7d430dbec55fd8cc6186a4cbcd9e1a4cc19"
+    },
+    {
+      "path": "skills/source/.agents/skills/secret-boundary-inspection/references/evidence-and-recovery.md",
+      "bytes": 6718,
+      "sha256": "ec50df711b3d630c46d6af2447212a3f1e338f853be18e8c1f00fca95a98a55e"
+    },
+    {
+      "path": "skills/source/.agents/skills/secret-boundary-inspection/references/receiver-adapter-contract.md",
+      "bytes": 5524,
+      "sha256": "6b0ed280691b4d3cd2cc4ae2838117e85f351ba59e10f4a6302a8906d44e93ff"
+    },
+    {
       "path": "skills/source/.agents/skills/spatial-support-and-change-visualization/SKILL.md",
-      "bytes": 5623,
-      "sha256": "83ba6288f3486fd2aaa6cc00e7059116c98e0e9d64396754b63197ae034843b9"
+      "bytes": 6997,
+      "sha256": "0bf89750aeb8ed2daba10dc8f1108bd682d6b9d130698bb07f55a507b6da6958"
     },
     {
       "path": "skills/source/.agents/skills/spatial-support-and-change-visualization/exercises/README.md",
@@ -463,13 +538,18 @@
     },
     {
       "path": "skills/source/.agents/skills/transaction-boundary-evidence-mapping/SKILL.md",
-      "bytes": 9470,
-      "sha256": "c105f246ee7af396d229854223078e6a1fde1347cd00c15bf3ba2e106fa4219e"
+      "bytes": 11295,
+      "sha256": "4c6bb7ec8a872e245f552fa60cce45d4db129f82545124e4c618c7edcf612a35"
+    },
+    {
+      "path": "skills/source/.agents/skills/transaction-boundary-evidence-mapping/references/failure-intervals-and-evidence.md",
+      "bytes": 3925,
+      "sha256": "c792855c14bd12a03c1cbce81c634401dafeccc19abb1c4b906f497f5f63adf2"
     },
     {
       "path": "skills/source/.agents/skills/typed-error-recovery-contracts/SKILL.md",
-      "bytes": 9077,
-      "sha256": "416ca6df50c718ae5715e077bfe7a285b9a2ae8081286ef234f8a77662e01e9f"
+      "bytes": 10418,
+      "sha256": "51e50583dd75373a125c325502ec8a661d52486d52bbf1aed2d87a66eb507485"
     },
     {
       "path": "skills/source/.agents/skills/typed-error-recovery-contracts/exercises/README.md",
@@ -493,13 +573,18 @@
     },
     {
       "path": "skills/source/.agents/skills/versioned-exemplar-successor/SKILL.md",
-      "bytes": 6556,
-      "sha256": "18979742d7488ec44cb787e67577b0bb112b68694c56eb465999a60973aacb3f"
+      "bytes": 8373,
+      "sha256": "9479ce93e91860324cfc7ee11bd5b207b222210bcd0fd9d3d301c2d2435d3f0e"
+    },
+    {
+      "path": "skills/source/.agents/skills/versioned-exemplar-successor/references/successor-and-projection-recovery.md",
+      "bytes": 3463,
+      "sha256": "4bd0e98852597fb3f399f40932f79f194a7c99a35e7059308a7f8e222d73efbe"
     },
     {
       "path": "skills/source/.agents/skills/visualization-question-routing/SKILL.md",
-      "bytes": 5392,
-      "sha256": "93c20b583363208998a90d1322521211781255005ab37ce7360fae7438ad2502"
+      "bytes": 6725,
+      "sha256": "6eb38582a3fff92de3bbd4bbbaad7e84972474bb94b37808c412fa7afd7ba387"
     },
     {
       "path": "skills/source/.agents/skills/visualization-question-routing/exercises/README.md",
@@ -529,27 +614,27 @@
     {
       "path": "skills/spatial-support-and-change-visualization/index.html",
       "bytes": 7365,
-      "sha256": "66434f3ff1e03d98c60ea091738920e0bc8f461a1098b9807b0a835b8b0711b6"
+      "sha256": "f1b8db40b6ae5c17bbf231eee936ba4c0770a142707935eaf90b7f5097412f52"
     },
     {
       "path": "skills/transaction-boundary-evidence-mapping/index.html",
-      "bytes": 3281,
-      "sha256": "7d70bd465ea82d6538bdb283b4fa7254fcd461b37f264ba3f443a2acc432f061"
+      "bytes": 3834,
+      "sha256": "2804500f73f9fab4c836a5e4e8ff804a201f3645a25f2b6e5e900c59b158560c"
     },
     {
       "path": "skills/typed-error-recovery-contracts/index.html",
       "bytes": 5198,
-      "sha256": "a6561cb4a170c9a21476a6f59949103d33db70d8be4381f9ff25b1d1700ce649"
+      "sha256": "40af164569bcad170b3a5b96f653148ba9a5fc255c16a6e8954baf21bb590b27"
     },
     {
       "path": "skills/versioned-exemplar-successor/index.html",
-      "bytes": 3241,
-      "sha256": "1f3239fe8e0c3850252c947995e32f89c4077bdb7f5a1b33fd45b272974445bc"
+      "bytes": 3776,
+      "sha256": "cd40d1240466182739286ec2c083521c4efce89c669416163c67e034240e7315"
     },
     {
       "path": "skills/visualization-question-routing/index.html",
       "bytes": 5605,
-      "sha256": "bfab8b4740a4f9aaee4376e6c09baaa09f92ed4f85ccc8c1d664a88dc674d2f3"
+      "sha256": "18f6436f138457e60be6e25d58ac7a0446c64e176cc63a9698a4344ef976fb0d"
     },
     {
       "path": "snippets/README.md",
@@ -579,7 +664,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/index.html",
       "bytes": 5855,
-      "sha256": "8d2f958be4ff54c2972ee3e08c546d32b24654901e7968799f976823936855ec"
+      "sha256": "c1a43c26d6c6fa081a6b4f4cc67974872c9a8854f79278c49b1e9384f41da0c4"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.0/snippet.json",
@@ -609,7 +694,7 @@
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/index.html",
       "bytes": 6311,
-      "sha256": "a01c9da95fe4d9fd33315cf59682b30fbfb26008626b1443e3c458a5a5e3ec7f"
+      "sha256": "23a965dcb401b95f2ab3d0f3c507dcdf26f1df374cf8d7a6bfacc81991e13636"
     },
     {
       "path": "snippets/document-evidence-core-patterns/0.1.1/snippet.json",
@@ -674,7 +759,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.0/index.html",
       "bytes": 10490,
-      "sha256": "e1edc68184a0258782a33e74f8a7c1b7b90243429ef7d01f4e90d0b658ab9434"
+      "sha256": "3e55038dd2f6e8602f17c805bff7aef89f696308b603feb3745dda993885d4f1"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.0/pyproject.toml",
@@ -749,7 +834,7 @@
     {
       "path": "snippets/document-evidence-extraction/0.1.1/index.html",
       "bytes": 11998,
-      "sha256": "95bd1b43838f4549e9281a305776d3d2273d71e6c8c6520c1e8e9f77e2521c09"
+      "sha256": "859ee6756aef56716444aaff19eda87f2c0c9f102383289def45b153070c1664"
     },
     {
       "path": "snippets/document-evidence-extraction/0.1.1/pyproject.toml",
@@ -829,7 +914,7 @@
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/index.html",
       "bytes": 9455,
-      "sha256": "9c31139780869cb66187dc1a0db8e0bc6d12ff7f495700d387fa65d2649e5311"
+      "sha256": "8a033de3f9f0ba44ee950eb5b92c27c2e1ea9f4f01db30a9a49faf0537e00a86"
     },
     {
       "path": "snippets/instrument-ingress-integrity/0.1.0/pyproject.toml",
@@ -874,7 +959,7 @@
     {
       "path": "snippets/lims-eln-enterprise-implementation/0.3.2/index.html",
       "bytes": 5852,
-      "sha256": "fe37d828ea019050ba5288ad59a12225248775da6a29434aa0de71d9ddafcc4c"
+      "sha256": "4ac0b8af20c56bfb7f316cf2a8e1f11c08b44a161015a79e30c5e5ae0a83a244"
     },
     {
       "path": "snippets/lims-eln-enterprise-implementation/0.3.2/release-coordinate.json",
@@ -929,7 +1014,7 @@
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/index.html",
       "bytes": 10128,
-      "sha256": "6d94bcfd7d9086fb7ab36974b49eaa5968b24d7059d58c180ab92522795d239c"
+      "sha256": "760b7a763f4400b394cdc8c0a069a9c5307e7e3ec22e1602d7a362f4b344dee4"
     },
     {
       "path": "snippets/migration-reconciliation-cutover/0.1.0/pyproject.toml",
@@ -1004,7 +1089,7 @@
     {
       "path": "snippets/postgresql-pending-outbox-query/0.1.0/index.html",
       "bytes": 12469,
-      "sha256": "747a1fd80f06328dbba5ec6d78a2d590f8069d5d8539fd6f8a7d8eaf0bd17995"
+      "sha256": "7d0b7d2304aa06f962e21cfe9dfab95e5994cd31924ae39abd25405d51f4f717"
     },
     {
       "path": "snippets/postgresql-pending-outbox-query/0.1.0/observations/postgresql-17.json",
@@ -1094,7 +1179,7 @@
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/index.html",
       "bytes": 8573,
-      "sha256": "1702c7465bc08b05f8e171aca5139329c5a7ddff4efc1aeadca296eeaceada05"
+      "sha256": "457743a82b0503e13a12b692b27844f51755cafc736b0c0f13c0620f9d8cb80b"
     },
     {
       "path": "snippets/specimen-custody-outbox/0.1.0/pyproject.toml",
@@ -1149,7 +1234,7 @@
     {
       "path": "snippets/typed-absence-and-wire-shape/0.1.0/index.html",
       "bytes": 9705,
-      "sha256": "710f04ef8377bacaccd15a7accde03e993a2955e9f293ba588941594d7974684"
+      "sha256": "ab7c244b6f0807fbea5d951a3045b964fd429487d58ce878be1cade19ca65f6e"
     },
     {
       "path": "snippets/typed-absence-and-wire-shape/0.1.0/package-lock.json",

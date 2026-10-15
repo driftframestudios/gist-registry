@@ -25,6 +25,20 @@ owns accepted effects and replay; [typed error contracts](https://kindlight.io/s
 own catchable feedback and diagnostic audiences. Share a helper when its
 acquisition, transfer, and error policy actually agree across callers.
 
+## Inputs and caller policy
+
+Begin with the operation and its accepted state, acquisition/transfer/release
+sites, actual resource identity, wrapper semantics, and public caller contract.
+Record which failures mean ordinary operation failure and which events carry
+control under the selected runtime. The caller selects precedence; a familiar
+context-manager pattern does not settle that policy by itself.
+
+Missing close/retry semantics route to the platform owner before changing a
+release loop. An unknown publication result stays uncertain until the native
+receipt or reconciliation establishes it. The result identifies current
+owners, attempted releases, accepted state, the selected propagating event,
+remaining diagnostics, and the receiver responsible for recovery.
+
 ## Rules
 
 ### Rule: Acquisition and transfer name the owner
@@ -107,7 +121,24 @@ for Python streams, transaction owners, source lineage, and competing designs.
 The [bounded lifecycle exercise](exercises/exercise.py) and its
 [guide](exercises/README.md) expose the two independent failure controls.
 
-## Completion and re-entry
+## Scenario: Publication succeeds and teardown stops
+
+- Given a verified generation becomes accepted and its pending owner transfers ownership
+- When a later release raises an ordinary failure or control signal
+- Then remaining owned releases receive their declared attempts
+- And the caller's failure policy preserves the observed publication state and relevant diagnostics
+- And recovery uses the accepted result or its receipt rather than repeating the operation as if publication had never occurred
+
+## Recovery and re-entry
+
+Preserve each resource whose release remains unresolved and name its current
+owner or reconciliation receiver. Report an attempted release separately from
+observed closure. Retrying a close, deleting retained state, or replaying an
+accepted operation follows that resource's native policy. Re-enter at the
+earliest uncertain acquisition, transfer, or release state; settled resources
+retain their recorded disposition while the affected observation is repeated.
+
+## Completion
 
 The contract is ready when a caller can recover each resource's owner and
 observed state after success, failure, and interruption, and the promised

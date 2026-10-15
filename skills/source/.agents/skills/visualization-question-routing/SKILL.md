@@ -20,6 +20,16 @@ description: Translates a reader question and data structure into explicit varia
 - **May under-attend:** Domain validity, reader comprehension, accessibility, and final rendering each need their fitting observation.
 - **Interactions:** Longitudinal observation and spatial support skills resolve their respective semantic branches. Transform fidelity and scientific composition receive the settled view contract. One destination owner retains the delivered artifact.
 
+## Inputs, defaults and output
+
+Supply the reader question, observation unit and population, source/field meanings,
+meaningful absence, and intended destination. A small sample with an exact-value
+companion can be enough. When a field's role is unsettled, retain the records and
+propose a table or explicitly provisional view; the source owner supplies the
+missing identity, denominator, or time basis. The output is a view contract in
+the existing work record, with one selected reading and a decisive alternative.
+A new manifest is useful only when a receiving tool consumes it.
+
 ## Rules
 
 ### Rule: The reading job precedes the chart name
@@ -72,6 +82,15 @@ states. State uncertainty type and method where it changes interpretation.
 5. **Transfer:** Supply values, source, labels, scales, uncertainty, companion, and named destination owner.
 6. **Observe:** Check arithmetic and semantic agreement; inspect actual rendering when produced. Keep comprehension claims tied to actual reader evidence.
 
+## Decisive scenario
+
+### Scenario: Annual groups contain different people
+
+- Given two annual samples have recoverable group values but lack persistent person identities
+- When the proposed figure connects each year's records as individual change
+- Then annual group comparisons remain available and the individual-change claim stays held
+- And the source owner supplies admitted pairing before individual histories are drawn
+
 ## Conditional context
 
 Load [roles and evidence](references/roles-and-evidence.md) for time roles,
@@ -80,7 +99,14 @@ Use the [receiving exercise](exercises/README.md) when applying the contract to
 one dataset with several legitimate questions. Its runnable assertions check
 that example's semantic decisions; they do not automate general form selection.
 
-## Completion and re-entry
+## Recovery and re-entry
+
+Preserve the original records, admitted field meanings, and exact-value table.
+Return an unresolved identity, denominator, or timing question to its source
+owner. Use the supported comparison while that decision rests. A changed task
+or new source evidence reopens the form decision before further rendering.
+
+## Completion
 
 The receiver can identify the population, perform the named comparison, recover
 exact values, and explain why the form fits. Unresolved source meaning remains

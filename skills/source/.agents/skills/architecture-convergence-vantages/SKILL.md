@@ -24,6 +24,21 @@ description: Coordinates bounded technical vantages around a consequential imple
 - **Material result:** A decision that an implementer can test and a reviewer can bound.
 - **Rest or release when:** Additional vantages repeat the same mechanism, evidence, and receiver without changing the decision.
 
+## Inputs and bounded output
+
+Begin with a material decision, the current source and evidence coordinate,
+the desired guarantee, the operating actors, and the consequence of choosing
+poorly. Identify constraints that actually discriminate options: supported
+platforms, concurrent readers or writers, accepted-state recovery, trust,
+workload, and action authority as relevant. A missing operating-model fact
+remains an open premise; source reading can identify the smallest observation
+or human choice that settles it.
+
+The output compares viable mechanisms against the same requirements, selects
+one bounded route or an explicitly held decision, and names implementation
+and evidence owners. Two distinct vantages are the starting dose. Additional
+perspectives earn attention when they can change that result.
+
 ## Rules
 
 ### Rule: Vantages are named by the boundary they examine
@@ -58,6 +73,12 @@ more complex option remains available only when it protects a named receiver
 or consequence.
 
 ### Rule: Primary sources and local behavior retain evidence authority
+
+Source revision, operating model, requirement, and platform scope travel with
+each vantage. Resolve factual disagreements through their source owner or a
+distinguishing observation. A stale or incompatible return remains useful as a
+question, while current synthesis uses evidence for the actual receiving
+coordinate. Agreement among reviewers supplies no missing runtime guarantee.
 
 Runnable source and focused tests establish current behavior. Official
 documentation establishes platform contracts. Local fault injection,
@@ -133,3 +154,12 @@ other guarantees retain their fitting evidence owners, and the operating
 model, evidence limits, and next receiver are legible. A changed mechanism,
 test observation, platform, threat model, source version, runtime observation,
 or human-held requirement can reopen convergence.
+
+## Recovery and re-entry
+
+When a probe contradicts the selected mechanism, preserve the last verified
+source and accepted behavior, return to the affected guarantee row, and revise
+the option or its acceptance test. A missing platform or operating-model
+observation produces a conditional recommendation with its exact release
+signal and receiver. Keep viable alternatives only with the condition that
+would activate them; unresolved tradeoffs remain visible in the one synthesis.
