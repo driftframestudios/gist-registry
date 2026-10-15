@@ -1,0 +1,7 @@
+region,year,events,exposure,support,rate_per_100
+North,2023,10,100,synthetic-v1,10
+South,2023,20,1000,synthetic-v1,2
+West,2023,0,0,synthetic-v1,unavailable
+North,2024,20,100,synthetic-v1,20
+South,2024,0,1000,synthetic-v1,0
+West,2024,5,100,synthetic-v2,5

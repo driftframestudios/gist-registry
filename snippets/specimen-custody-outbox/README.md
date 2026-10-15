@@ -1,7 +1,5 @@
 # Specimen custody and transactional outbox
 
-Current form: [`specimen-custody-outbox@0.1.0`](0.1.0/README.md).
-
 This family makes one custody-transfer boundary inspectable: an attributable,
 tenant-scoped command advances specimen custody and records its event, replay
 outcome, and outbox message through one accepted state change. Exact replay
@@ -15,9 +13,21 @@ recovery. A durable database implementation is the next fitting route for
 transaction isolation, persistence, process interruption, and concurrent
 writers.
 
-## Continuation
+## Current state
 
-- **Standing:** `seeded`
-- **Current form:** [`specimen-custody-outbox@0.1.0`](0.1.0/)
-- **Present use:** A runnable domain exemplar and candidate source set for a
-  separately reviewed public Gist projection.
+| Axis | Standing | Meaning |
+| --- | --- | --- |
+| Registry acceptance | `0.1.0` accepted | The exact version is registered and its immutable tag preserves the reviewed coordinate |
+| Manifest maturity | `candidate` | The exact `snippet.json` records the process-local evidence maturity |
+| Continuation | `seeded` | The first runnable form supports use and leaves durable transaction questions open |
+| Publication | Pages projected | The accepted package is publicly retrievable; optional Gist creation remains a separate human-held action |
+
+**Current coordinate:**
+[`specimen-custody-outbox@0.1.0`](0.1.0/README.md).
+
+## Next evidence-bearing route
+
+The current version is a runnable domain exemplar and proposed compact Gist
+source set. A durable database implementation receives transaction isolation,
+persistence, process interruption, concurrent-writer, and broker-delivery
+evidence.

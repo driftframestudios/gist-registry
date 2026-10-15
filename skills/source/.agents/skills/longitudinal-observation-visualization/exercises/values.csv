@@ -1,0 +1,6 @@
+record,unit,date,value,status
+a1,A,2024-01-01,0,observed
+a2,A,2024-01-03,4,observed
+a3,A,2024-01-05,,missing_expected
+a4,A,2024-01-09,3,observed
+b1,B,2024-01-02,8,observed

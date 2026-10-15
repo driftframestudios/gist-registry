@@ -1,8 +1,16 @@
 # General provenance
 
 Gist Registry is authored by Vikrant Varun Kudesia and maintained by Driftframe
-Studios, Limited Liability Company through human–AI collaboration. Git history
-and reviewed pull requests carry contribution credit.
+Studios, Limited Liability Company. Vikrant sets the work's direction and
+retains human authorship and publication authority.
+
+Human–AI collaboration describes the arrangement of work: generative AI
+systems assist with research, drafting, code generation, and checks within
+assigned tasks and available tools. People hold the consequential review,
+acceptance, and publication decisions; authorized systems can carry out their
+specified actions. Runnable source, focused observations, and reviewed pull
+requests establish the technical evidence. Git history and reviewed pull
+requests carry contribution credit.
 
 This repository-wide record lets individual samples stay focused on technical
 material. Copyright notices remain in their established repository and page

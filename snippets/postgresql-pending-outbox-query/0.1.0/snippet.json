@@ -1,0 +1,248 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "postgresql-pending-outbox-query",
+  "version": "0.1.0",
+  "artifactKind": "domain_exemplar",
+  "standing": "candidate",
+  "title": "PostgreSQL pending outbox query and partial index",
+  "summary": "A bounded PostgreSQL 17 query proves tenant-scoped pending counts through an ordinary reader, then compares baseline and partial-index plans after exact result parity.",
+  "use": {
+    "practicalQuestion": "How does a partial index change database work while preserving the exact pending-message count for each tenant-scoped specimen?",
+    "changedAbility": "A reader can reproduce relational count meaning, detect missing predicates, inspect ordinary-role execution, and assess a query-plan observation within its complete cost boundary.",
+    "readers": [
+      "Technical practitioners reviewing relational query correctness and cost",
+      "AI collaborators adapting SQL with source-bound semantics and evidence"
+    ],
+    "capabilities": [
+      "prove_query_semantics",
+      "inspect_relational_identity",
+      "observe_ordinary_role_plans",
+      "compare_after_semantic_parity",
+      "release_owned_cluster"
+    ]
+  },
+  "provenance": {
+    "class": "authorized_source_adaptation",
+    "description": "Adapts the Enterprise V005 pending-count lateral query and V007 partial-index form; owns newly authored synthetic schema, fixtures, independent oracle and disposable PostgreSQL runner. source-coordinate.json binds exact upstream files, license and attribution.",
+    "temporalScope": "Source adaptation from Enterprise ae213e7c01262431030a2a8d81129bed090f1376; local PostgreSQL 17.10 observation records its own runtime and executable-source digests.",
+    "sourceKeys": [
+      "authorized-source:enterprise-pending-outbox-query",
+      "authorized-source:enterprise-v007-partial-index",
+      "realistic-synthetic:tenant-specimen-outbox"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Eleven focused tests pass with the explicit PostgreSQL 17.10 profile: literal count expectations, three SQL predicate perturbations, two denied reader writes, four relational constraint controls, fixed-workload result parity, source/license binding, and owned-cluster recovery tests. The retained ordinary-role plans are observations; exact counts and index meaning define correctness."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/postgresql-pending-outbox-query/0.1.0",
+  "representations": [
+    {
+      "role": "orientation",
+      "path": "README.md",
+      "declaredMediaType": "text/markdown"
+    },
+    {
+      "role": "manifest",
+      "path": "snippet.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "runtime_version",
+      "path": ".python-version",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "dependency_definition",
+      "path": "pyproject.toml",
+      "declaredMediaType": "application/toml"
+    },
+    {
+      "role": "dependency_lock",
+      "path": "uv.lock",
+      "declaredMediaType": "application/toml"
+    },
+    {
+      "role": "source",
+      "path": "sql/schema.sql",
+      "declaredMediaType": "application/sql"
+    },
+    {
+      "role": "source",
+      "path": "sql/query.sql",
+      "declaredMediaType": "application/sql"
+    },
+    {
+      "role": "source",
+      "path": "sql/index.sql",
+      "declaredMediaType": "application/sql"
+    },
+    {
+      "role": "source",
+      "path": "src/pending_outbox.py",
+      "declaredMediaType": "text/x-python"
+    },
+    {
+      "role": "source",
+      "path": "src/owned_cluster.py",
+      "declaredMediaType": "text/x-python"
+    },
+    {
+      "role": "test",
+      "path": "tests/test_pending_outbox.py",
+      "declaredMediaType": "text/x-python"
+    },
+    {
+      "role": "fixture",
+      "path": "fixtures/semantic.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "fixture",
+      "path": "fixtures/workload.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "expected_contract",
+      "path": "expected/semantic.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "provenance",
+      "path": "source-coordinate.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "license",
+      "path": "UPSTREAM-LICENSE",
+      "declaredMediaType": "text/plain"
+    },
+    {
+      "role": "observation",
+      "path": "observations/postgresql-17.json",
+      "declaredMediaType": "application/json"
+    },
+    {
+      "role": "exercise",
+      "path": "exercises/parity-bound-query-plans.md",
+      "declaredMediaType": "text/markdown"
+    }
+  ],
+  "execution": {
+    "runtime": "Python >=3.12,<3.13; PostgreSQL major 17 on Linux or macOS; Psycopg 3.3.6",
+    "dependenciesPath": "uv.lock",
+    "commands": [
+      {
+        "name": "run",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/postgresql-pending-outbox-query/0.1.0 --locked python snippets/postgresql-pending-outbox-query/0.1.0/src/pending_outbox.py --postgres-bin /path/to/postgresql-17/bin",
+        "establishes": "Creates and releases one owned cluster, proves exact semantics and ordinary read authority, then emits normalized baseline/index plans with executable-source digests."
+      },
+      {
+        "name": "test",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/postgresql-pending-outbox-query/0.1.0 --locked python -m unittest discover -s snippets/postgresql-pending-outbox-query/0.1.0/tests -v",
+        "establishes": "Runs source-binding, capacity, plan-normalization and cleanup controls; reports the database integration test as a named opt-in skip."
+      },
+      {
+        "name": "test_postgresql",
+        "command": "PENDING_QUERY_POSTGRES_BIN=/path/to/postgresql-17/bin uv --cache-dir .artifacts/uv-cache run --project snippets/postgresql-pending-outbox-query/0.1.0 --locked python -m unittest discover -s snippets/postgresql-pending-outbox-query/0.1.0/tests -v",
+        "establishes": "Runs all eleven tests, including the real owned PostgreSQL 17 cluster, deliberate predicate failures and exact result parity."
+      },
+      {
+        "name": "lint",
+        "command": "uv --cache-dir .artifacts/uv-cache run --project snippets/postgresql-pending-outbox-query/0.1.0 --locked ruff check snippets/postgresql-pending-outbox-query/0.1.0/src snippets/postgresql-pending-outbox-query/0.1.0/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/postgresql-pending-outbox-query/0.1.0 --locked ruff format --check snippets/postgresql-pending-outbox-query/0.1.0/src snippets/postgresql-pending-outbox-query/0.1.0/tests",
+        "establishes": "Checks focused Python correctness, imports, modernization and formatting."
+      }
+    ],
+    "fixtures": [
+      "fixtures/semantic.json",
+      "fixtures/workload.json"
+    ],
+    "expectedResults": [
+      "expected/semantic.json"
+    ],
+    "environmentNotes": [
+      "The caller supplies an existing PostgreSQL 17 installation. The runner allocates a new private Unix-socket cluster and operates only that cluster.",
+      "The read role has SELECT on sample tables. Tenant query parameters preserve query scope; signed authorization and row security retain their Enterprise receiver.",
+      "One fixed-workload measurement per variant records sampled statistics, visibility preparation, setting units, plan cardinalities, loops and buffers; variable timings remain outside acceptance thresholds."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Which relation predicates carry complete tenant-scoped specimen meaning?",
+      "Does a zero count survive while an absent tenant remains an empty result?",
+      "Which exact results agree before timing, and what work lies outside EXPLAIN execution time?",
+      "Which authority and recovery mechanisms belong to the receiving application?"
+    ],
+    "decisionRules": [
+      "Keep tenant and aggregate predicates together, and preserve every admitted pending state.",
+      "Compare variants against literal independent expectations before observing their cost.",
+      "Treat plan choice and timing as workload observations; use exact rows and catalog meaning as acceptance.",
+      "Retain the owned cluster directory when shutdown requires manual recovery."
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Bind tenant values through the driver, keep predicate meaning explicit, and install a matching partial index under the setup owner."
+      },
+      {
+        "mode": "review",
+        "instruction": "Perturb tenant, aggregate and state predicates; inspect exact counts, ordinary-role grants, source hashes and all cleanup exits."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Bring the query to a receiver with explicit tenant authorization, migration lock policy, data distribution and complete-path cost evidence."
+      }
+    ],
+    "codeExemplarGranularity": "One SQL count and partial index with a minimal relational schema, bounded synthetic fixtures, ordinary reader, owned runtime runner, exact expectations and retained plan observation.",
+    "complexityAndAllocation": "Repeated scans can inspect O(N*M) rows; keyed partial-index access is approximately O(N log M + P), while complete results and Python parity lists remain O(N). PostgreSQL plans expose actual visits and buffers; index storage, write maintenance, setup and Python allocation retain separate cost boundaries."
+  },
+  "boundaries": {
+    "evidence": "Observed PostgreSQL 17.10 semantics, database constraints, parameter binding, ordinary read authority, cleanup controls and one parity-bound query-plan comparison on fixed synthetic data.",
+    "trust": "All domain values are synthetic. Private local socket access shares the invoking OS identity boundary. Exact SHA-256 and Git blobs provide content identity; application authentication remains with the receiver.",
+    "transfer": "Enterprise owns signed tenant context, row security, delivery transitions, leases, replay, Flyway upgrades and restart acceptance. A receiving deployment establishes its migration policy, distribution, write costs and operational authority."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A missing relational or state predicate changes exact counts.",
+      "A selected runtime differs from PostgreSQL major 17 or the declared workload grows beyond its fixed capacity.",
+      "A body or start interruption leaves cleanup responsible for an owned cluster.",
+      "A shutdown failure leaves the owned resource available for local recovery."
+    ],
+    "recoveryMoves": [
+      "Restore intended semantics and rerun all independent controls before comparison.",
+      "Select PostgreSQL 17 and keep workload changes in a reviewed successor.",
+      "Attempt owned shutdown and directory release after body and start failures.",
+      "Preserve the owned directory and both failure objects; use its local path to inspect and stop the server before removal."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "derived_from",
+      "target": "lims-eln-enterprise-implementation@ae213e7c01262431030a2a8d81129bed090f1376",
+      "reason": "Exact query, partial-index and configured-test source owners remain discoverable through source-coordinate.json.",
+      "publicUrl": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/tree/ae213e7c01262431030a2a8d81129bed090f1376"
+    },
+    {
+      "type": "complements",
+      "target": "specimen-custody-outbox@0.1.0",
+      "reason": "The in-memory command exemplar owns atomic custody/outbox semantics; this package demonstrates a bounded durable SQL read and its cost."
+    },
+    {
+      "type": "exercises",
+      "target": "gist-registry:parity-bound-workload-measurement",
+      "reason": "The SQL fixture supplies a natural parity-before-timing comparison for the portable measurement skill."
+    }
+  ],
+  "extensions": {
+    "sourceCoordinates": {
+      "path": "source-coordinate.json",
+      "relationship": "authorized_adaptation"
+    },
+    "retainedObservation": {
+      "path": "observations/postgresql-17.json",
+      "meaning": "one local ordinary-role comparison, bound to executable source and fixtures"
+    }
+  }
+}

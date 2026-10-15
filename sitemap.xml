@@ -9,10 +9,21 @@
   <url><loc>https://kindlight.io/schemas/gist-registry/skills/0.1.0/</loc></url>
   <url><loc>https://kindlight.io/skills/</loc></url>
   <url><loc>https://kindlight.io/skills/architecture-convergence-vantages/</loc></url>
+  <url><loc>https://kindlight.io/skills/bounded-representation-admission/</loc></url>
   <url><loc>https://kindlight.io/skills/contextual-jargon-scan/</loc></url>
+  <url><loc>https://kindlight.io/skills/controlled-context-comparison/</loc></url>
+  <url><loc>https://kindlight.io/skills/interruption-safe-resource-ownership/</loc></url>
+  <url><loc>https://kindlight.io/skills/longitudinal-observation-visualization/</loc></url>
+  <url><loc>https://kindlight.io/skills/omics-coordinate-and-measurement-views/</loc></url>
+  <url><loc>https://kindlight.io/skills/parity-bound-workload-measurement/</loc></url>
   <url><loc>https://kindlight.io/skills/probe-bearing-exemplar-formation/</loc></url>
+  <url><loc>https://kindlight.io/skills/scientific-figure-composition/</loc></url>
+  <url><loc>https://kindlight.io/skills/scientific-scale-and-transform-fidelity/</loc></url>
+  <url><loc>https://kindlight.io/skills/spatial-support-and-change-visualization/</loc></url>
   <url><loc>https://kindlight.io/skills/transaction-boundary-evidence-mapping/</loc></url>
+  <url><loc>https://kindlight.io/skills/typed-error-recovery-contracts/</loc></url>
   <url><loc>https://kindlight.io/skills/versioned-exemplar-successor/</loc></url>
+  <url><loc>https://kindlight.io/skills/visualization-question-routing/</loc></url>
   <url><loc>https://kindlight.io/snippets/</loc></url>
   <url><loc>https://kindlight.io/snippets/document-evidence-core-patterns/</loc></url>
   <url><loc>https://kindlight.io/snippets/document-evidence-core-patterns/0.1.0/</loc></url>
@@ -26,6 +37,8 @@
   <url><loc>https://kindlight.io/snippets/lims-eln-enterprise-implementation/0.3.2/</loc></url>
   <url><loc>https://kindlight.io/snippets/migration-reconciliation-cutover/</loc></url>
   <url><loc>https://kindlight.io/snippets/migration-reconciliation-cutover/0.1.0/</loc></url>
+  <url><loc>https://kindlight.io/snippets/postgresql-pending-outbox-query/</loc></url>
+  <url><loc>https://kindlight.io/snippets/postgresql-pending-outbox-query/0.1.0/</loc></url>
   <url><loc>https://kindlight.io/snippets/specimen-custody-outbox/</loc></url>
   <url><loc>https://kindlight.io/snippets/specimen-custody-outbox/0.1.0/</loc></url>
   <url><loc>https://kindlight.io/snippets/typed-absence-and-wire-shape/</loc></url>

@@ -1,8 +1,5 @@
 # Migration reconciliation and approval-bound cutover
 
-Current form:
-[`migration-reconciliation-cutover@0.1.0`](0.1.0/README.md).
-
 This family makes one migration-activation boundary inspectable. Exact
 generation reconciliation and restore evidence form one cutover plan; a
 request-bound approval record then participates in a single process-local
@@ -18,9 +15,21 @@ post-publication response recovery remain inspectable together. Receiving
 identity, operations, quality, and durable-storage systems retain their own
 authority and evidence roles.
 
-## Continuation
+## Current state
 
-- **Standing:** `seeded`
-- **Current form:** [`migration-reconciliation-cutover@0.1.0`](0.1.0/)
-- **Present use:** A runnable domain exemplar and proposed source set for a
-  separately reviewed public Gist projection.
+| Axis | Standing | Meaning |
+| --- | --- | --- |
+| Registry acceptance | `0.1.0` accepted | The exact version is registered and its immutable tag preserves the reviewed coordinate |
+| Manifest maturity | `candidate` | The exact `snippet.json` records the process-local evidence maturity |
+| Continuation | `seeded` | The first runnable form supports use and leaves durable cutover questions open |
+| Publication | Pages projected | The accepted package is publicly retrievable; optional Gist creation remains a separate human-held action |
+
+**Current coordinate:**
+[`migration-reconciliation-cutover@0.1.0`](0.1.0/README.md).
+
+## Next evidence-bearing route
+
+The current version is a runnable domain exemplar and proposed compact Gist
+source set. A durable coordination and persistence owner receives multi-process
+epoch control, restart recovery, operational approval, and production cutover
+evidence.

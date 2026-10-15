@@ -1,0 +1,42 @@
+{
+  "repository": "https://github.com/driftframestudios/lims-eln-enterprise-implementation",
+  "source_commit": "ae213e7c01262431030a2a8d81129bed090f1376",
+  "source_tree": "825e062a7b22b9df91cd8e3b08519c50a04473a1",
+  "relationship": "authorized adaptation of the pending-count lateral query and V007 partial-index form; synthetic fixture and owned runner are authored here",
+  "license": "Apache-2.0",
+  "attribution": "LIMS/ELN Enterprise Implementation is authored by Vikrant Varun Kudesia and maintained by Driftframe Studios, Limited Liability Company through human\u2013AI collaboration. Git history and reviewed pull requests carry contribution credit.",
+  "source_files": {
+    "sql/V005__golden_specimen_workbench.sql": {
+      "git_blob": "e86f4d85d336805c2bae14afb7a6e9dd420a75d6",
+      "sha256": "6366a6093992c6fa42770cb5e6706a9109cbbcf2c0828f14bfe8af9288e0ed6e",
+      "bytes": 14460
+    },
+    "sql/V007__pending_outbox_specimen_index.sql": {
+      "git_blob": "6734501280b8182b0601ff6cbd597dad0cc819c7",
+      "sha256": "bcd2b1ef557cbff04f74780c6b0493102750e5dcff8477e0c8405eaf3cdf8c78",
+      "bytes": 520
+    },
+    "tests/test_pending_outbox_postgres.py": {
+      "git_blob": "47d4256f88398fc58f04eb064604f07f6cfc05f8",
+      "sha256": "f2df4f0e4e8d0216bd6e56686213c4d0dc124fcbdd610387c66dab6ff7ea3e43",
+      "bytes": 6906
+    },
+    "LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357
+    },
+    "AUTHORS": {
+      "git_blob": "57ca1f2b2388cf1a57ac0d8216a47d01aab46bc7",
+      "sha256": "63c6673baa090ed6abbc83fa026794c27ac2de85c663bfd53cac7ba977ff9829",
+      "bytes": 470
+    }
+  },
+  "runtime_observation": {
+    "postgresql": "17.10",
+    "distribution": "official source archive compiled locally",
+    "archive": "https://ftp.postgresql.org/pub/source/v17.10/postgresql-17.10.tar.bz2",
+    "archive_sha256": "078a03516dcdbdb705fecaf415ea3d13a956c589e46f09fed68a06fb00598c90"
+  },
+  "attribution_role": "Verbatim excerpt from the upstream AUTHORS record; the adaptation README names human authorship/review and generative assistance explicitly."
+}
