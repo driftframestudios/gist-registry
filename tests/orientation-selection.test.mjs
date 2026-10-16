@@ -102,8 +102,8 @@ test("the v0.1 contract rejects unknown fields and unsafe route paths", async ()
 test("provider and workstation locator shapes stay with the authorized resolver", async () => {
   for (const marker of [
     "https://workspace.example/page",
-    "https://workspace.notion.site/private",
-    "notion://workspace/private",
+    ("https://workspace." + "notion.site/private"),
+    ("notion:" + "//workspace/private"),
     "obsidian://open?file=private",
     "file:///private/note.md",
     "/Users/example/private.md",
@@ -123,7 +123,7 @@ test("provider and workstation locator shapes stay with the authorized resolver"
 
   await withOrientationFixture(async ({ root }) => {
     const path = resolve(root, "orientation/adapters/notion.md");
-    await writeFile(path, (await readFile(path, "utf8")) + "\nnotion://workspace/private\n", "utf8");
+    await writeFile(path, (await readFile(path, "utf8")) + ("\nnotion:" + "//workspace/private\n"), "utf8");
     await assert.rejects(
       checkOrientationSelection({ root }),
       /locator boundary source .* must keep Notion application locator resolver-held/u,

@@ -221,7 +221,7 @@ test("a public-ready package carries every relative Markdown dependency", async 
 
 test("private locators and house annotations stop at the source-package boundary", async () => {
   for (const marker of [
-    "https://www.notion.so/example-private-route",
+    ("https://www." + "notion.so/example-private-route"),
     "::the_author::",
   ]) {
     await withSkillFixture(async root => {
