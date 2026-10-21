@@ -41,12 +41,13 @@ Install and exercise the exact browser binaries when the receiving environment
 owns browser execution:
 
 ```sh
-npm --prefix snippets/react-aria-visual-contract-receiver/0.1.0 ci --ignore-scripts
-npm --prefix snippets/cross-browser-visual-contract-observer/0.1.0 run install:browsers
-npm --prefix snippets/cross-browser-visual-contract-observer/0.1.0 run test:browser
+npm run install:visual-contracts:browsers
+npm run test:visual-contracts:observer:browsers:0.1.0
 ```
 
-The browser command first builds the bound Issue #62 package, recomputes the
+The repository command installs both the observer and its bound Issue #62
+receiver from their lockfiles before execution. The browser command then builds
+that receiver package, recomputes the
 same sorted production-file manifest used by that package, and requires an
 exact receiver-coordinate digest before case-plan execution. It then
 serves those production bytes locally for one focused interactive smoke in

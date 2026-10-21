@@ -132,17 +132,16 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: |
+            snippets/react-aria-visual-contract-receiver/0.1.0/package-lock.json
             snippets/cross-browser-visual-contract-observer/0.1.0/package-lock.json
             snippets/visual-pattern-artifact-compiler/0.1.0/package-lock.json
 
       - name: Install the locked browser-test toolchains
-        run: |
-          npm --prefix snippets/cross-browser-visual-contract-observer/0.1.0 ci --ignore-scripts
-          npm --prefix snippets/visual-pattern-artifact-compiler/0.1.0 ci --ignore-scripts
+        run: npm run prepare:visual-contracts:browsers
 
       - name: Install the exact Playwright browser matrix
         working-directory: snippets/cross-browser-visual-contract-observer/0.1.0
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Exercise browser receipts and published artifact semantics
-        run: npm run test:visual-contracts:browsers
+        run: npm run exercise:visual-contracts:browsers

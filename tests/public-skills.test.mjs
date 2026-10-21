@@ -134,9 +134,18 @@ test("visual-contract packages run across the declared Node.js maintenance lines
   assert.match(workflow, /visual-contract-browser-matrix:/u);
   assert.match(
     workflow,
-    /run: npx playwright install --with-deps chromium firefox webkit/u,
+    /visual-contract-browser-matrix:[\s\S]*?react-aria-visual-contract-receiver\/0\.1\.0\/package-lock\.json[\s\S]*?run: npm run prepare:visual-contracts:browsers[\s\S]*?run: npx playwright install --with-deps chromium firefox webkit[\s\S]*?run: npm run exercise:visual-contracts:browsers/u,
   );
-  assert.match(workflow, /run: npm run test:visual-contracts:browsers/u);
+
+  const rootPackage = await json(resolve(repositoryRoot, "package.json"));
+  assert.equal(
+    rootPackage.scripts["prepare:visual-contracts:browsers"],
+    "npm run prepare:visual-contracts:receiver:0.1.0 && npm run prepare:visual-contracts:observer:0.1.0 && npm run prepare:visual-contracts:artifact-compiler:0.1.0",
+  );
+  assert.match(
+    rootPackage.scripts["test:visual-contracts:observer:browsers:0.1.0"],
+    /prepare:visual-contracts:receiver:0\.1\.0/u,
+  );
 });
 
 test("each selected skill carries its operator README in the source package", async () => {
