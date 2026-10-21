@@ -1,0 +1,18 @@
+{
+  "operations": [
+    {
+      "id": "create-a",
+      "type": "create_variable",
+      "tempId": "tmp:a",
+      "dependsOn": ["create-b"],
+      "payload": {"name": "a", "resolvedType": "FLOAT", "value": 1}
+    },
+    {
+      "id": "create-b",
+      "type": "create_variable",
+      "tempId": "tmp:b",
+      "dependsOn": ["create-a"],
+      "payload": {"name": "b", "resolvedType": "FLOAT", "value": 2}
+    }
+  ]
+}

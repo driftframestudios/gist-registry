@@ -1,0 +1,47 @@
+{
+  "batchCount": 2,
+  "edgeCount": 3,
+  "elapsedMs": 0,
+  "finalRemoteRevision": 9,
+  "finalStateDigest": "0f1c066d29bb36fe20307ef89c8378dd6aecb380669fc296876ca6ca8a0c373a",
+  "finalVariableCount": 3,
+  "initialRemoteRevision": 7,
+  "maxBatchBytes": 520,
+  "maxResolvedBatchBytes": 351,
+  "observationTranscript": {
+    "count": 2,
+    "digest": "98d28f9165ec7cf6c76f0a7d42785016e6fb7246c2af00324accb48073f66084",
+    "retainedCount": 2,
+    "truncated": false
+  },
+  "observations": [
+    {
+      "attempt": 0,
+      "batchIndex": 0,
+      "classification": "applied",
+      "operationCount": 2,
+      "remoteRevision": 8
+    },
+    {
+      "attempt": 0,
+      "batchIndex": 1,
+      "classification": "applied",
+      "operationCount": 2,
+      "remoteRevision": 9
+    }
+  ],
+  "operationCount": 4,
+  "planDigest": "f07ae1fcf9396ccda761d334e3414f3fd37e5f790c86b2f5f2530fa637eec3ac",
+  "resumedFromBatch": 0,
+  "runId": "sync-run-001",
+  "schemaVersion": "0.1.0",
+  "settlementTranscript": {
+    "count": 2,
+    "digest": "272b4c75ea8e131a12fda818b7fc0cf011248b4ffbb928bebabef6456a65d010",
+    "releasedCount": 0
+  },
+  "status": "accepted",
+  "tempIdToRealId": {
+    "tmp:color-accent-current": "var_0003"
+  }
+}

@@ -5,13 +5,17 @@ A skill guides attention and action; source, actual observations and the
 receiving team's decisions establish the result. Each published package
 includes its references and declared exercise files.
 
-## Choose the first useful move
+## Choose the route for the work in front of you
 
 1. **Shape a scientific view.** Read [visualization question routing](visualization-question-routing/SKILL.md), identify the observation unit and the reader's comparison, then select one domain skill below. Keep original values and value states available beside the picture.
 2. **Repair a runtime boundary.** Choose typed errors, resource ownership, admission or transaction mapping according to the operation's actual failure. Bring the source, an independent expected result and one counterexample.
 3. **Compare alternatives.** Use controlled context for the comparison contract and parity-bound measurement for equivalent work. Run the [SQL measurement exercise](../../snippets/postgresql-pending-outbox-query/0.1.0/exercises/parity-bound-query-plans.md) for a concrete receiving example.
 4. **Keep a useful result.** Exemplar formation creates the first version; versioned successors preserve an accepted coordinate while new evidence strengthens the next one.
 5. **Complete a repository handoff.** Bind the repository collaboration cycle to the receiver's source owners and commands, then use secret-boundary inspection for the exact material crossing the handoff.
+6. **Carry a visual contract into service.** Steward token meaning into exact
+   artifacts, bind semantic states through a receiver, select decision-led
+   browser evidence, and publish coordinated visual derivatives through the
+   four contracts below.
 
 ## Scientific visualization
 
@@ -29,6 +33,24 @@ rule, alternatives and a receiving proof. Synthetic exercises establish their
 named mechanisms; domain validity, clinical or biological inference, new
 workloads and audience comprehension receive their own observations. The
 composition route separates visual inspection from automated geometry checks.
+
+## Visual contracts and executable receivers
+
+| Job | Skill | Material exercise |
+| --- | --- | --- |
+| Carry token meaning from authority through DTCG, compilation, and adapters | [Design-token pipeline stewardship](design-token-pipeline-stewardship/SKILL.md) | Primitive → semantic → component chain across two brands, two modes, two platforms, and two receivers |
+| Preserve state, interaction, presentation, and async ownership in a UI | [Semantic visual receiver contracts](semantic-visual-receiver-contracts/SKILL.md) | Native/React state parity and stale-generation reconciliation |
+| Match each visual decision with the strongest fitting evidence | [Visual contract receipt design](visual-contract-receipt-design/SKILL.md) | Five decision/fault/oracle/consequence pairs with a receipt recording a deliberate boundary change |
+| Publish responsive pixels and semantic companions as one family | [Visual artifact family publication](visual-artifact-family-publication/SKILL.md) | SVG identity, references, painter order, three widths, descriptions, and accepted pointer |
+
+The [receiving-repository runbook](../runbooks/gist-registry-receiving-repository-use.v0.1.md)
+shows how another codebase selects, verifies, adapts, observes, and reports on
+an exact artifact coordinate. Token compiler, native/React receiver, browser
+observer, SVG/WebP derivative, and remote-reconciliation packages provide the
+first executable evidence for this family. Its [durable exercise
+receipt](../runbooks/receipts/gist-registry-receiving-repository-use.v0.1.json)
+records two distinct package mechanisms and one independent cold-entry review
+while source acceptance stays with its review owner.
 
 ## Implementation, review and measurement
 
@@ -57,10 +79,10 @@ exercises. Repository commands remain explicit receiving inputs. HASE's
 [source orientation task](https://github.com/driftframestudios/human-ai-systems-exemplars/pull/488)
 exercises both through its native implementation, including a real finding,
 interruption and recovery. That changed-repository use, synthetic controls,
-independent review and future independent cold-start transfer have distinct
-evidence meanings.
+independent review, and the bounded independent cold-entry receipt carry
+distinct evidence meanings.
 
-All eighteen packages are selected as `public_ready` with `exercised` evidence
+All twenty-two skills are selected as `public_ready` with `exercised` evidence
 standing. “Exercised” refers to the recorded receiving use and controls; broader
 competence and universal effectiveness remain unspecified. The
 [publication selection](publication-selection.json) owns package membership;

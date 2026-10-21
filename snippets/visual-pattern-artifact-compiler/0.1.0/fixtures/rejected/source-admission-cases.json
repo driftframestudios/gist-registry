@@ -1,0 +1,126 @@
+{
+  "svg": [
+    {
+      "id": "script-element",
+      "needle": "</svg>",
+      "replacement": "  <script>globalThis.compromised = true;</script>\n</svg>",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "event-handler",
+      "needle": "<svg ",
+      "replacement": "<svg onload=\"globalThis.compromised = true\" ",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "foreign-object",
+      "needle": "</svg>",
+      "replacement": "  <foreignObject x=\"0\" y=\"0\" width=\"100\" height=\"100\"><div>active document subtree</div></foreignObject>\n</svg>",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "network-image-reference",
+      "needle": "</svg>",
+      "replacement": "  <image href=\"https://assets.example.invalid/pattern.png\" width=\"10\" height=\"10\" />\n</svg>",
+      "expectedCode": "external_source_reference"
+    },
+    {
+      "id": "escaped-css-import",
+      "needle": "</svg>",
+      "replacement": "  <style>@\\000069mport 'https://assets.example.invalid/pattern.css';</style>\n</svg>",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "file-image-reference",
+      "needle": "</svg>",
+      "replacement": "  <image href=\"file:///synthetic-local/pattern.png\" width=\"10\" height=\"10\" />\n</svg>",
+      "expectedCode": "external_source_reference"
+    },
+    {
+      "id": "private-machine-locator",
+      "needle": "</svg>",
+      "replacement": "  <metadata data-source=\"private-local://synthetic/pattern.svg\">local source coordinate</metadata>\n</svg>",
+      "expectedCode": "private_source_locator"
+    },
+    {
+      "id": "externalizable-xml-declaration",
+      "needle": "<svg ",
+      "replacement": "<!DOCTYPE svg SYSTEM \"diagram.dtd\">\n<svg ",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "element-outside-static-subset",
+      "needle": "</svg>",
+      "replacement": "  <a href=\"#vf-title\"><text>navigation control</text></a>\n</svg>",
+      "expectedCode": "unsupported_source_element"
+    }
+  ],
+  "galleryShell": [
+    {
+      "id": "script-element",
+      "needle": "</body>",
+      "replacement": "  <script>globalThis.compromised = true;</script>\n</body>",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "event-handler",
+      "needle": "<body>",
+      "replacement": "<body onload=\"globalThis.compromised = true\">",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "external-stylesheet",
+      "needle": "</head>",
+      "replacement": "  <link rel=\"stylesheet\" href=\"https://assets.example.invalid/gallery.css\" />\n</head>",
+      "expectedCode": "external_source_reference"
+    },
+    {
+      "id": "network-srcset-candidate",
+      "needle": "{{PICTURE}}",
+      "replacement": "<img srcset=\"https://assets.example.invalid/pattern.webp 2x\" alt=\"synthetic fixture\" />\n    {{PICTURE}}",
+      "expectedCode": "external_source_reference"
+    },
+    {
+      "id": "path-traversal-srcset-candidate",
+      "needle": "{{PICTURE}}",
+      "replacement": "<source srcset=\"../private/pattern.webp 640w\" />\n    {{PICTURE}}",
+      "expectedCode": "external_source_reference"
+    },
+    {
+      "id": "encoded-network-srcset-candidate",
+      "needle": "{{PICTURE}}",
+      "replacement": "<img srcset=\"https&#58;//assets.example.invalid/pattern.webp 2x\" alt=\"synthetic fixture\" />\n    {{PICTURE}}",
+      "expectedCode": "external_source_reference"
+    },
+    {
+      "id": "css-image-set-coordinate",
+      "needle": "</style>",
+      "replacement": "    .fixture { background-image: image-set(\"pattern.webp\" 1x); }\n  </style>",
+      "expectedCode": "unsupported_source_syntax"
+    },
+    {
+      "id": "escaped-css-network-url",
+      "needle": "</style>",
+      "replacement": "    .fixture { background-image: u\\000072l(\\000068\\000074\\000074\\000070\\000073\\00003a\\00002f\\00002fassets.example.invalid/pattern.webp); }\n  </style>",
+      "expectedCode": "external_source_reference"
+    },
+    {
+      "id": "private-machine-locator",
+      "needle": "<body>",
+      "replacement": "<body data-source=\"private-local://synthetic/gallery.html\">",
+      "expectedCode": "private_source_locator"
+    },
+    {
+      "id": "refresh-instruction",
+      "needle": "</head>",
+      "replacement": "  <meta http-equiv=\"refresh\" content=\"0\" />\n</head>",
+      "expectedCode": "active_source_content"
+    },
+    {
+      "id": "element-outside-static-subset",
+      "needle": "</body>",
+      "replacement": "  <button type=\"button\">interactive control</button>\n</body>",
+      "expectedCode": "unsupported_source_element"
+    }
+  ]
+}

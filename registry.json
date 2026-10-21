@@ -70,6 +70,41 @@
       "artifactKind": "domain_exemplar",
       "canonicalPath": "snippets/postgresql-pending-outbox-query/0.1.0",
       "manifestPath": "snippets/postgresql-pending-outbox-query/0.1.0/snippet.json"
+    },
+    {
+      "semanticId": "style-dictionary-dtcg-pipeline",
+      "version": "0.1.0",
+      "artifactKind": "harness_material",
+      "canonicalPath": "snippets/style-dictionary-dtcg-pipeline/0.1.0",
+      "manifestPath": "snippets/style-dictionary-dtcg-pipeline/0.1.0/snippet.json"
+    },
+    {
+      "semanticId": "react-aria-visual-contract-receiver",
+      "version": "0.1.0",
+      "artifactKind": "code_sample",
+      "canonicalPath": "snippets/react-aria-visual-contract-receiver/0.1.0",
+      "manifestPath": "snippets/react-aria-visual-contract-receiver/0.1.0/snippet.json"
+    },
+    {
+      "semanticId": "cross-browser-visual-contract-observer",
+      "version": "0.1.0",
+      "artifactKind": "harness_material",
+      "canonicalPath": "snippets/cross-browser-visual-contract-observer/0.1.0",
+      "manifestPath": "snippets/cross-browser-visual-contract-observer/0.1.0/snippet.json"
+    },
+    {
+      "semanticId": "visual-pattern-artifact-compiler",
+      "version": "0.1.0",
+      "artifactKind": "harness_material",
+      "canonicalPath": "snippets/visual-pattern-artifact-compiler/0.1.0",
+      "manifestPath": "snippets/visual-pattern-artifact-compiler/0.1.0/snippet.json"
+    },
+    {
+      "semanticId": "figma-variable-sync-reconciliation",
+      "version": "0.1.0",
+      "artifactKind": "domain_exemplar",
+      "canonicalPath": "snippets/figma-variable-sync-reconciliation/0.1.0",
+      "manifestPath": "snippets/figma-variable-sync-reconciliation/0.1.0/snippet.json"
     }
   ]
 }

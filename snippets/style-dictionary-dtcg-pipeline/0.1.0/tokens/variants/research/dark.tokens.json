@@ -1,0 +1,15 @@
+{
+  "$description": "Research dark-mode overrides.",
+  "surface": {
+    "canvas": { "$type": "color", "$value": "{color.ink.950}" },
+    "panel": { "$type": "color", "$value": "{color.ink.900}" }
+  },
+  "text": {
+    "primary": { "$type": "color", "$value": "{color.cream.050}" }
+  },
+  "action": {
+    "background": { "$type": "color", "$value": "{color.cobalt.700}" },
+    "background-pressed": { "$type": "color", "$value": "{color.cobalt.600}" },
+    "focus-ring": { "$type": "color", "$value": "{color.signal.coral}" }
+  }
+}

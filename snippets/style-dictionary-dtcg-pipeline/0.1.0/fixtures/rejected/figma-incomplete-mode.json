@@ -1,0 +1,18 @@
+{
+  "documentId": "synthetic-rejected-document",
+  "collections": [
+    {
+      "id": "collection:missing-mode-value",
+      "name": "Missing mode value",
+      "modes": [{ "id": "mode:light", "name": "Light" }],
+      "variables": [
+        {
+          "id": "variable:action-background",
+          "name": "action/background",
+          "resolvedType": "COLOR",
+          "valuesByMode": {}
+        }
+      ]
+    }
+  ]
+}

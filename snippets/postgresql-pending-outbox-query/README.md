@@ -21,7 +21,7 @@ PostgreSQL 17 runner, deliberate predicate failures, and normalized query plans.
 the complete query path, and propose a successor for a different distribution
 or authenticated application boundary.
 
-## Next evidence-bearing route
+## Next verification step
 
 Start with the [query and result meaning](0.1.0/README.md#meaning-and-relations),
 then [run the proof](0.1.0/README.md#run-the-proof). The

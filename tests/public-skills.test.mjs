@@ -28,6 +28,7 @@ const expectedPublicReady = [
   "bounded-representation-admission",
   "contextual-jargon-scan",
   "controlled-context-comparison",
+  "design-token-pipeline-stewardship",
   "interruption-safe-resource-ownership",
   "longitudinal-observation-visualization",
   "omics-coordinate-and-measurement-views",
@@ -37,10 +38,13 @@ const expectedPublicReady = [
   "scientific-figure-composition",
   "scientific-scale-and-transform-fidelity",
   "secret-boundary-inspection",
+  "semantic-visual-receiver-contracts",
   "spatial-support-and-change-visualization",
   "transaction-boundary-evidence-mapping",
   "typed-error-recovery-contracts",
   "versioned-exemplar-successor",
+  "visual-artifact-family-publication",
+  "visual-contract-receipt-design",
   "visualization-question-routing"
 ];
 
@@ -108,6 +112,96 @@ test("registry checks run when skill sources or runbooks change", async () => {
   assert.match(workflow, /- "\.agents\/runbooks\/\*\*"/u);
 });
 
+test("visual-contract packages run across the declared Node.js maintenance lines", async () => {
+  const visualContractFamilies = [
+    "style-dictionary-dtcg-pipeline",
+    "react-aria-visual-contract-receiver",
+    "cross-browser-visual-contract-observer",
+    "visual-pattern-artifact-compiler",
+    "figma-variable-sync-reconciliation",
+  ];
+  const workflow = await readFile(
+    resolve(repositoryRoot, ".github/workflows/registry-checks.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /visual-contract-node-matrix:/u);
+  assert.match(workflow, /- name: Use Node\.js 22[\s\S]*?node-version: "22"[\s\S]*?run: npm test/u);
+  assert.match(workflow, /node-version: \[24, 26\]/u);
+  assert.match(workflow, /run: npm run test:visual-contracts/u);
+  for (const family of visualContractFamilies)
+    assert.match(
+      workflow,
+      new RegExp("snippets/" + family + "/0\\.1\\.0/package-lock\\.json", "u"),
+    );
+  assert.match(workflow, /visual-contract-browser-matrix:/u);
+  assert.match(
+    workflow,
+    /visual-contract-browser-matrix:[\s\S]*?react-aria-visual-contract-receiver\/0\.1\.0\/package-lock\.json[\s\S]*?run: npm run prepare:visual-contracts:browsers[\s\S]*?run: npx playwright install --with-deps chromium firefox webkit[\s\S]*?run: npm run exercise:visual-contracts:browsers/u,
+  );
+
+  const rootPackage = await json(resolve(repositoryRoot, "package.json"));
+  assert.equal(rootPackage.engines.node, "^22 || ^24 || ^26");
+  const documentedNodeCoordinate = "Node.js 22, 24, or 26";
+  const continuousNodeRange = /Node\.js (?:>=22 <27|22 through 26|22–26)/u;
+  for (const family of visualContractFamilies) {
+    const packageRoot = resolve(repositoryRoot, "snippets", family, "0.1.0");
+    const packageManifest = await json(resolve(packageRoot, "package.json"));
+    const packageLock = await json(resolve(packageRoot, "package-lock.json"));
+    const artifactManifestText = await readFile(resolve(packageRoot, "snippet.json"), "utf8");
+    const artifactManifest = JSON.parse(artifactManifestText);
+    assert.equal(packageManifest.engines.node, rootPackage.engines.node);
+    assert.equal(packageLock.packages[""].engines.node, rootPackage.engines.node);
+    assert.match(artifactManifest.execution.runtime, new RegExp(documentedNodeCoordinate, "u"));
+    assert.doesNotMatch(artifactManifestText, continuousNodeRange);
+  }
+  for (const documentationPath of [
+    "planning/visual-contract-official-source-review.md",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/README.md",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/README.md",
+  ]) {
+    const documentation = await readFile(resolve(repositoryRoot, documentationPath), "utf8");
+    assert.match(documentation, new RegExp(documentedNodeCoordinate, "u"));
+    assert.doesNotMatch(documentation, continuousNodeRange);
+  }
+  assert.equal(
+    rootPackage.scripts["prepare:visual-contracts:browsers"],
+    "npm run prepare:visual-contracts:receiver:0.1.0 && npm run prepare:visual-contracts:observer:0.1.0 && npm run prepare:visual-contracts:artifact-compiler:0.1.0",
+  );
+  assert.match(
+    rootPackage.scripts["test:visual-contracts:observer:browsers:0.1.0"],
+    /prepare:visual-contracts:receiver:0\.1\.0/u,
+  );
+});
+
+test("the visual-receipt skill sizes work from explicit applicable cases", async () => {
+  const skill = await readFile(
+    resolve(repositoryRoot, ".agents/skills/visual-contract-receipt-design/SKILL.md"),
+    "utf8",
+  );
+  assert.match(skill, /Expected work is the\s+explicit applicable-case inventory/u);
+  assert.match(skill, /Cartesian product[\s\S]*?is only an upper bound/u);
+  assert.doesNotMatch(
+    skill,
+    /Expected work is the\s+finite product of targets, states, browsers, media variants, and selected\s+oracles/u,
+  );
+});
+
+test("each selected skill carries its operator README in the source package", async () => {
+  await withSkillFixture(async root => {
+    const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
+    const selection = await json(selectionPath);
+    const first = selection.skills[0];
+    first.dependencies = first.dependencies.filter(
+      path => path !== `.agents/skills/${first.name}/README.md`,
+    );
+    await writeJson(selectionPath, selection);
+    await assert.rejects(
+      loadPublicSkills({ root, sourceSha: fixedSourceRevision }),
+      /must include its operator README/u,
+    );
+  });
+});
+
 test("an omitted or invented selection entry cannot change the repository skill inventory", async () => {
   await withSkillFixture(async root => {
     const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
@@ -140,7 +234,10 @@ test("publication paths stay inside the repository and resolve to regular files"
   await withSkillFixture(async root => {
     const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
     const selection = await json(selectionPath);
-    selection.skills[0].dependencies = ["../outside.md"];
+    selection.skills[0].dependencies = [
+      "../outside.md",
+      `.agents/skills/${selection.skills[0].name}/README.md`,
+    ].sort();
     await writeJson(selectionPath, selection);
     await assert.rejects(
       loadPublicSkills({ root, sourceSha: fixedSourceRevision }),
@@ -280,16 +377,18 @@ test("a newly withheld skill stays outside the catalog and public source package
   await withSkillFixture(async root => {
     const name = "private-calibration-recipe";
     const sourcePath = `.agents/skills/${name}/SKILL.md`;
+    const readmePath = `.agents/skills/${name}/README.md`;
     await mkdir(resolve(root, `.agents/skills/${name}`));
     await writeFile(resolve(root, sourcePath), [
       "---", `name: ${name}`,
       "description: Calibrates a private fixture. Applies during this boundary test.",
       "---", "", "# Private calibration recipe", "",
     ].join("\n"));
+    await writeFile(resolve(root, readmePath), "# Private calibration recipe guide\n");
     const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
     const selection = await json(selectionPath);
     selection.skills.push({ name, sourcePath, publicationStanding: "public_possible",
-      evidenceStanding: "instruction_only", dependencies: [], readinessNote: "Private fixture." });
+      evidenceStanding: "instruction_only", dependencies: [readmePath], readinessNote: "Private fixture." });
     selection.skills.sort((left, right) => left.name.localeCompare(right.name));
     await writeJson(selectionPath, selection);
     const model = await loadPublicSkills({ root, sourceSha: fixedSourceRevision });

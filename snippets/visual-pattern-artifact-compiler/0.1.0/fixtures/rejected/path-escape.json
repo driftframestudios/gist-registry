@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "path-escape",
+  "title": "Escaped output path",
+  "description": "A rejected fixture exercises output containment.",
+  "alt": "One panel represents an escaped output path fixture.",
+  "caption": "Output names stay inside the candidate directory.",
+  "outputBaseName": "../escaped",
+  "outputMediaType": "image/webp",
+  "metadataPolicy": "strip_and_inspect",
+  "fontCoordinate": "ui-sans-serif, system-ui, sans-serif",
+  "sourceStanding": "independent_synthetic_authoring",
+  "rightsStanding": "Apache-2.0",
+  "owner": "Gist Registry Issue 64",
+  "intrinsic": {"width": 1200, "height": 720},
+  "widths": [640],
+  "states": [{"id": "source", "label": "Source", "meaning": "Meaning."}],
+  "readingOrder": ["source"]
+}

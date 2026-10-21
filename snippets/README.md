@@ -21,6 +21,11 @@ behavior they exercise.
 | [Typed absence and wire shape](typed-absence-and-wire-shape/README.md) | `code_sample` | `0.1.0` | `seeded` | A JSON update contract must preserve omission, `null`, empty values, zero, and false as distinct instructions |
 | [LIMS/ELN Enterprise Implementation release exemplar](lims-eln-enterprise-implementation/README.md) | `repository_exemplar` | `0.3.2` | `seeded` | An exact file from an accepted repository release needs portable provenance and upstream-evidence bindings |
 | [PostgreSQL pending-outbox query](postgresql-pending-outbox-query/README.md) | `domain_exemplar` | `0.1.0` | `seeded` | A bounded SQL query needs independent row expectations, ordinary-role checks, and equal results before index-plan comparison |
+| [Style Dictionary DTCG pipeline](style-dictionary-dtcg-pipeline/README.md) | `harness_material` | `0.1.0` | `seeded` | Reviewed token meaning needs bounded admission, deterministic compilation, semantic comparison, and recoverable publication |
+| [React Aria visual-contract receiver](react-aria-visual-contract-receiver/README.md) | `code_sample` | `0.1.0` | `interstitial` | Native and React receivers need shared semantic state, accessible interaction, late-result handling, and exact token coordinates |
+| [Cross-browser visual-contract observer](cross-browser-visual-contract-observer/README.md) | `harness_material` | `0.1.0` | `seeded` | A browser decision needs a proportionate oracle, controlled fault, exact coordinate, and recoverable receipt |
+| [Visual pattern artifact compiler](visual-pattern-artifact-compiler/README.md) | `harness_material` | `0.1.0` | `seeded` | One visual source needs responsive derivatives, semantic companions, exact manifests, and atomic family promotion |
+| [Figma Variable synchronization and reconciliation](figma-variable-sync-reconciliation/README.md) | `domain_exemplar` | `0.1.0` | `seeded` | Remote design variables need typed planning, durable checkpoints, uncertain-outcome reconciliation, and successor migrations |
 
 ## Read the state axes
 
@@ -45,7 +50,7 @@ collaboration.
 ## Evaluate one family
 
 1. Read the family README for its mechanism, current coordinate, state axes,
-   and next evidence-bearing route.
+   and next verification step.
 2. Read the selected exact-version README and `snippet.json` together.
 3. Run the exact version's declared command or the nearest focused test.
 4. Treat the observed assertions as the demonstrated boundary and route

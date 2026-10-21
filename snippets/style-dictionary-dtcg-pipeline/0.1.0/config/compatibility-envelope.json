@@ -1,0 +1,21 @@
+{
+  "format": "DTCG Format Module 2025.10 subset",
+  "color": "DTCG Color Module 2025.10",
+  "tokenTypes": ["boolean", "color", "dimension", "duration", "number", "string"],
+  "references": ["curly-brace alias"],
+  "requiredDimensions": {
+    "brand": ["acme", "research"],
+    "mode": ["light", "dark"],
+    "platform": ["css", "javascript"]
+  },
+  "limits": {
+    "sourceBytes": 512000,
+    "sourceNodes": 100000,
+    "depth": 32,
+    "tokens": 20000,
+    "references": 40000,
+    "aliasDepth": 128,
+    "generatedFiles": 32,
+    "generatedBytes": 4000000
+  }
+}

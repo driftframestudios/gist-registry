@@ -1,0 +1,4 @@
+{
+  "safe": { "$type": "string", "$value": "value" },
+  "__proto__": { "$type": "string", "$value": "reserved" }
+}

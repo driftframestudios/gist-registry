@@ -1,0 +1,15 @@
+{
+  "acceptedState": {"generation": 0, "id": "family-a", "status": "ready"},
+  "controls": [
+    {"id": "family", "label": "Specimen family", "labelPosition": "above"},
+    {"id": "state", "label": "Review state", "labelPosition": "above"}
+  ],
+  "receivers": {
+    "native": ["default", "focus-visible", "pressed", "selected", "invalid", "disabled", "pending", "success", "warning"],
+    "react-aria": ["default", "focus-visible", "pressed", "selected", "invalid", "disabled", "pending", "success", "warning"]
+  },
+  "requests": [
+    {"generation": 1, "id": "family-a", "settles": "late", "status": "warning"},
+    {"generation": 2, "id": "family-b", "settles": "first", "status": "success"}
+  ]
+}

@@ -8,8 +8,8 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
 
 test("the layered README graph covers every registered artifact family", async () => {
   const result = await checkReadmeRoutes({ root: repositoryRoot });
-  assert.equal(result.familyCount, 8);
-  assert.equal(result.exactVersionCount, 10);
+  assert.equal(result.familyCount, 13);
+  assert.equal(result.exactVersionCount, 15);
   assert.ok(result.readmeCount >= 25);
   assert.ok(result.localLinkCount >= 100);
 });

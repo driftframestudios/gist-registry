@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "0.1.0",
+  "tokenSource": {
+    "semanticId": "style-dictionary-dtcg-pipeline",
+    "version": "0.1.0",
+    "coordinate": {"brand": "acme", "mode": "light"},
+    "manifestKind": "generated_output_manifest",
+    "manifestSha256": "cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79",
+    "standing": "candidate"
+  },
+  "receiver": {
+    "semanticId": "react-aria-visual-contract-receiver",
+    "version": "0.1.0",
+    "manifestKind": "production_build_manifest",
+    "manifestSha256": "4a3a1dc6534a17288dd6ae09c416009415e52c2bdb400dfca39b4f9916bb95c8",
+    "standing": "candidate"
+  },
+  "observationFixture": {
+    "kind": "synthetic_receiver_fixture",
+    "path": "source/receiver.html",
+    "sha256": "23937db40f1195b149ea8173b2267c13de73a47f196c5be2bf808bc16f3a3d8b"
+  },
+  "bindingRule": "The token source binds the Issue #61 generated-output manifest and its acme/light coordinate. The receiver binds the Issue #62 deterministic production-build manifest, which the browser lane rebuilds, rehashes, and directly smokes. Fault-oracle receipts separately carry the exact synthetic receiver fixture bytes they actually loaded. Refresh dependency standing and digests from accepted manifests before adapting this harness to a receiver release."
+}

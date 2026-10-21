@@ -6,7 +6,7 @@
   "publicationPolicy": {
     "catalogScope": "Every repository skill appears in this repository-only selection. Only public-ready entries appear in public artifacts.",
     "sourceRule": "A public-ready entry carries its exact instruction source and every supporting file selected for publication.",
-    "possibleRule": "A public-possible entry stays wholly outside public HTML, JSON, source copies, manifests, and links until its complete source package is ready for the same audience.",
+    "possibleRule": "A public-possible entry remains in repository selection while its source package matures. Public projection admits the complete package after it reaches public-ready standing.",
     "readinessRule": "Public-ready describes a publication-safe, coherent source package with a receiving use. Evidence standing remains explicit in the generated exchange projection.",
     "authorityRule": "Each SKILL.md remains semantic authority. The generated JSON is an exchange projection, and current intent plus granted authority governs each use."
   },
@@ -17,6 +17,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/architecture-convergence-vantages/README.md",
         ".agents/skills/architecture-convergence-vantages/references/filesystem-state-transitions.md"
       ],
       "readinessNote": "The skill and its conditional filesystem reference have shaped accepted source-and-test convergence cycles."
@@ -27,6 +28,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/bounded-representation-admission/README.md",
         ".agents/skills/bounded-representation-admission/exercises/README.md",
         ".agents/skills/bounded-representation-admission/exercises/exercise.py",
         ".agents/skills/bounded-representation-admission/references/admission-design-and-evidence.md"
@@ -39,6 +41,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/contextual-jargon-scan/README.md",
         ".agents/skills/contextual-jargon-scan/references/classification-and-recovery.md"
       ],
       "readinessNote": "The portable contract has been exercised against Registry prose and deterministic projection boundaries."
@@ -49,6 +52,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/controlled-context-comparison/README.md",
         ".agents/skills/controlled-context-comparison/exercises/README.md",
         ".agents/skills/controlled-context-comparison/exercises/exercise.py",
         ".agents/skills/controlled-context-comparison/references/design-and-evidence.md"
@@ -56,11 +60,27 @@
       "readinessNote": "Complete instruction and evidence package exercised in the scientific-practice refinement with synthetic controls and independent review; each reference names the observed scope and remaining receiving work."
     },
     {
+      "name": "design-token-pipeline-stewardship",
+      "sourcePath": ".agents/skills/design-token-pipeline-stewardship/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/design-token-pipeline-stewardship/README.md",
+        ".agents/skills/design-token-pipeline-stewardship/exercises/README.md",
+        ".agents/skills/design-token-pipeline-stewardship/exercises/exercise.mjs",
+        ".agents/skills/design-token-pipeline-stewardship/exercises/expected-receipt.json",
+        ".agents/skills/design-token-pipeline-stewardship/exercises/pipeline.json",
+        ".agents/skills/design-token-pipeline-stewardship/references/tool-and-runtime-boundaries.md"
+      ],
+      "readinessNote": "The portable contract has been exercised through a deterministic DTCG/Style Dictionary compiler and an independent accessible native/React receiver with exact coordinates and recovery evidence."
+    },
+    {
       "name": "interruption-safe-resource-ownership",
       "sourcePath": ".agents/skills/interruption-safe-resource-ownership/SKILL.md",
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/interruption-safe-resource-ownership/README.md",
         ".agents/skills/interruption-safe-resource-ownership/exercises/README.md",
         ".agents/skills/interruption-safe-resource-ownership/exercises/exercise.py",
         ".agents/skills/interruption-safe-resource-ownership/references/mechanisms-and-evidence.md"
@@ -73,6 +93,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/longitudinal-observation-visualization/README.md",
         ".agents/skills/longitudinal-observation-visualization/exercises/README.md",
         ".agents/skills/longitudinal-observation-visualization/exercises/example.html",
         ".agents/skills/longitudinal-observation-visualization/exercises/example.svg",
@@ -90,6 +111,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/omics-coordinate-and-measurement-views/README.md",
         ".agents/skills/omics-coordinate-and-measurement-views/exercises/verify.py",
         ".agents/skills/omics-coordinate-and-measurement-views/references/assay-matrices-and-inference.md",
         ".agents/skills/omics-coordinate-and-measurement-views/references/evidence-and-exercises.md",
@@ -103,6 +125,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/parity-bound-workload-measurement/README.md",
         ".agents/skills/parity-bound-workload-measurement/exercises/README.md",
         ".agents/skills/parity-bound-workload-measurement/exercises/exercise.py",
         ".agents/skills/parity-bound-workload-measurement/references/design-and-evidence.md"
@@ -115,6 +138,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/probe-bearing-exemplar-formation/README.md",
         ".agents/skills/probe-bearing-exemplar-formation/references/formation-evidence-and-recovery.md"
       ],
       "readinessNote": "The route received a complete first-coordinate source cycle and public-safe artifact boundary."
@@ -125,11 +149,14 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/runbooks/gist-registry-receiving-repository-use.v0.1.md",
+        ".agents/runbooks/receipts/gist-registry-receiving-repository-use.v0.1.json",
+        ".agents/skills/repository-collaboration-cycle/README.md",
         ".agents/skills/repository-collaboration-cycle/exercises/receiving-task.md",
         ".agents/skills/repository-collaboration-cycle/references/repository-adapter.md",
         ".agents/skills/repository-collaboration-cycle/references/source-work-cycle.md"
       ],
-      "readinessNote": "Complete portable contract and native-adapter package exercised through HASE PR #488, with real finding/interruption recovery, exact source binding and independent review; broader cold-start transfer remains a separate observation."
+      "readinessNote": "Complete portable contract and native-adapter package exercised through HASE PR #488, with real finding/interruption recovery, exact source binding and independent review; a durable two-package receipt now includes one bounded independent cold-entry review while source acceptance stays with its review owner."
     },
     {
       "name": "scientific-figure-composition",
@@ -137,6 +164,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/scientific-figure-composition/README.md",
         ".agents/skills/scientific-figure-composition/exercises/verify.py",
         ".agents/skills/scientific-figure-composition/references/delivery-and-inspection.md",
         ".agents/skills/scientific-figure-composition/references/evidence-and-exercises.md",
@@ -150,6 +178,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/scientific-scale-and-transform-fidelity/README.md",
         ".agents/skills/scientific-scale-and-transform-fidelity/exercises/verify.py",
         ".agents/skills/scientific-scale-and-transform-fidelity/references/evidence-and-exercises.md",
         ".agents/skills/scientific-scale-and-transform-fidelity/references/intervals-colors-and-density.md",
@@ -163,6 +192,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/secret-boundary-inspection/README.md",
         ".agents/skills/secret-boundary-inspection/exercises/README.md",
         ".agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
         ".agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
@@ -173,11 +203,27 @@
       "readinessNote": "Complete portable contract and native-adapter package exercised through HASE PR #488, with real finding/interruption recovery, exact source binding and independent review; broader cold-start transfer remains a separate observation."
     },
     {
+      "name": "semantic-visual-receiver-contracts",
+      "sourcePath": ".agents/skills/semantic-visual-receiver-contracts/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/semantic-visual-receiver-contracts/README.md",
+        ".agents/skills/semantic-visual-receiver-contracts/exercises/README.md",
+        ".agents/skills/semantic-visual-receiver-contracts/exercises/exercise.mjs",
+        ".agents/skills/semantic-visual-receiver-contracts/exercises/expected-receipt.json",
+        ".agents/skills/semantic-visual-receiver-contracts/exercises/receiver-contract.json",
+        ".agents/skills/semantic-visual-receiver-contracts/references/framework-and-receiving-boundaries.md"
+      ],
+      "readinessNote": "Native HTML and React Aria routes have exercised shared state names, labels, stable identity, asynchronous generation checks, and accepted-state recovery."
+    },
+    {
       "name": "spatial-support-and-change-visualization",
       "sourcePath": ".agents/skills/spatial-support-and-change-visualization/SKILL.md",
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/spatial-support-and-change-visualization/README.md",
         ".agents/skills/spatial-support-and-change-visualization/exercises/README.md",
         ".agents/skills/spatial-support-and-change-visualization/exercises/comparisons.json",
         ".agents/skills/spatial-support-and-change-visualization/exercises/example.html",
@@ -195,6 +241,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/transaction-boundary-evidence-mapping/README.md",
         ".agents/skills/transaction-boundary-evidence-mapping/references/failure-intervals-and-evidence.md"
       ],
       "readinessNote": "The contract formed from three accepted domain cycles with distinct identity, freshness, replay, publication, and recovery behavior."
@@ -205,6 +252,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/typed-error-recovery-contracts/README.md",
         ".agents/skills/typed-error-recovery-contracts/exercises/README.md",
         ".agents/skills/typed-error-recovery-contracts/exercises/exercise.py",
         ".agents/skills/typed-error-recovery-contracts/exercises/offline-review-boundary.md",
@@ -218,9 +266,41 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/versioned-exemplar-successor/README.md",
         ".agents/skills/versioned-exemplar-successor/references/successor-and-projection-recovery.md"
       ],
       "readinessNote": "The route received the accepted document-evidence successor and exact derived companion."
+    },
+    {
+      "name": "visual-artifact-family-publication",
+      "sourcePath": ".agents/skills/visual-artifact-family-publication/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/visual-artifact-family-publication/README.md",
+        ".agents/skills/visual-artifact-family-publication/exercises/README.md",
+        ".agents/skills/visual-artifact-family-publication/exercises/exercise.mjs",
+        ".agents/skills/visual-artifact-family-publication/exercises/expected-receipt.json",
+        ".agents/skills/visual-artifact-family-publication/exercises/family.json",
+        ".agents/skills/visual-artifact-family-publication/exercises/pattern.svg",
+        ".agents/skills/visual-artifact-family-publication/references/renderer-svg-and-metadata-boundaries.md"
+      ],
+      "readinessNote": "Synthetic SVG/WebP and token-artifact families have exercised source contracts, semantic companions, deterministic manifests, and accepted-pointer recovery."
+    },
+    {
+      "name": "visual-contract-receipt-design",
+      "sourcePath": ".agents/skills/visual-contract-receipt-design/SKILL.md",
+      "publicationStanding": "public_ready",
+      "evidenceStanding": "exercised",
+      "dependencies": [
+        ".agents/skills/visual-contract-receipt-design/README.md",
+        ".agents/skills/visual-contract-receipt-design/exercises/README.md",
+        ".agents/skills/visual-contract-receipt-design/exercises/decisions.json",
+        ".agents/skills/visual-contract-receipt-design/exercises/exercise.mjs",
+        ".agents/skills/visual-contract-receipt-design/exercises/expected-receipt.json",
+        ".agents/skills/visual-contract-receipt-design/references/browser-evidence-and-variance.md"
+      ],
+      "readinessNote": "Compiler, receiver, and derivative routes have exercised direct oracle selection, controlled faults, exact environment coordinates, and recoverable candidate receipts."
     },
     {
       "name": "visualization-question-routing",
@@ -228,6 +308,7 @@
       "publicationStanding": "public_ready",
       "evidenceStanding": "exercised",
       "dependencies": [
+        ".agents/skills/visualization-question-routing/README.md",
         ".agents/skills/visualization-question-routing/exercises/README.md",
         ".agents/skills/visualization-question-routing/exercises/exercise.py",
         ".agents/skills/visualization-question-routing/exercises/records.csv",

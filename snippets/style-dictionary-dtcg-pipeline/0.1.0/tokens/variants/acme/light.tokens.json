@@ -1,0 +1,10 @@
+{
+  "$description": "Acme light-mode overrides.",
+  "surface": {
+    "canvas": { "$type": "color", "$value": "{color.cream.050}" },
+    "panel": { "$type": "color", "$value": "{color.cream.100}" }
+  },
+  "text": {
+    "primary": { "$type": "color", "$value": "{color.ink.900}" }
+  }
+}

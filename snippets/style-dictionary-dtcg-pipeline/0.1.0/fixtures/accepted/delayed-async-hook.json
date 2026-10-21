@@ -1,0 +1,4 @@
+{
+  "delayMilliseconds": 2,
+  "expectedCoordinates": ["acme-dark", "acme-light", "research-dark", "research-light"]
+}

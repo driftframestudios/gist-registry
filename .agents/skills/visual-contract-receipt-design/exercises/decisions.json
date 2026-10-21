@@ -1,0 +1,12 @@
+{
+  "acceptedPointer": "visual-receipts@0.1.0",
+  "changedDecisionIds": ["label", "focus", "clipping", "token", "relationship"],
+  "decisions": [
+    {"id": "label", "oracle": "semantic", "fault": "label-association-removed", "consequence": "control loses its accessible name"},
+    {"id": "focus", "oracle": "interaction", "fault": "focus-displaced", "consequence": "keyboard context shifts away from the initiating control"},
+    {"id": "clipping", "oracle": "geometry", "fault": "caption-clipped", "consequence": "caption becomes unreadable"},
+    {"id": "token", "oracle": "computed-style", "fault": "wrong-focus-token", "consequence": "focus state loses intended emphasis"},
+    {"id": "relationship", "oracle": "bitmap", "fault": "connector-painted-over-card", "consequence": "diagram relationship becomes ambiguous"}
+  ],
+  "environment": {"browser": "synthetic-browser@1", "os": "synthetic-os@1", "font": "bundled-sans@1", "scale": 1}
+}

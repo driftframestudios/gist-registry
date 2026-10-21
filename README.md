@@ -30,7 +30,7 @@ Human review retains those decisions.
 
 `main` owns accepted authored source. The builder-owned `docs` branch carries
 the most recent reviewed Pages projection at [kindlight.io](https://kindlight.io/).
-Eight artifact families and ten exact versions are registered. Every exact
+Thirteen artifact families and fifteen exact versions are registered. Every exact
 manifest currently records `candidate` technical maturity, while source
 acceptance, continuation, publication, and hosted observation retain their own
 state axes.
@@ -43,7 +43,7 @@ work-state authority.
 
 | Reader job | Start here | What it supplies |
 | --- | --- | --- |
-| Evaluate or reuse an implementation | [Artifact family catalog](snippets/README.md) | Eight families grouped by mechanism, current coordinate, continuation, and evidence-bearing next route |
+| Evaluate or reuse an implementation | [Artifact family catalog](snippets/README.md) | Thirteen families grouped by mechanism, current coordinate, continuation, and evidence-bearing next route |
 | Retrieve exact versions programmatically | [`registry.json`](registry.json) | Semantic IDs, versions, artifact kinds, manifest paths, and canonical paths |
 | Run the smallest repository proof | [Quickest proof](#quickest-proof) | Registry, path, manifest, representation, and digest agreement |
 | Contribute one artifact or successor | [`AGENTS.md`](AGENTS.md), then the [source collaboration cycle](.agents/runbooks/gist-registry-source-collaboration-cycle.v0.1.md) | Current-truth reconstruction, source ownership, evidence, and review-ready handback |
@@ -54,8 +54,8 @@ work-state authority.
 
 ## Quickest proof
 
-With Node.js 22 or newer, install the pinned root dependencies and check the
-complete registry graph:
+With a current Node.js 22, 24, or 26 maintenance release, install the pinned
+root dependencies and check the complete registry graph:
 
 ```sh
 npm ci
@@ -110,10 +110,47 @@ when the receiving work demonstrates a recurring need.
 | [Typed absence and wire shape](snippets/typed-absence-and-wire-shape/README.md) | `code_sample` | `0.1.0` | Omission, `null`, empty values, zero, and false must remain distinct JSON instructions |
 | [LIMS/ELN Enterprise Implementation release exemplar](snippets/lims-eln-enterprise-implementation/README.md) | `repository_exemplar` | `0.3.2` | An exact accepted release file, its provenance, and upstream evidence need one portable coordinate |
 | [PostgreSQL pending-outbox query](snippets/postgresql-pending-outbox-query/README.md) | `domain_exemplar` | `0.1.0` | Exact tenant counts, relational constraints, partial-index meaning, and observed query plans need a runnable SQL example |
+| [Style Dictionary DTCG pipeline](snippets/style-dictionary-dtcg-pipeline/README.md) | `harness_material` | `0.1.0` | Token sources need bounded admission, graph checks, deterministic multi-coordinate output, semantic diffs, and recoverable promotion |
+| [React Aria visual-contract receiver](snippets/react-aria-visual-contract-receiver/README.md) | `code_sample` | `0.1.0` | Native and React receivers need shared meaning, accessible interaction, bounded asynchronous settlement, and exact upstream coordinates |
+| [Cross-browser visual-contract observer](snippets/cross-browser-visual-contract-observer/README.md) | `harness_material` | `0.1.0` | Each visual decision needs a fitting browser oracle, a controlled fault, an exact environment coordinate, and a recoverable receipt |
+| [Visual pattern artifact compiler](snippets/visual-pattern-artifact-compiler/README.md) | `harness_material` | `0.1.0` | Visual sources need responsive derivatives, semantic companions, rights and metadata checks, and atomic family publication |
+| [Figma Variable synchronization and reconciliation](snippets/figma-variable-sync-reconciliation/README.md) | `domain_exemplar` | `0.1.0` | Remote variable changes need typed dependency planning, bounded batches, durable resume, drift detection, and final reconciliation |
 
 The [complete family catalog](snippets/README.md) explains how to read registry
 acceptance, exact-manifest maturity, continuation, publication, and delivery
-observation without collapsing them into one status.
+observation as distinct standings with distinct owners.
+
+### Follow one visual contract from meaning to observation
+
+The five visual-contract families form a connected route while each package
+remains independently reusable:
+
+```text
+authored token meaning
+  → DTCG admission and deterministic compilation
+  → native and React Aria receiving states
+  → proportionate cross-browser observations
+  → deterministic responsive visual artifacts
+
+remote Figma changes
+  → planned batches, durable checkpoints, and final reconciliation
+```
+
+Start with the [DTCG and Style Dictionary pipeline](snippets/style-dictionary-dtcg-pipeline/README.md)
+when the question concerns token authority or generated targets. Continue into
+the [accessible receiver](snippets/react-aria-visual-contract-receiver/README.md)
+and [browser observer](snippets/cross-browser-visual-contract-observer/README.md)
+when the decision depends on rendered behavior. Use the [artifact compiler](snippets/visual-pattern-artifact-compiler/README.md)
+for responsive image families and semantic companions. Use the [Figma
+reconciliation state machine](snippets/figma-variable-sync-reconciliation/README.md)
+when remote mutation, uncertain outcomes, and resume behavior are the core
+problem.
+
+The [receiving-repository runbook](.agents/runbooks/gist-registry-receiving-repository-use.v0.1.md)
+shows how to select one exact coordinate, verify it, adapt it locally, and
+return findings to the source family. The [public skill catalog](.agents/skills/README.md)
+provides the reusable methods behind token stewardship, semantic receiving,
+browser receipts, and visual-family publication.
 
 
 ## Why this repository exists
@@ -211,7 +248,7 @@ The registry uses dependencies where they protect named behavior:
 - Python artifact environments are locked with `uv`, with Ruff providing a
   focused diagnostic and formatting route.
 
-The reference local toolchain is Node.js 22 or newer, TypeScript 5.9.3,
+The complete repository suite supports Node.js 22, 24, or 26, TypeScript 5.9.3,
 Python 3.12, and `uv` 0.11.33. Confirm `node --version`,
 `python3.12 --version`, and `uv --version`, then install the root Node
 dependencies and run the complete fast path:
@@ -220,6 +257,21 @@ dependencies and run the complete fast path:
 npm ci
 npm test
 ```
+
+The visual-contract packages carry artifact-local locks for Style Dictionary,
+React Aria and React Stately, Playwright, and Sharp/libvips. The default test
+route exercises compilation, receiver models and production build, the
+browser-independent observation contract, responsive artifact generation, and
+Figma reconciliation. A receiving environment that has installed the pinned
+browser binaries can run both three-engine lanes separately:
+
+```sh
+npm run install:visual-contracts:browsers
+npm run test:visual-contracts:browsers
+```
+
+Those lanes record Playwright browser coordinates. A branded Safari result
+remains a distinct observation supplied by a receiving release environment.
 
 The focused orientation contract is also available as:
 
@@ -363,10 +415,14 @@ faults. Each delivery observation names the source and projection
 coordinates it actually examined; later hosted behavior remains a new evidence
 question.
 
-The path-filtered Registry checks workflow runs this same route in one
-cancellable job with an eight-minute timeout and no schedule. The independent
-secret-material receiver runs for every pull request with its own four-minute
-ceiling. The repository owner monitors the 300-minute monthly operating target
+The path-filtered Registry checks workflow runs the complete repository suite
+on Node.js 22 in one cancellable fifteen-minute job, then exercises the
+visual-contract packages on Node.js 24 and 26 through two independent
+ten-minute matrix jobs. A
+twenty-minute browser job installs the matching Chromium, Firefox, and WebKit
+revisions and exercises browser receipts plus published-artifact semantics.
+The independent secret-material receiver runs for every pull request with its
+own four-minute ceiling. The repository owner monitors the 300-minute monthly operating target
 through the [Actions usage view](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time)
 and manages metered spending through [account budgets and alerts](https://docs.github.com/en/billing/concepts/budgets-and-alerts).
 Those account controls and the observed usage supply the monthly budget route;

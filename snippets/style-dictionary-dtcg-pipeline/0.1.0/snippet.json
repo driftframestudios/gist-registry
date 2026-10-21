@@ -1,0 +1,186 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "style-dictionary-dtcg-pipeline",
+  "version": "0.1.0",
+  "artifactKind": "harness_material",
+  "standing": "candidate",
+  "title": "Deterministic DTCG and Style Dictionary pipeline",
+  "summary": "A bounded DTCG Format and Color Module 2025.10 subset compiles through Style Dictionary 5.7.0 into deterministic CSS, immutable JavaScript, typed declarations, semantic diffs, measured observations, and a recoverable accepted pointer.",
+  "use": {
+    "practicalQuestion": "How can reviewed token meaning compile across brands, modes, and targets while collisions, unsupported values, source leakage, semantic changes, interruption, and recovery remain inspectable?",
+    "changedAbility": "A collaborator can run one exact-version source-to-artifact transaction, inspect its typed failures and meaning changes, and preserve the last accepted coordinate through interruption.",
+    "readers": [
+      "Design-system and front-end practitioners forming token pipelines",
+      "AI collaborators reviewing source authority, transformations, and release receipts"
+    ],
+    "capabilities": [
+      "adapt_bounded_figma_snapshot",
+      "validate_dtcg_subset",
+      "compare_semantic_token_changes",
+      "compile_deterministic_token_targets",
+      "verify_generated_target_parity",
+      "promote_accepted_pointer"
+    ]
+  },
+  "provenance": {
+    "class": "independent_synthetic_authoring",
+    "description": "The token names, values, Figma-shaped snapshot, code, prose, and fault fixtures are independently authored synthetic material. Public specifications and package documentation support the format and compiler boundaries.",
+    "temporalScope": "This version implements the declared DTCG Format and Color Module 2025.10 subset through Style Dictionary 5.7.0 on Node.js 22, 24, or 26. Another compiler, format subset, target, or service adapter receives its own observation.",
+    "sourceKeys": [
+      "independent-authoring:style-dictionary-dtcg-pipeline",
+      "public-specification:dtcg-format-2025-10",
+      "public-specification:dtcg-color-2025-10",
+      "public-package:style-dictionary-5-7-0"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Package-local tests establish strict JSON-tree admission, the declared per-type value syntax, structured colors, token/group separation, alias type inference and topology diffs, finite graph admission, pre-clone string and node ceilings, stat-first sparse-file rejection, source and target collision handling, prototype-safe Figma-shaped adaptation, typed rejected fixtures, 100/1000/10000-token scale behavior, awaited hooks, exclusive non-destructive candidate-directory ownership, locale-stable ordinal output, captured-input and live-source parity, non-executing generated-module inspection, component-wise symlink rejection, cross-target parity, closed digest manifests, and accepted-pointer recovery."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/style-dictionary-dtcg-pipeline/0.1.0",
+  "representations": [
+    { "role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown" },
+    { "role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json" },
+    { "role": "dependency_definition", "path": "package.json", "declaredMediaType": "application/json" },
+    { "role": "dependency_lock", "path": "package-lock.json", "declaredMediaType": "application/json" },
+    { "role": "compatibility_contract", "path": "config/compatibility-envelope.json", "declaredMediaType": "application/json" },
+    { "role": "configuration", "path": "config/build-matrix.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "configuration", "path": "config/style-dictionary.config.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "token_source", "path": "tokens/primitives.tokens.json", "declaredMediaType": "application/json" },
+    { "role": "token_source", "path": "tokens/semantics.tokens.json", "declaredMediaType": "application/json" },
+    { "role": "token_source", "path": "tokens/components.tokens.json", "declaredMediaType": "application/json" },
+    { "role": "token_variant", "path": "tokens/variants/acme/dark.tokens.json", "declaredMediaType": "application/json" },
+    { "role": "token_variant", "path": "tokens/variants/acme/light.tokens.json", "declaredMediaType": "application/json" },
+    { "role": "token_variant", "path": "tokens/variants/research/dark.tokens.json", "declaredMediaType": "application/json" },
+    { "role": "token_variant", "path": "tokens/variants/research/light.tokens.json", "declaredMediaType": "application/json" },
+    { "role": "source", "path": "src/contract.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "source", "path": "src/publication.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "adapter", "path": "adapters/figma-snapshot-to-dtcg.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "tool", "path": "tools/build-candidates.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "tool", "path": "tools/load-coordinate.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "tool", "path": "tools/make-manifest.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "tool", "path": "tools/paths.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "runner", "path": "tools/run-example.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "tool", "path": "tools/validate-source.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "tool", "path": "tools/verify-generated.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "test", "path": "tests/graph.test.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "test", "path": "tests/build.test.mjs", "declaredMediaType": "text/javascript" },
+    { "role": "fixture", "path": "fixtures/accepted/delayed-async-hook.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/accepted/figma-snapshot.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/alias-cycle.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/figma-incomplete-mode.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/figma-normalized-name-collision.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/figma-private-description.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/figma-unsupported-type.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/missing-reference.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/normalized-name-collision.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/reserved-key.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/source-collision.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/type-mismatch.json", "declaredMediaType": "application/json" },
+    { "role": "fixture", "path": "fixtures/rejected/unsupported-dtcg-feature.json", "declaredMediaType": "application/json" },
+    { "role": "expected_contract", "path": "expected/pipeline-contract.json", "declaredMediaType": "application/json" }
+  ],
+  "execution": {
+    "runtime": "Node.js 22, 24, or 26; Style Dictionary 5.7.0 resolved by package-lock.json",
+    "dependenciesPath": "package-lock.json",
+    "commands": [
+      {
+        "name": "prepare",
+        "command": "npm --prefix snippets/style-dictionary-dtcg-pipeline/0.1.0 ci --ignore-scripts",
+        "establishes": "Installs the exact compiler dependency graph recorded by the artifact-local lock while lifecycle scripts remain outside the installation route."
+      },
+      {
+        "name": "test",
+        "command": "npm --prefix snippets/style-dictionary-dtcg-pipeline/0.1.0 test",
+        "establishes": "Exercises admission, adaptation, semantic comparison, scale, deterministic compilation, target parity, interruption, and recovery."
+      },
+      {
+        "name": "run",
+        "command": "npm --prefix snippets/style-dictionary-dtcg-pipeline/0.1.0 run example",
+        "establishes": "Runs an isolated four-coordinate build and prints validation, semantic-diff, measurement, and deterministic-manifest receipts."
+      }
+    ],
+    "fixtures": [
+      "tokens/primitives.tokens.json",
+      "tokens/semantics.tokens.json",
+      "tokens/components.tokens.json",
+      "fixtures/accepted/figma-snapshot.json",
+      "fixtures/accepted/delayed-async-hook.json",
+      "fixtures/rejected/alias-cycle.json",
+      "fixtures/rejected/missing-reference.json",
+      "fixtures/rejected/type-mismatch.json",
+      "fixtures/rejected/unsupported-dtcg-feature.json",
+      "fixtures/rejected/source-collision.json",
+      "fixtures/rejected/normalized-name-collision.json",
+      "fixtures/rejected/figma-normalized-name-collision.json",
+      "fixtures/rejected/figma-incomplete-mode.json",
+      "fixtures/rejected/figma-private-description.json"
+    ],
+    "expectedResults": ["expected/pipeline-contract.json"],
+    "environmentNotes": [
+      "The deterministic manifest carries stable source and output facts; elapsed time and peak memory remain observation fields tied to one run.",
+      "Fresh compiler instances per coordinate and atomic accepted-pointer promotion are repository design policies exercised by this package."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Does the declared subset include every authored type, reference form, extension, mode, and target required by the receiver?",
+      "Does each token path have one source owner and each intentional variant have a named coordinate?",
+      "Does the semantic diff say which receiver meaning changed before publication?",
+      "Can a failed candidate preserve the previous accepted coordinate and return an exact restart point?"
+    ],
+    "decisionRules": [
+      "Admit one explicit format subset before compilation.",
+      "Build one sorted finite matrix with a fresh compiler instance per coordinate.",
+      "Verify target inventory, meaning, syntax, containment, and digests before promotion.",
+      "Move one accepted pointer after the complete candidate family passes."
+    ],
+    "semanticMarkers": [
+      { "marker": "TARGET", "meaning": "Reviewed token meaning reaches every declared target through one exact compiler and source coordinate." },
+      { "marker": "CONTRAST", "meaning": "Implicit format support and rolling dependencies leave source authority, transformation scope, and receiver change distributed across local assumptions." },
+      { "marker": "GUARD", "meaning": "A finite subset, typed failures, semantic diff, target parity checks, digest manifest, and atomic pointer promotion keep the change inspectable and recoverable." }
+    ],
+    "instructionYields": [
+      { "mode": "implementation", "instruction": "Name token authorities and the compatibility subset, then compile a sorted finite coordinate matrix through an exact dependency lock." },
+      { "mode": "review", "instruction": "Inspect source ownership, reference graph, target names, semantic changes, output parity, measurements, and the accepted-pointer transition." },
+      { "mode": "recovery", "instruction": "Preserve the accepted pointer, clear the partial candidate destination, correct the typed source or target failure, and resume from the reported stage." }
+    ],
+    "codeExemplarGranularity": "One self-contained Node.js token pipeline with synthetic DTCG sources, a bounded Figma-shaped adapter, exact Style Dictionary compiler, deterministic targets, typed fixtures, semantic diffs, scale tests, and recoverable publication.",
+    "complexityAndAllocation": "Graph admission is O(N + E) time and storage for N tokens and E aliases. Node and UTF-8 string-byte admission precedes cloning; stat-first capped reads bound source, generated, manifest, and promotion allocation. The finite build performs one compiler pass per brand-mode coordinate and records source bytes, output bytes, elapsed time, and peak resident memory."
+  },
+  "boundaries": {
+    "evidence": "The tests establish the declared subset, fixtures, target formats, scale observations, determinism, and recovery behavior for the included synthetic sources and exact dependency lock.",
+    "trust": "All token values, identifiers, descriptions, and Figma-shaped records are synthetic and Apache-2.0. Public specifications and package documentation support current integration claims.",
+    "transfer": "A receiving system supplies token authority, approved extensions, Figma access, target naming, platform semantics, accessibility checks, security policy, performance budgets, and release acceptance for its exact coordinate."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A source can introduce an unsupported type, invalid direct value, token/group conflict, unresolved reference, cycle, conflicting owner, or secret-shaped description.",
+      "Two source paths can normalize to one target identifier.",
+      "A target build can return an incomplete or divergent artifact catalog.",
+      "An interruption can occur after accepted bytes are staged and before the pointer moves."
+    ],
+    "recoveryMoves": [
+      "Return the typed source coordinate and restart from source review.",
+      "Choose distinct target-safe names and rerun admission.",
+      "Preserve the candidate boundary for inspection and keep the previous accepted pointer in service.",
+      "Clear the new partial destination and resume promotion from the verified manifest."
+    ]
+  },
+  "relationships": [
+    { "type": "issue", "target": "gist-registry:issue-61", "reason": "Issue #61 owns formation and review of this first compiler coordinate." },
+    { "type": "receiver", "target": "gist-registry:issue-62", "reason": "The accessible receiver consumes the accepted semantic outputs and observes runtime states." },
+    { "type": "observer", "target": "gist-registry:issue-63", "reason": "The browser harness binds focused observations to the accepted source and receiver coordinates." }
+  ],
+  "extensions": {
+    "formatProfile": "DTCG Format Module 2025.10 subset",
+    "compilerCoordinate": "style-dictionary@5.7.0",
+    "publicationTransaction": {
+      "acceptedPointer": "accepted/current.json",
+      "artifactIdentity": "manifestDigest",
+      "digestAlgorithm": "sha256"
+    }
+  }
+}

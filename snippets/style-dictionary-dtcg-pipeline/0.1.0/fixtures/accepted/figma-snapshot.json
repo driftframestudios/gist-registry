@@ -1,0 +1,26 @@
+{
+  "documentId": "synthetic-variable-document",
+  "collections": [
+    {
+      "id": "collection:semantic-color",
+      "name": "Semantic color",
+      "modes": [{ "id": "mode:light", "name": "Light" }],
+      "variables": [
+        {
+          "id": "variable:action-background",
+          "name": "action/background",
+          "resolvedType": "COLOR",
+          "valuesByMode": { "mode:light": { "r": 0.1450980392, "g": 0.2745098039, "b": 0.9607843137, "a": 1 } },
+          "description": "Primary action background"
+        },
+        {
+          "id": "variable:focus-ring",
+          "name": "action/focus-ring",
+          "resolvedType": "COLOR",
+          "valuesByMode": { "mode:light": { "r": 0.937254902, "g": 1, "b": 0.2705882353, "a": 1 } },
+          "description": "Keyboard focus indicator"
+        }
+      ]
+    }
+  ]
+}

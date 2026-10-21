@@ -1,0 +1,18 @@
+{
+  "documentId": "synthetic-rejected-document",
+  "collections": [
+    {
+      "id": "collection:unsupported",
+      "name": "Unsupported",
+      "modes": [{ "id": "mode:light", "name": "Light" }],
+      "variables": [
+        {
+          "id": "variable:gradient",
+          "name": "surface/gradient",
+          "resolvedType": "GRADIENT",
+          "valuesByMode": { "mode:light": ["#2546f5", "#efff45"] }
+        }
+      ]
+    }
+  ]
+}

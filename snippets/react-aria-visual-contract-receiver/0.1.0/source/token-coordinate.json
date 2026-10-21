@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "0.1.0",
+  "acceptedCoordinate": {
+    "semanticId": "style-dictionary-dtcg-pipeline",
+    "version": "0.1.0",
+    "brand": "acme",
+    "mode": "light",
+    "canonicalPath": "snippets/style-dictionary-dtcg-pipeline/0.1.0",
+    "manifestKind": "generated_output_manifest",
+    "manifestSha256": "cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79",
+    "manifestStanding": "candidate_source_coordinate",
+    "generatedArtifact": {
+      "artifactKind": "generated_css_artifact",
+      "path": "acme-light/tokens.css",
+      "sha256": "7a5d1503f28c80f671fc27a6fbe879fbc532a55879d0f82db1c871158f29a632"
+    }
+  },
+  "boundedFixture": {
+    "path": "source/accepted-token-fixture.css",
+    "sha256": "6888c1ac53cd98a607e3c2a4765e5f206d6fc67fb9cbbe5fd5adf3af23b8ddd9",
+    "adapter": {
+      "id": "receiver-css-token-projection-v1",
+      "kind": "bounded_custom_property_projection",
+      "selection": [
+        "--color-cobalt-600",
+        "--color-cobalt-700",
+        "--color-cream-050",
+        "--color-cream-100",
+        "--color-ink-900",
+        "--color-ink-950",
+        "--color-signal-lime",
+        "--color-signal-coral",
+        "--space-2",
+        "--space-3",
+        "--space-4",
+        "--border-thin",
+        "--border-strong",
+        "--duration-quick",
+        "--surface-canvas",
+        "--surface-panel",
+        "--surface-inverse",
+        "--text-primary",
+        "--text-inverse",
+        "--text-action",
+        "--action-background",
+        "--action-background-pressed",
+        "--action-focus-ring",
+        "--status-warning",
+        "--layout-control-gap",
+        "--layout-control-padding",
+        "--layout-select-caret-inset",
+        "--layout-panel-padding",
+        "--motion-state-change"
+      ],
+      "renames": {
+        "--layout-control-gap": "--control-gap",
+        "--layout-control-padding": "--control-padding",
+        "--layout-select-caret-inset": "--select-caret-inset",
+        "--layout-panel-padding": "--panel-padding",
+        "--motion-state-change": "--state-change-duration"
+      },
+      "valueNormalizations": {
+        "--duration-quick": {
+          "rule": "seconds_to_milliseconds_exact",
+          "from": "0.12s",
+          "to": "120ms"
+        }
+      }
+    },
+    "scope": [
+      "receiver color roles",
+      "control spacing",
+      "logical select caret inset",
+      "focus indication",
+      "state-change duration"
+    ]
+  },
+  "reentry": "Confirm the candidate generated-output manifest and acme-light/tokens.css artifact digests at Issue 61 acceptance, advance manifestStanding to accepted_source_coordinate, run the named projection adapter against the accepted artifact, verify the bounded fixture digest, and rerun npm test."
+}

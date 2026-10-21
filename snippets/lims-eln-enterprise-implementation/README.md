@@ -25,7 +25,7 @@ tenant-scoped reservation, exact replay, changed-content collision,
 in-progress ownership, committed outcome recovery, and transaction snapshot
 restoration in one process-local reference model.
 
-## Next evidence-bearing route
+## Next verification step
 
 The current coordinate is ready for inspection, adaptation, forks, and
 execution through the owning repository's focused tests. A database-backed

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "invalid-dimensions",
+    "replace": { "intrinsic": { "width": 0, "height": 720 } },
+    "expectedCode": "invalid_dimension"
+  },
+  {
+    "id": "unsupported-media-type",
+    "replace": { "outputMediaType": "image/jpeg" },
+    "expectedCode": "unsupported_media_type"
+  },
+  {
+    "id": "missing-rights-standing",
+    "replace": { "rightsStanding": "" },
+    "expectedCode": "missing_text"
+  },
+  {
+    "id": "derivative-name-collision",
+    "replace": { "widths": [640, 640] },
+    "expectedCode": "invalid_widths"
+  },
+  {
+    "id": "metadata-policy-mismatch",
+    "replace": { "metadataPolicy": "retain" },
+    "expectedCode": "unsupported_metadata_policy"
+  }
+]

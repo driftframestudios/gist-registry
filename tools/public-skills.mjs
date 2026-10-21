@@ -258,6 +258,11 @@ export async function loadPublicSkills({ root, sourceSha } = {}) {
       entry.name + " dependencies must be path-sorted",
     );
     assert.equal(new Set(entry.dependencies).size, entry.dependencies.length, entry.name + " dependencies must be unique");
+    const readmePath = ".agents/skills/" + entry.name + "/README.md";
+    assert.ok(
+      entry.dependencies.includes(readmePath),
+      entry.name + " source package must include its operator README",
+    );
     requireString(entry.readinessNote, entry.name + " readiness note");
 
     const sourceBytes = await readRegularFile(root, entry.sourcePath, entry.name + " source");

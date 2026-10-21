@@ -84,7 +84,7 @@ export async function checkReadmeRoutes({ root = repositoryRoot } = {}) {
     "| Continuation |",
     "| Publication |",
     "**Current coordinate:**",
-    "## Next evidence-bearing route",
+    "## Next verification step",
   ];
 
   for (const familyId of familyIds) {
