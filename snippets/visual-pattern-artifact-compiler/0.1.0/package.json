@@ -1,0 +1,22 @@
+{
+  "name": "visual-pattern-artifact-compiler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "scripts": {
+    "build": "node tools/build-artifacts.mjs",
+    "example": "node tools/build-artifacts.mjs --summary",
+    "test": "node --test tests/*.test.mjs",
+    "install:browsers": "playwright install chromium firefox webkit",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}

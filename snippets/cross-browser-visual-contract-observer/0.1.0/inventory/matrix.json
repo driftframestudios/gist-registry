@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarios": [
+    {"id":"baseline","tiers":["smoke","changed_boundary","full"],"viewport":{"width":1280,"height":800},"textScale":1,"direction":"ltr","media":"screen","colorMode":"normal","motion":"reduced","image":"available","font":"system","input":"keyboard","state":"accepted"},
+    {"id":"narrow-200","tiers":["changed_boundary","full"],"viewport":{"width":320,"height":800},"textScale":2,"direction":"ltr","media":"screen","colorMode":"normal","motion":"reduced","image":"available","font":"system","input":"touch","state":"pending"},
+    {"id":"narrow-400","tiers":["full"],"viewport":{"width":320,"height":1000},"textScale":4,"direction":"ltr","media":"screen","colorMode":"normal","motion":"reduced","image":"available","font":"system","input":"keyboard","state":"warning"},
+    {"id":"rtl-touch","tiers":["changed_boundary","full"],"viewport":{"width":390,"height":844},"textScale":1,"direction":"rtl","media":"screen","colorMode":"normal","motion":"reduced","image":"available","font":"system","input":"touch","state":"accepted"},
+    {"id":"forced-colors","tiers":["full"],"viewport":{"width":1024,"height":768},"textScale":1,"direction":"ltr","media":"screen","colorMode":"forced","motion":"reduced","image":"available","font":"system","input":"keyboard","state":"invalid"},
+    {"id":"print","tiers":["full"],"viewport":{"width":1024,"height":768},"textScale":1,"direction":"ltr","media":"print","colorMode":"normal","motion":"reduced","image":"available","font":"system","input":"none","state":"accepted"},
+    {"id":"motion","tiers":["full"],"viewport":{"width":1024,"height":768},"textScale":1,"direction":"ltr","media":"screen","colorMode":"normal","motion":"full","image":"available","font":"system","input":"pointer","state":"success"},
+    {"id":"missing-image","tiers":["full"],"viewport":{"width":1024,"height":768},"textScale":1,"direction":"ltr","media":"screen","colorMode":"normal","motion":"reduced","image":"missing","font":"system","input":"keyboard","state":"warning"},
+    {"id":"missing-font","tiers":["full"],"viewport":{"width":1024,"height":768},"textScale":1,"direction":"ltr","media":"screen","colorMode":"normal","motion":"reduced","image":"available","font":"missing","input":"pointer","state":"stale"},
+    {"id":"script-independent","tiers":["smoke","changed_boundary","full"],"viewport":{"width":1024,"height":768},"textScale":1,"direction":"ltr","media":"screen","colorMode":"normal","motion":"reduced","image":"available","font":"system","input":"none","state":"accepted","javaScript":false}
+  ]
+}

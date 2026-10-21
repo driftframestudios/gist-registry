@@ -1,0 +1,71 @@
+{
+  "runId": "sync-run-001",
+  "owner": "release-coordinator-a",
+  "clockStartMs": 1792598400000,
+  "maxBatchBytes": 520,
+  "remote": {
+    "revision": 7,
+    "variables": [
+      {
+        "id": "var_0001",
+        "name": "color.accent.legacy",
+        "resolvedType": "COLOR",
+        "value": "#2855d9",
+        "version": 1
+      },
+      {
+        "id": "var_0002",
+        "name": "component.action.background",
+        "resolvedType": "COLOR",
+        "value": "#2855d9",
+        "referenceTo": "var_0001",
+        "version": 2
+      }
+    ]
+  },
+  "operations": [
+    {
+      "id": "01-create-successor",
+      "type": "create_variable",
+      "tempId": "tmp:color-accent-current",
+      "dependsOn": [],
+      "payload": {
+        "name": "color.accent.current",
+        "resolvedType": "COLOR",
+        "value": "#315cf5"
+      }
+    },
+    {
+      "id": "02-update-legacy-label",
+      "type": "update_variable",
+      "targetId": "var_0001",
+      "expectedVersion": 1,
+      "dependsOn": [],
+      "payload": {
+        "name": "color.accent.legacy-review"
+      }
+    },
+    {
+      "id": "03-rewire-component",
+      "type": "rewire_reference",
+      "targetId": "var_0002",
+      "expectedVersion": 2,
+      "dependsOn": [
+        "01-create-successor"
+      ],
+      "payload": {
+        "referenceTo": "tmp:color-accent-current"
+      }
+    },
+    {
+      "id": "04-deprecate-legacy",
+      "type": "deprecate_variable",
+      "targetId": "var_0001",
+      "expectedVersion": 2,
+      "dependsOn": [
+        "02-update-legacy-label",
+        "03-rewire-component"
+      ]
+    }
+  ]
+}

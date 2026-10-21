@@ -525,7 +525,7 @@ function artifactFamilyPage(semanticId, versions, outputPath) {
         " exact version" +
         (versions.length === 1 ? "" : "s") +
         "</dd>",
-      '<dt>Continuation</dt><dd>Read the mutable family source guide for the current form and next evidence-bearing route</dd>',
+      '<dt>Continuation</dt><dd>Read the mutable family source guide for the current form and next verification step</dd>',
       '<dt>Machine record</dt><dd><a href="/registry.json"><code>registry.json</code></a></dd>',
       "</dl>",
       '<p><a href="/snippets/' +
@@ -908,11 +908,30 @@ function publicSkillsPage(publicSkills, outputPath) {
 }
 
 function publicSkillPage(skill, sourceRevision, outputPath) {
-  const dependencies = skill.dependencies.length
+  const operatorGuidePath = ".agents/skills/" + skill.name + "/README.md";
+  const operatorGuide = skill.dependencies.find(
+    dependency => dependency.repositoryPath === operatorGuidePath,
+  );
+  const companions = skill.dependencies.filter(
+    dependency => dependency.repositoryPath !== operatorGuidePath,
+  );
+  const operatorGuideSection = [
+    "<h2>Operator guide</h2>",
+    '<p>Start with <a href="' +
+      escapeHtml(operatorGuide.publishedPath) +
+      '"><code>' +
+      escapeHtml(operatorGuide.repositoryPath) +
+      "</code></a> · <code>sha256:" +
+      escapeHtml(operatorGuide.sha256) +
+      '</code> · <a href="' +
+      escapeHtml(operatorGuide.repositoryUrl) +
+      '">Inspect on GitHub</a></p>',
+  ].join("\n");
+  const dependencies = companions.length
     ? [
-        "<h2>Dependencies</h2>",
+        "<h2>Source package companions</h2>",
         '<ul class="file-list">',
-        ...skill.dependencies.map(dependency =>
+        ...companions.map(dependency =>
           '<li><a href="' +
           escapeHtml(dependency.publishedPath) +
           '"><code>' +
@@ -952,6 +971,7 @@ function publicSkillPage(skill, sourceRevision, outputPath) {
         '">Inspect this file on GitHub</a></dd>',
       "</dl>",
       "<p>The local source link opens the byte-preserving kindlight.io copy. GitHub access follows the repository’s current visibility.</p>",
+      operatorGuideSection,
       dependencies,
       '<p><a href="/skills/">Return to collaboration skills</a></p>',
     ].join("\n"),

@@ -1,0 +1,4 @@
+{
+  "color": { "$type": "color", "$value": "#2546f5" },
+  "space": { "$type": "dimension", "$value": "{color}" }
+}

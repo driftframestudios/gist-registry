@@ -1,0 +1,4 @@
+{
+  "focus_ring": { "$type": "color", "$value": "#2546f5" },
+  "focus-ring": { "$type": "color", "$value": "#efff45" }
+}

@@ -1,0 +1,22 @@
+{
+  "layers": [
+    {
+      "name": "foundation.tokens.json",
+      "role": "source",
+      "document": {
+        "action": {
+          "background": { "$type": "color", "$value": "#173a8f" }
+        }
+      }
+    },
+    {
+      "name": "component.tokens.json",
+      "role": "source",
+      "document": {
+        "action": {
+          "background": { "$type": "color", "$value": "#244fd6" }
+        }
+      }
+    }
+  ]
+}

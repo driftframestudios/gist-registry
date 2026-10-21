@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A native HTML and React Aria visual-contract receiver with explicit draft, request, accepted, and released state."
+    />
+    <title>React Aria visual-contract receiver</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#receiver-root">Skip to the interactive receiver</a>
+    <div id="receiver-root"></div>
+
+    <article class="semantic-companion" aria-labelledby="semantic-companion-title">
+      <p class="eyebrow">Semantic companion</p>
+      <h2 id="semantic-companion-title">The page keeps its operating contract readable from source</h2>
+      <p>
+        A draft records the visitor’s current choice. A request binds that choice
+        to a monotonic generation. Acceptance updates only when the response
+        matches the current generation. Release binds the accepted coordinate to
+        a stable receipt, and a repeated release returns the same receipt.
+      </p>
+      <ol>
+        <li>Choose a stable specimen ID from either control route.</li>
+        <li>Request a preview and observe its generation in the status region.</li>
+        <li>Settle the current generation into accepted state.</li>
+        <li>Release the accepted coordinate and retain the returned receipt.</li>
+      </ol>
+      <p>
+        <a href="./source/semantic-reading.html">Open the complete script-independent reading</a>
+      </p>
+    </article>
+
+    <noscript>
+      <p class="noscript-message">
+        The interactive comparison uses JavaScript. The
+        <a href="./source/native-receiver.html">native HTML route</a> and
+        <a href="./source/semantic-reading.html">semantic companion</a>
+        remain available as complete documents.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

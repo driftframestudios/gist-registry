@@ -1,0 +1,18 @@
+{
+  "collections": [
+    {
+      "id": "collection.synthetic",
+      "name": "Synthetic",
+      "modes": [{ "id": "mode.light", "name": "Light" }],
+      "variables": [
+        {
+          "id": "variable.private",
+          "name": "Action/Background",
+          "description": "Authorization: Bearer synthetic-secret-shaped-value",
+          "resolvedType": "COLOR",
+          "valuesByMode": { "mode.light": "#173a8f" }
+        }
+      ]
+    }
+  ]
+}

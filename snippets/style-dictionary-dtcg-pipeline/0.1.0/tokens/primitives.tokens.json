@@ -1,0 +1,38 @@
+{
+  "$description": "Synthetic primitive material values for the pipeline exemplar.",
+  "color": {
+    "$type": "color",
+    "cobalt": {
+      "600": { "$value": "#2546f5" },
+      "700": { "$value": "#1833c8" }
+    },
+    "cream": {
+      "050": { "$value": "#fffaf0" },
+      "100": { "$value": "#f7efd8" }
+    },
+    "ink": {
+      "900": { "$value": "#11284d" },
+      "950": { "$value": "#081427" }
+    },
+    "signal": {
+      "lime": { "$value": "#efff45" },
+      "coral": { "$value": "#ff766d" }
+    }
+  },
+  "space": {
+    "$type": "dimension",
+    "1": { "$value": { "value": 4, "unit": "px" } },
+    "2": { "$value": { "value": 8, "unit": "px" } },
+    "3": { "$value": { "value": 12, "unit": "px" } },
+    "4": { "$value": { "value": 16, "unit": "px" } }
+  },
+  "border": {
+    "$type": "dimension",
+    "thin": { "$value": { "value": 1, "unit": "px" } },
+    "strong": { "$value": { "value": 2, "unit": "px" } }
+  },
+  "duration": {
+    "$type": "duration",
+    "quick": { "$value": { "value": 120, "unit": "ms" } }
+  }
+}

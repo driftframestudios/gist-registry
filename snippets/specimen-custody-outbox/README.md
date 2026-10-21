@@ -25,7 +25,7 @@ writers.
 **Current coordinate:**
 [`specimen-custody-outbox@0.1.0`](0.1.0/README.md).
 
-## Next evidence-bearing route
+## Next verification step
 
 The current version is a runnable domain exemplar and proposed compact Gist
 source set. A durable database implementation receives transaction isolation,

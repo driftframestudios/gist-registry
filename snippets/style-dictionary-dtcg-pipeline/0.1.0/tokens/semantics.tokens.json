@@ -1,0 +1,36 @@
+{
+  "$description": "Purpose-bearing aliases shared by receiving components.",
+  "surface": {
+    "$type": "color",
+    "canvas": { "$value": "{color.cream.050}" },
+    "panel": { "$value": "{color.cream.100}" },
+    "inverse": { "$value": "{color.ink.950}" }
+  },
+  "text": {
+    "$type": "color",
+    "primary": { "$value": "{color.ink.900}" },
+    "inverse": { "$value": "{color.cream.050}" },
+    "action": { "$value": "{color.cobalt.700}" }
+  },
+  "action": {
+    "$type": "color",
+    "background": { "$value": "{color.cobalt.600}" },
+    "background-pressed": { "$value": "{color.cobalt.700}" },
+    "focus-ring": { "$value": "{color.signal.lime}" }
+  },
+  "status": {
+    "$type": "color",
+    "warning": { "$value": "{color.signal.coral}" }
+  },
+  "layout": {
+    "$type": "dimension",
+    "control-gap": { "$value": "{space.2}" },
+    "control-padding": { "$value": "{space.3}" },
+    "select-caret-inset": { "$value": "{space.3}" },
+    "panel-padding": { "$value": "{space.4}" }
+  },
+  "motion": {
+    "$type": "duration",
+    "state-change": { "$value": "{duration.quick}" }
+  }
+}

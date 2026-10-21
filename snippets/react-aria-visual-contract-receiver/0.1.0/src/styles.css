@@ -1,0 +1,464 @@
+@import "../source/accepted-token-fixture.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  min-inline-size: 0;
+  margin: 0;
+  color: var(--text-primary);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--action-background) 8%, transparent) 1px, transparent 1px) 0 0 / 24px 24px,
+    var(--surface-canvas);
+}
+
+a {
+  color: var(--text-action);
+  text-underline-offset: 0.2em;
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+[data-focus-visible] {
+  outline: 3px solid var(--action-focus-ring);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  inset-block-start: var(--space-3);
+  inset-inline-start: var(--space-3);
+  z-index: 20;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-inverse);
+  background: var(--surface-inverse);
+  transform: translateY(-180%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.app-shell,
+.semantic-companion,
+.noscript-message,
+.standalone-page {
+  inline-size: min(100% - 2rem, 76rem);
+  margin-inline: auto;
+}
+
+.app-shell {
+  padding-block: clamp(2rem, 6vw, 5rem);
+}
+
+.hero {
+  max-inline-size: 64rem;
+  padding: clamp(1.25rem, 4vw, 3.5rem);
+  border: var(--border-strong) solid var(--text-primary);
+  background: var(--action-background);
+  color: var(--text-inverse);
+  box-shadow: 10px 10px 0 var(--surface-inverse);
+}
+
+.hero h1,
+.receiver-card h2,
+.operating-state h2,
+.semantic-companion h2,
+.standalone-page h1,
+.standalone-page h2 {
+  margin-block: 0.25em 0.5em;
+  line-height: 1.08;
+}
+
+.hero h1 {
+  max-inline-size: 18ch;
+  font-size: clamp(2rem, 6vw, 4.75rem);
+}
+
+.hero nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--control-gap) var(--panel-padding);
+  margin-block-start: 1.5rem;
+}
+
+.hero a {
+  color: var(--text-inverse);
+  font-weight: 750;
+}
+
+.eyebrow,
+dt,
+.status-line {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.receiver-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+  gap: clamp(1rem, 3vw, 2rem);
+  margin-block: clamp(2rem, 5vw, 4rem);
+}
+
+.receiver-card,
+.operating-state,
+.semantic-companion,
+.standalone-panel {
+  min-inline-size: 0;
+  border: var(--border-strong) solid var(--text-primary);
+  background: var(--surface-panel);
+}
+
+.receiver-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-padding);
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.receiver-card > * {
+  margin-block: 0;
+}
+
+.field-stack {
+  display: grid;
+  gap: var(--control-gap);
+  margin-block-start: auto;
+}
+
+.field-stack label,
+.field-stack [slot="label"],
+.field-stack .react-aria-Label {
+  display: block;
+  font-weight: 800;
+}
+
+.select-shell,
+.select-trigger {
+  position: relative;
+}
+
+select,
+.select-trigger,
+button {
+  min-block-size: 2.75rem;
+  border: var(--border-strong) solid var(--text-primary);
+  border-radius: 0;
+  font: inherit;
+  font-weight: 750;
+}
+
+select,
+.select-trigger {
+  inline-size: 100%;
+  color: var(--text-primary);
+  background: var(--surface-canvas);
+}
+
+select {
+  appearance: none;
+  padding-block: var(--control-padding);
+  padding-inline-start: var(--control-padding);
+  padding-inline-end: calc(var(--select-caret-inset) + 1.25rem);
+}
+
+.select-shell::after,
+.select-caret {
+  inline-size: 0.6rem;
+  block-size: 0.6rem;
+  border-inline-end: var(--border-strong) solid currentColor;
+  border-block-end: var(--border-strong) solid currentColor;
+  transform: rotate(45deg) translateY(-25%);
+  pointer-events: none;
+}
+
+.select-shell::after {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: var(--select-caret-inset);
+  content: "";
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--control-gap);
+  padding-block: var(--control-padding);
+  padding-inline-start: var(--control-padding);
+  padding-inline-end: var(--select-caret-inset);
+  text-align: start;
+}
+
+.select-caret {
+  flex: 0 0 auto;
+  margin-inline-end: 0.1rem;
+}
+
+.select-popover {
+  inline-size: var(--trigger-width);
+  max-inline-size: calc(100vw - 2rem);
+  border: var(--border-strong) solid var(--text-primary);
+  background: var(--surface-canvas);
+  box-shadow: 6px 6px 0 var(--surface-inverse);
+}
+
+.select-listbox {
+  max-block-size: min(24rem, 70vh);
+  overflow: auto;
+  padding: var(--space-2);
+  outline: 0;
+}
+
+.select-option {
+  display: grid;
+  gap: 0.2rem;
+  padding: var(--control-padding);
+  cursor: default;
+}
+
+.select-option small {
+  font-weight: 450;
+}
+
+.select-option[data-focused] {
+  color: var(--text-inverse);
+  background: var(--action-background-pressed);
+  outline: 2px solid var(--action-focus-ring);
+  outline-offset: -2px;
+}
+
+.select-option[data-selected] {
+  border-inline-start: 0.35rem solid var(--status-warning);
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--control-gap);
+}
+
+button,
+.action-row [role="button"] {
+  padding: var(--control-padding) var(--panel-padding);
+  color: var(--text-inverse);
+  background: var(--action-background);
+  cursor: pointer;
+  transition:
+    background-color var(--state-change-duration) ease,
+    transform var(--state-change-duration) ease;
+}
+
+button:active,
+[role="button"][data-pressed] {
+  background: var(--action-background-pressed);
+  transform: translateY(1px);
+}
+
+button.secondary-action,
+.secondary-action {
+  color: var(--text-primary);
+  background: var(--surface-canvas);
+}
+
+.operating-state {
+  display: grid;
+  gap: var(--panel-padding);
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.state-readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.state-readout div {
+  min-inline-size: 0;
+  padding: var(--panel-padding);
+  border-inline-start: 0.4rem solid var(--action-background);
+  background: var(--surface-canvas);
+}
+
+.state-readout dd {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.status-line {
+  margin: 0;
+  padding: var(--control-padding);
+  border: var(--border-thin) solid var(--text-primary);
+  background: var(--action-focus-ring);
+}
+
+.semantic-companion,
+.standalone-panel {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.semantic-companion {
+  margin-block: 0 4rem;
+}
+
+.standalone-page {
+  padding-block: 2rem 5rem;
+}
+
+.standalone-page > header {
+  max-inline-size: 70ch;
+  margin-block-end: 2rem;
+}
+
+.standalone-panel + .standalone-panel {
+  margin-block-start: 1.5rem;
+}
+
+.contract-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.contract-table th,
+.contract-table td {
+  padding: var(--control-padding);
+  border-block-end: var(--border-thin) solid var(--text-primary);
+  text-align: start;
+  vertical-align: top;
+}
+
+.contract-table th {
+  inline-size: 10rem;
+}
+
+.noscript-message {
+  padding: var(--panel-padding);
+  border: var(--border-strong) solid var(--status-warning);
+  background: var(--surface-canvas);
+}
+
+:dir(rtl) .select-caret,
+:dir(rtl) .select-shell::after {
+  transform: rotate(45deg) scale(-1, 1) translateY(-25%);
+}
+
+@media (max-width: 34rem) {
+  .app-shell,
+  .semantic-companion,
+  .noscript-message,
+  .standalone-page {
+    inline-size: min(100% - 1rem, 76rem);
+  }
+
+  .hero {
+    box-shadow: 5px 5px 0 var(--surface-inverse);
+  }
+
+  .action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .contract-table,
+  .contract-table tbody,
+  .contract-table tr,
+  .contract-table th,
+  .contract-table td {
+    display: block;
+    inline-size: 100%;
+  }
+
+  .contract-table tr {
+    padding-block: var(--space-2);
+    border-block-end: var(--border-thin) solid var(--text-primary);
+  }
+
+  .contract-table th,
+  .contract-table td {
+    border: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .hero,
+  .receiver-card,
+  .operating-state,
+  .semantic-companion,
+  .standalone-panel,
+  .status-line,
+  .select-popover {
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+
+  .state-readout div,
+  .select-option[data-selected] {
+    border-color: Highlight;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  select:focus-visible,
+  [data-focus-visible] {
+    outline-color: Highlight;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .skip-link,
+  .action-row,
+  .hero nav {
+    display: none;
+  }
+
+  .app-shell,
+  .semantic-companion,
+  .standalone-page {
+    inline-size: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hero,
+  .receiver-card,
+  .operating-state,
+  .semantic-companion,
+  .standalone-panel {
+    break-inside: avoid;
+    color: #000;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  a {
+    color: #000;
+  }
+}

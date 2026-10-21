@@ -1,0 +1,228 @@
+import { DEFAULT_LIMITS, PipelineError, compareOrdinal, normalizeCssName } from "../src/contract.mjs";
+
+const typeMap = Object.freeze({
+  BOOLEAN: "boolean",
+  COLOR: "color",
+  FLOAT: "number",
+  STRING: "string",
+});
+
+const sensitiveText = /(?:api[_ -]?key|authorization|bearer|password|private[_ -]?url|secret|token\s*[:=])/iu;
+const privateLocator = /https?:\/\/(?:localhost|127\.0\.0\.1|[^/]*\.internal)(?:[/:]|$)/iu;
+const reservedSegments = new Set(["__proto__", "prototype", "constructor"]);
+
+function safeSegments(name) {
+  if (typeof name !== "string" || !name.trim()) {
+    throw new PipelineError("FIGMA_NAME_REQUIRED", "Each source variable requires a stable name.", {
+      stage: "figma_adapter",
+      restartFrom: "source_snapshot",
+    });
+  }
+  const segments = name
+    .split("/")
+    .map(segment => segment.trim().toLowerCase().replace(/[^a-z0-9-]+/gu, "-"))
+    .filter(Boolean);
+  if (segments.length === 0) {
+    throw new PipelineError("FIGMA_NAME_REQUIRED", "Each source variable requires a stable normalized name.", {
+      stage: "figma_adapter",
+      restartFrom: "source_snapshot",
+    });
+  }
+  const reserved = segments.find(segment => reservedSegments.has(segment));
+  if (reserved) {
+    throw new PipelineError("FIGMA_NAME_RESERVED", "A source variable name contains a reserved object segment.", {
+      stage: "figma_adapter",
+      reservedSegment: reserved,
+      restartFrom: "source_snapshot",
+    });
+  }
+  return segments;
+}
+
+function assignToken(root, segments, token) {
+  let cursor = root;
+  for (const segment of segments.slice(0, -1)) {
+    if (Object.hasOwn(cursor, segment) && Object.hasOwn(cursor[segment], "$value")) {
+      throw new PipelineError("FIGMA_NAME_COLLISION", "A source group and token share one normalized path.", {
+        stage: "figma_adapter",
+        tokenPath: segments.join("."),
+        restartFrom: "source_snapshot",
+      });
+    }
+    // Create an own group explicitly. Reading through `??=` would accept an
+    // inherited Object-prototype member such as `toString` as the next group.
+    if (!Object.hasOwn(cursor, segment)) cursor[segment] = Object.create(null);
+    cursor = cursor[segment];
+  }
+  const leaf = segments.at(-1);
+  if (Object.hasOwn(cursor, leaf)) {
+    throw new PipelineError("FIGMA_NAME_COLLISION", "Two source variables share one normalized path.", {
+      stage: "figma_adapter",
+      tokenPath: segments.join("."),
+      restartFrom: "source_snapshot",
+    });
+  }
+  cursor[leaf] = token;
+}
+
+function inspectPublicBoundary(value, path = "snapshot") {
+  const pending = [{ value, path, depth: 0 }];
+  let nodes = 0;
+  let admittedNodes = 1;
+  let stringBytes = 0;
+  const admitNode = node => {
+    admittedNodes += 1;
+    if (admittedNodes > DEFAULT_LIMITS.sourceNodes || node.depth > 64) {
+      throw new PipelineError(
+        "SOURCE_BOUNDARY_LIMIT_EXCEEDED",
+        "The source snapshot exceeds the bounded inspection envelope.",
+        {
+          stage: "figma_adapter",
+          dimension: admittedNodes > DEFAULT_LIMITS.sourceNodes ? "source_nodes" : "depth",
+          sourcePath: node.path,
+          observedDepth: node.depth,
+          observedNodes: admittedNodes,
+          depthLimit: 64,
+          nodeLimit: DEFAULT_LIMITS.sourceNodes,
+          restartFrom: "source_snapshot",
+        },
+      );
+    }
+    pending.push(node);
+  };
+  const admitString = (input, sourcePath) => {
+    stringBytes += Buffer.byteLength(input, "utf8");
+    if (stringBytes > DEFAULT_LIMITS.sourceBytes) {
+      throw new PipelineError(
+        "SOURCE_BOUNDARY_LIMIT_EXCEEDED",
+        "The source snapshot exceeds the bounded string-byte envelope.",
+        {
+          stage: "figma_adapter",
+          dimension: "source_string_bytes",
+          sourcePath,
+          observed: stringBytes,
+          limit: DEFAULT_LIMITS.sourceBytes,
+          restartFrom: "source_snapshot",
+        },
+      );
+    }
+  };
+  while (pending.length > 0) {
+    const current = pending.pop();
+    nodes += 1;
+    if (nodes > DEFAULT_LIMITS.sourceNodes || current.depth > 64) {
+      throw new PipelineError(
+        "SOURCE_BOUNDARY_LIMIT_EXCEEDED",
+        "The source snapshot exceeds the bounded inspection envelope.",
+        {
+          stage: "figma_adapter",
+          sourcePath: current.path,
+          observedDepth: current.depth,
+          observedNodes: nodes,
+          depthLimit: 64,
+          nodeLimit: DEFAULT_LIMITS.sourceNodes,
+          restartFrom: "source_snapshot",
+        },
+      );
+    }
+    if (typeof current.value === "string") {
+      admitString(current.value, current.path);
+      if (sensitiveText.test(current.value) || privateLocator.test(current.value)) {
+        throw new PipelineError("SOURCE_BOUNDARY_REJECTED", "The source snapshot contains a private or secret-shaped string.", {
+          stage: "figma_adapter",
+          sourcePath: current.path,
+          restartFrom: "source_snapshot",
+        });
+      }
+      continue;
+    }
+    if (Array.isArray(current.value)) {
+      for (let index = current.value.length - 1; index >= 0; index -= 1) {
+        admitNode({
+          value: current.value[index],
+          path: `${current.path}[${index}]`,
+          depth: current.depth + 1,
+        });
+      }
+      continue;
+    }
+    if (current.value && typeof current.value === "object") {
+      for (const key in current.value) {
+        if (!Object.hasOwn(current.value, key)) continue;
+        admitString(key, `${current.path}.${key}`);
+        admitNode({
+          value: current.value[key],
+          path: `${current.path}.${key}`,
+          depth: current.depth + 1,
+        });
+      }
+    }
+  }
+}
+
+export function adaptFigmaSnapshot(snapshot, { modeName = "Light" } = {}) {
+  inspectPublicBoundary(snapshot);
+  if (!snapshot || !Array.isArray(snapshot.collections)) {
+    throw new PipelineError("FIGMA_COLLECTIONS_REQUIRED", "The source snapshot requires a collections array.", {
+      stage: "figma_adapter",
+      restartFrom: "source_snapshot",
+    });
+  }
+
+  const document = { $description: "Candidate tokens adapted from a realistic synthetic Figma-shaped snapshot." };
+  const sourceMap = [];
+  const normalizedNames = new Map();
+
+  for (const collection of snapshot.collections) {
+    const mode = collection.modes?.find(candidate => candidate.name === modeName);
+    if (!mode) {
+      throw new PipelineError("FIGMA_MODE_REQUIRED", `Collection ${collection.name ?? collection.id} requires mode ${modeName}.`, {
+        stage: "figma_adapter",
+        collectionId: collection.id,
+        restartFrom: "source_snapshot",
+      });
+    }
+    for (const variable of collection.variables ?? []) {
+      const type = typeMap[variable.resolvedType];
+      if (!type) {
+        throw new PipelineError("FIGMA_TYPE_UNSUPPORTED", `Variable ${variable.name} uses an unsupported source type.`, {
+          stage: "figma_adapter",
+          variableId: variable.id,
+          sourceType: variable.resolvedType,
+          restartFrom: "source_snapshot",
+        });
+      }
+      const segments = safeSegments(variable.name);
+      const path = segments.join(".");
+      const normalized = normalizeCssName(path);
+      if (normalizedNames.has(normalized)) {
+        throw new PipelineError("FIGMA_NORMALIZED_NAME_COLLISION", "Two source variables share one generated identifier.", {
+          stage: "figma_adapter",
+          normalizedName: normalized,
+          variableIds: [normalizedNames.get(normalized), variable.id],
+          restartFrom: "source_snapshot",
+        });
+      }
+      normalizedNames.set(normalized, variable.id);
+      if (!Object.hasOwn(variable.valuesByMode ?? {}, mode.id)) {
+        throw new PipelineError("FIGMA_MODE_VALUE_REQUIRED", `Variable ${variable.name} requires a value for ${modeName}.`, {
+          stage: "figma_adapter",
+          variableId: variable.id,
+          modeId: mode.id,
+          restartFrom: "source_snapshot",
+        });
+      }
+      assignToken(document, segments, {
+        $type: type,
+        $value: structuredClone(variable.valuesByMode[mode.id]),
+        ...(typeof variable.description === "string" && variable.description.trim()
+          ? { $description: variable.description.trim() }
+          : {}),
+      });
+      sourceMap.push({ tokenPath: path, collectionId: collection.id, variableId: variable.id, modeId: mode.id });
+    }
+  }
+
+  sourceMap.sort((left, right) => compareOrdinal(left.tokenPath, right.tokenPath));
+  return { document, sourceMap };
+}

@@ -37,7 +37,7 @@ concurrency:
 jobs:
   registry:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     steps:
       - name: Check out accepted source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -53,6 +53,11 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             snippets/typed-absence-and-wire-shape/0.1.0/package-lock.json
+            snippets/style-dictionary-dtcg-pipeline/0.1.0/package-lock.json
+            snippets/react-aria-visual-contract-receiver/0.1.0/package-lock.json
+            snippets/cross-browser-visual-contract-observer/0.1.0/package-lock.json
+            snippets/visual-pattern-artifact-compiler/0.1.0/package-lock.json
+            snippets/figma-variable-sync-reconciliation/0.1.0/package-lock.json
 
       - name: Use Python 3.12
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -79,3 +84,65 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: git diff --check "$BASE_SHA...$HEAD_SHA"
+
+  visual-contract-node-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24, 26]
+    steps:
+      - name: Check out accepted source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            snippets/style-dictionary-dtcg-pipeline/0.1.0/package-lock.json
+            snippets/react-aria-visual-contract-receiver/0.1.0/package-lock.json
+            snippets/cross-browser-visual-contract-observer/0.1.0/package-lock.json
+            snippets/visual-pattern-artifact-compiler/0.1.0/package-lock.json
+            snippets/figma-variable-sync-reconciliation/0.1.0/package-lock.json
+
+      - name: Install the locked root toolchain
+        run: npm ci --ignore-scripts
+
+      - name: Exercise the visual-contract packages
+        run: npm run test:visual-contracts
+
+  visual-contract-browser-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out accepted source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            snippets/cross-browser-visual-contract-observer/0.1.0/package-lock.json
+            snippets/visual-pattern-artifact-compiler/0.1.0/package-lock.json
+
+      - name: Install the locked browser-test toolchains
+        run: |
+          npm --prefix snippets/cross-browser-visual-contract-observer/0.1.0 ci --ignore-scripts
+          npm --prefix snippets/visual-pattern-artifact-compiler/0.1.0 ci --ignore-scripts
+
+      - name: Install the exact Playwright browser matrix
+        working-directory: snippets/cross-browser-visual-contract-observer/0.1.0
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Exercise browser receipts and published artifact semantics
+        run: npm run test:visual-contracts:browsers

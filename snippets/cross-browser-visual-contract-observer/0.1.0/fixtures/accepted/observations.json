@@ -1,0 +1,7 @@
+{
+  "family-label": {"accessibleName":"Specimen family","labelPosition":"above"},
+  "stale-settlement": {"focusOwner":"preview","acceptedGeneration":0,"settlement":"stale"},
+  "narrow-reflow": {"viewportWidth":320,"scrollWidth":320,"minimumHitTarget":44},
+  "action-token": {"customProperty":"--contract-action","resolvedValue":"rgb(37, 70, 245)"},
+  "connector-painter-order": {"crop":"workflow","connectorLayer":0,"cardLayer":1}
+}

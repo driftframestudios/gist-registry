@@ -1,0 +1,11 @@
+{
+  "hero": {
+    "gradient": {
+      "$type": "gradient",
+      "$value": [
+        { "color": "#173a8f", "position": 0 },
+        { "color": "#f2675e", "position": 1 }
+      ]
+    }
+  }
+}

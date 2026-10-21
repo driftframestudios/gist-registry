@@ -1,0 +1,22 @@
+{
+  "authority": {
+    "semantic": "design-system-owner",
+    "compiler": "platform-engineering",
+    "receivers": ["web-native", "react-aria"]
+  },
+  "tokens": {
+    "cobalt.600": {"type": "color", "value": "#3158ee"},
+    "action.focus-ring": {"type": "color", "value": "{cobalt.600}"},
+    "button.focus-ring": {"type": "color", "value": "{action.focus-ring}"}
+  },
+  "matrix": {
+    "brands": ["field", "research"],
+    "modes": ["dark", "light"],
+    "platforms": ["css", "javascript"]
+  },
+  "artifacts": {
+    "css": ["cobalt.600", "action.focus-ring", "button.focus-ring"],
+    "javascript": ["cobalt.600", "action.focus-ring", "button.focus-ring"]
+  },
+  "acceptedCoordinate": "synthetic-token-contract@0.1.0"
+}

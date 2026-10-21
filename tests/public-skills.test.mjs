@@ -28,6 +28,7 @@ const expectedPublicReady = [
   "bounded-representation-admission",
   "contextual-jargon-scan",
   "controlled-context-comparison",
+  "design-token-pipeline-stewardship",
   "interruption-safe-resource-ownership",
   "longitudinal-observation-visualization",
   "omics-coordinate-and-measurement-views",
@@ -37,10 +38,13 @@ const expectedPublicReady = [
   "scientific-figure-composition",
   "scientific-scale-and-transform-fidelity",
   "secret-boundary-inspection",
+  "semantic-visual-receiver-contracts",
   "spatial-support-and-change-visualization",
   "transaction-boundary-evidence-mapping",
   "typed-error-recovery-contracts",
   "versioned-exemplar-successor",
+  "visual-artifact-family-publication",
+  "visual-contract-receipt-design",
   "visualization-question-routing"
 ];
 
@@ -108,6 +112,49 @@ test("registry checks run when skill sources or runbooks change", async () => {
   assert.match(workflow, /- "\.agents\/runbooks\/\*\*"/u);
 });
 
+test("visual-contract packages run across the declared Node.js maintenance lines", async () => {
+  const workflow = await readFile(
+    resolve(repositoryRoot, ".github/workflows/registry-checks.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /visual-contract-node-matrix:/u);
+  assert.match(workflow, /node-version: \[22, 24, 26\]/u);
+  assert.match(workflow, /run: npm run test:visual-contracts/u);
+  for (const family of [
+    "style-dictionary-dtcg-pipeline",
+    "react-aria-visual-contract-receiver",
+    "cross-browser-visual-contract-observer",
+    "visual-pattern-artifact-compiler",
+    "figma-variable-sync-reconciliation",
+  ])
+    assert.match(
+      workflow,
+      new RegExp("snippets/" + family + "/0\\.1\\.0/package-lock\\.json", "u"),
+    );
+  assert.match(workflow, /visual-contract-browser-matrix:/u);
+  assert.match(
+    workflow,
+    /run: npx playwright install --with-deps chromium firefox webkit/u,
+  );
+  assert.match(workflow, /run: npm run test:visual-contracts:browsers/u);
+});
+
+test("each selected skill carries its operator README in the source package", async () => {
+  await withSkillFixture(async root => {
+    const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
+    const selection = await json(selectionPath);
+    const first = selection.skills[0];
+    first.dependencies = first.dependencies.filter(
+      path => path !== `.agents/skills/${first.name}/README.md`,
+    );
+    await writeJson(selectionPath, selection);
+    await assert.rejects(
+      loadPublicSkills({ root, sourceSha: fixedSourceRevision }),
+      /must include its operator README/u,
+    );
+  });
+});
+
 test("an omitted or invented selection entry cannot change the repository skill inventory", async () => {
   await withSkillFixture(async root => {
     const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
@@ -140,7 +187,10 @@ test("publication paths stay inside the repository and resolve to regular files"
   await withSkillFixture(async root => {
     const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
     const selection = await json(selectionPath);
-    selection.skills[0].dependencies = ["../outside.md"];
+    selection.skills[0].dependencies = [
+      "../outside.md",
+      `.agents/skills/${selection.skills[0].name}/README.md`,
+    ].sort();
     await writeJson(selectionPath, selection);
     await assert.rejects(
       loadPublicSkills({ root, sourceSha: fixedSourceRevision }),
@@ -280,16 +330,18 @@ test("a newly withheld skill stays outside the catalog and public source package
   await withSkillFixture(async root => {
     const name = "private-calibration-recipe";
     const sourcePath = `.agents/skills/${name}/SKILL.md`;
+    const readmePath = `.agents/skills/${name}/README.md`;
     await mkdir(resolve(root, `.agents/skills/${name}`));
     await writeFile(resolve(root, sourcePath), [
       "---", `name: ${name}`,
       "description: Calibrates a private fixture. Applies during this boundary test.",
       "---", "", "# Private calibration recipe", "",
     ].join("\n"));
+    await writeFile(resolve(root, readmePath), "# Private calibration recipe guide\n");
     const selectionPath = resolve(root, ".agents/skills/publication-selection.json");
     const selection = await json(selectionPath);
     selection.skills.push({ name, sourcePath, publicationStanding: "public_possible",
-      evidenceStanding: "instruction_only", dependencies: [], readinessNote: "Private fixture." });
+      evidenceStanding: "instruction_only", dependencies: [readmePath], readinessNote: "Private fixture." });
     selection.skills.sort((left, right) => left.name.localeCompare(right.name));
     await writeJson(selectionPath, selection);
     const model = await loadPublicSkills({ root, sourceSha: fixedSourceRevision });

@@ -1,0 +1,18 @@
+{
+  "$description": "Component and interaction-state bindings for one synthetic control family.",
+  "component": {
+    "action-button": {
+      "background": { "$type": "color", "$value": "{action.background}" },
+      "background-pressed": { "$type": "color", "$value": "{action.background-pressed}" },
+      "foreground": { "$type": "color", "$value": "{text.inverse}" },
+      "focus-ring": { "$type": "color", "$value": "{action.focus-ring}" },
+      "padding-inline": { "$type": "dimension", "$value": "{layout.control-padding}" }
+    },
+    "select": {
+      "background": { "$type": "color", "$value": "{surface.panel}" },
+      "foreground": { "$type": "color", "$value": "{text.primary}" },
+      "caret-inset-inline-end": { "$type": "dimension", "$value": "{layout.select-caret-inset}" },
+      "focus-ring": { "$type": "color", "$value": "{action.focus-ring}" }
+    }
+  }
+}

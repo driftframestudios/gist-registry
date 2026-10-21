@@ -1,0 +1,9 @@
+{
+  "acceptedPointer": "visual-receipts@0.1.0",
+  "decisionCount": 5,
+  "environmentFields": 4,
+  "evidenceClasses": ["bitmap", "computed-style", "geometry", "interaction", "semantic"],
+  "faultCount": 5,
+  "standing": "accepted",
+  "tier": "changed-boundary"
+}

@@ -1,0 +1,194 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "visual-pattern-artifact-compiler",
+  "version": "0.1.0",
+  "artifactKind": "harness_material",
+  "standing": "candidate",
+  "title": "Visual pattern artifact compiler",
+  "summary": "A bounded, script-independent synthetic SVG and semantic contract compile into responsive WebPs, an accessible gallery, a machine-readable companion, exact runtime receipts, and recoverable accepted-pointer publication.",
+  "use": {
+    "practicalQuestion": "How can one source-owned visual contract produce responsive image bytes, accessible reading companions, and a recoverable publication receipt while each representation keeps the same meaning?",
+    "changedAbility": "A collaborator can run and inspect one resource-bounded source-to-derivative transaction that admits self-contained visual sources and preserves meaning across SVG, WebP, HTML, semantic JSON, metadata inspection, digests, interruption, and accepted-pointer recovery.",
+    "readers": [
+      "AI collaborators forming visual artifact families",
+      "Front-end and design-systems practitioners reviewing responsive media publication"
+    ],
+    "capabilities": [
+      "validate_visual_source_contract",
+      "admit_script_independent_visual_sources",
+      "validate_svg_instance_graph",
+      "enforce_render_resource_envelope",
+      "generate_responsive_webp_family",
+      "generate_semantic_companion",
+      "inspect_embedded_metadata",
+      "promote_accepted_pointer",
+      "observe_visual_artifact_in_browsers"
+    ]
+  },
+  "provenance": {
+    "class": "independent_synthetic_authoring",
+    "description": "The code, contract, SVG, gallery, prose, and fixtures are independently authored synthetic material. Visual Fidelity practice informs the mechanism while production art, private design files, operational URLs, participant data, and employer assets remain with their authorized owners.",
+    "temporalScope": "This version exercises Node.js 22 through 26 with Sharp 0.35.5, Playwright 1.64.1, and the libvips and browser coordinates resolved by its exact lock. Another runtime, browser revision, font set, encoder, or media target receives its own observation.",
+    "sourceKeys": [
+      "independent-authoring:visual-pattern-artifact-compiler",
+      "realistic-synthetic:source-to-decision-route"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Package-local tests establish bounded source admission; typed rejection of active, externally referenced, and machine-private sources; source-reference, state, width, pixel, and output ceilings; SVG identity/reference/painter-order checks; responsive derivative dimensions; clean embedded-metadata standing; same-coordinate byte repeatability; atomic candidate-directory ownership; semantic companion and gallery generation; input/output/time/memory measurement; immutable accepted-directory reuse across concurrent publishers; and accepted-pointer continuity through injected interruption. A separate Playwright 1.64.1 lane launches Chromium, Firefox, and WebKit to observe unavailable-image meaning, 320 CSS-pixel reflow at 200% text, forced colors, print, and SVG data-layer bounds."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/visual-pattern-artifact-compiler/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_definition", "path": "package.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_lock", "path": "package-lock.json", "declaredMediaType": "application/json"},
+    {"role": "source_contract", "path": "source/pattern-contract.json", "declaredMediaType": "application/json"},
+    {"role": "source_vector", "path": "source/pattern.svg", "declaredMediaType": "image/svg+xml"},
+    {"role": "source_template", "path": "source/gallery-shell.html", "declaredMediaType": "text/html"},
+    {"role": "source", "path": "src/compiler.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "browser_config", "path": "playwright.config.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "runner", "path": "tools/build-artifacts.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "browser_server", "path": "tools/serve-gallery.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "test", "path": "tests/compiler.test.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "browser_test", "path": "tests/browser/gallery.spec.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "fixture", "path": "fixtures/rejected/contract-mutations.json", "declaredMediaType": "application/json"},
+    {"role": "fixture", "path": "fixtures/rejected/missing-alt.json", "declaredMediaType": "application/json"},
+    {"role": "fixture", "path": "fixtures/rejected/missing-semantic-companion.html", "declaredMediaType": "text/html"},
+    {"role": "fixture", "path": "fixtures/rejected/path-escape.json", "declaredMediaType": "application/json"},
+    {"role": "fixture", "path": "fixtures/rejected/repeated-id.svg", "declaredMediaType": "image/svg+xml"},
+    {"role": "fixture", "path": "fixtures/rejected/source-admission-cases.json", "declaredMediaType": "application/json"},
+    {"role": "expected_contract", "path": "expected/contract-expectation.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Node.js >=22 <27; Sharp 0.35.5 and Playwright 1.64.1 with libvips and browser coordinates resolved by package-lock.json",
+    "dependenciesPath": "package-lock.json",
+    "commands": [
+      {
+        "name": "prepare",
+        "command": "npm --prefix snippets/visual-pattern-artifact-compiler/0.1.0 ci --ignore-scripts",
+        "establishes": "Installs the exact Sharp dependency graph recorded by the artifact-local lock while lifecycle scripts remain outside the installation route."
+      },
+      {
+        "name": "test",
+        "command": "npm --prefix snippets/visual-pattern-artifact-compiler/0.1.0 test",
+        "establishes": "Exercises bounded source admission, script-independent SVG and gallery shells, contract and SVG semantics, derivative generation, resource ceilings, semantic companions, repeatability, typed rejection, accepted-directory integrity, and publication recovery."
+      },
+      {
+        "name": "test-browser",
+        "command": "npm --prefix snippets/visual-pattern-artifact-compiler/0.1.0 run test:browser",
+        "establishes": "Launches the lock-resolved Chromium, Firefox, and WebKit coordinates and records unavailable-image meaning, narrow reflow at 200% text, forced-colors, print, and SVG data-layer-bound observations."
+      },
+      {
+        "name": "run",
+        "command": "npm --prefix snippets/visual-pattern-artifact-compiler/0.1.0 run example",
+        "establishes": "Builds one ignored example family and prints the exact manifest digest, output digests, dimensions, media types, and runtime coordinate."
+      }
+    ],
+    "fixtures": [
+      "source/pattern-contract.json",
+      "source/pattern.svg",
+      "fixtures/rejected/missing-alt.json",
+      "fixtures/rejected/path-escape.json",
+      "fixtures/rejected/repeated-id.svg",
+      "fixtures/rejected/source-admission-cases.json",
+      "fixtures/rejected/contract-mutations.json",
+      "fixtures/rejected/missing-semantic-companion.html"
+    ],
+    "expectedResults": ["expected/contract-expectation.json"],
+    "environmentNotes": [
+      "Byte repeatability belongs to the recorded Node, Sharp, libvips, source, and encoder coordinate; another coordinate receives a separate comparison receipt.",
+      "The exemplar renders SVG derivatives directly through libvips. Its browser acceptance lane records separately versioned Chromium, Firefox, and WebKit observations; another font set or engine revision receives its own receipt."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Does the source contract name dimensions, rights, reading order, descriptions, and publication ownership before encoding?",
+      "Do source bytes, semantic cardinality, derivative dimensions, and cumulative output stay inside the declared resource envelope?",
+      "Does each SVG and gallery shell stay static, self-contained, and free of machine-private locators?",
+      "Do SVG identities, local references, and painter order preserve the intended relationship?",
+      "Can an image-unavailable reader recover the same practical meaning from the gallery and semantic companion?",
+      "Does an interrupted candidate preserve the accepted pointer and return an exact checkpoint?"
+    ],
+    "decisionRules": [
+      "Admit semantic and rights-bearing source before derivative generation.",
+      "Admit static, self-contained SVG and gallery-shell sources before creating a candidate boundary.",
+      "Apply source, state, width, pixel, and output ceilings before derivative work begins.",
+      "Bind byte identity to the exact renderer and encoder coordinate.",
+      "Pair responsive pixels with concise alternative text, a distinct caption, and a structured semantic companion.",
+      "Promote one accepted pointer after the complete family verifies."
+    ],
+    "semanticMarkers": [
+      {"marker": "TARGET", "meaning": "One accepted source contract yields pixels, structured data, readable prose, and a digest-addressed coordinate with matching meaning."},
+      {"marker": "CONTRAST", "meaning": "An image-only export leaves dimensions, rights, reading order, semantic state, metadata standing, and recovery distributed across informal knowledge."},
+      {"marker": "GUARD", "meaning": "Closed fields, script-independent source admission, explicit resource ceilings, SVG graph checks, contained names, metadata inspection, exact runtime coordinates, accepted-directory integrity, candidate verification, and pointer promotion keep the family reviewable."}
+    ],
+    "instructionYields": [
+      {"mode": "implementation", "instruction": "Declare the semantic and delivery contract before rendering, then generate every derivative and companion inside one candidate boundary."},
+      {"mode": "review", "instruction": "Inspect identity, references, painter order, dimensions, metadata, descriptions, semantic parity, digests, and interrupted promotion."},
+      {"mode": "transfer", "instruction": "Bind the receiving art direction, content, rights, cache, runtime, and release owners to the exact accepted family coordinate."}
+    ],
+    "codeExemplarGranularity": "One self-contained Node.js source-to-derivative compiler with synthetic JSON, HTML, and SVG inputs; static source admission; explicit resource ceilings; responsive WebP generation; semantic companions; metadata and digest receipts; controlled rejection fixtures; accepted-directory verification; and accepted-pointer recovery.",
+    "complexityAndAllocation": "For F source families and W widths, derivative work is O(F × W) plus one bounded source, SVG, gallery, and manifest pass per family. The implementation limits source bytes, state and width cardinality, intrinsic and derivative pixels, and complete-family bytes while holding each source document and one encoded derivative in memory at a time."
+  },
+  "boundaries": {
+    "evidence": "The tests establish the declared bounded source-to-derivative, static-source admission, SVG, accessibility-companion, repeatability, metadata, accepted-directory integrity, and publication-recovery behavior for the included synthetic fixtures and exact resolved runtime.",
+    "trust": "All records and visual material are synthetic and Apache-2.0. A production owner supplies content authority, rights review, private-source handling, approved fonts, and release acceptance.",
+    "transfer": "A receiving system selects its browser or renderer, fonts, media widths, quality, cache policy, accessible descriptions, content lifecycle, CDN, and rollback period, then records observations at that exact coordinate."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A visual source can reach rendering before meaning, rights, dimensions, and reading order have assigned owners.",
+      "Repeated SVG IDs or unresolved references can bind paint to the wrong instance.",
+      "Active markup, external references, or private locators can cross the artifact boundary.",
+      "Large sources, state collections, derivative plans, or output families can exhaust the receiving runtime.",
+      "An output name can escape its candidate boundary or collide with another derivative.",
+      "An encoder or publication interruption can leave a partial candidate."
+    ],
+    "recoveryMoves": [
+      "Return the exact missing contract owner before rendering.",
+      "Return the repeated or missing SVG identity and preserve the source for correction.",
+      "Return the active element, reference, or locator to the source owner before rendering.",
+      "Return the observed resource and ceiling, then reduce the source or output family at the named restart boundary.",
+      "Require contained semantic names and a complete unique output catalog.",
+      "Remove partial candidate bytes, preserve the accepted pointer, and return the last durable checkpoint."
+    ]
+  },
+  "relationships": [
+    {"type": "issue", "target": "gist-registry:issue-64", "reason": "Issue #64 owns formation and review of this first visual-pattern derivative coordinate."},
+    {"type": "companion", "target": "gist-registry:issue-61", "reason": "The token pipeline supplies shared authority and accepted-artifact vocabulary while this package owns responsive visual publication."},
+    {"type": "receiver", "target": "human-ai-systems-exemplars:visual-fidelity-contracts", "reason": "The Visual Fidelity hub can link to the accepted standalone mechanism after human-reviewed publication."}
+  ],
+  "extensions": {
+    "sourceAdmission": {
+      "standing": "static_self_contained",
+      "localReferenceForm": "#semantic-id",
+      "typedRejections": [
+        "active_source_content",
+        "external_source_reference",
+        "private_source_locator",
+        "unsupported_source_element"
+      ]
+    },
+    "resourceLimits": {
+      "contractBytes": 65536,
+      "svgBytes": 1048576,
+      "galleryShellBytes": 262144,
+      "totalSourceBytes": 1310720,
+      "states": 64,
+      "widths": 8,
+      "intrinsicPixels": 32000000,
+      "derivativePixels": 64000000,
+      "outputBytes": 16777216,
+      "sourceReferences": 64
+    },
+    "publicationTransaction": {
+      "acceptedPointer": "accepted-pointer.json",
+      "candidateBoundary": ".candidates/",
+      "manifestDigestAlgorithm": "sha256"
+    }
+  }
+}

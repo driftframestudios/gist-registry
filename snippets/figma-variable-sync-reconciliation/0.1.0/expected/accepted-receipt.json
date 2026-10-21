@@ -1,0 +1,36 @@
+{
+  "batchCount": 2,
+  "edgeCount": 3,
+  "elapsedMs": 0,
+  "finalRemoteRevision": 9,
+  "finalStateDigest": "4c07a8bb423ad71d8fe48c8d263dc19f146811723f10307208c5cbcc7908ed51",
+  "finalVariableCount": 3,
+  "initialRemoteRevision": 7,
+  "maxBatchBytes": 520,
+  "maxResolvedBatchBytes": 351,
+  "observations": [
+    {
+      "attempt": 0,
+      "batchIndex": 0,
+      "classification": "applied",
+      "operationCount": 2,
+      "remoteRevision": 8
+    },
+    {
+      "attempt": 0,
+      "batchIndex": 1,
+      "classification": "applied",
+      "operationCount": 2,
+      "remoteRevision": 9
+    }
+  ],
+  "operationCount": 4,
+  "planDigest": "f07ae1fcf9396ccda761d334e3414f3fd37e5f790c86b2f5f2530fa637eec3ac",
+  "resumedFromBatch": 0,
+  "runId": "sync-run-001",
+  "schemaVersion": "0.1.0",
+  "status": "accepted",
+  "tempIdToRealId": {
+    "tmp:color-accent-current": "var_0003"
+  }
+}

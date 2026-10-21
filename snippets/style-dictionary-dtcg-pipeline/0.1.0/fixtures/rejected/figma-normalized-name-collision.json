@@ -1,0 +1,23 @@
+{
+  "collections": [
+    {
+      "id": "collection.synthetic",
+      "name": "Synthetic",
+      "modes": [{ "id": "mode.light", "name": "Light" }],
+      "variables": [
+        {
+          "id": "variable.focus-a",
+          "name": "Action/Focus Ring",
+          "resolvedType": "COLOR",
+          "valuesByMode": { "mode.light": "#173a8f" }
+        },
+        {
+          "id": "variable.focus-b",
+          "name": "Action/Focus-Ring",
+          "resolvedType": "COLOR",
+          "valuesByMode": { "mode.light": "#244fd6" }
+        }
+      ]
+    }
+  ]
+}

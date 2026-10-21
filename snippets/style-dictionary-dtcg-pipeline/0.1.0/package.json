@@ -1,0 +1,20 @@
+{
+  "name": "style-dictionary-dtcg-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "scripts": {
+    "validate": "node tools/validate-source.mjs",
+    "build": "node tools/build-candidates.mjs",
+    "verify": "node tools/verify-generated.mjs",
+    "manifest": "node tools/make-manifest.mjs",
+    "example": "node tools/run-example.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "style-dictionary": "5.7.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "semanticId": "synthetic-operating-map",
+  "version": "0.1.0",
+  "owner": "visual-systems-team",
+  "license": "Apache-2.0",
+  "rightsStanding": "independent-synthetic-authoring",
+  "intrinsic": {"width": 1600, "height": 900},
+  "alternativeText": "Three connected stages carry an accepted request into a reviewed result.",
+  "caption": "The operating map shows where review changes candidate state before publication.",
+  "semanticCompanion": "The source stage feeds review; review either returns the candidate or promotes the accepted result.",
+  "targets": [
+    {"width": 640, "mediaType": "image/webp"},
+    {"width": 1280, "mediaType": "image/webp"},
+    {"width": 1600, "mediaType": "image/webp"}
+  ],
+  "acceptedPointer": "synthetic-operating-map@0.1.0"
+}

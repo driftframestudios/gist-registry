@@ -1,0 +1,10 @@
+{
+  "schemaVersion":"0.1.0",
+  "decisionCount":5,
+  "scenarioCount":10,
+  "evidenceClasses":["semantic","interaction","geometry","computed_style","bitmap_crop"],
+  "coordinateKinds":{"source":"generated_output_manifest","receiver":"production_build_manifest","subject":"synthetic_receiver_fixture"},
+  "tiers":{"smoke":2,"changed_boundary":4,"full":10},
+  "casePlan":{"smoke":6,"changedBoundaryExample":12,"full":57},
+  "requiredCoverage":{"textScales":[1,2,4],"directions":["ltr","rtl"],"media":["screen","print"],"states":["accepted","invalid","pending","stale","success","warning"]}
+}

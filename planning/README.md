@@ -1,5 +1,30 @@
 # Current planning terrain
 
+## Visual-contract executable program
+
+Milestone 6 carries the current source program through one dependency chain:
+
+```text
+#61 compile reviewed meaning
+  → #62 receive it through accessible runtime states
+  → #63 observe each decision with proportionate browser evidence
+  → #66 teach selection, transfer, recovery, and successor formation
+
+#64 publishes responsive visual families after #61 vocabulary settles.
+#65 exercises remote synchronization and reconciliation from the same identity model.
+```
+
+The first exact-version manifests carry candidate technical maturity.
+Repository review decides source acceptance, while each receiving system owns
+its deployment decision and local observations. The next tagged Pages release
+will project accepted repository coordinates and every selected public-ready
+skill through the established human-reviewed publication route.
+
+The [official-source review](visual-contract-official-source-review.md) binds
+DTCG, Style Dictionary, React Aria/Stately/Spectrum, Playwright, Sharp/libvips,
+and Figma claims to observed versions and names the implementation boundaries
+that remain receiving decisions.
+
 The authorized scientific-practice and tagged-site release has these owners:
 
 - #51 — laddered onboarding, accountable provenance, and current work routes;

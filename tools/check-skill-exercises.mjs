@@ -16,6 +16,13 @@ const examples = [
   ["bounded-representation-admission", "exercise.py"],
 ];
 
+const nodeExamples = [
+  ["design-token-pipeline-stewardship", "exercise.mjs"],
+  ["semantic-visual-receiver-contracts", "exercise.mjs"],
+  ["visual-contract-receipt-design", "exercise.mjs"],
+  ["visual-artifact-family-publication", "exercise.mjs"],
+];
+
 for (const [name, script, ...args] of examples) {
   const result = spawnSync("uv", [
     "--cache-dir", ".artifacts/uv-cache", "run", "--no-project", "--python", "3.12",
@@ -25,6 +32,17 @@ for (const [name, script, ...args] of examples) {
     console.error(`Skill exercise held: ${name}`);
     process.exitCode = 1;
     break;
+  }
+}
+
+for (const [name, script] of nodeExamples) {
+  if (process.exitCode) break;
+  const result = spawnSync(process.execPath, [
+    `.agents/skills/${name}/exercises/${script}`,
+  ], { cwd: root, stdio: "inherit" });
+  if (result.status !== 0) {
+    console.error(`Skill exercise held: ${name}`);
+    process.exitCode = 1;
   }
 }
 

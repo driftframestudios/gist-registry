@@ -1,0 +1,172 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "cross-browser-visual-contract-observer",
+  "version": "0.1.0",
+  "artifactKind": "harness_material",
+  "standing": "candidate",
+  "title": "Cross-browser visual-contract observer",
+  "summary": "An exact-version Playwright harness maps five visual-contract decisions to proportionate semantic, interaction, geometry, computed-style, and bounded-bitmap evidence with controlled faults, typed receipts, finite tiers, and recoverable promotion.",
+  "use": {
+    "practicalQuestion": "Which browser evidence answers a visual-contract decision directly, and how can a team prove that evidence detects the intended fault while the last accepted receipt remains available?",
+    "changedAbility": "A collaborator can select a proportionate browser-observation tier, prove each oracle with a matching controlled fault, record exact environment coordinates, and preserve the last accepted result while a complete candidate earns promotion.",
+    "readers": [
+      "Front-end and design-systems practitioners selecting browser evidence",
+      "AI collaborators planning bounded visual-contract verification"
+    ],
+    "capabilities": [
+      "select_proportionate_observation_tier",
+      "exercise_controlled_visual_faults",
+      "record_exact_browser_coordinate",
+      "smoke_bound_receiver_production_build",
+      "validate_typed_observation_receipt",
+      "promote_accepted_receipt_pointer"
+    ]
+  },
+  "provenance": {
+    "class": "independent_synthetic_authoring",
+    "description": "The faultable receiver, inventory, matrix, faults, observations, schema, tests, and prose are independently authored synthetic material. A focused smoke consumes the separate Issue #62 synthetic production build at its bound digest. Production design files, participant data, operational routes, private context, and product assets remain with their authorized owners.",
+    "temporalScope": "This version exercises Node.js 22 through 26 and Playwright 1.64.1 with lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370. Each receiving operating system, font set, scale, browser binary, and bitmap policy receives its own receipt.",
+    "sourceKeys": [
+      "independent-authoring:cross-browser-visual-contract-observer",
+      "realistic-synthetic:specimen-review-receiver",
+      "registry-exemplar:react-aria-visual-contract-receiver-v0-1-0"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Thirty-four package-local checks establish exact direct dependency and lock coordinates, the published receipt-schema identity, distinct generated-output, production-build, and observed-fixture coordinates, closed and bounded inventory and matrix admission, tier selection, matched fault-oracle behavior, bounded receipt and artifact admission, typed malformed-artifact rejection, unique path containment, concurrent candidate isolation, accepted-destination replay integrity, and pointer recovery. One hundred seventy-seven browser checks pass across the lock-resolved Chromium, Firefox, and WebKit coordinates in the exercised macOS ARM64 environment, including a rebuild, manifest rehash, focused interactive smoke of the bound Issue #62 production build, applicable target/scenario observations, controlled faults, and scenario-contract checks in each engine."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/cross-browser-visual-contract-observer/0.1.0",
+  "representations": [
+    {"role":"orientation","path":"README.md","declaredMediaType":"text/markdown"},
+    {"role":"manifest","path":"snippet.json","declaredMediaType":"application/json"},
+    {"role":"dependency_definition","path":"package.json","declaredMediaType":"application/json"},
+    {"role":"dependency_lock","path":"package-lock.json","declaredMediaType":"application/json"},
+    {"role":"browser_configuration","path":"playwright.config.mjs","declaredMediaType":"text/javascript"},
+    {"role":"source_receiver","path":"source/receiver.html","declaredMediaType":"text/html"},
+    {"role":"source_coordinate","path":"source/coordinates.json","declaredMediaType":"application/json"},
+    {"role":"decision_inventory","path":"inventory/decisions.json","declaredMediaType":"application/json"},
+    {"role":"observation_matrix","path":"inventory/matrix.json","declaredMediaType":"application/json"},
+    {"role":"receipt_schema","path":"schema/receipt.schema.json","declaredMediaType":"application/schema+json"},
+    {"role":"source","path":"src/contracts.mjs","declaredMediaType":"text/javascript"},
+    {"role":"source","path":"src/browser-observer.mjs","declaredMediaType":"text/javascript"},
+    {"role":"source","path":"src/publication.mjs","declaredMediaType":"text/javascript"},
+    {"role":"source","path":"src/receipt-schema.mjs","declaredMediaType":"text/javascript"},
+    {"role":"runner","path":"tools/run-example.mjs","declaredMediaType":"text/javascript"},
+    {"role":"bound_receiver_server","path":"tools/serve-bound-receiver.mjs","declaredMediaType":"text/javascript"},
+    {"role":"runner_support","path":"tools/paths.mjs","declaredMediaType":"text/javascript"},
+    {"role":"test","path":"tests/contracts.test.mjs","declaredMediaType":"text/javascript"},
+    {"role":"test","path":"tests/receipt.test.mjs","declaredMediaType":"text/javascript"},
+    {"role":"test","path":"tests/publication.test.mjs","declaredMediaType":"text/javascript"},
+    {"role":"test_support","path":"tests/helpers.mjs","declaredMediaType":"text/javascript"},
+    {"role":"browser_test","path":"tests/browser/receiver.spec.mjs","declaredMediaType":"text/javascript"},
+    {"role":"fixture","path":"fixtures/accepted/observations.json","declaredMediaType":"application/json"},
+    {"role":"controlled_fault","path":"fixtures/rejected/semantic.json","declaredMediaType":"application/json"},
+    {"role":"controlled_fault","path":"fixtures/rejected/interaction.json","declaredMediaType":"application/json"},
+    {"role":"controlled_fault","path":"fixtures/rejected/geometry.json","declaredMediaType":"application/json"},
+    {"role":"controlled_fault","path":"fixtures/rejected/computed-style.json","declaredMediaType":"application/json"},
+    {"role":"controlled_fault","path":"fixtures/rejected/bitmap.json","declaredMediaType":"application/json"},
+    {"role":"receipt_orientation","path":"receipts/accepted/README.md","declaredMediaType":"text/markdown"},
+    {"role":"receipt_orientation","path":"receipts/candidates/README.md","declaredMediaType":"text/markdown"},
+    {"role":"expected_contract","path":"expected/observer-contract.json","declaredMediaType":"application/json"}
+  ],
+  "execution": {
+    "runtime": "Node.js >=22 <27; @playwright/test 1.64.1; lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370",
+    "dependenciesPath": "package-lock.json",
+    "commands": [
+      {
+        "name": "run",
+        "command": "npm --prefix snippets/cross-browser-visual-contract-observer/0.1.0 run example",
+        "establishes": "Selects the smoke tier, evaluates its controlled model observations, writes one typed candidate and human companion per target, and promotes per-target digest-addressed accepted pointers under an explicit model-fixture environment."
+      },
+      {
+        "name": "test",
+        "command": "npm --prefix snippets/cross-browser-visual-contract-observer/0.1.0 test",
+        "establishes": "Exercises inventories, tiers, five fault-oracle pairs, receipt boundaries, and accepted-pointer recovery through the browser-independent model lane."
+      },
+      {
+        "name": "browser",
+        "command": "npm --prefix snippets/cross-browser-visual-contract-observer/0.1.0 run test:browser",
+        "establishes": "Rebuilds and rehashes the bound Issue #62 production bundle, exercises one focused smoke of those bytes, then exercises exact coordinates, accepted observations, controlled faults, the declared scenario matrix, and script-independent reading across Chromium, Firefox, and WebKit."
+      }
+    ],
+    "fixtures": [
+      "source/coordinates.json",
+      "inventory/decisions.json",
+      "inventory/matrix.json",
+      "fixtures/accepted/observations.json",
+      "fixtures/rejected/semantic.json",
+      "fixtures/rejected/interaction.json",
+      "fixtures/rejected/geometry.json",
+      "fixtures/rejected/computed-style.json",
+      "fixtures/rejected/bitmap.json"
+    ],
+    "expectedResults": ["expected/observer-contract.json"],
+    "environmentNotes": [
+      "Bitmap evidence belongs to the exact browser, operating system, architecture, font, scale, color, and Playwright coordinate recorded in the receipt.",
+      "The browser command requires the sibling react-aria-visual-contract-receiver@0.1.0 dependencies, builds that package, recomputes its production manifest, and smokes the bound bytes before exercising the independent controlled-fault fixture.",
+      "Playwright WebKit represents upstream WebKit plus Playwright patches. A branded Safari observation remains a separate receiving coordinate.",
+      "Playwright 1.64.0 and 1.64.1 Linux WebKit revision 2370 can stall on backdrop-filter pages under constrained two-CPU runners; classify that exact condition as an environment exception and use a validated released successor coordinate."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Does each observation protect one named decision and use the strongest fitting oracle?",
+      "Does a controlled fault prove that oracle fails for the intended reason?",
+      "Does the selected tier report the changed boundary and finite work product?",
+      "Can an interrupted candidate preserve the accepted receipt and return its exact restart point?"
+    ],
+    "decisionRules": [
+      "Use semantic and interaction evidence when those signals answer the decision directly.",
+      "Use focused geometry for clipping, overlap, hit targets, seams, and painter relationships.",
+      "Bind bitmap evidence to one bounded region and exact rendering coordinate.",
+      "Move one accepted pointer only after receipt schema, containment, artifacts, digests, and any existing digest-addressed destination verify."
+    ],
+    "semanticMarkers": [
+      {"marker":"TARGET","meaning":"Every visual-contract decision receives one primary oracle, one controlled fault, and one exact receipt coordinate."},
+      {"marker":"CONTRAST","meaning":"A page-wide screenshot alone blends meaning, interaction, geometry, token application, environment variance, and harness faults into one weak signal."},
+      {"marker":"GUARD","meaning":"Finite tiers, closed receipts, matched faults, contained artifacts, digest-addressed candidates, and one accepted pointer keep diagnosis and recovery bounded."}
+    ],
+    "instructionYields": [
+      {"mode":"implementation","instruction":"Name the decision and plausible fault, then select the strongest direct oracle before writing the assertion."},
+      {"mode":"review","instruction":"Inspect oracle fit, controlled-fault behavior, exact environment coordinate, finite tier choice, and promotion recovery."},
+      {"mode":"transfer","instruction":"Replace fixture digests with accepted source and receiver coordinates, then set local browser, font, bitmap, budget, and release authority."
+      }
+    ],
+    "codeExemplarGranularity": "One independently faultable synthetic HTML receiver, one digest-bound smoke of the sibling Issue #62 production build, five evidence classes, five matched fault fixtures, a ten-scenario matrix, an exact three-browser Playwright lane, a typed receipt, and recoverable pointer publication.",
+    "complexityAndAllocation": "The selector materializes an explicit applicability join. For T targets, S selected scenarios, C emitted observation/fault/scenario-contract cases, and B browsers, C is at most T × S + T + S and executed work is O(C × B). expectedWork equals C. Admission caps T and S at 64 before browser contexts open. Inventory, receipt, and tier admission use linear passes and indexed identity outside the bounded join. A receipt carries at most 32 artifacts, 16 MiB each, and 64 MiB in aggregate; normalized observation data receives finite depth, node, and UTF-8 string-byte bounds. Bitmap allocation remains bounded to one workflow crop at a time."
+  },
+  "boundaries": {
+    "evidence": "The model and browser checks establish the declared signals, faults, applied matrix dimensions, typed dependency and subject identities, receipt integrity, and recovery behavior for the included synthetic receiver, plus the bound production-manifest digest and focused interactive behavior of the actual Issue #62 build, under Playwright 1.64.1, lock-resolved browser revisions, and the exercised macOS ARM64 coordinate.",
+    "trust": "All content and identifiers are synthetic and Apache-2.0. A production receiver supplies design authority, content review, assistive-technology coverage, approved fonts, private-data handling, and release acceptance.",
+    "transfer": "A receiving system binds accepted generated-output and production-build manifests, records the exact subject bytes observed, selects its browser and assistive-technology coordinates, declares bitmap tolerances and performance budgets, exercises controlled faults, and records a separate accepted receipt."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "An assertion can use an indirect signal that obscures the decision and fault.",
+      "A browser, font, operating-system, or scale change can alter bitmap bytes.",
+      "A candidate can stop after receipt writing or after accepted bytes verify.",
+      "A changed-boundary request can name an unowned target."
+    ],
+    "recoveryMoves": [
+      "Return to the decision inventory and select the strongest fitting oracle.",
+      "Classify the coordinate change and record a separate engine or environment observation.",
+      "Remove partial candidate bytes, retain the prior pointer, and resume from the named checkpoint.",
+      "Return the unknown target and require its decision owner before selecting coverage."
+    ]
+  },
+  "relationships": [
+    {"type":"issue","target":"gist-registry:issue-63","reason":"Issue #63 owns formation and review of this first cross-browser observation coordinate."},
+    {"type":"source","target":"gist-registry:issue-61","reason":"The accepted token pipeline supplies the source digest and semantic token meaning."},
+    {"type":"receiver","target":"gist-registry:issue-62","reason":"The accessible receiver supplies runtime states and highest-consequence decisions for observation."}
+  ],
+  "extensions": {
+    "observationPolicy": {
+      "tiers":["smoke","changed_boundary","full"],
+      "variabilityClasses":["contract_change","deterministic_implementation_change","declared_engine_platform_variance","environmental_drift","test_harness_fault","bounded_follow_up"],
+      "acceptedPointer":"accepted-pointer.json"
+    }
+  }
+}

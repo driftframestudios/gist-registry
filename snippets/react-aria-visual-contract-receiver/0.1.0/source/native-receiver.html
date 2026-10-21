@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Native HTML visual-contract receiver</title>
+    <link rel="stylesheet" href="../src/styles.css" />
+  </head>
+  <body>
+    <main class="standalone-page">
+      <header>
+        <p class="eyebrow">Native HTML route</p>
+        <h1>Browser semantics carry the visual contract</h1>
+        <p>
+          This document keeps the receiver readable and operable when the React
+          application is unavailable. The label, select, button, status, and
+          disclosure elements retain their native keyboard and reading order.
+        </p>
+        <p><a href="../receiver-entry.html">Return to the side-by-side receiver</a></p>
+      </header>
+
+      <section class="standalone-panel" aria-labelledby="native-form-title">
+        <h2 id="native-form-title">Choose a specimen state</h2>
+        <form>
+          <div class="field-stack">
+            <label for="standalone-specimen">Specimen state</label>
+            <span class="select-shell">
+              <select id="standalone-specimen" name="specimen">
+                <option value="participant-intake">Participant intake</option>
+                <option value="review-routing">Review routing</option>
+                <option value="release-receipt">Release receipt</option>
+              </select>
+            </span>
+          </div>
+          <p>
+            <button type="button">Request native preview</button>
+          </p>
+          <p class="status-line" role="status">
+            Interactive acceptance runs in the paired application; this route
+            demonstrates the native semantic and visual receiver.
+          </p>
+        </form>
+      </section>
+
+      <section class="standalone-panel" aria-labelledby="native-details-title">
+        <h2 id="native-details-title">State ownership</h2>
+        <details>
+          <summary>Inspect the state sequence</summary>
+          <ol>
+            <li>Draft keeps the current choice.</li>
+            <li>Request binds the draft to a generation.</li>
+            <li>Acceptance settles the current generation.</li>
+            <li>Release emits one stable receipt for that acceptance.</li>
+          </ol>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "0.1.0",
+  "coordinate": "react-aria-visual-contract-receiver@0.1.0",
+  "authoredSourcePaths": [
+    "receiver-entry.html",
+    "source/accepted-token-fixture.css",
+    "source/native-receiver.html",
+    "source/semantic-reading.html",
+    "source/token-coordinate.json",
+    "src/app.jsx",
+    "src/controller.mjs",
+    "src/main.jsx",
+    "src/model.mjs",
+    "src/styles.css",
+    "tools/token-projection.mjs",
+    "vite.config.mjs"
+  ],
+  "thresholds": {
+    "authoredSourceBytes": 60000,
+    "directDependencyCount": 12,
+    "resolvedPackageCount": 150,
+    "specimenCount": 25,
+    "transitionOperationCount": 6,
+    "runtimeJavaScriptBytes": 430000,
+    "runtimeJavaScriptGzipBytes": 135000,
+    "runtimeAssetBytes": 440000,
+    "sourceMapBytes": 2300000,
+    "completeBuildBytes": 2700000
+  }
+}

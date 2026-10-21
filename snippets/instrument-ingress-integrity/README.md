@@ -24,7 +24,7 @@ artifact governance, and configured-environment evidence.
 **Current coordinate:**
 [`instrument-ingress-integrity@0.1.0`](0.1.0/README.md).
 
-## Next evidence-bearing route
+## Next verification step
 
 The current version is a runnable domain exemplar and proposed compact Gist
 source set. A governed object store and durable inbox transaction receive

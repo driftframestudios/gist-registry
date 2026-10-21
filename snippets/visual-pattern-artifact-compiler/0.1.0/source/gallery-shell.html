@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{TITLE}}</title>
+  <style>
+    :root { color-scheme: light; font-family: ui-sans-serif, system-ui, sans-serif; background: #fbfaf4; color: #12315b; }
+    body { margin: 0; padding: clamp(1rem, 4vw, 3rem); }
+    main { max-width: 76rem; margin-inline: auto; }
+    figure { margin: 0; border: 2px solid currentColor; background: #fff; padding: clamp(.75rem, 2vw, 1.5rem); }
+    img { display: block; inline-size: 100%; block-size: auto; }
+    figcaption { margin-block-start: 1rem; max-width: 72ch; font-weight: 650; }
+    .semantic { margin-block-start: 2rem; }
+    table { inline-size: 100%; max-inline-size: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { border: 1px solid currentColor; padding: .65rem; text-align: start; vertical-align: top; overflow-wrap: anywhere; }
+    @media (forced-colors: active) { figure { forced-color-adjust: auto; } }
+    @media print { body { padding: 0; } figure { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>{{TITLE}}</h1>
+    <p>{{DESCRIPTION}}</p>
+    {{PICTURE}}
+    <section class="semantic" aria-labelledby="semantic-heading">
+      <h2 id="semantic-heading">Semantic companion</h2>
+      <p>This table preserves the reading order and meaning when the visual asset is unavailable.</p>
+      {{SEMANTIC_TABLE}}
+    </section>
+  </main>
+</body>
+</html>

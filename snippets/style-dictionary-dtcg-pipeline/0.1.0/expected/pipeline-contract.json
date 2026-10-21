@@ -1,0 +1,7 @@
+{
+  "adaptedSnapshotTokens": 2,
+  "coordinates": ["acme-dark", "acme-light", "research-dark", "research-light"],
+  "generatedFilesPerCoordinate": 3,
+  "referenceCountPerCoordinate": 24,
+  "tokenCountPerCoordinate": 39
+}

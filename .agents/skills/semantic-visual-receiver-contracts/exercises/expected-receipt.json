@@ -1,0 +1,9 @@
+{
+  "acceptedGeneration": 2,
+  "acceptedId": "family-b",
+  "controlCount": 2,
+  "receiverCount": 2,
+  "staleGenerations": [1],
+  "stateCount": 9,
+  "standing": "accepted"
+}
