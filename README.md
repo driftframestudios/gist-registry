@@ -54,8 +54,8 @@ work-state authority.
 
 ## Quickest proof
 
-With Node.js 22 or newer, install the pinned root dependencies and check the
-complete registry graph:
+With a current Node.js 22, 24, or 26 maintenance release, install the pinned
+root dependencies and check the complete registry graph:
 
 ```sh
 npm ci
@@ -248,7 +248,7 @@ The registry uses dependencies where they protect named behavior:
 - Python artifact environments are locked with `uv`, with Ruff providing a
   focused diagnostic and formatting route.
 
-The reference local toolchain is Node.js 22 or newer, TypeScript 5.9.3,
+The complete repository suite supports Node.js 22, 24, or 26, TypeScript 5.9.3,
 Python 3.12, and `uv` 0.11.33. Confirm `node --version`,
 `python3.12 --version`, and `uv --version`, then install the root Node
 dependencies and run the complete fast path:
@@ -415,9 +415,10 @@ faults. Each delivery observation names the source and projection
 coordinates it actually examined; later hosted behavior remains a new evidence
 question.
 
-The path-filtered Registry checks workflow runs repository checks in one
-cancellable fifteen-minute job and exercises the visual-contract packages in
-Node.js 22, 24, and 26 through three independent ten-minute matrix jobs. A
+The path-filtered Registry checks workflow runs the complete repository suite
+on Node.js 22 in one cancellable fifteen-minute job, then exercises the
+visual-contract packages on Node.js 24 and 26 through two independent
+ten-minute matrix jobs. A
 twenty-minute browser job installs the matching Chromium, Firefox, and WebKit
 revisions and exercises browser receipts plus published-artifact semantics.
 The independent secret-material receiver runs for every pull request with its

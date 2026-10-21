@@ -23,8 +23,13 @@ import {
 const coordinatePattern = /^[a-z0-9][a-z0-9._-]*$/iu;
 const digestPattern = /^[a-f0-9]{64}$/u;
 export const MAX_CHECKPOINT_OBSERVATIONS = 50_000;
+export const MAX_CHECKPOINT_OBSERVATION_WINDOW = 128;
 export const MAX_CHECKPOINT_REMOTE_VARIABLE_IDS =
   REMOTE_CONTRACT_LIMITS.variables + PLANNER_RESOURCE_LIMITS.operations;
+const observationTranscriptSeed = digest({
+  schemaVersion: "0.1.0",
+  owner: "checkpoint_observation_transcript",
+});
 const checkpointKeys = new Set([
   "schemaVersion",
   "runId",
@@ -34,9 +39,23 @@ const checkpointKeys = new Set([
   "expectedRemoteStateDigest",
   "initialRemoteRevision",
   "maxResolvedBatchBytes",
+  "pendingTransition",
   "tempIdToRealId",
   "knownRemoteVariableIds",
+  "observationCount",
+  "observationBaseDigest",
+  "observationDigest",
+  "settlementCount",
+  "settlementBaseCount",
+  "settlementBaseDigest",
+  "settlementDigest",
   "observations",
+]);
+const pendingTransitionKeys = new Set([
+  "batchIndex",
+  "priorRevision",
+  "priorStateDigest",
+  "projectedStateDigest",
 ]);
 const settledClassifications = new Set([
   "applied",
@@ -166,7 +185,7 @@ function admitCheckpointShape(checkpoint) {
   const observationValues = requireDataArray(
     descriptors.observations.value,
     "checkpoint.observations",
-    MAX_CHECKPOINT_OBSERVATIONS,
+    MAX_CHECKPOINT_OBSERVATION_WINDOW,
   );
   const observations = observationValues.map((observation, index) => {
     const observationDescriptors = requireDataProperties(
@@ -189,6 +208,17 @@ function admitCheckpointShape(checkpoint) {
     "checkpoint.knownRemoteVariableIds",
     MAX_CHECKPOINT_REMOTE_VARIABLE_IDS,
   );
+  let pendingTransition = null;
+  if (descriptors.pendingTransition.value !== null) {
+    const pendingDescriptors = requireExactKeys(
+      descriptors.pendingTransition.value,
+      pendingTransitionKeys,
+      "checkpoint.pendingTransition",
+    );
+    pendingTransition = Object.fromEntries(
+      Reflect.ownKeys(pendingDescriptors).map(key => [key, pendingDescriptors[key].value]),
+    );
+  }
 
   return {
     schemaVersion: descriptors.schemaVersion.value,
@@ -199,13 +229,97 @@ function admitCheckpointShape(checkpoint) {
     expectedRemoteStateDigest: descriptors.expectedRemoteStateDigest.value,
     initialRemoteRevision: descriptors.initialRemoteRevision.value,
     maxResolvedBatchBytes: descriptors.maxResolvedBatchBytes.value,
+    pendingTransition,
     tempIdToRealId,
     knownRemoteVariableIds,
+    observationCount: descriptors.observationCount.value,
+    observationBaseDigest: descriptors.observationBaseDigest.value,
+    observationDigest: descriptors.observationDigest.value,
+    settlementCount: descriptors.settlementCount.value,
+    settlementBaseCount: descriptors.settlementBaseCount.value,
+    settlementBaseDigest: descriptors.settlementBaseDigest.value,
+    settlementDigest: descriptors.settlementDigest.value,
     observations,
   };
 }
 
-function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
+function formCheckpointPlanIndex(plan) {
+  const createBatchByTempId = new Map();
+  const completedCreateCountByBatch = [0];
+  const operationCountByBatch = [];
+  let createCount = 0;
+  for (const batch of plan.batches) {
+    operationCountByBatch.push(batch.operations.length);
+    for (const operation of batch.operations) {
+      if (operation.type !== "create_variable") continue;
+      createBatchByTempId.set(operation.tempId, batch.index);
+      createCount += 1;
+    }
+    completedCreateCountByBatch.push(createCount);
+  }
+  return Object.freeze({
+    batchCount: plan.batches.length,
+    completedCreateCountByBatch: Object.freeze(completedCreateCountByBatch),
+    createBatchByTempId,
+    operationCountByBatch: Object.freeze(operationCountByBatch),
+  });
+}
+
+function extendObservationTranscript(previousDigest, index, observation) {
+  return digest({ previousDigest, index, observation });
+}
+
+function settlementTranscriptSeed({ runId, planDigest, initialRemoteRevision }) {
+  return digest({
+    schemaVersion: "0.1.0",
+    owner: "checkpoint_settlement_transcript",
+    runId,
+    planDigest,
+    initialRemoteRevision,
+  });
+}
+
+function extendSettlementTranscript(previousDigest, batchIndex, observation) {
+  return digest({ previousDigest, batchIndex, observation });
+}
+
+function appendCheckpointObservation(checkpoint, observation) {
+  const index = checkpoint.observationCount;
+  if (checkpoint.observations.length === MAX_CHECKPOINT_OBSERVATION_WINDOW) {
+    const firstRetainedIndex = index - checkpoint.observations.length;
+    const [releasedObservation] = checkpoint.observations.splice(0, 1);
+    checkpoint.observationBaseDigest = extendObservationTranscript(
+      checkpoint.observationBaseDigest,
+      firstRetainedIndex,
+      releasedObservation,
+    );
+    if (observationKind(releasedObservation.classification) === "settled") {
+      checkpoint.settlementBaseDigest = extendSettlementTranscript(
+        checkpoint.settlementBaseDigest,
+        releasedObservation.batchIndex,
+        releasedObservation,
+      );
+      checkpoint.settlementBaseCount += 1;
+    }
+  }
+  checkpoint.observationDigest = extendObservationTranscript(
+    checkpoint.observationDigest,
+    index,
+    observation,
+  );
+  checkpoint.observationCount += 1;
+  checkpoint.observations.push(observation);
+  if (observationKind(observation.classification) === "settled") {
+    checkpoint.settlementDigest = extendSettlementTranscript(
+      checkpoint.settlementDigest,
+      observation.batchIndex,
+      observation,
+    );
+    checkpoint.settlementCount += 1;
+  }
+}
+
+function validateCheckpoint(checkpoint, { runId, planIndex, maxBatchBytes }) {
   if (checkpoint.schemaVersion !== "0.1.0") {
     throw checkpointAdmissionError("schema_version", {
       observed: checkpoint.schemaVersion,
@@ -219,7 +333,7 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
     throw checkpointAdmissionError("plan_digest_shape");
   }
   requireCheckpointInteger(checkpoint.nextBatchIndex, "nextBatchIndex", {
-    max: plan.batches.length,
+    max: planIndex.batchCount,
   });
   requireCheckpointInteger(checkpoint.initialRemoteRevision, "initialRemoteRevision");
   requireCheckpointInteger(checkpoint.expectedRemoteRevision, "expectedRemoteRevision");
@@ -236,19 +350,20 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
   requireCheckpointInteger(checkpoint.maxResolvedBatchBytes, "maxResolvedBatchBytes", {
     max: maxBatchBytes,
   });
-  const completedTempIds = new Set(
-    plan.batches
-      .slice(0, checkpoint.nextBatchIndex)
-      .flatMap((batch) => batch.operations)
-      .filter((operation) => operation.type === "create_variable")
-      .map((operation) => operation.tempId),
-  );
-  const knownTempIds = new Set(
-    plan.batches
-      .flatMap((batch) => batch.operations)
-      .filter((operation) => operation.type === "create_variable")
-      .map((operation) => operation.tempId),
-  );
+  if (checkpoint.pendingTransition !== null) {
+    requireCheckpointInteger(checkpoint.pendingTransition.batchIndex, "pendingTransition.batchIndex", {
+      max: planIndex.batchCount - 1,
+    });
+    requireCheckpointInteger(checkpoint.pendingTransition.priorRevision, "pendingTransition.priorRevision");
+    if (
+      checkpoint.pendingTransition.batchIndex !== checkpoint.nextBatchIndex
+      || checkpoint.pendingTransition.priorRevision !== checkpoint.expectedRemoteRevision
+      || checkpoint.pendingTransition.priorStateDigest !== checkpoint.expectedRemoteStateDigest
+      || !digestPattern.test(checkpoint.pendingTransition.projectedStateDigest)
+    ) {
+      throw checkpointAdmissionError("pending_transition_coordinate");
+    }
+  }
   const knownRemoteVariableIds = new Set();
   let previousRemoteVariableId = null;
   for (const [index, remoteId] of checkpoint.knownRemoteVariableIds.entries()) {
@@ -265,10 +380,12 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
     previousRemoteVariableId = remoteId;
   }
   const mappedRemoteIds = new Set();
-  for (const [tempId, remoteId] of Object.entries(checkpoint.tempIdToRealId)) {
+  const temporaryMappings = Object.entries(checkpoint.tempIdToRealId);
+  for (const [tempId, remoteId] of temporaryMappings) {
+    const createBatchIndex = planIndex.createBatchByTempId.get(tempId);
     if (
-      !knownTempIds.has(tempId) ||
-      !completedTempIds.has(tempId) ||
+      createBatchIndex === undefined ||
+      createBatchIndex >= checkpoint.nextBatchIndex ||
       typeof remoteId !== "string" ||
       remoteId.length < 1 ||
       remoteId.length > 512 ||
@@ -279,21 +396,78 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
     }
     mappedRemoteIds.add(remoteId);
   }
-  for (const tempId of completedTempIds) {
-    if (!Object.hasOwn(checkpoint.tempIdToRealId, tempId)) {
-      throw checkpointAdmissionError("temporary_id_missing", { tempId });
-    }
+  const expectedMappingCount = planIndex.completedCreateCountByBatch[checkpoint.nextBatchIndex];
+  if (temporaryMappings.length !== expectedMappingCount) {
+    throw checkpointAdmissionError("temporary_id_missing", {
+      expectedCount: expectedMappingCount,
+      observedCount: temporaryMappings.length,
+    });
   }
 
-  const settledByBatch = new Map();
+  requireCheckpointInteger(checkpoint.observationCount, "observationCount", {
+    max: MAX_CHECKPOINT_OBSERVATIONS,
+  });
+  if (
+    !digestPattern.test(checkpoint.observationBaseDigest)
+    || !digestPattern.test(checkpoint.observationDigest)
+  ) {
+    throw checkpointAdmissionError("observation_digest_shape");
+  }
+  requireCheckpointInteger(checkpoint.settlementCount, "settlementCount", {
+    max: planIndex.batchCount,
+  });
+  requireCheckpointInteger(checkpoint.settlementBaseCount, "settlementBaseCount", {
+    max: checkpoint.settlementCount,
+  });
+  if (
+    checkpoint.settlementCount !== checkpoint.nextBatchIndex
+    || !digestPattern.test(checkpoint.settlementBaseDigest)
+    || !digestPattern.test(checkpoint.settlementDigest)
+  ) {
+    throw checkpointAdmissionError("settlement_summary", {
+      expectedCount: checkpoint.nextBatchIndex,
+      observedCount: checkpoint.settlementCount,
+    });
+  }
+  const expectedSettlementSeed = settlementTranscriptSeed(checkpoint);
+  if (
+    checkpoint.settlementBaseCount === 0
+    && checkpoint.settlementBaseDigest !== expectedSettlementSeed
+  ) {
+    throw checkpointAdmissionError("settlement_transcript_base");
+  }
+  const expectedObservationWindow = Math.min(
+    checkpoint.observationCount,
+    MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  );
+  if (checkpoint.observations.length !== expectedObservationWindow) {
+    throw checkpointAdmissionError("settlement_missing", {
+      expectedObservationWindow,
+      observedObservationWindow: checkpoint.observations.length,
+    });
+  }
+  if (
+    checkpoint.observationCount <= MAX_CHECKPOINT_OBSERVATION_WINDOW
+    && checkpoint.observationBaseDigest !== observationTranscriptSeed
+  ) {
+    throw checkpointAdmissionError("observation_transcript_base");
+  }
   let previousBatchIndex = -1;
+  let observedTranscriptDigest = checkpoint.observationBaseDigest;
+  let observedSettlementCount = checkpoint.settlementBaseCount;
+  let observedSettlementDigest = checkpoint.settlementBaseDigest;
+  const firstObservationIndex = checkpoint.observationCount - checkpoint.observations.length;
   for (const [index, observation] of checkpoint.observations.entries()) {
     const kind = observationKind(observation.classification);
     requireCheckpointInteger(observation.batchIndex, `observations[${index}].batchIndex`, {
-      max: plan.batches.length - 1,
+      max: planIndex.batchCount - 1,
     });
     requireCheckpointInteger(observation.attempt, `observations[${index}].attempt`, { max: 100 });
-    if (observation.batchIndex < previousBatchIndex || observation.batchIndex > checkpoint.nextBatchIndex) {
+    if (
+      observation.batchIndex < checkpoint.settlementBaseCount
+      || observation.batchIndex < previousBatchIndex
+      || observation.batchIndex > checkpoint.nextBatchIndex
+    ) {
       throw checkpointAdmissionError("observation_order", { index });
     }
     previousBatchIndex = observation.batchIndex;
@@ -307,42 +481,54 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
         `observations[${index}].observedRemoteRevision`,
       );
     } else {
-      if (settledByBatch.has(observation.batchIndex)) {
-        throw checkpointAdmissionError("repeated_settlement", {
-          batchIndex: observation.batchIndex,
-        });
-      }
       if (observation.batchIndex >= checkpoint.nextBatchIndex) {
         throw checkpointAdmissionError("settlement_ahead_of_checkpoint", {
           batchIndex: observation.batchIndex,
         });
       }
-      const batch = plan.batches[observation.batchIndex];
       requireCheckpointInteger(observation.remoteRevision, `observations[${index}].remoteRevision`);
       requireCheckpointInteger(observation.operationCount, `observations[${index}].operationCount`, {
         min: 1,
-        max: batch.operations.length,
+        max: planIndex.operationCountByBatch[observation.batchIndex],
       });
       const expectedBatchRevision = checkpoint.initialRemoteRevision + observation.batchIndex + 1;
       if (
-        observation.remoteRevision !== expectedBatchRevision ||
-        observation.operationCount !== batch.operations.length
+        observation.batchIndex !== observedSettlementCount
+        || observation.remoteRevision !== expectedBatchRevision
+        || observation.operationCount !== planIndex.operationCountByBatch[observation.batchIndex]
       ) {
         throw checkpointAdmissionError("settlement_progress", {
           batchIndex: observation.batchIndex,
           expectedRemoteRevision: expectedBatchRevision,
           observedRemoteRevision: observation.remoteRevision,
-          expectedOperationCount: batch.operations.length,
+          expectedOperationCount: planIndex.operationCountByBatch[observation.batchIndex],
           observedOperationCount: observation.operationCount,
         });
       }
-      settledByBatch.set(observation.batchIndex, observation);
+      observedSettlementDigest = extendSettlementTranscript(
+        observedSettlementDigest,
+        observation.batchIndex,
+        observation,
+      );
+      observedSettlementCount += 1;
     }
+    observedTranscriptDigest = extendObservationTranscript(
+      observedTranscriptDigest,
+      firstObservationIndex + index,
+      observation,
+    );
   }
-  for (let batchIndex = 0; batchIndex < checkpoint.nextBatchIndex; batchIndex += 1) {
-    if (!settledByBatch.has(batchIndex)) {
-      throw checkpointAdmissionError("settlement_missing", { batchIndex });
-    }
+  if (observedTranscriptDigest !== checkpoint.observationDigest) {
+    throw checkpointAdmissionError("observation_transcript_digest");
+  }
+  if (
+    observedSettlementCount !== checkpoint.settlementCount
+    || observedSettlementDigest !== checkpoint.settlementDigest
+  ) {
+    throw checkpointAdmissionError("settlement_missing", {
+      expectedCount: checkpoint.settlementCount,
+      observedCount: observedSettlementCount,
+    });
   }
   assertCredentialSafe(checkpoint, "checkpoint");
   return checkpoint;
@@ -352,7 +538,7 @@ async function persistCheckpoint({
   checkpointStore,
   runId,
   checkpoint,
-  plan,
+  planIndex,
   maxBatchBytes,
   restartAt,
   batchIndex = null,
@@ -392,7 +578,7 @@ async function persistCheckpoint({
   }
   try {
     const admitted = admitCheckpointShape(saved);
-    validateCheckpoint(admitted, { runId, plan, maxBatchBytes });
+    validateCheckpoint(admitted, { runId, planIndex, maxBatchBytes });
     if (digest(admitted) !== digest(checkpoint)) {
       throw checkpointAdmissionError("persistence_mismatch");
     }
@@ -522,6 +708,38 @@ function statusResult(status, fields) {
   return result;
 }
 
+function boundedLeaseReleaseFailure(releaseError, owner, generation) {
+  return Object.freeze({
+    source: "writer_lease_release",
+    code: releaseError.code,
+    owner,
+    generation,
+    restartAt: "inspect_writer_lease",
+  });
+}
+
+function retainSecondaryReleaseFailure(primaryError, secondaryFailure) {
+  if (
+    primaryError === null
+    || (typeof primaryError !== "object" && typeof primaryError !== "function")
+  ) return;
+  try {
+    // Descriptor inspection preserves an existing cause accessor without
+    // invoking caller-controlled code during failure cleanup.
+    const existing = Object.getOwnPropertyDescriptor(primaryError, "secondaryFailure");
+    if (existing !== undefined && !existing.configurable) return;
+    Object.defineProperty(primaryError, "secondaryFailure", {
+      configurable: true,
+      enumerable: false,
+      value: secondaryFailure,
+      writable: false,
+    });
+  } catch {
+    // The primary failure remains authoritative when its object rejects a
+    // bounded secondary observation.
+  }
+}
+
 function remoteProtocolInvalidResult({
   runId,
   batchIndex,
@@ -561,7 +779,7 @@ function checkpointRemoteDriftResult({
 }
 
 function hasObservationCapacity(checkpoint, required = 1) {
-  return checkpoint.observations.length + required <= MAX_CHECKPOINT_OBSERVATIONS;
+  return checkpoint.observationCount + required <= MAX_CHECKPOINT_OBSERVATIONS;
 }
 
 function observationLimitResult({ runId, batchIndex, restartAt }) {
@@ -621,6 +839,150 @@ function resolveBatchCoordinate(identifier, batchTempIdToRealId) {
   return batchTempIdToRealId.get(identifier) ?? identifier;
 }
 
+function semanticIdentity(kind, coordinate) {
+  return { kind, coordinate };
+}
+
+function semanticIdentityKey(identity) {
+  return `${identity.kind === "created" ? "0" : "1"}:${identity.coordinate}`;
+}
+
+function projectSemanticBatchTransition({ priorSnapshot, operations, remoteRevision }) {
+  const createdTempIds = new Set(
+    operations
+      .filter((operation) => operation.type === "create_variable")
+      .map((operation) => operation.tempId),
+  );
+  const identityForCoordinate = (coordinate) => createdTempIds.has(coordinate)
+    ? semanticIdentity("created", coordinate)
+    : semanticIdentity("remote", coordinate);
+  const variables = new Map(
+    priorSnapshot.variables.map((variable) => {
+      const identity = semanticIdentity("remote", variable.id);
+      return [semanticIdentityKey(identity), {
+        identity,
+        name: variable.name,
+        resolvedType: variable.resolvedType,
+        value: structuredClone(variable.value),
+        referenceTo: variable.referenceTo === null
+          ? null
+          : semanticIdentity("remote", variable.referenceTo),
+        deprecated: variable.deprecated,
+        version: variable.version,
+      }];
+    }),
+  );
+
+  for (const operation of operations) {
+    if (operation.type === "create_variable") {
+      const identity = semanticIdentity("created", operation.tempId);
+      const key = semanticIdentityKey(identity);
+      if (variables.has(key)) {
+        return { accepted: false, reason: "batch_transition_create_collision" };
+      }
+      const referenceTo = operation.payload.referenceTo
+        ? identityForCoordinate(operation.payload.referenceTo)
+        : null;
+      if (referenceTo !== null && !variables.has(semanticIdentityKey(referenceTo))) {
+        return { accepted: false, reason: "batch_transition_reference_missing" };
+      }
+      variables.set(key, {
+        identity,
+        name: operation.payload.name,
+        resolvedType: operation.payload.resolvedType,
+        value: structuredClone(operation.payload.value),
+        referenceTo,
+        deprecated: false,
+        version: 1,
+      });
+      continue;
+    }
+
+    const identity = identityForCoordinate(operation.targetId);
+    const key = semanticIdentityKey(identity);
+    const current = variables.get(key);
+    if (current === undefined) {
+      return { accepted: false, reason: "batch_transition_target_missing" };
+    }
+    if (
+      Object.hasOwn(operation, "expectedVersion")
+      && operation.expectedVersion !== current.version
+    ) {
+      return { accepted: false, reason: "batch_transition_version_mismatch" };
+    }
+    if (operation.type === "delete_variable") {
+      variables.delete(key);
+      continue;
+    }
+    const next = structuredClone(current);
+    if (operation.type === "update_variable") {
+      if (Object.hasOwn(operation.payload, "name")) next.name = operation.payload.name;
+      if (Object.hasOwn(operation.payload, "resolvedType")) {
+        next.resolvedType = operation.payload.resolvedType;
+      }
+      if (Object.hasOwn(operation.payload, "value")) {
+        next.value = structuredClone(operation.payload.value);
+      }
+    } else if (operation.type === "rewire_reference") {
+      const referenceTo = identityForCoordinate(operation.payload.referenceTo);
+      if (!variables.has(semanticIdentityKey(referenceTo))) {
+        return { accepted: false, reason: "batch_transition_reference_missing" };
+      }
+      next.referenceTo = referenceTo;
+    } else if (operation.type === "deprecate_variable") {
+      next.deprecated = true;
+    }
+    next.version = current.version + 1;
+    variables.set(key, next);
+  }
+
+  if ([...variables.values()].some(
+    (variable) => variable.referenceTo !== null
+      && !variables.has(semanticIdentityKey(variable.referenceTo)),
+  )) {
+    return { accepted: false, reason: "batch_transition_dangling_reference" };
+  }
+
+  return {
+    accepted: true,
+    value: {
+      revision: remoteRevision,
+      variables: [...variables.entries()]
+        .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
+        .map(([, variable]) => variable),
+    },
+  };
+}
+
+function semanticSnapshotDigest(snapshot, results) {
+  const createdTempIdByTargetId = new Map(
+    results
+      .filter((result) => Object.hasOwn(result, "tempId"))
+      .map((result) => [result.targetId, result.tempId]),
+  );
+  const identityForRemoteId = (remoteId) => createdTempIdByTargetId.has(remoteId)
+    ? semanticIdentity("created", createdTempIdByTargetId.get(remoteId))
+    : semanticIdentity("remote", remoteId);
+  const variables = snapshot.variables
+    .map((variable) => ({
+      identity: identityForRemoteId(variable.id),
+      name: variable.name,
+      resolvedType: variable.resolvedType,
+      value: structuredClone(variable.value),
+      referenceTo: variable.referenceTo === null
+        ? null
+        : identityForRemoteId(variable.referenceTo),
+      deprecated: variable.deprecated,
+      version: variable.version,
+    }))
+    .sort((left, right) => {
+      const leftKey = semanticIdentityKey(left.identity);
+      const rightKey = semanticIdentityKey(right.identity);
+      return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+    });
+  return digest({ revision: snapshot.revision, variables });
+}
+
 function expectedCreatedVariablesAfterBatch(operations, results) {
   const batchTempIdToRealId = new Map(
     results
@@ -657,6 +1019,9 @@ function expectedCreatedVariablesAfterBatch(operations, results) {
     const next = structuredClone(current);
     if (operation.type === "update_variable") {
       if (Object.hasOwn(operation.payload, "name")) next.name = operation.payload.name;
+      if (Object.hasOwn(operation.payload, "resolvedType")) {
+        next.resolvedType = operation.payload.resolvedType;
+      }
       if (Object.hasOwn(operation.payload, "value")) {
         next.value = structuredClone(operation.payload.value);
       }
@@ -703,106 +1068,6 @@ function verifyCreatedIdentityTransfer({ checkpoint, operations, results, snapsh
   return { accepted: true };
 }
 
-function projectBatchTransition({ priorSnapshot, operations, results, remoteRevision }) {
-  const batchTempIdToRealId = new Map(
-    results
-      .filter((result) => Object.hasOwn(result, "tempId"))
-      .map((result) => [result.tempId, result.targetId]),
-  );
-  const variables = new Map(
-    priorSnapshot.variables.map((variable) => [variable.id, structuredClone(variable)]),
-  );
-
-  for (const operation of operations) {
-    if (operation.type === "create_variable") {
-      const targetId = batchTempIdToRealId.get(operation.tempId);
-      if (variables.has(targetId)) {
-        return { accepted: false, reason: "batch_transition_create_collision" };
-      }
-      const referenceTo = operation.payload.referenceTo
-        ? resolveBatchCoordinate(operation.payload.referenceTo, batchTempIdToRealId)
-        : null;
-      if (referenceTo !== null && !variables.has(referenceTo)) {
-        return { accepted: false, reason: "batch_transition_reference_missing" };
-      }
-      variables.set(targetId, {
-        id: targetId,
-        name: operation.payload.name,
-        resolvedType: operation.payload.resolvedType,
-        value: structuredClone(operation.payload.value),
-        referenceTo,
-        deprecated: false,
-        version: 1,
-      });
-      continue;
-    }
-
-    const targetId = resolveBatchCoordinate(operation.targetId, batchTempIdToRealId);
-    const current = variables.get(targetId);
-    if (current === undefined) {
-      return { accepted: false, reason: "batch_transition_target_missing" };
-    }
-    if (
-      Object.hasOwn(operation, "expectedVersion")
-      && operation.expectedVersion !== current.version
-    ) {
-      return { accepted: false, reason: "batch_transition_version_mismatch" };
-    }
-    if (operation.type === "delete_variable") {
-      variables.delete(targetId);
-      continue;
-    }
-    const next = structuredClone(current);
-    if (operation.type === "update_variable") {
-      if (Object.hasOwn(operation.payload, "name")) next.name = operation.payload.name;
-      if (Object.hasOwn(operation.payload, "value")) {
-        next.value = structuredClone(operation.payload.value);
-      }
-    } else if (operation.type === "rewire_reference") {
-      const referenceTo = resolveBatchCoordinate(
-        operation.payload.referenceTo,
-        batchTempIdToRealId,
-      );
-      if (!variables.has(referenceTo)) {
-        return { accepted: false, reason: "batch_transition_reference_missing" };
-      }
-      next.referenceTo = referenceTo;
-    } else if (operation.type === "deprecate_variable") {
-      next.deprecated = true;
-    }
-    next.version = current.version + 1;
-    variables.set(targetId, next);
-  }
-
-  if ([...variables.values()].some(
-    (variable) => variable.referenceTo !== null && !variables.has(variable.referenceTo),
-  )) {
-    return { accepted: false, reason: "batch_transition_dangling_reference" };
-  }
-
-  return {
-    accepted: true,
-    value: {
-      revision: remoteRevision,
-      variables: [...variables.values()].sort((left, right) =>
-        left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
-    },
-  };
-}
-
-function verifyBatchTransition({ priorSnapshot, operations, results, snapshot }) {
-  const projected = projectBatchTransition({
-    priorSnapshot,
-    operations,
-    results,
-    remoteRevision: snapshot.revision,
-  });
-  if (!projected.accepted) return projected;
-  return digest(projected.value) === digest(snapshot)
-    ? { accepted: true }
-    : { accepted: false, reason: "batch_transition_state_mismatch" };
-}
-
 function extendRemoteIdentityLedger(checkpoint, snapshot, results) {
   const identities = new Set(checkpoint.knownRemoteVariableIds);
   for (const variable of snapshot.variables) identities.add(variable.id);
@@ -839,6 +1104,7 @@ export async function synchronizeVariables({
     maxRetryAfterMs,
     leaseTtlMs,
   });
+  const planIndex = formCheckpointPlanIndex(plan);
   const startedAtMs = await clock.now();
   let lease;
   try {
@@ -861,10 +1127,11 @@ export async function synchronizeVariables({
     throw error;
   }
 
+  let executionResult;
   let executionError;
   let executionFailed = false;
   let leaseAuthorityLost = false;
-  try {
+  const executeWithLease = async () => {
     let claimedFencingToken;
     try {
       claimedFencingToken = await checkpointStore.claimFence(runId, lease.generation);
@@ -911,7 +1178,7 @@ export async function synchronizeVariables({
         checkpointStore,
         runId,
         checkpoint,
-        plan,
+        planIndex,
         maxBatchBytes,
         restartAt,
         batchIndex,
@@ -956,7 +1223,7 @@ export async function synchronizeVariables({
         });
       }
       try {
-        validateCheckpoint(existing, { runId, plan, maxBatchBytes });
+        validateCheckpoint(existing, { runId, planIndex, maxBatchBytes });
       } catch (error) {
         if (error instanceof PlanError && error.code === "checkpoint_invalid") {
           return statusResult("friction", {
@@ -1019,15 +1286,35 @@ export async function synchronizeVariables({
           reconciliation.classification === "already_applied"
           && admission.value.remoteRevision === observedStart.revision
         ) {
-          // A single exact intent set explains this one-revision advance; no write is replayed.
-          resumeSettlement = {
-            batchIndex,
-            value: {
-              disposition: "idempotent_replay",
-              remoteRevision: admission.value.remoteRevision,
-              results: reconciliation.results,
-            },
-          };
+          const resumedStateDigest = semanticSnapshotDigest(
+            observedStart,
+            reconciliation.results,
+          );
+          if (
+            existing.pendingTransition !== null
+            && resumedStateDigest === existing.pendingTransition.projectedStateDigest
+          ) {
+            // The durable projected state and exact intent set jointly explain
+            // this one-revision advance; the writer settles from the recorded outcome.
+            resumeSettlement = {
+              batchIndex,
+              value: {
+                disposition: "idempotent_replay",
+                remoteRevision: admission.value.remoteRevision,
+                results: reconciliation.results,
+              },
+            };
+          } else if (existing.pendingTransition !== null) {
+            return remoteProtocolInvalidResult({
+              runId,
+              batchIndex,
+              source: "resume_state_transition",
+              admission: {
+                accepted: false,
+                reason: "batch_transition_state_mismatch",
+              },
+            });
+          }
         }
       }
       if (!resumeSettlement) {
@@ -1042,6 +1329,11 @@ export async function synchronizeVariables({
     }
     let checkpoint = existing;
     if (checkpoint === null) {
+      const initialSettlementDigest = settlementTranscriptSeed({
+        runId,
+        planDigest: plan.planDigest,
+        initialRemoteRevision: observedStart.revision,
+      });
       const initialCheckpoint = {
         schemaVersion: "0.1.0",
         runId,
@@ -1051,8 +1343,16 @@ export async function synchronizeVariables({
         expectedRemoteStateDigest: digest(observedStart),
         initialRemoteRevision: observedStart.revision,
         maxResolvedBatchBytes: 0,
+        pendingTransition: null,
         tempIdToRealId: {},
         knownRemoteVariableIds: observedStart.variables.map(({ id }) => id),
+        observationCount: 0,
+        observationBaseDigest: observationTranscriptSeed,
+        observationDigest: observationTranscriptSeed,
+        settlementCount: 0,
+        settlementBaseCount: 0,
+        settlementBaseDigest: initialSettlementDigest,
+        settlementDigest: initialSettlementDigest,
         observations: [],
       };
       const persisted = await persistCurrentCheckpoint({
@@ -1087,6 +1387,46 @@ export async function synchronizeVariables({
       }
       let attempt = 0;
       const settlementContinuesEarlierRun = resumeSettlement?.batchIndex === batchIndex;
+      if (!settlementContinuesEarlierRun) {
+        const projectedTransition = projectSemanticBatchTransition({
+          priorSnapshot: lastObservedSnapshot,
+          operations: resolvedOperations,
+          remoteRevision: checkpoint.expectedRemoteRevision + 1,
+        });
+        if (!projectedTransition.accepted) {
+          return remoteProtocolInvalidResult({
+            runId,
+            batchIndex,
+            source: "pending_transition_projection",
+            admission: projectedTransition,
+          });
+        }
+        const projectedStateDigest = digest(projectedTransition.value);
+        if (checkpoint.pendingTransition === null) {
+          checkpoint.pendingTransition = {
+            batchIndex,
+            priorRevision: checkpoint.expectedRemoteRevision,
+            priorStateDigest: checkpoint.expectedRemoteStateDigest,
+            projectedStateDigest,
+          };
+          const persisted = await persistCurrentCheckpoint({
+            checkpoint,
+            restartAt: `persist:pending_transition:batch:${batchIndex}`,
+            leaseFailureRestartAt: `batch:${batchIndex}`,
+            batchIndex,
+          });
+          if (!persisted.accepted) return persisted.result;
+          checkpoint = persisted.value;
+        } else if (checkpoint.pendingTransition.projectedStateDigest !== projectedStateDigest) {
+          return statusResult("friction", {
+            code: "checkpoint_invalid",
+            runId,
+            batchIndex,
+            details: { reason: "pending_transition_projection_mismatch" },
+            restartAt: "inspect_checkpoint",
+          });
+        }
+      }
       let settled = settlementContinuesEarlierRun
         ? resumeSettlement.value
         : null;
@@ -1151,7 +1491,7 @@ export async function synchronizeVariables({
                 restartAt: `batch:${batchIndex}`,
               });
             }
-            checkpoint.observations.push({
+            appendCheckpointObservation(checkpoint, {
               batchIndex,
               attempt,
               classification: "bounded_retry",
@@ -1191,7 +1531,7 @@ export async function synchronizeVariables({
                 restartAt: `reconcile:batch:${batchIndex}`,
               });
             }
-            checkpoint.observations.push({
+            appendCheckpointObservation(checkpoint, {
               batchIndex,
               attempt,
               classification: reconciliation.classification,
@@ -1321,21 +1661,25 @@ export async function synchronizeVariables({
         });
       }
 
-      if (!settlementContinuesEarlierRun) {
-        const transition = verifyBatchTransition({
-          priorSnapshot: lastObservedSnapshot,
-          operations: resolvedOperations,
-          results: settled.results,
-          snapshot: settledSnapshot,
+      const observedTransitionDigest = semanticSnapshotDigest(
+        settledSnapshot,
+        settled.results,
+      );
+      if (
+        checkpoint.pendingTransition === null
+        || observedTransitionDigest !== checkpoint.pendingTransition.projectedStateDigest
+      ) {
+        return remoteProtocolInvalidResult({
+          runId,
+          batchIndex,
+          source: settlementContinuesEarlierRun
+            ? "resume_state_transition"
+            : "settled_state_transition",
+          admission: {
+            accepted: false,
+            reason: "batch_transition_state_mismatch",
+          },
         });
-        if (!transition.accepted) {
-          return remoteProtocolInvalidResult({
-            runId,
-            batchIndex,
-            source: "settled_state_transition",
-            admission: transition,
-          });
-        }
       }
 
       for (const result of settled.results) {
@@ -1348,6 +1692,7 @@ export async function synchronizeVariables({
       checkpoint.nextBatchIndex = batchIndex + 1;
       checkpoint.expectedRemoteRevision = settled.remoteRevision;
       checkpoint.expectedRemoteStateDigest = digest(settledSnapshot);
+      checkpoint.pendingTransition = null;
       checkpoint.maxResolvedBatchBytes = Math.max(
         checkpoint.maxResolvedBatchBytes ?? 0,
         resolvedBatchBytes,
@@ -1359,7 +1704,7 @@ export async function synchronizeVariables({
           restartAt: `reconcile:batch:${batchIndex}`,
         });
       }
-      checkpoint.observations.push({
+      appendCheckpointObservation(checkpoint, {
         batchIndex,
         attempt,
         classification: settled.disposition,
@@ -1421,10 +1766,25 @@ export async function synchronizeVariables({
       finalStateDigest,
       tempIdToRealId: checkpoint.tempIdToRealId,
       observations: checkpoint.observations,
+      observationTranscript: {
+        count: checkpoint.observationCount,
+        retainedCount: checkpoint.observations.length,
+        truncated: checkpoint.observationCount > checkpoint.observations.length,
+        digest: checkpoint.observationDigest,
+      },
+      settlementTranscript: {
+        count: checkpoint.settlementCount,
+        releasedCount: checkpoint.settlementBaseCount,
+        digest: checkpoint.settlementDigest,
+      },
       elapsedMs: (await clock.now()) - startedAtMs,
     };
     assertSanitizedReceipt(receipt);
     return receipt;
+  };
+  try {
+    executionResult = await executeWithLease();
+    return executionResult;
   } catch (error) {
     executionFailed = true;
     executionError = error;
@@ -1453,19 +1813,26 @@ export async function synchronizeVariables({
       }
     }
 
-    if (releaseError && !executionFailed) {
+    if (
+      releaseError
+      && !executionFailed
+      && executionResult !== undefined
+      && executionResult.status !== "accepted"
+    ) {
+      executionResult.secondaryFailure = boundedLeaseReleaseFailure(
+        releaseError,
+        owner,
+        lease.generation,
+      );
+      assertSanitizedReceipt(executionResult);
+    } else if (releaseError && !executionFailed) {
       throw releaseError;
     }
-    if (releaseError && executionError?.cause === undefined) {
-      try {
-        Object.defineProperty(executionError, "cause", {
-          configurable: true,
-          value: releaseError,
-        });
-      } catch {
-        // The primary failure remains authoritative when an immutable error
-        // object cannot carry the secondary lease-release observation.
-      }
+    if (releaseError && executionFailed) {
+      retainSecondaryReleaseFailure(
+        executionError,
+        boundedLeaseReleaseFailure(releaseError, owner, lease.generation),
+      );
     }
   }
 }

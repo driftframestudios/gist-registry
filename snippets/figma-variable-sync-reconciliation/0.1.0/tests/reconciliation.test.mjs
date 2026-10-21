@@ -3,7 +3,11 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { assertSanitizedReceipt, canonicalJson, digest } from "../src/canonical.mjs";
-import { MAX_CHECKPOINT_OBSERVATIONS, synchronizeVariables } from "../src/coordinator.mjs";
+import {
+  MAX_CHECKPOINT_OBSERVATIONS,
+  MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  synchronizeVariables,
+} from "../src/coordinator.mjs";
 import { FakeVariableRemote } from "../src/fake-remote.mjs";
 import { ExecutionInterruptedError, LeaseError, PlanError } from "../src/errors.mjs";
 import {
@@ -26,6 +30,35 @@ const fixture = JSON.parse(
 const cycleFixture = JSON.parse(
   await readFile(new URL("../fixtures/dependency-cycle.json", import.meta.url), "utf8"),
 );
+const observationTranscriptSeed = digest({
+  schemaVersion: "0.1.0",
+  owner: "checkpoint_observation_transcript",
+});
+
+function transcriptDigest(baseDigest, observations, startIndex = 0) {
+  return observations.reduce(
+    (previousDigest, observation, offset) => digest({
+      previousDigest,
+      index: startIndex + offset,
+      observation,
+    }),
+    baseDigest,
+  );
+}
+
+function settlementTranscriptSeed({ runId, planDigest, initialRemoteRevision }) {
+  return digest({
+    schemaVersion: "0.1.0",
+    owner: "checkpoint_settlement_transcript",
+    runId,
+    planDigest,
+    initialRemoteRevision,
+  });
+}
+
+function extendSettlementTranscript(previousDigest, batchIndex, observation) {
+  return digest({ previousDigest, batchIndex, observation });
+}
 
 function harness(overrides = {}) {
   let nowMs = fixture.clockStartMs;
@@ -655,6 +688,15 @@ test("an async lease-release rejection is awaited and returns a typed recovery o
 test("a primary async collaborator failure retains authority when lease release also rejects", async () => {
   const base = harness();
   const primaryFailure = new Error("synthetic checkpoint read fault");
+  let causeReads = 0;
+  const existingCause = new Error("existing primary context");
+  Object.defineProperty(primaryFailure, "cause", {
+    configurable: false,
+    get() {
+      causeReads += 1;
+      return existingCause;
+    },
+  });
   const checkpointStore = {
     claimFence: async (...args) => base.checkpointStore.claimFence(...args),
     load: async () => {
@@ -671,9 +713,67 @@ test("a primary async collaborator failure retains authority when lease release 
     runWith({ ...base, checkpointStore, leaseStore }),
     (error) =>
       error === primaryFailure
-      && error.cause instanceof LeaseError
-      && error.cause.code === "lease_release_failed",
+      && causeReads === 0
+      && Object.getOwnPropertyDescriptor(error, "cause").get !== undefined
+      && error.secondaryFailure.source === "writer_lease_release"
+      && error.secondaryFailure.code === "lease_release_failed"
+      && error.secondaryFailure.restartAt === "inspect_writer_lease",
   );
+  assert.equal(causeReads, 0);
+});
+
+test("typed operational outcomes retain primary authority when lease release also rejects", async () => {
+  const cases = [
+    {
+      expectedStatus: "conflict",
+      expectedCode: "remote_revision_changed",
+      execution: {
+        faultFor: ({ batchIndex, attempt }) =>
+          batchIndex === 0 && attempt === 0
+            ? { kind: "concurrent_drift", targetId: "var_0001", changes: { value: "#486ff7" } }
+            : null,
+      },
+    },
+    {
+      expectedStatus: "friction",
+      expectedCode: "retry_budget_exhausted",
+      execution: {
+        maxRetries: 0,
+        faultFor: ({ batchIndex, attempt }) =>
+          batchIndex === 0 && attempt === 0
+            ? { kind: "retry_after", retryAfterMs: 1 }
+            : null,
+      },
+    },
+    {
+      expectedStatus: "interrupted",
+      expectedCode: "execution_interrupted",
+      execution: {
+        faultFor: ({ batchIndex, attempt }) =>
+          batchIndex === 0 && attempt === 0 ? { kind: "interrupt_after_apply" } : null,
+      },
+    },
+  ];
+
+  for (const scenario of cases) {
+    const base = harness();
+    const leaseStore = asyncMethodAdapter(base.leaseStore, ["acquire", "renew"]);
+    leaseStore.release = async () => {
+      throw new Error("synthetic lease release fault");
+    };
+
+    const result = await runWith({ ...base, leaseStore }, scenario.execution);
+
+    assert.equal(result.status, scenario.expectedStatus);
+    assert.equal(result.code, scenario.expectedCode);
+    assert.deepEqual(result.secondaryFailure, {
+      source: "writer_lease_release",
+      code: "lease_release_failed",
+      owner: fixture.owner,
+      generation: 1,
+      restartAt: "inspect_writer_lease",
+    });
+  }
 });
 
 test("Retry-After is bounded, observed, and followed by the accepted path", async () => {
@@ -1095,6 +1195,46 @@ test("resume after post-apply interruption replays the intent set idempotently",
   assert.ok(resumed.observations.some((item) => item.classification === "idempotent_replay"));
 });
 
+test("resume verifies the complete projected transition before accepting recorded intents", async () => {
+  const base = harness();
+  const underlyingRemote = base.remote;
+  let applyCalls = 0;
+  let exposeUnrelatedSideEffect = false;
+  const remote = {
+    applyBatch(operations, options) {
+      applyCalls += 1;
+      return underlyingRemote.applyBatch(operations, options);
+    },
+    readIntentResults: underlyingRemote.readIntentResults.bind(underlyingRemote),
+    snapshot() {
+      const snapshot = underlyingRemote.snapshot();
+      if (exposeUnrelatedSideEffect) {
+        snapshot.variables.find(({ id }) => id === "var_0002").name = "unreported.side.effect";
+      }
+      return snapshot;
+    },
+  };
+
+  const interrupted = await runWith({ ...base, remote }, {
+    faultFor: ({ batchIndex, attempt }) =>
+      batchIndex === 0 && attempt === 0 ? { kind: "interrupt_after_apply" } : null,
+  });
+  assert.equal(interrupted.status, "interrupted");
+  const durableBeforeResume = base.checkpointStore.load(fixture.runId);
+  assert.equal(durableBeforeResume.pendingTransition.batchIndex, 0);
+  exposeUnrelatedSideEffect = true;
+  const applyCallsBeforeResume = applyCalls;
+
+  const resumed = await runWith({ ...base, remote });
+
+  assert.equal(resumed.status, "friction");
+  assert.equal(resumed.code, "remote_protocol_invalid");
+  assert.equal(resumed.details.source, "resume_state_transition");
+  assert.equal(resumed.details.reason, "batch_transition_state_mismatch");
+  assert.equal(applyCalls, applyCallsBeforeResume);
+  assert.deepEqual(base.checkpointStore.load(fixture.runId), durableBeforeResume);
+});
+
 test("same-revision state drift stops resume before another remote mutation", async () => {
   const base = harness();
   const underlyingRemote = base.remote;
@@ -1216,6 +1356,93 @@ test("checkpoint admission rejects completed progress with a missing settlement 
   assert.deepEqual(h.remote.snapshot(), remoteBefore);
 });
 
+test("checkpoint admission rejects a retained observation that breaks the transcript digest", async () => {
+  const h = harness();
+  const accepted = await runWith(h);
+  assert.equal(accepted.status, "accepted");
+  const checkpoint = h.checkpointStore.load(fixture.runId);
+  checkpoint.observations[0].attempt = 1;
+  h.checkpointStore.save(fixture.runId, checkpoint, {
+    fencingToken: h.checkpointStore.inspectFence(fixture.runId),
+  });
+  const remoteBefore = h.remote.snapshot();
+
+  const result = await runWith(h);
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "checkpoint_invalid");
+  assert.equal(result.details.reason, "observation_transcript_digest");
+  assert.equal(result.restartAt, "inspect_checkpoint");
+  assert.deepEqual(h.remote.snapshot(), remoteBefore);
+});
+
+test("a truncated transcript cannot advance past a batch without a verifiable settlement", async () => {
+  const runId = "truncated-settlement-guard";
+  const operations = [{
+    id: "deprecate-required-variable",
+    type: "deprecate_variable",
+    targetId: "var_0001",
+    dependsOn: [],
+    payload: {},
+  }];
+  const maxBatchBytes = encodedBatchBytes(operations);
+  const plan = planOperations(operations, { maxBatchBytes });
+  const remote = new FakeVariableRemote(fixture.remote);
+  const remoteBefore = remote.snapshot();
+  const checkpointStore = new InMemoryCheckpointStore();
+  const observations = Array.from(
+    { length: MAX_CHECKPOINT_OBSERVATION_WINDOW },
+    () => ({
+      batchIndex: 0,
+      attempt: 0,
+      classification: "bounded_retry",
+      retryAfterMs: 0,
+    }),
+  );
+  const observationBaseDigest = digest({ owner: "forged_truncated_prefix" });
+  const settlementBaseDigest = digest({ owner: "forged_settlement_prefix" });
+  checkpointStore.claimFence(runId, 1);
+  checkpointStore.save(runId, {
+    schemaVersion: "0.1.0",
+    runId,
+    planDigest: plan.planDigest,
+    nextBatchIndex: 1,
+    expectedRemoteRevision: remoteBefore.revision,
+    expectedRemoteStateDigest: digest(remoteBefore),
+    initialRemoteRevision: remoteBefore.revision - 1,
+    maxResolvedBatchBytes: 0,
+    pendingTransition: null,
+    tempIdToRealId: {},
+    knownRemoteVariableIds: remoteBefore.variables.map(({ id }) => id),
+    observationCount: MAX_CHECKPOINT_OBSERVATION_WINDOW + 1,
+    observationBaseDigest,
+    observationDigest: transcriptDigest(observationBaseDigest, observations, 1),
+    settlementCount: 1,
+    settlementBaseCount: 1,
+    settlementBaseDigest,
+    settlementDigest: settlementBaseDigest,
+    observations,
+  }, { fencingToken: 1 });
+
+  const result = await synchronizeVariables({
+    runId,
+    owner: fixture.owner,
+    operations,
+    remote,
+    leaseStore: new InMemoryLeaseStore(),
+    checkpointStore,
+    maxBatchBytes,
+    clock: { now: () => fixture.clockStartMs },
+  });
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "checkpoint_invalid");
+  assert.equal(result.details.reason, "observation_order");
+  assert.equal(result.restartAt, "inspect_checkpoint");
+  assert.deepEqual(remote.snapshot(), remoteBefore);
+  assert.equal(remote.snapshot().variables.find(({ id }) => id === "var_0001").deprecated, false);
+});
+
 test("checkpoint admission rejects progress coordinates outside the planned batches", async () => {
   const h = harness();
   const accepted = await runWith(h);
@@ -1239,6 +1466,11 @@ test("checkpoint admission rejects progress coordinates outside the planned batc
 test("checkpoint admission rejects executable shapes before remote observation", async () => {
   const plan = planOperations(fixture.operations, { maxBatchBytes: fixture.maxBatchBytes });
   const snapshot = new FakeVariableRemote(fixture.remote).snapshot();
+  const settlementSeed = settlementTranscriptSeed({
+    runId: fixture.runId,
+    planDigest: plan.planDigest,
+    initialRemoteRevision: snapshot.revision,
+  });
   const baseCheckpoint = {
     schemaVersion: "0.1.0",
     runId: fixture.runId,
@@ -1248,8 +1480,16 @@ test("checkpoint admission rejects executable shapes before remote observation",
     expectedRemoteStateDigest: digest(snapshot),
     initialRemoteRevision: snapshot.revision,
     maxResolvedBatchBytes: 0,
+    pendingTransition: null,
     tempIdToRealId: {},
     knownRemoteVariableIds: snapshot.variables.map(({ id }) => id),
+    observationCount: 0,
+    observationBaseDigest: observationTranscriptSeed,
+    observationDigest: observationTranscriptSeed,
+    settlementCount: 0,
+    settlementBaseCount: 0,
+    settlementBaseDigest: settlementSeed,
+    settlementDigest: settlementSeed,
     observations: [],
   };
   let getterReads = 0;
@@ -1356,6 +1596,19 @@ test("a full observation envelope returns friction before another remote mutatio
   const plan = planOperations(fixture.operations, { maxBatchBytes: fixture.maxBatchBytes });
   const remoteBefore = h.remote.snapshot();
   const setupFencingToken = 1;
+  const observations = Array.from({ length: MAX_CHECKPOINT_OBSERVATION_WINDOW }, () => ({
+    batchIndex: 0,
+    attempt: 0,
+    classification: "bounded_retry",
+    retryAfterMs: 0,
+  }));
+  const observationBaseDigest = digest({ owner: "admitted_truncated_observation_prefix" });
+  const settlementSeed = settlementTranscriptSeed({
+    runId: fixture.runId,
+    planDigest: plan.planDigest,
+    initialRemoteRevision: remoteBefore.revision,
+  });
+  const firstObservationIndex = MAX_CHECKPOINT_OBSERVATIONS - observations.length;
   h.checkpointStore.claimFence(fixture.runId, setupFencingToken);
   h.checkpointStore.save(fixture.runId, {
     schemaVersion: "0.1.0",
@@ -1366,14 +1619,21 @@ test("a full observation envelope returns friction before another remote mutatio
     expectedRemoteStateDigest: digest(remoteBefore),
     initialRemoteRevision: remoteBefore.revision,
     maxResolvedBatchBytes: 0,
+    pendingTransition: null,
     tempIdToRealId: {},
     knownRemoteVariableIds: remoteBefore.variables.map(({ id }) => id),
-    observations: Array.from({ length: MAX_CHECKPOINT_OBSERVATIONS }, () => ({
-      batchIndex: 0,
-      attempt: 0,
-      classification: "bounded_retry",
-      retryAfterMs: 0,
-    })),
+    observationCount: MAX_CHECKPOINT_OBSERVATIONS,
+    observationBaseDigest,
+    observationDigest: transcriptDigest(
+      observationBaseDigest,
+      observations,
+      firstObservationIndex,
+    ),
+    settlementCount: 0,
+    settlementBaseCount: 0,
+    settlementBaseDigest: settlementSeed,
+    settlementDigest: settlementSeed,
+    observations,
   }, { fencingToken: setupFencingToken });
 
   const result = await runWith(h);
@@ -1526,10 +1786,15 @@ test("checkpoint fencing preserves successor authority when a writer expires aft
   assert.equal(result.status, "friction");
   assert.equal(result.code, "lease_lost");
   assert.equal(result.batchIndex, 0);
-  assert.equal(result.details.checkpointPersistence, "earlier_checkpoint_retained");
-  assert.equal(result.restartAt, "reconcile:batch:0");
-  assert.equal(remote.snapshot().revision, fixture.remote.revision + 1);
-  assert.equal(checkpointStore.load(fixture.runId).nextBatchIndex, 0);
+  assert.equal(
+    result.details.checkpointPersistence,
+    "store_returned_record_requires_authority_reconciliation",
+  );
+  assert.equal(result.restartAt, "batch:0");
+  assert.equal(remote.snapshot().revision, fixture.remote.revision);
+  const retainedCheckpoint = checkpointStore.load(fixture.runId);
+  assert.equal(retainedCheckpoint.nextBatchIndex, 0);
+  assert.equal(retainedCheckpoint.pendingTransition.batchIndex, 0);
   assert.equal(checkpointStore.inspectFence(fixture.runId), 2);
   assert.throws(
     () => checkpointStore.save(
@@ -1546,6 +1811,83 @@ test("the example receipt matches its committed deterministic result", async () 
   const actual = canonicalJson(await runWith(h));
   const expected = await readFile(new URL("../expected/accepted-receipt.json", import.meta.url), "utf8");
   assert.equal(actual, expected);
+});
+
+test("admitted-scale checkpointing retains a bounded observation window and full transcript digest", async () => {
+  const operationCount = MAX_CHECKPOINT_OBSERVATION_WINDOW + 12;
+  const operations = Array.from({ length: operationCount }, (_, index) => ({
+    id: `deprecate-${String(index).padStart(4, "0")}`,
+    type: "deprecate_variable",
+    targetId: "var_0001",
+    dependsOn: [],
+    payload: {},
+  }));
+  const maxBatchBytes = encodedBatchBytes([operations[0]]);
+  const base = harness();
+  const retainedObservationCounts = [];
+  const checkpointStore = {
+    claimFence: base.checkpointStore.claimFence.bind(base.checkpointStore),
+    load: base.checkpointStore.load.bind(base.checkpointStore),
+    save(runId, checkpoint, options) {
+      retainedObservationCounts.push(checkpoint.observations.length);
+      return base.checkpointStore.save(runId, checkpoint, options);
+    },
+  };
+
+  const receipt = await runWith({ ...base, checkpointStore }, {
+    runId: "bounded-transcript-scale",
+    operations,
+    maxBatchBytes,
+  });
+
+  assert.equal(receipt.status, "accepted");
+  assert.equal(receipt.batchCount, operationCount);
+  assert.equal(receipt.observationTranscript.count, operationCount);
+  assert.equal(
+    receipt.observationTranscript.retainedCount,
+    MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  );
+  assert.equal(receipt.observationTranscript.truncated, true);
+  assert.match(receipt.observationTranscript.digest, /^[a-f0-9]{64}$/u);
+  assert.equal(receipt.settlementTranscript.count, operationCount);
+  assert.equal(
+    receipt.settlementTranscript.releasedCount,
+    operationCount - MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  );
+  assert.equal(receipt.observations.length, MAX_CHECKPOINT_OBSERVATION_WINDOW);
+  assert.equal(
+    receipt.observations[0].batchIndex,
+    operationCount - MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  );
+  assert.ok(retainedObservationCounts.every(
+    (count) => count <= MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  ));
+  const checkpoint = base.checkpointStore.load("bounded-transcript-scale");
+  assert.equal(checkpoint.observationCount, operationCount);
+  assert.equal(checkpoint.observationDigest, receipt.observationTranscript.digest);
+  const plan = planOperations(operations, { maxBatchBytes });
+  let expectedSettlementDigest = settlementTranscriptSeed({
+    runId: "bounded-transcript-scale",
+    planDigest: plan.planDigest,
+    initialRemoteRevision: fixture.remote.revision,
+  });
+  for (let batchIndex = 0; batchIndex < operationCount; batchIndex += 1) {
+    const observation = {
+      batchIndex,
+      attempt: 0,
+      classification: "applied",
+      remoteRevision: fixture.remote.revision + batchIndex + 1,
+      operationCount: 1,
+    };
+    expectedSettlementDigest = extendSettlementTranscript(
+      expectedSettlementDigest,
+      batchIndex,
+      observation,
+    );
+  }
+  assert.equal(checkpoint.settlementCount, operationCount);
+  assert.equal(checkpoint.settlementDigest, expectedSettlementDigest);
+  assert.equal(receipt.settlementTranscript.digest, expectedSettlementDigest);
 });
 
 test("scale planning records linear graph counts", () => {

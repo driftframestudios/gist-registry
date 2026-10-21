@@ -518,9 +518,49 @@ test("pointer promotion revalidates accepted leaf bytes after the first complete
       },
     }),
     error => error instanceof VisualArtifactError
-      && error.code === "accepted_integrity_mismatch",
+      && error.code === "accepted_integrity_mismatch"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === first.manifestDigest,
   );
   assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("accepted leaf replacement routes to accepted-coordinate recovery", async () => {
+  const root = await temporaryDirectory("accepted-leaf-identity");
+  const publicationRoot = path.join(root, "publication");
+  const first = await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const acceptedLeaf = path.join(
+    publicationRoot,
+    "accepted",
+    first.manifestDigest,
+    "semantic-companion.json",
+  );
+  const heldLeaf = `${acceptedLeaf}.held`;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      publicationRoot,
+      faultInjector: async ({ checkpoint }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        const bytes = await readFile(acceptedLeaf);
+        await rename(acceptedLeaf, heldLeaf);
+        await writeFile(acceptedLeaf, bytes);
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_boundary_invalid"
+      && error.details.boundary === "accepted_file.semantic-companion.json"
+      && error.details.reason === "file_identity_changed"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === first.manifestDigest,
+  );
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+  assert.deepEqual(await readFile(acceptedLeaf), await readFile(heldLeaf));
 });
 
 test("pointer promotion preserves a replaced temporary coordinate for inspection", async () => {
@@ -607,6 +647,115 @@ test("an existing empty digest coordinate remains owned by its creator", async (
   assert.equal(retainedIdentity.dev, collisionIdentity.dev);
   assert.equal(retainedIdentity.ino, collisionIdentity.ino);
   assert.deepEqual(await readdir(collidingDirectory), []);
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("reservation replacement stops pointer promotion at accepted-coordinate recovery", async () => {
+  const root = await temporaryDirectory("reservation-replacement");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises reservation replacement recovery.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  let replacementPath;
+  let heldPath;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        replacementPath = reservationPath;
+        heldPath = `${reservationPath}.held`;
+        await rename(reservationPath, heldPath);
+        await mkdir(reservationPath);
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_reservation_release_failed"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
+      && error.details.failure.code === "publication_boundary_invalid"
+      && error.details.failure.boundary === "accepted_reservation",
+  );
+  assert.ok((await lstat(replacementPath)).isDirectory());
+  assert.ok((await lstat(heldPath)).isDirectory());
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("a nonempty reservation stops pointer promotion and remains inspectable", async () => {
+  const root = await temporaryDirectory("reservation-nonempty");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises nonempty reservation recovery.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  let retainedFile;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        retainedFile = path.join(reservationPath, "owner-note.txt");
+        await writeFile(retainedFile, "retained for accepted-coordinate inspection\n");
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_reservation_release_failed"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.failure.code === "ENOTEMPTY"
+      && error.details.failure.boundary === "accepted_reservation",
+  );
+  assert.equal(await readFile(retainedFile, "utf8"), "retained for accepted-coordinate inspection\n");
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("a primary promotion failure retains bounded reservation-cleanup context", async () => {
+  const root = await temporaryDirectory("reservation-primary-and-cleanup");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises primary and cleanup failure retention.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await writeFile(path.join(reservationPath, "owner-note.txt"), "retained after primary failure\n");
+        throw new VisualArtifactError(
+          "injected_fault",
+          "The injected primary failure stopped promotion before reservation release.",
+          { checkpoint: "before_reservation_release" },
+        );
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "injected_fault"
+      && error.details.checkpoint === "before_reservation_release"
+      && Object.keys(error.details.cleanupFailure).sort().join(",") === "boundary,code,recovery"
+      && error.details.cleanupFailure.code === "publication_reservation_release_failed"
+      && error.details.cleanupFailure.boundary === "accepted_reservation"
+      && error.details.cleanupFailure.recovery === "accepted_coordinate_recovery",
+  );
   assert.deepEqual(await readFile(pointerPath), pointerBefore);
 });
 
@@ -716,6 +865,9 @@ test("rejects a corrupted preexisting accepted directory and preserves the point
     publishArtifactFamily({ ...sourcePaths, publicationRoot }),
     (error) => error instanceof VisualArtifactError
       && error.code === "accepted_integrity_mismatch"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
       && error.details.checkpoint === "existing_accepted_verified"
       && error.details.relativePath === "semantic-companion.json",
   );

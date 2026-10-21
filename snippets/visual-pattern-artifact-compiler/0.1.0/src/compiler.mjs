@@ -886,19 +886,78 @@ export async function compileArtifactFamily(options) {
 function acceptedIntegrityMismatch(message, details = {}) {
   return new VisualArtifactError("accepted_integrity_mismatch", message, {
     checkpoint: "existing_accepted_verified",
+    restartFrom: "accepted_coordinate_recovery",
+    action: "inspect_or_quarantine",
     ...details,
   });
 }
 
-function publicationBoundaryError(boundary, reason) {
+function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
+  return Object.freeze({
+    code: typeof error?.code === "string" ? error.code : fallbackCode,
+    boundary: typeof error?.details?.boundary === "string"
+      ? error.details.boundary
+      : fallbackBoundary,
+    recovery: typeof error?.details?.restartFrom === "string"
+      ? error.details.restartFrom
+      : "accepted_coordinate_recovery",
+  });
+}
+
+function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoordinate) {
+  const cleanupFailure = boundedFailureContext(
+    cleanupError,
+    "publication_reservation_release_failed",
+    "accepted_reservation",
+  );
+  if (primaryError instanceof VisualArtifactError) {
+    const retained = new VisualArtifactError(primaryError.code, primaryError.message, {
+      ...primaryError.details,
+      cleanupFailure,
+    });
+    retained.cause = primaryError;
+    return retained;
+  }
+  const retained = new VisualArtifactError(
+    "publication_failed",
+    "Artifact publication stopped, and its accepted-coordinate reservation requires inspection.",
+    {
+      checkpoint: "accepted_reservation_release",
+      restartFrom: "accepted_coordinate_recovery",
+      action: "inspect_or_quarantine",
+      acceptedCoordinate,
+      primaryFailure: boundedFailureContext(primaryError, "publication_failed", "publication"),
+      cleanupFailure,
+    },
+  );
+  retained.cause = primaryError;
+  return retained;
+}
+
+function publicationBoundaryError(boundary, reason, acceptedCoordinate = null) {
   return new VisualArtifactError(
     "publication_boundary_invalid",
     "Artifact publication requires stable, directly addressed regular directories.",
-    { checkpoint: "publication_root", boundary, reason },
+    {
+      checkpoint: "publication_root",
+      boundary,
+      reason,
+      ...(acceptedCoordinate === null
+        ? {}
+        : {
+            restartFrom: "accepted_coordinate_recovery",
+            action: "inspect_or_quarantine",
+            acceptedCoordinate,
+          }),
+    },
   );
 }
 
-async function requirePublicationDirectory(directory, boundary, { create = false, recursive = false } = {}) {
+async function requirePublicationDirectory(directory, boundary, {
+  create = false,
+  recursive = false,
+  acceptedCoordinate = null,
+} = {}) {
   if (create) {
     try {
       await mkdir(directory, { recursive });
@@ -910,12 +969,12 @@ async function requirePublicationDirectory(directory, boundary, { create = false
   try {
     entry = await lstat(directory);
   } catch (error) {
-    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable", acceptedCoordinate);
   }
   if (!entry.isDirectory() || entry.isSymbolicLink()) {
-    throw publicationBoundaryError(boundary, "regular_directory_required");
+    throw publicationBoundaryError(boundary, "regular_directory_required", acceptedCoordinate);
   }
-  return { directory, boundary, dev: entry.dev, ino: entry.ino };
+  return { directory, boundary, dev: entry.dev, ino: entry.ino, acceptedCoordinate };
 }
 
 async function assertPublicationDirectory(identity) {
@@ -923,7 +982,7 @@ async function assertPublicationDirectory(identity) {
   try {
     entry = await lstat(identity.directory);
   } catch (error) {
-    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable", identity.acceptedCoordinate);
   }
   if (
     !entry.isDirectory()
@@ -931,7 +990,7 @@ async function assertPublicationDirectory(identity) {
     || entry.dev !== identity.dev
     || entry.ino !== identity.ino
   ) {
-    throw publicationBoundaryError(identity.boundary, "directory_identity_changed");
+    throw publicationBoundaryError(identity.boundary, "directory_identity_changed", identity.acceptedCoordinate);
   }
 }
 
@@ -987,17 +1046,17 @@ async function writeOwnedPublicationFile(filePath, bytes, boundary, { cleanupRoo
   }
 }
 
-async function requirePublicationFileIdentity(filePath, boundary) {
+async function requirePublicationFileIdentity(filePath, boundary, acceptedCoordinate = null) {
   let entry;
   try {
     entry = await lstat(filePath);
   } catch (error) {
-    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable", acceptedCoordinate);
   }
   if (!entry.isFile() || entry.isSymbolicLink()) {
-    throw publicationBoundaryError(boundary, "regular_file_required");
+    throw publicationBoundaryError(boundary, "regular_file_required", acceptedCoordinate);
   }
-  return { path: filePath, boundary, dev: entry.dev, ino: entry.ino, size: entry.size };
+  return { path: filePath, boundary, dev: entry.dev, ino: entry.ino, size: entry.size, acceptedCoordinate };
 }
 
 async function assertPublicationFile(identity) {
@@ -1005,7 +1064,7 @@ async function assertPublicationFile(identity) {
   try {
     entry = await lstat(identity.path);
   } catch (error) {
-    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable", identity.acceptedCoordinate);
   }
   if (
     !entry.isFile()
@@ -1014,7 +1073,7 @@ async function assertPublicationFile(identity) {
     || entry.ino !== identity.ino
     || (identity.size !== null && entry.size !== identity.size)
   ) {
-    throw publicationBoundaryError(identity.boundary, "file_identity_changed");
+    throw publicationBoundaryError(identity.boundary, "file_identity_changed", identity.acceptedCoordinate);
   }
 }
 
@@ -1066,19 +1125,34 @@ async function acquirePublicationReservation(parent, reservationPath) {
   return requirePublicationDirectory(reservationPath, "accepted_reservation");
 }
 
-async function releasePublicationReservation(identity, parent, root) {
+async function releasePublicationReservation(identity, parent, root, acceptedCoordinate) {
   if (!identity) return;
-  await removeOwnedEmptyDirectory(identity, parent, root);
+  try {
+    await removeOwnedEmptyDirectory(identity, parent, root, { strict: true });
+  } catch (error) {
+    throw new VisualArtifactError(
+      "publication_reservation_release_failed",
+      "The accepted-coordinate reservation remains available for inspection before pointer promotion resumes.",
+      {
+        checkpoint: "accepted_reservation_release",
+        restartFrom: "accepted_coordinate_recovery",
+        action: "inspect_or_quarantine",
+        acceptedCoordinate,
+        failure: boundedFailureContext(error, "reservation_release_failed", "accepted_reservation"),
+      },
+    );
+  }
 }
 
-async function removeOwnedEmptyDirectory(identity, parent, root) {
+async function removeOwnedEmptyDirectory(identity, parent, root, { strict = false } = {}) {
   if (!identity) return;
   try {
     await assertPublicationDirectory(root);
     await assertPublicationDirectory(parent);
     await assertPublicationDirectory(identity);
     await rmdir(identity.directory);
-  } catch {
+  } catch (error) {
+    if (strict) throw error;
     // A changed owner boundary turns path-based cleanup into an unsafe write.
     // The stable publication root remains the recovery coordinate.
   }
@@ -1109,7 +1183,10 @@ function containedAcceptedPath(root, relativePath) {
   const resolvedRoot = path.resolve(root);
   const resolvedPath = path.resolve(resolvedRoot, relativePath);
   if (resolvedPath === resolvedRoot || !resolvedPath.startsWith(`${resolvedRoot}${path.sep}`)) {
-    throw acceptedIntegrityMismatch("The existing accepted artifact inventory contains an escaped path.", { relativePath });
+    throw acceptedIntegrityMismatch("The existing accepted artifact inventory contains an escaped path.", {
+      acceptedCoordinate: path.basename(resolvedRoot),
+      relativePath,
+    });
   }
   return resolvedPath;
 }
@@ -1128,10 +1205,11 @@ function acceptedInventoryEnvelope(paths) {
 }
 
 async function acceptedFileInventory(root, { maxDepth, maxEntries }) {
+  const acceptedCoordinate = path.basename(path.resolve(root));
   const inventory = [];
   const rootEntry = await lstat(root).catch(() => null);
   if (!rootEntry?.isDirectory() || rootEntry.isSymbolicLink()) {
-    throw acceptedIntegrityMismatch("The existing accepted artifact requires one regular directory.");
+    throw acceptedIntegrityMismatch("The existing accepted artifact requires one regular directory.", { acceptedCoordinate });
   }
   const pending = [{ directory: root, depth: 0 }];
   let observedEntries = 0;
@@ -1142,13 +1220,14 @@ async function acceptedFileInventory(root, { maxDepth, maxEntries }) {
       for await (const entry of handle) {
         observedEntries += 1;
         if (observedEntries > maxEntries) {
-          throw acceptedIntegrityMismatch("The existing accepted artifact inventory exceeds its declared finite envelope.", { maxEntries });
+          throw acceptedIntegrityMismatch("The existing accepted artifact inventory exceeds its declared finite envelope.", { acceptedCoordinate, maxEntries });
         }
         const absolutePath = containedAcceptedPath(root, path.relative(root, path.join(directory, entry.name)));
         const relativePath = path.relative(root, absolutePath).split(path.sep).join("/");
         const pathEntry = await lstat(absolutePath);
         if (pathEntry.isSymbolicLink()) {
           throw acceptedIntegrityMismatch("The existing accepted artifact inventory requires regular files and directories.", {
+            acceptedCoordinate,
             relativePath,
           });
         }
@@ -1156,6 +1235,7 @@ async function acceptedFileInventory(root, { maxDepth, maxEntries }) {
           const nextDepth = depth + 1;
           if (nextDepth > maxDepth) {
             throw acceptedIntegrityMismatch("The existing accepted artifact inventory exceeds its declared directory depth.", {
+              acceptedCoordinate,
               relativePath,
               maxDepth,
             });
@@ -1164,6 +1244,7 @@ async function acceptedFileInventory(root, { maxDepth, maxEntries }) {
         } else if (pathEntry.isFile()) inventory.push(relativePath);
         else {
           throw acceptedIntegrityMismatch("The existing accepted artifact inventory requires regular files and directories.", {
+            acceptedCoordinate,
             relativePath,
           });
         }
@@ -1187,6 +1268,7 @@ async function readAcceptedFile(acceptedDir, relativePath, expectedBytes) {
     });
   } catch (error) {
     throw acceptedIntegrityMismatch("The existing accepted output bytes differ from the verified manifest.", {
+      acceptedCoordinate: path.basename(path.resolve(acceptedDir)),
       relativePath,
       causeCode: error.code,
       cause: error.message,
@@ -1199,6 +1281,7 @@ async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifest
   const manifestBytes = await readAcceptedFile(acceptedDir, "manifest.json", expectedManifestBytes.byteLength);
   if (sha256(manifestBytes) !== manifestDigest) {
     throw acceptedIntegrityMismatch("The existing accepted manifest bytes differ from the content-addressed digest.", {
+      acceptedCoordinate: manifestDigest,
       relativePath: "manifest.json",
     });
   }
@@ -1207,12 +1290,14 @@ async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifest
     storedManifest = JSON.parse(manifestBytes.toString("utf8"));
   } catch (error) {
     throw acceptedIntegrityMismatch("The existing accepted manifest requires valid JSON.", {
+      acceptedCoordinate: manifestDigest,
       relativePath: "manifest.json",
       cause: error.message,
     });
   }
   if (stableJson(storedManifest) !== stableJson(manifest)) {
     throw acceptedIntegrityMismatch("The existing accepted manifest differs from the verified candidate manifest.", {
+      acceptedCoordinate: manifestDigest,
       relativePath: "manifest.json",
     });
   }
@@ -1224,6 +1309,7 @@ async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifest
   );
   if (stableJson(observedInventory) !== stableJson(expectedInventory)) {
     throw acceptedIntegrityMismatch("The existing accepted artifact inventory differs from the verified manifest.", {
+      acceptedCoordinate: manifestDigest,
       expectedInventory,
       observedInventory,
     });
@@ -1233,19 +1319,21 @@ async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifest
     const outputBytes = await readAcceptedFile(acceptedDir, output.path, output.bytes);
     if (outputBytes.byteLength !== output.bytes || sha256(outputBytes) !== output.sha256) {
       throw acceptedIntegrityMismatch("The existing accepted output bytes differ from the verified manifest.", {
+        acceptedCoordinate: manifestDigest,
         relativePath: output.path,
       });
     }
   }
 }
 
-async function captureAcceptedFileIdentities({ acceptedDir, manifest }) {
+async function captureAcceptedFileIdentities({ acceptedDir, manifest, manifestDigest }) {
   const relativePaths = ["manifest.json", ...manifest.outputs.map((output) => output.path)];
   const identities = [];
   for (const relativePath of relativePaths) {
     identities.push(await requirePublicationFileIdentity(
       containedAcceptedPath(acceptedDir, relativePath),
       `accepted_file.${relativePath}`,
+      manifestDigest,
     ));
   }
   return identities;
@@ -1304,6 +1392,7 @@ export async function publishArtifactFamily({
   let acceptedDir;
   let pointerTempIdentity;
   let reservationIdentity;
+  let acceptedCoordinate = null;
   const pointerPath = path.join(absolutePublicationRoot, "accepted-pointer.json");
   const pointerTempPath = path.join(absolutePublicationRoot, `.accepted-pointer-${nonce}.tmp`);
   const candidateOwnership = {
@@ -1331,7 +1420,8 @@ export async function publishArtifactFamily({
     if (faultAt === "after_candidate_verification") {
       throw new VisualArtifactError("injected_fault", "The injected fault stopped after candidate verification.", { checkpoint: "candidate_verified" });
     }
-    acceptedDir = path.join(acceptedParentPath, compiled.manifestDigest);
+    acceptedCoordinate = compiled.manifestDigest;
+    acceptedDir = path.join(acceptedParentPath, acceptedCoordinate);
     await faultInjector?.(Object.freeze({
       checkpoint: "before_candidate_rename",
       root: absolutePublicationRoot,
@@ -1346,6 +1436,7 @@ export async function publishArtifactFamily({
     await assertPublicationDirectory(candidateIdentity);
     const reservationPath = path.join(acceptedParentPath, `.${compiled.manifestDigest}.reservation`);
     reservationIdentity = await acquirePublicationReservation(acceptedParent, reservationPath);
+    let promotionError = null;
     try {
       await assertPublicationDirectory(rootIdentity);
       await assertPublicationDirectory(candidateParent);
@@ -1362,11 +1453,35 @@ export async function publishArtifactFamily({
       }
       candidateIdentity = null;
       candidateOwnership.directoryIdentity = null;
-    } finally {
-      await releasePublicationReservation(reservationIdentity, acceptedParent, rootIdentity);
-      reservationIdentity = null;
+      await faultInjector?.(Object.freeze({
+        checkpoint: "before_reservation_release",
+        root: absolutePublicationRoot,
+        acceptedParent: acceptedParentPath,
+        acceptedDir,
+        reservationPath,
+      }));
+    } catch (error) {
+      promotionError = error;
     }
-    const acceptedIdentity = await requirePublicationDirectory(acceptedDir, "accepted_destination");
+    const acquiredReservation = reservationIdentity;
+    reservationIdentity = null;
+    try {
+      await releasePublicationReservation(
+        acquiredReservation,
+        acceptedParent,
+        rootIdentity,
+        acceptedCoordinate,
+      );
+    } catch (cleanupError) {
+      if (promotionError) {
+        throw retainReservationCleanupFailure(promotionError, cleanupError, acceptedCoordinate);
+      }
+      throw cleanupError;
+    }
+    if (promotionError) throw promotionError;
+    const acceptedIdentity = await requirePublicationDirectory(acceptedDir, "accepted_destination", {
+      acceptedCoordinate,
+    });
     await assertPublicationDirectory(acceptedParent);
     await verifyExistingAcceptedDirectory({
       acceptedDir,
@@ -1376,6 +1491,7 @@ export async function publishArtifactFamily({
     const acceptedFileIdentities = await captureAcceptedFileIdentities({
       acceptedDir,
       manifest: compiled.manifest,
+      manifestDigest: compiled.manifestDigest,
     });
     await checkpointObserver?.(Object.freeze({
       checkpoint: "accepted_bytes_verified",
@@ -1425,12 +1541,25 @@ export async function publishArtifactFamily({
     return Object.freeze({ ...compiled, pointer });
   } catch (error) {
     await removeOwnedPublicationFile(pointerTempIdentity, rootIdentity);
-    await releasePublicationReservation(reservationIdentity, acceptedParent, rootIdentity);
+    let failure = error;
+    if (reservationIdentity) {
+      try {
+        await releasePublicationReservation(
+          reservationIdentity,
+          acceptedParent,
+          rootIdentity,
+          acceptedCoordinate,
+        );
+      } catch (cleanupError) {
+        failure = retainReservationCleanupFailure(error, cleanupError, acceptedCoordinate);
+      }
+      reservationIdentity = null;
+    }
     await removeOwnedCandidate(candidateOwnership, rootIdentity);
     // A digest directory becomes shared immutable state as soon as its atomic
     // rename succeeds. A later invocation may verify and publish that exact
     // directory, so this invocation owns cleanup only for its candidate and
     // temporary pointer. Unreferenced digest collection is a separate policy.
-    throw error;
+    throw failure;
   }
 }

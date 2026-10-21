@@ -134,6 +134,13 @@ that directory as shared immutable state. A publisher interruption cleans its
 private candidate and temporary pointer while leaving accepted bytes available
 for a concurrent or resumed publisher. A separate retention policy can collect
 accepted digests that remain unreferenced after a bounded recovery window.
+An integrity mismatch at that durable coordinate returns
+`accepted_coordinate_recovery`, the digest-safe `acceptedCoordinate`, and the
+`inspect_or_quarantine` action. The operator inspects or quarantines that
+coordinate before another candidate can reuse its digest. Reservation release
+is part of successful promotion: a replaced or nonempty reservation stops
+pointer movement, while a primary promotion error retains one bounded
+`cleanupFailure` record for the same recovery state.
 
 The portable publisher assumes one trusted writer domain honors its
 digest-scoped reservation. Node's cross-platform filesystem API supplies

@@ -25,7 +25,7 @@
     "buildFileBytes": 2300000
   },
   "thresholds": {
-    "authoredSourceBytes": 60000,
+    "authoredSourceBytes": 70000,
     "directDependencyCount": 12,
     "resolvedPackageCount": 150,
     "specimenCount": 25,

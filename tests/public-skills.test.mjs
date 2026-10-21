@@ -118,7 +118,8 @@ test("visual-contract packages run across the declared Node.js maintenance lines
     "utf8",
   );
   assert.match(workflow, /visual-contract-node-matrix:/u);
-  assert.match(workflow, /node-version: \[22, 24, 26\]/u);
+  assert.match(workflow, /- name: Use Node\.js 22[\s\S]*?node-version: "22"[\s\S]*?run: npm test/u);
+  assert.match(workflow, /node-version: \[24, 26\]/u);
   assert.match(workflow, /run: npm run test:visual-contracts/u);
   for (const family of [
     "style-dictionary-dtcg-pipeline",
@@ -138,6 +139,7 @@ test("visual-contract packages run across the declared Node.js maintenance lines
   );
 
   const rootPackage = await json(resolve(repositoryRoot, "package.json"));
+  assert.equal(rootPackage.engines.node, "^22 || ^24 || ^26");
   assert.equal(
     rootPackage.scripts["prepare:visual-contracts:browsers"],
     "npm run prepare:visual-contracts:receiver:0.1.0 && npm run prepare:visual-contracts:observer:0.1.0 && npm run prepare:visual-contracts:artifact-compiler:0.1.0",

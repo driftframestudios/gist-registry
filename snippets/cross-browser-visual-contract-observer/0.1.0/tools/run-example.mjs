@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { evaluateControlledObservation, readJson, selectTier, sha256, validateInventory, validateMatrix } from "../src/contracts.mjs";
@@ -24,8 +24,6 @@ const modelCases = selection.cases
     result: evaluateControlledObservation(targetsById.get(entry.targetId), observations[entry.targetId]),
   }));
 const receiptRoot = resolve(artifactRoot, "receipts");
-await rm(receiptRoot, { recursive: true, force: true });
-await mkdir(receiptRoot, { recursive: true });
 const sourceBytes = await readFile(resolve(packageRoot, "source/receiver.html"));
 const sourceCoordinate = value => ({ semanticId: value.semanticId, version: value.version, coordinate: value.coordinate, manifestKind: value.manifestKind, manifestSha256: value.manifestSha256 });
 const receiverCoordinate = value => ({ semanticId: value.semanticId, version: value.version, manifestKind: value.manifestKind, manifestSha256: value.manifestSha256 });
@@ -51,6 +49,10 @@ for (const { caseId, target, scenario, result } of modelCases) {
     classification: "deterministic_implementation_change",
     restartFrom: target.restartFrom,
   };
-  pointers.push(await publishReceipt(resolve(receiptRoot, target.id, scenario.id), receipt, { artifactSources: { [subject.path]: resolve(packageRoot, "source/receiver.html") } }));
+  const publicationRoot = resolve(receiptRoot, target.id, scenario.id);
+  pointers.push(await publishReceipt(publicationRoot, receipt, {
+    artifactSources: { [subject.path]: resolve(packageRoot, "source/receiver.html") },
+    ownerRoot: packageRoot,
+  }));
 }
 process.stdout.write(`${JSON.stringify({ selection, executedModelCases: modelCases.map(entry => entry.caseId), pointers }, null, 2)}\n`);

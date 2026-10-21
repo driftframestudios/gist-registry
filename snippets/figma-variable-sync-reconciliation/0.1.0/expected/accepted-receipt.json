@@ -8,6 +8,12 @@
   "initialRemoteRevision": 7,
   "maxBatchBytes": 520,
   "maxResolvedBatchBytes": 351,
+  "observationTranscript": {
+    "count": 2,
+    "digest": "98d28f9165ec7cf6c76f0a7d42785016e6fb7246c2af00324accb48073f66084",
+    "retainedCount": 2,
+    "truncated": false
+  },
   "observations": [
     {
       "attempt": 0,
@@ -29,6 +35,11 @@
   "resumedFromBatch": 0,
   "runId": "sync-run-001",
   "schemaVersion": "0.1.0",
+  "settlementTranscript": {
+    "count": 2,
+    "digest": "ff4d012fff787d966f4a93959a3023f3d94356ec7cf00ccc68efd572e4383e47",
+    "releasedCount": 0
+  },
   "status": "accepted",
   "tempIdToRealId": {
     "tmp:color-accent-current": "var_0003"

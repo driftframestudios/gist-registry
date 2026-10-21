@@ -193,11 +193,20 @@ accepted root therefore remains an exclusive operational boundary; detected
 drift stays available for inspection.
 An interrupted owner that leaves a reservation without a destination requires
 operator inspection and reservation removal before that digest can retry.
+A changed or nonempty reservation stops pointer movement and returns
+`accepted_coordinate_recovery`; when release fails beside another promotion
+error, that primary outcome remains authoritative and carries one bounded
+`cleanupFailure` record.
 A repeated digest rechecks the stored manifest digest, exact file inventory,
 byte counts, and file digests before the pointer moves. Promotion carries only
 the artifacts named by that manifest into the accepted coordinate. Every
 publisher owns a distinct staging directory, so concurrent replay of the same
 manifest converges on one verified digest directory and one atomic pointer.
+Accepted-coordinate drift returns `accepted_coordinate_recovery`, the
+digest-safe `acceptedCoordinate`, and the `inspect_or_quarantine` action. This
+state sends the operator to the durable coordinate whose bytes need attention;
+candidate rebuilding resumes after that coordinate is inspected or
+quarantined.
 After the digest directory verifies, an injected stop before pointer movement
 preserves the previous pointer and leaves those immutable accepted bytes ready
 for retry. A separate retention policy may collect unreferenced digest
@@ -205,9 +214,9 @@ directories after their review and recovery window.
 
 Deterministic recovery tests can retain the string checkpoints `after_copy`,
 `before_pointer`, and `after_pointer_write`. A function hook receives a frozen
-coordinate at `before_candidate_rename`, `before_pointer_write`, and
-`before_pointer_rename`; promotion awaits each hook before it rechecks directory
-ownership and crosses the corresponding boundary.
+coordinate at `before_candidate_rename`, `before_reservation_release`,
+`before_pointer_write`, and `before_pointer_rename`; promotion awaits each hook
+before it rechecks directory ownership and crosses the corresponding boundary.
 
 ## Adapting the package
 

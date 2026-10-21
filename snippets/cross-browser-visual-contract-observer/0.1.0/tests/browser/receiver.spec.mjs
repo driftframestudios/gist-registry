@@ -209,7 +209,11 @@ for (const caseDefinition of fullPlan.cases) {
         expect(receipt.classification).toBe(target.oracle === "bitmap_crop" ? "declared_engine_platform_variance" : "deterministic_implementation_change");
         expect(receipt.caseId).toBe(caseDefinition.id);
         await expectReceiptCoordinateApplied(page, receipt);
-        const pointer = await publishReceipt(resolve(packageRoot, ".artifacts/browser-receipts", browserName, target.id, scenario.id), receipt, { artifactSources: { [subjectArtifact.path]: receiverPath, ...result.artifactSources } });
+        const receiptRoot = resolve(packageRoot, ".artifacts/browser-receipts", browserName, target.id, scenario.id);
+        const pointer = await publishReceipt(receiptRoot, receipt, {
+          artifactSources: { [subjectArtifact.path]: receiverPath, ...result.artifactSources },
+          ownerRoot: packageRoot,
+        });
         expect(pointer.receiptId).toBe(`${target.id}-${scenario.id}-${browserName}`);
       } finally {
         await context.close();

@@ -1,14 +1,32 @@
 import assert from "node:assert/strict";
-import { lstat, mkdtemp, symlink, truncate, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, rename, rm, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
+import { writeEvidenceOutput } from "../src/browser-observer.mjs";
 import { evaluateControlledObservation, inspectPngScreenshot, OBSERVER_RESOURCE_LIMITS, ObserverError, readBoundedRegularFile, readJson, selectTier, validateBitmapCaptureEnvelope, validateBitmapScreenshotBytes, validateInventory, validateMatrix } from "../src/contracts.mjs";
 import { packageRoot } from "../tools/paths.mjs";
 
 const inventory = await readJson(resolve(packageRoot, "inventory/decisions.json"));
 const matrix = await readJson(resolve(packageRoot, "inventory/matrix.json"));
 const accepted = await readJson(resolve(packageRoot, "fixtures/accepted/observations.json"));
+
+async function withTemporaryEvidenceDirectory(run) {
+  const root = await mkdtemp(join(tmpdir(), "visual-observer-evidence-"));
+  try {
+    return await run(root);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+function hasEvidenceBoundary(error) {
+  return error instanceof ObserverError && error.code === "EVIDENCE_OUTPUT_BOUNDARY_INVALID";
+}
+
+async function pathExists(path) {
+  return lstat(path).then(() => true, () => false);
+}
 
 test("JSON admission bounds bytes and requires a directly addressed regular file", async () => {
   const root = await mkdtemp(join(tmpdir(), "visual-observer-json-"));
@@ -68,6 +86,151 @@ test("bounded capture preserves typed recovery when an opened source becomes unr
     ),
   );
   assert.equal(closed, true);
+});
+
+test("browser evidence replaces a regular leaf through an atomic owned-path write", async () => {
+  await withTemporaryEvidenceDirectory(async root => {
+    const owner = join(root, "owner");
+    const output = join(owner, "nested", "evidence");
+    await mkdir(owner);
+    await writeEvidenceOutput({
+      ownerRoot: owner,
+      outputDirectory: output,
+      fileName: "capture.png",
+      bytes: Buffer.from("first"),
+    });
+    await writeEvidenceOutput({
+      ownerRoot: owner,
+      outputDirectory: output,
+      fileName: "capture.png",
+      bytes: Buffer.from("second"),
+    });
+    assert.equal((await readFile(join(output, "capture.png"))).toString(), "second");
+  });
+});
+
+test("browser evidence rejects replacement of its captured owner root", async () => {
+  await withTemporaryEvidenceDirectory(async root => {
+    const owner = join(root, "owner");
+    const heldOwner = join(root, "held-owner");
+    const outside = join(root, "outside");
+    await mkdir(owner);
+    await mkdir(outside);
+
+    await assert.rejects(
+      writeEvidenceOutput({
+        ownerRoot: owner,
+        outputDirectory: join(owner, "evidence"),
+        fileName: "capture.png",
+        bytes: Buffer.from("bounded"),
+        injectFault: async ({ checkpoint }) => {
+          if (checkpoint !== "after_owner_capture") return;
+          await rename(owner, heldOwner);
+          await symlink(outside, owner, "dir");
+        },
+      }),
+      hasEvidenceBoundary,
+    );
+    assert.equal(await pathExists(join(outside, "capture.png")), false);
+    assert.equal(await pathExists(join(outside, "evidence", "capture.png")), false);
+  });
+});
+
+test("browser evidence rejects replacement of a captured intermediate directory", async () => {
+  await withTemporaryEvidenceDirectory(async root => {
+    const owner = join(root, "owner");
+    const intermediate = join(owner, "intermediate");
+    const heldIntermediate = join(owner, "held-intermediate");
+    const outside = join(root, "outside");
+    await mkdir(owner);
+    await mkdir(outside);
+
+    await assert.rejects(
+      writeEvidenceOutput({
+        ownerRoot: owner,
+        outputDirectory: join(intermediate, "evidence"),
+        fileName: "capture.png",
+        bytes: Buffer.from("bounded"),
+        injectFault: async ({ checkpoint, relativeDirectory }) => {
+          if (checkpoint !== "after_directory_capture" || relativeDirectory !== "intermediate") return;
+          await rename(intermediate, heldIntermediate);
+          await symlink(outside, intermediate, "dir");
+        },
+      }),
+      hasEvidenceBoundary,
+    );
+    assert.equal(await pathExists(join(outside, "capture.png")), false);
+    assert.equal(await pathExists(join(outside, "evidence", "capture.png")), false);
+  });
+});
+
+test("browser evidence rejects a prepared symbolic-link leaf", async () => {
+  await withTemporaryEvidenceDirectory(async root => {
+    const owner = join(root, "owner");
+    const output = join(owner, "evidence");
+    const outside = join(root, "outside.png");
+    await mkdir(output, { recursive: true });
+    await writeFile(outside, "outside");
+    await symlink(outside, join(output, "capture.png"));
+
+    await assert.rejects(
+      writeEvidenceOutput({
+        ownerRoot: owner,
+        outputDirectory: output,
+        fileName: "capture.png",
+        bytes: Buffer.from("bounded"),
+      }),
+      hasEvidenceBoundary,
+    );
+    assert.equal((await readFile(outside)).toString(), "outside");
+  });
+});
+
+test("browser evidence rejects a same-size temporary-byte mutation", async () => {
+  await withTemporaryEvidenceDirectory(async root => {
+    const owner = join(root, "owner");
+    const output = join(owner, "evidence");
+    await mkdir(owner);
+
+    await assert.rejects(
+      writeEvidenceOutput({
+        ownerRoot: owner,
+        outputDirectory: output,
+        fileName: "capture.png",
+        bytes: Buffer.from("trusted"),
+        injectFault: async ({ checkpoint, temporaryPath }) => {
+          if (checkpoint === "before_rename") {
+            await writeFile(temporaryPath, "hostile");
+          }
+        },
+      }),
+      error => hasEvidenceBoundary(error) && error.details.reason === "file_bytes_changed",
+    );
+    assert.equal(await pathExists(join(output, "capture.png")), false);
+  });
+});
+
+test("browser evidence rejects a same-size destination-byte mutation", async () => {
+  await withTemporaryEvidenceDirectory(async root => {
+    const owner = join(root, "owner");
+    const output = join(owner, "evidence");
+    await mkdir(owner);
+
+    await assert.rejects(
+      writeEvidenceOutput({
+        ownerRoot: owner,
+        outputDirectory: output,
+        fileName: "capture.png",
+        bytes: Buffer.from("trusted"),
+        injectFault: async ({ checkpoint, destination }) => {
+          if (checkpoint === "after_rename") {
+            await writeFile(destination, "hostile");
+          }
+        },
+      }),
+      error => hasEvidenceBoundary(error) && error.details.reason === "file_bytes_changed",
+    );
+  });
 });
 
 test("decision inventory maps each target to one fitting oracle and controlled fault", () => {

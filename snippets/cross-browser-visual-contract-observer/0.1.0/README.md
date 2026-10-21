@@ -134,7 +134,21 @@ rechecks the complete accepted inventory, metadata companions, and artifact
 digests before moving the pointer. The focused tests inject interruption after
 candidate writing and after accepted bytes are verified; both paths preserve
 the earlier pointer and return a named restart checkpoint. A corrupted existing
-destination is rejected while the earlier pointer remains available.
+destination is rejected while the earlier pointer remains available. That
+integrity failure returns `accepted_coordinate_recovery`, its digest-safe
+`acceptedCoordinate`, and the `inspect_or_quarantine` action so recovery starts
+at the durable coordinate; candidate rebuilding resumes after that coordinate
+is resolved.
+Reservation release participates in that acceptance boundary. A replaced or
+nonempty reservation stops pointer movement and returns the accepted digest for
+inspection. When release fails beside another publication error, the primary
+outcome retains authority and carries one bounded `cleanupFailure` record.
+The caller either provisions the directly addressed publication root or passes
+the stable `ownerRoot` from which the publisher creates and captures every
+descendant directory. Each publication recheck includes that full identity
+chain before it advances the private candidate, accepted directory, or pointer
+transition. A missing or redirected direct root returns typed
+`publication_root` recovery before candidate allocation.
 Receipt admission allows up to 32 artifacts, 16 MiB per artifact, and 64 MiB
 in aggregate. A bounded iterative walk checks normalized observation depth,
 node count, and UTF-8 string bytes before publication clones or digests the

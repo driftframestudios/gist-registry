@@ -626,7 +626,12 @@ test("promotion never replaces a concurrently reserved empty digest directory", 
         await mkdir(destination);
       },
     }),
-    /artifact destination integrity mismatch: manifest\.json must be a regular file/u,
+    error => error instanceof PipelineError
+      && error.code === "ACCEPTED_INTEGRITY_MISMATCH"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === manifest.manifestDigest
+      && error.details.relativePath === "manifest.json",
   );
   assert.deepEqual(await readdir(destinationPath), []);
   await assert.rejects(readAcceptedPointer(accepted), error => (
@@ -634,6 +639,115 @@ test("promotion never replaces a concurrently reserved empty digest directory", 
     && error.code === "SOURCE_FILE_UNREADABLE"
     && error.details.stage === "accepted_pointer"
   ));
+});
+
+test("reservation replacement stops pointer promotion at accepted-coordinate recovery", async t => {
+  const root = await temporaryRoot("dtcg-reservation-replacement");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "reservation replacement");
+  let replacementPath;
+  let heldPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        replacementPath = reservationPath;
+        heldPath = `${reservationPath}.held`;
+        await rename(reservationPath, heldPath);
+        await mkdir(reservationPath);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === alternate.manifestDigest
+      && error.details.failure.boundary === "destination_reservation",
+  );
+  assert.deepEqual(await readdir(replacementPath), []);
+  assert.ok((await readFile(heldPath)).byteLength > 0);
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+});
+
+test("a nonempty replacement reservation remains inspectable and stops pointer promotion", async t => {
+  const root = await temporaryRoot("dtcg-reservation-nonempty");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "nonempty reservation replacement");
+  let retainedFile;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        retainedFile = resolve(reservationPath, "owner-note.txt");
+        await writeFile(retainedFile, "retained for accepted-coordinate inspection\n");
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.acceptedCoordinate === alternate.manifestDigest
+      && error.details.failure.boundary === "destination_reservation",
+  );
+  assert.equal(await readFile(retainedFile, "utf8"), "retained for accepted-coordinate inspection\n");
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+});
+
+test("a primary promotion failure retains bounded reservation-cleanup context", async t => {
+  const root = await temporaryRoot("dtcg-reservation-primary-cleanup");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "primary and cleanup failure");
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        await writeFile(resolve(reservationPath, "owner-note.txt"), "retained after primary failure\n");
+        throw new PipelineError(
+          "INJECTED_PRIMARY",
+          "The injected primary failure stopped promotion before reservation release.",
+          { stage: "promotion", checkpoint: "before_reservation_release" },
+        );
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "INJECTED_PRIMARY"
+      && error.details.checkpoint === "before_reservation_release"
+      && Object.keys(error.details.cleanupFailure).sort().join(",") === "boundary,code,recovery"
+      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
+      && error.details.cleanupFailure.boundary === "destination_reservation"
+      && error.details.cleanupFailure.recovery === "accepted_coordinate_recovery",
+  );
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
 });
 
 test("pointer commit revalidates accepted leaf bytes after the final interleaving", async t => {
@@ -661,7 +775,12 @@ test("pointer commit revalidates accepted leaf bytes after the final interleavin
         await writeFile(corruptedPath, bytes);
       },
     }),
-    new RegExp(`artifact destination integrity mismatch: ${artifact.path.replace(".", "\\.")} bytes differ`, "u"),
+    error => error instanceof PipelineError
+      && error.code === "ACCEPTED_INTEGRITY_MISMATCH"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === alternate.manifestDigest
+      && error.details.relativePath === artifact.path,
   );
   assert.deepEqual(await readAcceptedPointer(accepted), pointer);
   assert.notEqual(sha256(await readFile(corruptedPath)), artifact.sha256);
@@ -697,7 +816,10 @@ test("pointer commit rejects a same-content accepted leaf replacement", async t 
     error => error instanceof PipelineError
       && error.code === "PUBLICATION_BOUNDARY_INVALID"
       && error.details.boundary === `accepted_file.${artifact.path}`
-      && error.details.reason === "file_identity_changed",
+      && error.details.reason === "file_identity_changed"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === alternate.manifestDigest,
   );
   assert.deepEqual(await readAcceptedPointer(accepted), pointer);
   assert.deepEqual(await readFile(replacementPath), await readFile(heldPath));
@@ -839,6 +961,7 @@ test("promotion awaits a function interruption and retains the established point
   );
   assert.deepEqual(checkpoints, [
     "before_candidate_rename",
+    "before_reservation_release",
     "before_pointer_write",
     "before_pointer_rename",
   ]);
@@ -934,7 +1057,12 @@ test("promotion rejects a corrupted preexisting digest directory and preserves t
 
   await assert.rejects(
     promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest }),
-    /artifact destination integrity mismatch: acme-light\/tokens\.css bytes differ/u,
+    error => error instanceof PipelineError
+      && error.code === "ACCEPTED_INTEGRITY_MISMATCH"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === manifest.manifestDigest
+      && error.details.relativePath === "acme-light/tokens.css",
   );
   assert.deepEqual(await readAcceptedPointer(accepted), pointer);
   assert.equal(await readFile(corruptedPath, "utf8"), ":root { --corrupted: true; }\n");
@@ -960,7 +1088,10 @@ test("promotion rejects a symlinked preexisting digest directory", async t => {
     promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest }),
     error => error instanceof PipelineError
       && error.code === "PUBLICATION_BOUNDARY_INVALID"
-      && error.details.boundary === "accepted_destination",
+      && error.details.boundary === "accepted_destination"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === manifest.manifestDigest,
   );
   await assert.rejects(
     readAcceptedPointer(accepted),

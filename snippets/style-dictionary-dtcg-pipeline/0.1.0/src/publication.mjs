@@ -221,15 +221,87 @@ async function requireContainedRegularFile(root, candidate, label) {
   return { path, entry: leafEntry };
 }
 
-function publicationBoundaryError(boundary, reason) {
+function acceptedRecoveryDetails(acceptedCoordinate) {
+  return {
+    restartFrom: "accepted_coordinate_recovery",
+    action: "inspect_or_quarantine",
+    acceptedCoordinate,
+  };
+}
+
+function acceptedIntegrityMismatch(message, acceptedCoordinate, details = {}) {
   return new PipelineError(
-    "PUBLICATION_BOUNDARY_INVALID",
-    "Promotion requires stable, directly addressed regular directories.",
-    { stage: "promotion", boundary, reason, restartFrom: "promotion" },
+    "ACCEPTED_INTEGRITY_MISMATCH",
+    message,
+    {
+      stage: "accepted_verification",
+      ...acceptedRecoveryDetails(acceptedCoordinate),
+      ...details,
+    },
   );
 }
 
-async function requireRegularDirectory(path, boundary, { create = false, recursive = false } = {}) {
+function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
+  return Object.freeze({
+    code: typeof error?.code === "string" ? error.code : fallbackCode,
+    boundary: typeof error?.details?.boundary === "string"
+      ? error.details.boundary
+      : fallbackBoundary,
+    recovery: typeof error?.details?.restartFrom === "string"
+      ? error.details.restartFrom
+      : "accepted_coordinate_recovery",
+  });
+}
+
+function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoordinate) {
+  const cleanupFailure = boundedFailureContext(
+    cleanupError,
+    "PUBLICATION_RESERVATION_RELEASE_FAILED",
+    "destination_reservation",
+  );
+  if (primaryError instanceof PipelineError) {
+    const retained = new PipelineError(primaryError.code, primaryError.message, {
+      ...primaryError.details,
+      cleanupFailure,
+    });
+    retained.cause = primaryError;
+    return retained;
+  }
+  const retained = new PipelineError(
+    "PUBLICATION_FAILED",
+    "Promotion stopped, and its digest reservation requires inspection.",
+    {
+      stage: "promotion",
+      checkpoint: "destination_reservation_release",
+      ...acceptedRecoveryDetails(acceptedCoordinate),
+      primaryFailure: boundedFailureContext(primaryError, "PUBLICATION_FAILED", "promotion"),
+      cleanupFailure,
+    },
+  );
+  retained.cause = primaryError;
+  return retained;
+}
+
+function publicationBoundaryError(boundary, reason, acceptedCoordinate = null) {
+  return new PipelineError(
+    "PUBLICATION_BOUNDARY_INVALID",
+    "Promotion requires stable, directly addressed regular directories.",
+    {
+      stage: "promotion",
+      boundary,
+      reason,
+      ...(acceptedCoordinate === null
+        ? { restartFrom: "promotion" }
+        : acceptedRecoveryDetails(acceptedCoordinate)),
+    },
+  );
+}
+
+async function requireRegularDirectory(path, boundary, {
+  create = false,
+  recursive = false,
+  acceptedCoordinate = null,
+} = {}) {
   if (create) {
     try {
       await mkdir(path, { recursive });
@@ -241,12 +313,12 @@ async function requireRegularDirectory(path, boundary, { create = false, recursi
   try {
     entry = await lstat(path);
   } catch (error) {
-    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable", acceptedCoordinate);
   }
   if (!entry.isDirectory() || entry.isSymbolicLink()) {
-    throw publicationBoundaryError(boundary, "regular_directory_required");
+    throw publicationBoundaryError(boundary, "regular_directory_required", acceptedCoordinate);
   }
-  return { path, boundary, dev: entry.dev, ino: entry.ino };
+  return { path, boundary, dev: entry.dev, ino: entry.ino, acceptedCoordinate };
 }
 
 async function assertDirectoryIdentity(identity) {
@@ -254,7 +326,7 @@ async function assertDirectoryIdentity(identity) {
   try {
     entry = await lstat(identity.path);
   } catch (error) {
-    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable", identity.acceptedCoordinate);
   }
   if (
     !entry.isDirectory()
@@ -262,7 +334,7 @@ async function assertDirectoryIdentity(identity) {
     || entry.dev !== identity.dev
     || entry.ino !== identity.ino
   ) {
-    throw publicationBoundaryError(identity.boundary, "directory_identity_changed");
+    throw publicationBoundaryError(identity.boundary, "directory_identity_changed", identity.acceptedCoordinate);
   }
 }
 
@@ -270,17 +342,17 @@ async function assertDirectoryIdentities(identities) {
   for (const identity of identities) await assertDirectoryIdentity(identity);
 }
 
-async function requireRegularFileIdentity(path, boundary) {
+async function requireRegularFileIdentity(path, boundary, acceptedCoordinate = null) {
   let entry;
   try {
     entry = await lstat(path);
   } catch (error) {
-    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable", acceptedCoordinate);
   }
   if (!entry.isFile() || entry.isSymbolicLink()) {
-    throw publicationBoundaryError(boundary, "regular_file_required");
+    throw publicationBoundaryError(boundary, "regular_file_required", acceptedCoordinate);
   }
-  return { path, boundary, dev: entry.dev, ino: entry.ino };
+  return { path, boundary, dev: entry.dev, ino: entry.ino, acceptedCoordinate };
 }
 
 async function assertFileIdentity(identity) {
@@ -288,7 +360,7 @@ async function assertFileIdentity(identity) {
   try {
     entry = await lstat(identity.path);
   } catch (error) {
-    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable", identity.acceptedCoordinate);
   }
   if (
     !entry.isFile()
@@ -296,7 +368,7 @@ async function assertFileIdentity(identity) {
     || entry.dev !== identity.dev
     || entry.ino !== identity.ino
   ) {
-    throw publicationBoundaryError(identity.boundary, "file_identity_changed");
+    throw publicationBoundaryError(identity.boundary, "file_identity_changed", identity.acceptedCoordinate);
   }
 }
 
@@ -364,7 +436,7 @@ async function assertOwnedFileBytes(identity, expectedBytes, owners) {
     restartFrom: "promotion",
   });
   if (!observed.equals(expectedBytes)) {
-    throw publicationBoundaryError(identity.boundary, "file_bytes_changed");
+    throw publicationBoundaryError(identity.boundary, "file_bytes_changed", identity.acceptedCoordinate);
   }
   await assertDirectoryIdentities(owners);
   await assertFileIdentity(identity);
@@ -403,6 +475,24 @@ async function removeOwnedFile(identity, owners, { strict = false } = {}) {
     // Preserve a changed path for operator inspection rather than deleting
     // material through an owner boundary that moved.
     return false;
+  }
+}
+
+async function releaseDestinationReservation(identity, owners, acceptedCoordinate) {
+  if (!identity) return;
+  try {
+    await removeOwnedFile(identity, owners, { strict: true });
+  } catch (error) {
+    throw new PipelineError(
+      "PUBLICATION_RESERVATION_RELEASE_FAILED",
+      "The digest reservation remains available for inspection before pointer promotion resumes.",
+      {
+        stage: "promotion",
+        checkpoint: "destination_reservation_release",
+        ...acceptedRecoveryDetails(acceptedCoordinate),
+        failure: boundedFailureContext(error, "RESERVATION_RELEASE_FAILED", "destination_reservation"),
+      },
+    );
   }
 }
 
@@ -509,13 +599,21 @@ async function acquireDestinationReservation({
   }
 }
 
-async function verifyExistingDestination(destination, manifest) {
+async function verifyExistingDestination(destination, manifest, { acceptedCoordinate = null } = {}) {
+  const mismatch = (message, details = {}) => {
+    if (acceptedCoordinate !== null) {
+      return acceptedIntegrityMismatch(message, acceptedCoordinate, details);
+    }
+    return new Error(message);
+  };
   validateManifestEnvelope(manifest);
-  await requireRegularDirectory(destination, "accepted_destination");
+  await requireRegularDirectory(destination, "accepted_destination", { acceptedCoordinate });
   const manifestPath = contained(destination, resolve(destination, "manifest.json"), "accepted manifest");
   const manifestEntry = await lstat(manifestPath).catch(() => null);
   if (!manifestEntry?.isFile() || manifestEntry.isSymbolicLink()) {
-    throw new Error("artifact destination integrity mismatch: manifest.json must be a regular file");
+    throw mismatch("Artifact destination integrity mismatch: manifest.json requires one regular file.", {
+      relativePath: "manifest.json",
+    });
   }
   let stored;
   try {
@@ -524,35 +622,62 @@ async function verifyExistingDestination(destination, manifest) {
       stage: "accepted_verification",
       dimension: "manifest_bytes",
       label: "Accepted manifest",
-      restartFrom: "promotion",
+      restartFrom: acceptedCoordinate === null ? "promotion" : "accepted_coordinate_recovery",
     })).toString("utf8"));
   } catch (error) {
-    throw new Error(`artifact destination integrity mismatch: manifest.json is invalid: ${error.message}`);
+    throw mismatch("Artifact destination integrity mismatch: manifest.json requires valid bounded JSON bytes.", {
+      relativePath: "manifest.json",
+      causeCode: error.code,
+    });
   }
   if (stableStringify(stored) !== stableStringify(manifest)) {
-    throw new Error("artifact destination integrity mismatch: manifest differs from the candidate");
+    throw mismatch("Artifact destination integrity mismatch: the manifest differs from the candidate.", {
+      relativePath: "manifest.json",
+    });
   }
 
   const expectedPaths = ["manifest.json", ...manifest.artifacts.map(artifact => artifact.path)].sort(compareOrdinal);
-  const observedPaths = await regularFileInventory(destination);
+  let observedPaths;
+  try {
+    observedPaths = await regularFileInventory(destination);
+  } catch (error) {
+    throw mismatch("Artifact destination integrity mismatch: the file inventory is unreadable.", {
+      causeCode: error.code,
+    });
+  }
   if (stableStringify(observedPaths) !== stableStringify(expectedPaths)) {
-    throw new Error("artifact destination integrity mismatch: file inventory differs from the manifest");
+    throw mismatch("Artifact destination integrity mismatch: the file inventory differs from the manifest.", {
+      expectedPaths,
+      observedPaths,
+    });
   }
   for (const artifact of manifest.artifacts) {
     const path = contained(destination, resolve(destination, artifact.path), "accepted artifact");
     const entry = await lstat(path).catch(() => null);
     if (!entry?.isFile() || entry.isSymbolicLink()) {
-      throw new Error(`artifact destination integrity mismatch: ${artifact.path} must be a regular file`);
+      throw mismatch("Artifact destination integrity mismatch: an artifact requires one regular file.", {
+        relativePath: artifact.path,
+      });
     }
-    const bytes = await readBoundedFile(path, {
-      maxBytes: artifact.bytes,
-      stage: "accepted_verification",
-      dimension: "generated_bytes",
-      label: `Accepted artifact ${artifact.path}`,
-      restartFrom: "promotion",
-    });
+    let bytes;
+    try {
+      bytes = await readBoundedFile(path, {
+        maxBytes: artifact.bytes,
+        stage: "accepted_verification",
+        dimension: "generated_bytes",
+        label: `Accepted artifact ${artifact.path}`,
+        restartFrom: acceptedCoordinate === null ? "promotion" : "accepted_coordinate_recovery",
+      });
+    } catch (error) {
+      throw mismatch("Artifact destination integrity mismatch: accepted artifact bytes are unreadable.", {
+        relativePath: artifact.path,
+        causeCode: error.code,
+      });
+    }
     if (bytes.byteLength !== artifact.bytes || sha256(bytes) !== artifact.sha256) {
-      throw new Error(`artifact destination integrity mismatch: ${artifact.path} bytes differ from the manifest`);
+      throw mismatch("Artifact destination integrity mismatch: accepted artifact bytes differ from the manifest.", {
+        relativePath: artifact.path,
+      });
     }
   }
 }
@@ -564,6 +689,7 @@ async function captureAcceptedFileIdentities(destination, manifest) {
     identities.push(await requireRegularFileIdentity(
       contained(destination, resolve(destination, relativePath), "accepted artifact identity"),
       `accepted_file.${relativePath}`,
+      manifest.manifestDigest,
     ));
   }
   return identities;
@@ -803,9 +929,11 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
       privateStagingIdentity = null;
       stagingIdentity = null;
     }
-    const destinationIdentity = await requireRegularDirectory(destination, "accepted_destination");
+    const destinationIdentity = await requireRegularDirectory(destination, "accepted_destination", {
+      acceptedCoordinate: digest,
+    });
     await assertDirectoryIdentity(artifactsIdentity);
-    await verifyExistingDestination(destination, manifest);
+    await verifyExistingDestination(destination, manifest, { acceptedCoordinate: digest });
     const destinationFileIdentities = await captureAcceptedFileIdentities(destination, manifest);
     if (reservationIdentity) {
       await assertOwnedFileBytes(
@@ -813,12 +941,32 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
         reservationBytes,
         [acceptedIdentity, artifactsIdentity],
       );
-      await removeOwnedFile(
-        reservationIdentity,
-        [acceptedIdentity, artifactsIdentity],
-        { strict: true },
-      );
+      let releasePrimaryError = null;
+      try {
+        await invokeFaultHook(injectFault, "before_reservation_release", {
+          acceptedRoot: accepted,
+          artifactsRoot,
+          destination,
+          reservationPath,
+        });
+      } catch (error) {
+        releasePrimaryError = error;
+      }
+      const acquiredReservation = reservationIdentity;
       reservationIdentity = null;
+      try {
+        await releaseDestinationReservation(
+          acquiredReservation,
+          [acceptedIdentity, artifactsIdentity],
+          digest,
+        );
+      } catch (cleanupError) {
+        if (releasePrimaryError) {
+          throw retainReservationCleanupFailure(releasePrimaryError, cleanupError, digest);
+        }
+        throw cleanupError;
+      }
+      if (releasePrimaryError) throw releasePrimaryError;
     }
     if (injectFault === "before_pointer") throw new Error("injected promotion fault before pointer update");
     const pointer = {
@@ -860,7 +1008,7 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
       pointerBytes,
       [acceptedIdentity, artifactsIdentity, destinationIdentity],
     );
-    await verifyExistingDestination(destination, manifest);
+    await verifyExistingDestination(destination, manifest, { acceptedCoordinate: digest });
     await assertDirectoryIdentities([acceptedIdentity, artifactsIdentity, destinationIdentity]);
     for (const identity of destinationFileIdentities) await assertFileIdentity(identity);
     await assertOwnedFileBytes(
@@ -872,7 +1020,19 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
     return pointer;
   } catch (error) {
     await removeOwnedFile(temporaryPointerIdentity, [acceptedIdentity]);
-    await removeOwnedFile(reservationIdentity, [acceptedIdentity, artifactsIdentity]);
+    let failure = error;
+    if (reservationIdentity) {
+      try {
+        await releaseDestinationReservation(
+          reservationIdentity,
+          [acceptedIdentity, artifactsIdentity],
+          digest,
+        );
+      } catch (cleanupError) {
+        failure = retainReservationCleanupFailure(error, cleanupError, digest);
+      }
+      reservationIdentity = null;
+    }
     if (stagingPromoted) {
       await removeOwnedEmptyDirectory(privateStagingIdentity, [acceptedIdentity, artifactsIdentity]);
     } else {
@@ -883,7 +1043,7 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
         stagingFiles,
       );
     }
-    throw error;
+    throw failure;
   }
 }
 

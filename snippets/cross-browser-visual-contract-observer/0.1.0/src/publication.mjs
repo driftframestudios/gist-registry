@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import { lstat, mkdir, open, opendir, rename, rm, rmdir } from "node:fs/promises";
-import { dirname, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import {
   OBSERVER_RESOURCE_LIMITS,
   ObserverError,
@@ -27,22 +27,82 @@ function contained(root, candidate) {
 
 function publicationRecoveryCoordinate(boundary) {
   if (boundary === "temporary_pointer" || boundary === "accepted_pointer") return "pointer";
+  if (boundary === "accepted_destination" || boundary.startsWith("accepted_file.")) {
+    return "accepted_coordinate_recovery";
+  }
   if (
     boundary === "candidate"
     || boundary === "destination_reservation"
-    || boundary === "accepted_destination"
     || boundary.startsWith("candidate_")
-    || boundary.startsWith("accepted_file.")
   ) return "candidate";
   return "publication_root";
 }
 
-function publicationBoundaryError(boundary, reason) {
+function publicationBoundaryError(boundary, reason, acceptedCoordinate = null) {
+  const restartFrom = publicationRecoveryCoordinate(boundary);
   return new ObserverError(
     "PUBLICATION_BOUNDARY_INVALID",
     "Receipt publication requires a stable, directly addressed ownership boundary.",
-    { boundary, reason, restartFrom: publicationRecoveryCoordinate(boundary) },
+    {
+      boundary,
+      reason,
+      restartFrom,
+      ...(restartFrom === "accepted_coordinate_recovery"
+        ? { action: "inspect_or_quarantine", acceptedCoordinate }
+        : {}),
+    },
   );
+}
+
+function acceptedIntegrityMismatch(message, acceptedCoordinate, details = {}) {
+  return new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", message, {
+    restartFrom: "accepted_coordinate_recovery",
+    action: "inspect_or_quarantine",
+    acceptedCoordinate,
+    ...details,
+  });
+}
+
+function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
+  return Object.freeze({
+    code: typeof error?.code === "string" ? error.code : fallbackCode,
+    boundary: typeof error?.details?.boundary === "string"
+      ? error.details.boundary
+      : fallbackBoundary,
+    recovery: typeof error?.details?.restartFrom === "string"
+      ? error.details.restartFrom
+      : "accepted_coordinate_recovery",
+  });
+}
+
+function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoordinate) {
+  const cleanupFailure = boundedFailureContext(
+    cleanupError,
+    "PUBLICATION_RESERVATION_RELEASE_FAILED",
+    "destination_reservation",
+  );
+  if (primaryError instanceof ObserverError) {
+    const retained = new ObserverError(primaryError.code, primaryError.message, {
+      ...primaryError.details,
+      cleanupFailure,
+    });
+    retained.cause = primaryError;
+    return retained;
+  }
+  const retained = new ObserverError(
+    "PUBLICATION_FAILED",
+    "Receipt publication stopped, and its digest reservation requires inspection.",
+    {
+      checkpoint: "destination_reservation_release",
+      restartFrom: "accepted_coordinate_recovery",
+      action: "inspect_or_quarantine",
+      acceptedCoordinate,
+      primaryFailure: boundedFailureContext(primaryError, "PUBLICATION_FAILED", "publication"),
+      cleanupFailure,
+    },
+  );
+  retained.cause = primaryError;
+  return retained;
 }
 
 async function tightenPrivateDirectoryMode(path, boundary, expectedEntry, mode) {
@@ -110,6 +170,7 @@ async function requireRegularDirectory(path, boundary, {
   create = false,
   mode = 0o755,
   privateMode = false,
+  acceptedCoordinate = null,
 } = {}) {
   if (create) {
     try {
@@ -122,10 +183,10 @@ async function requireRegularDirectory(path, boundary, {
   try {
     entry = await lstat(path);
   } catch (error) {
-    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable", acceptedCoordinate);
   }
   if (!entry.isDirectory() || entry.isSymbolicLink()) {
-    throw publicationBoundaryError(boundary, "regular_directory_required");
+    throw publicationBoundaryError(boundary, "regular_directory_required", acceptedCoordinate);
   }
   if (privateMode && (entry.mode & 0o077) !== 0) {
     if (!create) throw publicationBoundaryError(boundary, "private_directory_required");
@@ -134,15 +195,18 @@ async function requireRegularDirectory(path, boundary, {
     // receipt workspace can resume under the stronger publication contract.
     entry = await tightenPrivateDirectoryMode(path, boundary, entry, mode);
   }
-  return { path, boundary, dev: entry.dev, ino: entry.ino, privateMode };
+  return { path, boundary, dev: entry.dev, ino: entry.ino, privateMode, acceptedCoordinate };
 }
 
 async function assertDirectoryIdentity(identity) {
+  if (identity.ancestors) {
+    await assertDirectoryIdentities(identity.ancestors);
+  }
   let entry;
   try {
     entry = await lstat(identity.path);
   } catch (error) {
-    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable", identity.acceptedCoordinate);
   }
   if (
     !entry.isDirectory()
@@ -151,25 +215,88 @@ async function assertDirectoryIdentity(identity) {
     || entry.ino !== identity.ino
     || (identity.privateMode && (entry.mode & 0o077) !== 0)
   ) {
-    throw publicationBoundaryError(identity.boundary, "directory_identity_changed");
+    throw publicationBoundaryError(identity.boundary, "directory_identity_changed", identity.acceptedCoordinate);
   }
+}
+
+async function provisionPublicationRoot(ownerRoot, publicationRoot, injectFault) {
+  const absoluteOwner = resolve(ownerRoot);
+  const absoluteRoot = resolve(publicationRoot);
+  const pathFromOwner = relative(absoluteOwner, absoluteRoot);
+  if (
+    pathFromOwner === ".."
+    || pathFromOwner.startsWith(`..${sep}`)
+    || isAbsolute(pathFromOwner)
+  ) {
+    throw publicationBoundaryError("root", "path_outside_owner");
+  }
+
+  const segments = pathFromOwner.split(sep).filter(Boolean);
+  if (segments.length > 64) {
+    throw publicationBoundaryError("root", "path_depth_exceeded");
+  }
+
+  const identities = [await requireRegularDirectory(absoluteOwner, "root_owner")];
+  await invokeFaultHook(injectFault, "after_publication_owner_capture", {
+    ownerRoot: absoluteOwner,
+    root: absoluteRoot,
+  });
+  await assertDirectoryIdentities(identities);
+
+  if (segments.length === 0) {
+    return { ...identities[0], boundary: "root", ancestors: [] };
+  }
+
+  let current = absoluteOwner;
+  for (let index = 0; index < segments.length; index += 1) {
+    current = resolve(current, segments[index]);
+    await assertDirectoryIdentities(identities);
+    let created = false;
+    try {
+      await mkdir(current, { mode: 0o700 });
+      created = true;
+    } catch (error) {
+      if (error.code !== "EEXIST") {
+        throw publicationBoundaryError("root", error.code ?? "create_failed");
+      }
+    }
+    const relativeDirectory = relative(absoluteOwner, current).split(sep).join("/");
+    const isPublicationRoot = index === segments.length - 1;
+    const identity = await requireRegularDirectory(
+      current,
+      isPublicationRoot ? "root" : `root_ancestor.${relativeDirectory}`,
+      { privateMode: created },
+    );
+    identities.push(identity);
+    await invokeFaultHook(injectFault, "after_publication_directory_capture", {
+      ownerRoot: absoluteOwner,
+      root: absoluteRoot,
+      directoryPath: current,
+      relativeDirectory,
+      isPublicationRoot,
+    });
+    await assertDirectoryIdentities(identities);
+  }
+
+  const rootIdentity = identities.at(-1);
+  return { ...rootIdentity, ancestors: identities.slice(0, -1) };
 }
 
 async function assertDirectoryIdentities(identities) {
   for (const identity of identities) await assertDirectoryIdentity(identity);
 }
 
-async function requireRegularFileIdentity(path, boundary) {
+async function requireRegularFileIdentity(path, boundary, acceptedCoordinate = null) {
   let entry;
   try {
     entry = await lstat(path);
   } catch (error) {
-    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable", acceptedCoordinate);
   }
   if (!entry.isFile() || entry.isSymbolicLink()) {
-    throw publicationBoundaryError(boundary, "regular_file_required");
+    throw publicationBoundaryError(boundary, "regular_file_required", acceptedCoordinate);
   }
-  return { path, boundary, dev: entry.dev, ino: entry.ino };
+  return { path, boundary, dev: entry.dev, ino: entry.ino, acceptedCoordinate };
 }
 
 async function assertFileIdentity(identity) {
@@ -177,7 +304,7 @@ async function assertFileIdentity(identity) {
   try {
     entry = await lstat(identity.path);
   } catch (error) {
-    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable", identity.acceptedCoordinate);
   }
   if (
     !entry.isFile()
@@ -185,7 +312,7 @@ async function assertFileIdentity(identity) {
     || entry.dev !== identity.dev
     || entry.ino !== identity.ino
   ) {
-    throw publicationBoundaryError(identity.boundary, "file_identity_changed");
+    throw publicationBoundaryError(identity.boundary, "file_identity_changed", identity.acceptedCoordinate);
   }
 }
 
@@ -270,10 +397,14 @@ async function assertOwnedFileBytes(identity, expectedBytes, owners, restartFrom
     });
   } catch (error) {
     if (error instanceof ObserverError && error.code === "PUBLICATION_BOUNDARY_INVALID") throw error;
-    throw publicationBoundaryError(identity.boundary, error.code ?? "file_bytes_unreadable");
+    throw publicationBoundaryError(
+      identity.boundary,
+      error.code ?? "file_bytes_unreadable",
+      identity.acceptedCoordinate,
+    );
   }
   if (!observed.equals(expectedBytes)) {
-    throw publicationBoundaryError(identity.boundary, "file_bytes_changed");
+    throw publicationBoundaryError(identity.boundary, "file_bytes_changed", identity.acceptedCoordinate);
   }
   await assertDirectoryIdentities(owners);
   await assertFileIdentity(identity);
@@ -295,6 +426,25 @@ async function removeOwnedFile(identity, owners, { strict = false } = {}) {
   } catch (error) {
     if (strict) throw error;
     return false;
+  }
+}
+
+async function releaseDestinationReservation(identity, owners, acceptedCoordinate) {
+  if (!identity) return;
+  try {
+    await removeOwnedFile(identity, owners, { strict: true });
+  } catch (error) {
+    throw new ObserverError(
+      "PUBLICATION_RESERVATION_RELEASE_FAILED",
+      "The digest reservation remains available for inspection before pointer promotion resumes.",
+      {
+        checkpoint: "destination_reservation_release",
+        restartFrom: "accepted_coordinate_recovery",
+        action: "inspect_or_quarantine",
+        acceptedCoordinate,
+        failure: boundedFailureContext(error, "RESERVATION_RELEASE_FAILED", "destination_reservation"),
+      },
+    );
   }
 }
 
@@ -420,11 +570,11 @@ function inventoryEnvelope(paths) {
   return { maxDepth, maxEntries: paths.length + directories.size };
 }
 
-async function walkFiles(root, { maxDepth, maxEntries }) {
+async function walkFiles(root, { maxDepth, maxEntries }, acceptedCoordinate) {
   const paths = [];
   const rootEntry = await lstat(root);
   if (!rootEntry.isDirectory() || rootEntry.isSymbolicLink()) {
-    throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt storage requires one regular directory.", { restartFrom: "candidate" });
+    throw acceptedIntegrityMismatch("Accepted receipt storage requires one regular directory.", acceptedCoordinate);
   }
   const pending = [{ directory: root, depth: 0 }];
   let observedEntries = 0;
@@ -435,20 +585,20 @@ async function walkFiles(root, { maxDepth, maxEntries }) {
       for await (const entry of handle) {
         observedEntries += 1;
         if (observedEntries > maxEntries) {
-          throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt inventory exceeds its declared finite envelope.", { maxEntries, restartFrom: "candidate" });
+          throw acceptedIntegrityMismatch("Accepted receipt inventory exceeds its declared finite envelope.", acceptedCoordinate, { maxEntries });
         }
         const path = resolve(directory, entry.name);
         const pathEntry = await lstat(path);
         const receiptPath = relative(root, path).replaceAll("\\", "/");
-        if (pathEntry.isSymbolicLink()) throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt bytes require regular files and directories; a symbolic link was found.", { path: receiptPath, restartFrom: "candidate" });
+        if (pathEntry.isSymbolicLink()) throw acceptedIntegrityMismatch("Accepted receipt bytes require regular files and directories; a symbolic link was found.", acceptedCoordinate, { path: receiptPath });
         if (pathEntry.isDirectory()) {
           const nextDepth = depth + 1;
           if (nextDepth > maxDepth) {
-            throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt inventory exceeds its declared directory depth.", { path: receiptPath, maxDepth, restartFrom: "candidate" });
+            throw acceptedIntegrityMismatch("Accepted receipt inventory exceeds its declared directory depth.", acceptedCoordinate, { path: receiptPath, maxDepth });
           }
           pending.push({ directory: path, depth: nextDepth });
         } else if (pathEntry.isFile()) paths.push(receiptPath);
-        else throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt bytes must be regular files and directories.", { path: receiptPath, restartFrom: "candidate" });
+        else throw acceptedIntegrityMismatch("Accepted receipt bytes must be regular files and directories.", acceptedCoordinate, { path: receiptPath });
       }
     } finally {
       await handle.close().catch(error => {
@@ -459,50 +609,50 @@ async function walkFiles(root, { maxDepth, maxEntries }) {
   return paths.sort();
 }
 
-async function readAcceptedBytes(destination, path, expectedBytes) {
+async function readAcceptedBytes(destination, path, expectedBytes, acceptedCoordinate) {
   try {
     return await readBoundedRegularFile(contained(destination, path), {
       boundary: `accepted.${path}`,
       maxBytes: expectedBytes,
       expectedBytes,
-      restartFrom: "candidate",
+      restartFrom: "accepted_coordinate_recovery",
     });
   } catch (error) {
-    throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt bytes differ from the verified candidate.", {
+    throw acceptedIntegrityMismatch("Accepted receipt bytes differ from the verified candidate.", acceptedCoordinate, {
       path,
       causeCode: error.code,
       reason: error.message,
-      restartFrom: "candidate",
     });
   }
 }
 
-async function verifyAcceptedDestination(destination, expectedFiles) {
+async function verifyAcceptedDestination(destination, expectedFiles, acceptedCoordinate) {
   const expectedInventory = [...expectedFiles.keys()].sort();
   let observedInventory;
   try {
-    observedInventory = await walkFiles(destination, inventoryEnvelope(expectedInventory));
+    observedInventory = await walkFiles(destination, inventoryEnvelope(expectedInventory), acceptedCoordinate);
   } catch (error) {
     if (error instanceof ObserverError) throw error;
-    throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt inventory is unreadable.", { reason: error.message, restartFrom: "candidate" });
+    throw acceptedIntegrityMismatch("Accepted receipt inventory is unreadable.", acceptedCoordinate, { reason: error.message });
   }
   if (stableStringify(observedInventory) !== stableStringify(expectedInventory)) {
-    throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt inventory differs from the verified candidate.", { expectedInventory, observedInventory, restartFrom: "candidate" });
+    throw acceptedIntegrityMismatch("Accepted receipt inventory differs from the verified candidate.", acceptedCoordinate, { expectedInventory, observedInventory });
   }
   for (const [path, expectedBytes] of expectedFiles) {
-    const bytes = await readAcceptedBytes(destination, path, expectedBytes.byteLength);
+    const bytes = await readAcceptedBytes(destination, path, expectedBytes.byteLength, acceptedCoordinate);
     if (!bytes.equals(expectedBytes)) {
-      throw new ObserverError("ACCEPTED_INTEGRITY_MISMATCH", "Accepted receipt bytes differ from the verified candidate.", { path, restartFrom: "candidate" });
+      throw acceptedIntegrityMismatch("Accepted receipt bytes differ from the verified candidate.", acceptedCoordinate, { path });
     }
   }
 }
 
-async function captureAcceptedFileIdentities(destination, expectedFiles) {
+async function captureAcceptedFileIdentities(destination, expectedFiles, acceptedCoordinate) {
   const identities = [];
   for (const path of expectedFiles.keys()) {
     identities.push(await requireRegularFileIdentity(
       contained(destination, path),
       `accepted_file.${path}`,
+      acceptedCoordinate,
     ));
   }
   return identities;
@@ -556,7 +706,11 @@ function artifactSourceFor(artifactSources, artifactPath) {
   return descriptor.value;
 }
 
-export async function publishReceipt(root, inputReceipt, { injectFault = null, artifactSources = {} } = {}) {
+export async function publishReceipt(root, inputReceipt, {
+  injectFault = null,
+  artifactSources = {},
+  ownerRoot = null,
+} = {}) {
   const receipt = validateReceipt(inputReceipt);
   validateReceiptSchema(receipt);
   const acceptedReceipt = validateReceipt({ ...receipt, standing: "accepted" });
@@ -571,7 +725,13 @@ export async function publishReceipt(root, inputReceipt, { injectFault = null, a
   const pointerPath = contained(absoluteRoot, "accepted-pointer.json");
   const destination = contained(acceptedRoot, receiptSha256);
   const reservationPath = contained(acceptedRoot, `.reservation-${receiptSha256}`);
-  const publicationRoot = await requireRegularDirectory(absoluteRoot, "root", { create: true });
+  // A caller may either provision the directly addressed root or name the
+  // stable owner from which this publisher creates and captures every
+  // descendant. Both routes establish publication authority before a
+  // candidate is allocated.
+  const publicationRoot = ownerRoot === null
+    ? await requireRegularDirectory(absoluteRoot, "root")
+    : await provisionPublicationRoot(ownerRoot, absoluteRoot, injectFault);
   const candidateParent = await requireRegularDirectory(candidateParentPath, ".candidates", {
     create: true,
     mode: 0o700,
@@ -733,22 +893,48 @@ export async function publishReceipt(root, inputReceipt, { injectFault = null, a
       );
       candidate = null;
     }
-    const acceptedDestination = await requireRegularDirectory(destination, "accepted_destination");
+    const acceptedDestination = await requireRegularDirectory(destination, "accepted_destination", {
+      acceptedCoordinate: receiptSha256,
+    });
     await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
-    await verifyAcceptedDestination(destination, expectedFiles);
-    const acceptedFileIdentities = await captureAcceptedFileIdentities(destination, expectedFiles);
+    await verifyAcceptedDestination(destination, expectedFiles, receiptSha256);
+    const acceptedFileIdentities = await captureAcceptedFileIdentities(
+      destination,
+      expectedFiles,
+      receiptSha256,
+    );
     if (reservationIdentity) {
       await assertOwnedFileBytes(
         reservationIdentity,
         reservationBytes,
         [publicationRoot, acceptedParent],
       );
-      await removeOwnedFile(
-        reservationIdentity,
-        [publicationRoot, acceptedParent],
-        { strict: true },
-      );
+      let releasePrimaryError = null;
+      try {
+        await invokeFaultHook(injectFault, "before_reservation_release", {
+          root: absoluteRoot,
+          accepted: acceptedRoot,
+          destination,
+          reservationPath,
+        });
+      } catch (error) {
+        releasePrimaryError = error;
+      }
+      const acquiredReservation = reservationIdentity;
       reservationIdentity = null;
+      try {
+        await releaseDestinationReservation(
+          acquiredReservation,
+          [publicationRoot, acceptedParent],
+          receiptSha256,
+        );
+      } catch (cleanupError) {
+        if (releasePrimaryError) {
+          throw retainReservationCleanupFailure(releasePrimaryError, cleanupError, receiptSha256);
+        }
+        throw cleanupError;
+      }
+      if (releasePrimaryError) throw releasePrimaryError;
     }
     if (injectFault === "before_pointer") throw new ObserverError("INJECTED_INTERRUPTION", "Pointer interruption requested by the test fixture.", { checkpoint: "accepted_bytes_verified", restartFrom: "pointer" });
     const pointer = { schemaVersion: "0.1.0", receiptId: receipt.receiptId, receiptSha256, path: `accepted/${receiptSha256}/receipt.json` };
@@ -784,7 +970,7 @@ export async function publishReceipt(root, inputReceipt, { injectFault = null, a
       [publicationRoot, acceptedParent, acceptedDestination],
       "pointer",
     );
-    await verifyAcceptedDestination(destination, expectedFiles);
+    await verifyAcceptedDestination(destination, expectedFiles, receiptSha256);
     await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
     await assertFileIdentities(acceptedFileIdentities);
     await rename(temporaryPointer, pointerPath);
@@ -796,7 +982,19 @@ export async function publishReceipt(root, inputReceipt, { injectFault = null, a
     return pointer;
   } catch (error) {
     await removeOwnedFile(temporaryPointerIdentity, [publicationRoot]);
-    await removeOwnedFile(reservationIdentity, [publicationRoot, acceptedParent]);
+    let failure = error;
+    if (reservationIdentity) {
+      try {
+        await releaseDestinationReservation(
+          reservationIdentity,
+          [publicationRoot, acceptedParent],
+          receiptSha256,
+        );
+      } catch (cleanupError) {
+        failure = retainReservationCleanupFailure(error, cleanupError, receiptSha256);
+      }
+      reservationIdentity = null;
+    }
     if (!candidatePromoted) {
       await removeOwnedTree(
         candidate,
@@ -805,13 +1003,13 @@ export async function publishReceipt(root, inputReceipt, { injectFault = null, a
         candidateFiles,
       );
     }
-    if (error instanceof ObserverError) throw error;
+    if (failure instanceof ObserverError) throw failure;
     throw new ObserverError(
       "PUBLICATION_FAILED",
       "Receipt publication stopped at a recoverable coordinate.",
       {
-        causeCode: error.code,
-        reason: error.message,
+        causeCode: failure.code,
+        reason: failure.message,
         restartFrom: candidatePromoted ? "pointer" : "candidate",
       },
     );

@@ -91,7 +91,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [22, 24, 26]
+        # The registry job runs the complete suite on Node 22. These lanes add
+        # the remaining supported maintenance coordinates without repeating it.
+        node-version: [24, 26]
     steps:
       - name: Check out accepted source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

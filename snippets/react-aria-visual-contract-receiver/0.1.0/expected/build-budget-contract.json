@@ -3,7 +3,7 @@
   "coordinate": "react-aria-visual-contract-receiver@0.1.0",
   "deterministicManifestSha256": "4194c2ee7dac24c2560a8a87c268257ff22f55cb649d4f4eb99dd2e58aeb29d5",
   "deterministicMeasurements": {
-    "authoredSourceBytes": 56892,
+    "authoredSourceBytes": 67445,
     "directDependencyCount": 9,
     "resolvedPackageCount": 128,
     "specimenCount": 3,

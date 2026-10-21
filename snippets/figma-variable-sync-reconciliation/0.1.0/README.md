@@ -51,7 +51,7 @@ reviewed local contract
 | Approved local meaning | Receiving token system | The variable identity and value intended for synchronization |
 | Operation plan | `planner.mjs` | Stable intent IDs, dependency edges, batch envelope, and plan digest |
 | Writer authority | `InMemoryLeaseStore` | One active writer generation and expiry |
-| Resume point | `InMemoryCheckpointStore` | Current writer fence plus next batch, expected revision and state digest, temporary-ID map, monotonic remote-ID ledger, resolved-byte high-water mark, and observations |
+| Resume point | `InMemoryCheckpointStore` | Current writer fence plus next batch, expected revision and state digest, pending transition projection, temporary-ID map, monotonic remote-ID ledger, resolved-byte high-water mark, bounded observation transcript, and completed-batch settlement accumulator |
 | Remote truth | `FakeVariableRemote` | Current variables, revision, and applied intent results |
 | Final result | Coordinator receipt | Accepted state digest, revisions, counts, and recovery history |
 
@@ -70,7 +70,7 @@ checkpoint systems with its own atomicity and availability evidence.
 - Topological admission reports unresolved dependencies and cycles before
   remote work begins. Every target or reference that names a declared
   temporary ID carries a direct dependency on the operation that creates it,
-  so input order and later batch boundaries cannot change ownership.
+  so input order and later batch boundaries preserve the same ownership.
 - Batch planning enforces an explicit byte envelope. The coordinator measures
   each batch again after temporary IDs become service-issued IDs and returns
   the exact planned, resolved, and allowed byte counts when representation
@@ -97,15 +97,23 @@ checkpoint systems with its own atomicity and availability evidence.
   conflict, and interruption paths as synchronous throws.
 - Lease release settles before the caller receives a result. A rejected or
   unconfirmed release returns a typed lease error with an inspection
-  coordinate. When execution and release both fail, the execution error keeps
-  primary authority and carries the release error as its secondary cause.
+  coordinate after accepted execution. A typed conflict, friction, or
+  interruption keeps primary authority and carries bounded release context in
+  `secondaryFailure`; an extensible thrown execution error carries the same
+  bounded record in a distinct `secondaryFailure` property while preserving
+  its existing `cause` descriptor.
 - Every operation has a stable intent ID. Replaying a fully applied batch
   returns the recorded result.
 - A lost success response triggers an intent read. The coordinator classifies
   the batch as already applied, safe to retry, or requiring a human decision.
-- A post-apply interruption leaves the earlier checkpoint intact. Resume
-  reaches the same accepted state through an exact intent read when the
-  observed revision advances by the one expected batch transition.
+- Before dispatch, the checkpoint records a semantic projection of the complete
+  next state. Created variables use temporary identities in that digest, so the
+  projection remains stable before the service assigns remote IDs.
+- A post-apply interruption leaves that pending projection intact. Resume
+  requires an exact intent read, the one expected revision advance, and a full
+  observed-state match after service IDs normalize back to their temporary
+  identities. Changes to unrelated variables therefore route to reconciliation
+  before the checkpoint advances.
 - Before another resumed write, the coordinator compares the live revision and
   state digest with the durable checkpoint. An exact applied intent set can
   explain one pending batch transition; other drift returns both coordinates
@@ -114,25 +122,30 @@ checkpoint systems with its own atomicity and availability evidence.
   one-to-one operation result sets pass structural and semantic admission.
   Create results also pass an identity-transfer check against every previously
   observed or issued remote ID and the settled snapshot. The monotonic ledger
-  retains an issued ID after deletion, so a later batch cannot silently reuse
-  it for a different temporary identity.
-- After direct application, the coordinator projects every operation over the
-  earlier admitted snapshot and compares the complete result with the settled
-  snapshot. This catches unreported changes to unrelated variables, version
-  drift, create collisions, and dangling references before progress advances.
+  retains an issued ID after deletion and routes later reuse to explicit
+  identity-transfer friction.
+- After direct application, the coordinator compares the settled snapshot with
+  the same durable semantic projection. This catches unreported changes to
+  unrelated variables, version drift, create collisions, and dangling
+  references before progress advances.
 - Every durable batch checkpoint carries the reconciled state digest. Final
   acceptance requires the remote revision and state digest to match that
   checkpoint, so drift after a completed run receives a typed conflict.
-- Checkpoint admission validates the exact field set, batch progress,
-  settlement transcript, temporary-ID progress, revision arithmetic, and
-  resource envelope before a resumed run can accept or advance it. The
-  coordinator also caps accumulated retry, reconciliation, and settlement
-  observations before the next remote mutation.
+- Checkpoint admission validates the exact field set, batch progress, pending
+  transition, bounded transcript window and hash chain, temporary-ID progress,
+  revision arithmetic, and resource envelope before a resumed run can accept
+  or advance it. The coordinator caps total retry, reconciliation, and
+  settlement observations before the next remote mutation while retaining the
+  latest 128 records and one digest over the complete transcript. A separate
+  settlement count and digest chain stays aligned with `nextBatchIndex`; its
+  released-prefix coordinate keeps every retained observation at or beyond the
+  last completed batch.
 - Every checkpoint save returns through the same structural and semantic
   admission path. The coordinator compares the store-returned record with the
   record submitted for persistence before that durable state can drive another
   batch. Version `0.1.0` is the first published checkpoint shape for this
-  exemplar and includes the remote-ID ledger as a required field.
+  exemplar and includes the remote-ID ledger, pending transition, and bounded
+  observation transcript as required fields.
 - A changed plan receives a successor run ID and checkpoint lineage.
 - Receipts carry identifiers, counts, revisions, classifications, and digests;
   credential-shaped fields receive a dedicated finding.
@@ -143,13 +156,13 @@ checkpoint systems with its own atomicity and availability evidence.
 | --- | --- | --- |
 | `retry_after` | A safe non-negative integer delay and attempt appear in the checkpoint | Wait for the admitted interval and retry inside the declared attempt and delay budget |
 | active writer lease | The current owner and expiry return as typed friction | Preserve checkpoint and remote state, then retry after authority becomes available |
-| lease release rejected or unconfirmed | The caller receives `lease_release_failed` or `lease_release_unconfirmed` with the writer generation | Inspect the writer lease and resume from the durable checkpoint after authority is current |
+| lease release rejected or unconfirmed | Accepted execution raises `lease_release_failed` or `lease_release_unconfirmed`; typed outcomes and extensible thrown failures retain their primary authority and add bounded `secondaryFailure` context | Follow the primary recovery coordinate, inspect the writer lease, and resume from the durable checkpoint after authority is current |
 | writer expires around checkpoint persistence | Lease renewal or the atomic checkpoint fence returns typed friction and the earlier durable coordinate remains authoritative | Read remote intent results and reconcile the exact batch before a successor writer advances |
 | `timeout_before_apply` | Intent read returns an absent batch at the expected revision | Retry the same stable intents |
 | `response_lost` | Intent read returns every operation as applied | Advance the checkpoint using reconciled results |
-| `interrupt_after_apply` | Remote truth advances while the durable checkpoint remains earlier | Resume the same batch and accept idempotent replay |
+| `interrupt_after_apply` | Remote truth advances while the durable checkpoint retains the pre-dispatch full-state projection | Read the exact intents and accept idempotent replay after the complete observed state matches that projection |
 | `concurrent_drift` | Remote revision advances outside the prepared plan | Return both revisions to a reconciliation owner |
-| drift before interrupted-run resume | Live revision or state differs from the checkpoint and an exact pending intent set does not explain one transition | Return `checkpoint_remote_drift` at `reconcile:resume` before another remote mutation |
+| drift before interrupted-run resume | Live revision or state differs from the checkpoint while the exact pending intent set leaves the transition unexplained | Return `checkpoint_remote_drift` at `reconcile:resume` before another remote mutation |
 | incomplete or mismatched remote results | Apply or intent-read results fail the exact operation-set contract | Return `remote_protocol_invalid`, preserve the durable checkpoint, and inspect the remote adapter at the batch reconciliation coordinate |
 | drift after completion | Final revision or state digest differs from the durable accepted checkpoint | Return `final_remote_drift` with both expected and observed coordinates |
 | incomplete checkpoint transcript | Batch progress and settlement records disagree | Return `checkpoint_invalid` and inspect the durable checkpoint before resume |
@@ -158,16 +171,31 @@ checkpoint systems with its own atomicity and availability evidence.
 
 ## Complexity and allocation
 
-Let `V` be operations, `E` dependency edges, `B` batches, and `R` variables in
-the fake remote.
+Let `V` be operations, `E` dependency edges, `B` batches, `R` variables in
+the fake remote, `H` total checkpoint observations, and `W` the retained
+observation window (`W <= 128`).
 
 - graph admission and ordering: `O(V + E)` time and `O(V + E)` space;
 - collision and intent indexes: expected `O(V)` time and space;
 - batch formation: `O(V)` plus JSON encoding cost;
+- immutable checkpoint-plan indexes: `O(V + B)` once, followed by `O(1)` batch
+  and create-progress lookups;
+- one observation append: `O(1)` observation and settlement-chain digest work;
+  checkpoint admission replays at most `W` retained records, so transcript
+  work remains `O(W)` time and space across `H` observations;
+- pending-transition projection: `O(R + batch_size)` time and space per batch;
 - fake-remote atomic application: `O(R + batch_size)` allocation per batch
   because the simulator uses copy-on-write state; and
 - final ordering and digest: `O(R log R)` for locale-independent ordinal
   output across receiving runtimes.
+
+The checkpoint still carries the temporary-ID map and remote-identity ledger.
+Structural admission and exact store-return verification therefore scale with
+that durable coordinate's current serialized size. Remote snapshot projection
+also remains `O(B * R)` across a complete multi-batch run. The bounded
+transcript and immutable plan indexes remove the previous repeated scan of the
+entire growing observation history and completed plan prefix while continuing
+to expose the state that resume actually needs.
 
 The scale evidence admits both a 1,000-operation chain and a 2,000-operation
 high-fan-out graph. The fan-out test counts the indexed vertex and edge work and
@@ -193,7 +221,8 @@ digesting a complete plan:
 | Remote snapshot variables / JSON nodes / depth | 10,000 / 100,000 / 20 |
 | Remote snapshot strings / encoded snapshot | 4 MiB / 8 MiB |
 | Historical remote variable identities | 20,000 |
-| Checkpoint observations | 50,000 |
+| Total checkpoint observations | 50,000 |
+| Retained checkpoint observation window | 128 |
 
 Receiving adapters may select tighter limits inside this envelope. A successor
 coordinate receives any broader limit together with representative scale and

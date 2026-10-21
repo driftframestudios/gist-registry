@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdir, mkdtemp, readFile, readdir, rename, symlink, truncate, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, rename, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -12,6 +12,70 @@ test("candidate promotion moves one accepted pointer after verification", async 
   const pointer = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
   assert.equal(pointer.receiptId, "semantic-chromium-baseline");
   assert.deepEqual(JSON.parse(await readFile(join(root, "accepted-pointer.json"), "utf8")), pointer);
+});
+
+test("publication requires a caller-owned root and returns typed recovery when it is absent", async () => {
+  const container = await mkdtemp(join(tmpdir(), "visual-receipt-root-owner-"));
+  const root = join(container, "nested", "receipt-root");
+
+  await assert.rejects(
+    publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "root"
+      && error.details.reason === "ENOENT"
+      && error.details.restartFrom === "publication_root",
+  );
+  assert.deepEqual(await readdir(container), []);
+});
+
+test("owned-root provisioning rejects a prepared intermediate symbolic link", async () => {
+  const owner = await mkdtemp(join(tmpdir(), "visual-receipt-owned-root-link-"));
+  const artifacts = join(owner, ".artifacts");
+  const outside = join(owner, "outside");
+  await mkdir(artifacts);
+  await mkdir(outside);
+  await symlink(outside, join(artifacts, "receipts"), "dir");
+
+  await assert.rejects(
+    publishReceipt(
+      join(artifacts, "receipts", "browser", "case"),
+      makeReceipt(),
+      { artifactSources: artifactSources(), ownerRoot: owner },
+    ),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "root_ancestor..artifacts/receipts"
+      && error.details.reason === "regular_directory_required"
+      && error.details.restartFrom === "publication_root",
+  );
+  assert.deepEqual(await readdir(outside), []);
+});
+
+test("owned-root provisioning rejects publication-root replacement after capture", async () => {
+  const owner = await mkdtemp(join(tmpdir(), "visual-receipt-owned-root-swap-"));
+  const root = join(owner, ".artifacts", "receipts");
+  const heldRoot = join(owner, "held-receipts");
+  const outside = join(owner, "outside");
+  await mkdir(outside);
+
+  await assert.rejects(
+    publishReceipt(root, makeReceipt(), {
+      artifactSources: artifactSources(),
+      ownerRoot: owner,
+      injectFault: async ({ checkpoint, directoryPath, isPublicationRoot }) => {
+        if (checkpoint !== "after_publication_directory_capture" || !isPublicationRoot) return;
+        await rename(directoryPath, heldRoot);
+        await symlink(outside, directoryPath, "dir");
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "root"
+      && error.details.reason === "directory_identity_changed"
+      && error.details.restartFrom === "publication_root",
+  );
+  assert.deepEqual(await readdir(outside), []);
 });
 
 test("publication rejects receipt accessors before allocation and leaves the getter idle", async () => {
@@ -85,6 +149,9 @@ test("publication tightens a candidate parent retained by an earlier release", a
   const root = await mkdtemp(join(tmpdir(), "visual-receipt-candidate-upgrade-"));
   const candidateParent = join(root, ".candidates");
   await mkdir(candidateParent, { mode: 0o755 });
+  // Make the migration precondition independent from the process umask.
+  await chmod(candidateParent, 0o755);
+  assert.equal((await lstat(candidateParent)).mode & 0o077, 0o055);
 
   const pointer = await publishReceipt(root, makeReceipt(), {
     artifactSources: artifactSources(),
@@ -309,10 +376,108 @@ test("digest reservation preserves a pre-existing destination instead of replaci
     publishReceipt(root, receipt, { artifactSources: artifactSources() }),
     error => error instanceof ObserverError
       && error.code === "ACCEPTED_INTEGRITY_MISMATCH"
-      && error.details.restartFrom === "candidate",
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === coordinate.receiptSha256,
   );
   assert.deepEqual(await readdir(reservedDestination), []);
   assert.deepEqual(await readdir(join(root, ".candidates")), []);
+});
+
+test("reservation replacement stops pointer promotion at accepted-coordinate recovery", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-reservation-replacement-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "reservation-replacement-successor";
+  let replacementPath;
+  let heldPath;
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        replacementPath = reservationPath;
+        heldPath = `${reservationPath}.held`;
+        await rename(reservationPath, heldPath);
+        await mkdir(reservationPath);
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
+      && error.details.failure.boundary === "destination_reservation",
+  );
+  assert.deepEqual(await readdir(replacementPath), []);
+  assert.ok((await readFile(heldPath)).byteLength > 0);
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("a nonempty replacement reservation remains inspectable and stops pointer promotion", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-reservation-nonempty-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "reservation-nonempty-successor";
+  let retainedFile;
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        retainedFile = join(reservationPath, "owner-note.txt");
+        await writeFile(retainedFile, "retained for accepted-coordinate inspection\n");
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.failure.boundary === "destination_reservation",
+  );
+  assert.equal(await readFile(retainedFile, "utf8"), "retained for accepted-coordinate inspection\n");
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("a primary publication failure retains bounded reservation-cleanup context", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-reservation-primary-cleanup-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "reservation-primary-cleanup-successor";
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        await writeFile(join(reservationPath, "owner-note.txt"), "retained after primary failure\n");
+        throw new ObserverError(
+          "INJECTED_PRIMARY",
+          "The injected primary failure stopped publication before reservation release.",
+          { checkpoint: "before_reservation_release", restartFrom: "pointer" },
+        );
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "INJECTED_PRIMARY"
+      && error.details.checkpoint === "before_reservation_release"
+      && Object.keys(error.details.cleanupFailure).sort().join(",") === "boundary,code,recovery"
+      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
+      && error.details.cleanupFailure.boundary === "destination_reservation"
+      && error.details.cleanupFailure.recovery === "accepted_coordinate_recovery",
+  );
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
 });
 
 test("accepted leaf identity stays stable through pointer commit", async () => {
@@ -337,7 +502,9 @@ test("accepted leaf identity stays stable through pointer commit", async () => {
       && error.code === "PUBLICATION_BOUNDARY_INVALID"
       && error.details.boundary === "accepted_file.receipt.md"
       && error.details.reason === "file_identity_changed"
-      && error.details.restartFrom === "candidate",
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate),
   );
   assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
   assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
@@ -364,7 +531,9 @@ test("accepted leaf bytes stay exact through pointer commit", async () => {
     error => error instanceof ObserverError
       && error.code === "ACCEPTED_INTEGRITY_MISMATCH"
       && error.details.path === "receipt.md"
-      && error.details.restartFrom === "candidate",
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate),
   );
   assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
   assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
@@ -446,7 +615,11 @@ test("replay rejects a corrupted digest-addressed destination before moving the 
 
   await assert.rejects(
     publishReceipt(root, receipt, { artifactSources: artifactSources() }),
-    error => error instanceof ObserverError && error.code === "ACCEPTED_INTEGRITY_MISMATCH",
+    error => error instanceof ObserverError
+      && error.code === "ACCEPTED_INTEGRITY_MISMATCH"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === pointer.receiptSha256,
   );
   assert.deepEqual(JSON.parse(await readFile(join(root, "accepted-pointer.json"), "utf8")), pointer);
 });
