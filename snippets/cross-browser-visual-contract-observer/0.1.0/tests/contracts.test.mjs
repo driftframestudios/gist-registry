@@ -1,12 +1,74 @@
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
+import { lstat, mkdtemp, symlink, truncate, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import test from "node:test";
-import { evaluateControlledObservation, OBSERVER_RESOURCE_LIMITS, ObserverError, readJson, selectTier, validateInventory, validateMatrix } from "../src/contracts.mjs";
+import { evaluateControlledObservation, OBSERVER_RESOURCE_LIMITS, ObserverError, readBoundedRegularFile, readJson, selectTier, validateInventory, validateMatrix } from "../src/contracts.mjs";
 import { packageRoot } from "../tools/paths.mjs";
 
 const inventory = await readJson(resolve(packageRoot, "inventory/decisions.json"));
 const matrix = await readJson(resolve(packageRoot, "inventory/matrix.json"));
 const accepted = await readJson(resolve(packageRoot, "fixtures/accepted/observations.json"));
+
+test("JSON admission bounds bytes and requires a directly addressed regular file", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-observer-json-"));
+  const oversized = join(root, "oversized.json");
+  await writeFile(oversized, "{}");
+  await truncate(oversized, OBSERVER_RESOURCE_LIMITS.jsonBytes + 1);
+  await assert.rejects(
+    readJson(oversized),
+    error => (
+      error instanceof ObserverError &&
+      error.code === "RESOURCE_LIMIT_EXCEEDED" &&
+      error.details.boundary === "json_input.bytes"
+    ),
+  );
+
+  const source = join(root, "source.json");
+  const linked = join(root, "linked.json");
+  await writeFile(source, "{}\n");
+  await symlink(source, linked);
+  await assert.rejects(
+    readJson(linked),
+    error => error instanceof ObserverError && error.code === "SOURCE_FILE_INVALID",
+  );
+});
+
+test("bounded capture preserves typed recovery when an opened source becomes unreadable", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-observer-capture-"));
+  const source = join(root, "source.bin");
+  await writeFile(source, "bounded bytes");
+  const entry = await lstat(source);
+  let closed = false;
+  const fileSystem = {
+    lstat: async () => entry,
+    open: async () => ({
+      stat: async () => entry,
+      read: async () => {
+        throw new Error("injected descriptor read failure");
+      },
+      close: async () => {
+        closed = true;
+      },
+    }),
+  };
+
+  await assert.rejects(
+    readBoundedRegularFile(source, {
+      boundary: "artifact_source.fixture",
+      maxBytes: OBSERVER_RESOURCE_LIMITS.artifactBytes,
+      restartFrom: "candidate",
+      fileSystem,
+    }),
+    error => (
+      error instanceof ObserverError &&
+      error.code === "SOURCE_CAPTURE_FAILED" &&
+      error.details.boundary === "artifact_source.fixture" &&
+      error.details.restartFrom === "candidate"
+    ),
+  );
+  assert.equal(closed, true);
+});
 
 test("decision inventory maps each target to one fitting oracle and controlled fault", () => {
   assert.deepEqual(validateInventory(inventory), {

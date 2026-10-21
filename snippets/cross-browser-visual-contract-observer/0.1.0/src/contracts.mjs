@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { lstat, open } from "node:fs/promises";
 
 const ORACLES = new Set(["semantic", "interaction", "geometry", "computed_style", "bitmap_crop"]);
 const TIERS = new Set(["smoke", "changed_boundary", "full"]);
@@ -17,6 +18,7 @@ const CLASSIFICATIONS = new Set(["contract_change", "deterministic_implementatio
 const SOURCE_MANIFEST_KIND = "generated_output_manifest";
 const RECEIVER_MANIFEST_KIND = "production_build_manifest";
 const IDENTIFIER_PATTERN = /^[a-z0-9][a-z0-9._-]*$/u;
+const SOURCE_FILE_SYSTEM = Object.freeze({ lstat, open });
 
 export const OBSERVER_RESOURCE_LIMITS = Object.freeze({
   targets: 64,
@@ -25,6 +27,7 @@ export const OBSERVER_RESOURCE_LIMITS = Object.freeze({
   identifierBytes: 256,
   caseIdBytes: 1024,
   proseBytes: 16 * 1024,
+  jsonBytes: 2 * 1024 * 1024,
   artifactPathBytes: 1024,
   viewportWidth: 8192,
   viewportHeight: 8192,
@@ -64,12 +67,143 @@ export function stableStringify(value) {
   return `${JSON.stringify(order(value), null, 2)}\n`;
 }
 
-export async function readJson(path) {
+// One bounded file descriptor owns inspection and reading. This keeps source
+// identity, allocation, and cleanup inside the same observation boundary.
+export async function readBoundedRegularFile(filePath, {
+  boundary,
+  maxBytes,
+  expectedBytes = null,
+  restartFrom,
+  fileSystem = SOURCE_FILE_SYSTEM,
+}) {
+  let pathEntry;
   try {
-    return JSON.parse(await readFile(path, "utf8"));
+    pathEntry = await fileSystem.lstat(filePath);
+  } catch (error) {
+    throw new ObserverError("SOURCE_FILE_UNREADABLE", "The source coordinate requires a readable file.", {
+      boundary,
+      reason: error.message,
+      restartFrom,
+    });
+  }
+  if (!pathEntry.isFile() || pathEntry.isSymbolicLink()) {
+    throw new ObserverError("SOURCE_FILE_INVALID", "The source coordinate requires a directly addressed regular file.", {
+      boundary,
+      restartFrom,
+    });
+  }
+  if (pathEntry.size > maxBytes) resourceLimitExceeded(boundary, maxBytes, pathEntry.size, restartFrom);
+  if (expectedBytes !== null && pathEntry.size !== expectedBytes) {
+    throw new ObserverError("SOURCE_SIZE_MISMATCH", "The source byte count must match its declared coordinate.", {
+      boundary,
+      expected: expectedBytes,
+      observed: pathEntry.size,
+      restartFrom,
+    });
+  }
+
+  let handle;
+  try {
+    const flags = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0);
+    handle = await fileSystem.open(filePath, flags);
+  } catch (error) {
+    throw new ObserverError("SOURCE_FILE_UNREADABLE", "The source coordinate changed or became unreadable before capture.", {
+      boundary,
+      reason: error.message,
+      restartFrom,
+    });
+  }
+
+  let primaryError = null;
+  try {
+    const openedEntry = await handle.stat();
+    if (!openedEntry.isFile()) {
+      throw new ObserverError("SOURCE_FILE_INVALID", "The opened source coordinate requires a regular file.", {
+        boundary,
+        restartFrom,
+      });
+    }
+    if (openedEntry.dev !== pathEntry.dev || openedEntry.ino !== pathEntry.ino) {
+      throw new ObserverError("SOURCE_FILE_CHANGED", "The source coordinate changed before capture completed.", {
+        boundary,
+        restartFrom,
+      });
+    }
+    if (openedEntry.size > maxBytes) resourceLimitExceeded(boundary, maxBytes, openedEntry.size, restartFrom);
+    if (expectedBytes !== null && openedEntry.size !== expectedBytes) {
+      throw new ObserverError("SOURCE_SIZE_MISMATCH", "The opened source byte count must match its declared coordinate.", {
+        boundary,
+        expected: expectedBytes,
+        observed: openedEntry.size,
+        restartFrom,
+      });
+    }
+
+    const bytes = Buffer.allocUnsafe(openedEntry.size);
+    let offset = 0;
+    while (offset < bytes.byteLength) {
+      const result = await handle.read(bytes, offset, bytes.byteLength - offset, offset);
+      if (result.bytesRead === 0) break;
+      offset += result.bytesRead;
+    }
+    const overflowProbe = Buffer.allocUnsafe(1);
+    const overflow = await handle.read(overflowProbe, 0, 1, openedEntry.size);
+    const settledEntry = await handle.stat();
+    if (
+      offset !== openedEntry.size ||
+      overflow.bytesRead > 0 ||
+      settledEntry.size !== openedEntry.size ||
+      settledEntry.mtimeMs !== openedEntry.mtimeMs
+    ) {
+      throw new ObserverError("SOURCE_FILE_CHANGED", "The source bytes changed during bounded capture.", {
+        boundary,
+        restartFrom,
+      });
+    }
+    return bytes;
+  } catch (error) {
+    primaryError = error instanceof ObserverError
+      ? error
+      : new ObserverError("SOURCE_CAPTURE_FAILED", "The source coordinate could not complete its bounded capture.", {
+        boundary,
+        reason: error.message,
+        restartFrom,
+      });
+    throw primaryError;
+  } finally {
+    try {
+      await handle.close();
+    } catch (error) {
+      if (primaryError === null) {
+        throw new ObserverError("SOURCE_FILE_CLOSE_FAILED", "The source descriptor requires operator recovery after capture.", {
+          boundary,
+          reason: error.message,
+          restartFrom,
+        });
+      }
+    }
+  }
+}
+
+export async function readJson(path) {
+  let bytes;
+  try {
+    bytes = await readBoundedRegularFile(path, {
+      boundary: "json_input.bytes",
+      maxBytes: OBSERVER_RESOURCE_LIMITS.jsonBytes,
+      restartFrom: "input",
+    });
+  } catch (error) {
+    if (error instanceof ObserverError) throw error;
+    throw new ObserverError("INVALID_JSON", "The observer requires readable JSON input.", {
+      reason: error.message,
+      restartFrom: "input",
+    });
+  }
+  try {
+    return JSON.parse(bytes.toString("utf8"));
   } catch (error) {
     throw new ObserverError("INVALID_JSON", "The observer requires readable JSON input.", {
-      path: String(path),
       reason: error.message,
       restartFrom: "input",
     });

@@ -135,17 +135,22 @@ destination is rejected while the earlier pointer remains available.
 Receipt admission allows up to 32 artifacts, 16 MiB per artifact, and 64 MiB
 in aggregate. A bounded iterative walk checks normalized observation depth,
 node count, and UTF-8 string bytes before publication clones or digests the
-receipt.
+receipt. JSON inputs carry a 2 MiB ceiling. Artifact publication opens each
+directly addressed regular source through one descriptor, confirms its file
+identity and actual byte count, and reads within the declared envelope. Sparse
+oversize files and symbolic-link sources return to the candidate boundary
+before body capture.
 
 ## Focused evidence
 
-The package-local model lane establishes 34 behaviors, including exact direct
+The package-local model lane establishes 38 behaviors, including exact direct
 dependency and lock coordinates, plus distinct
 source-manifest, receiver-build, and observed-fixture coordinates, five matched
 fault-oracle pairs, closed and bounded inventory/matrix admission, executable
-case planning, bounded receipt admission, unique contained artifacts, exact
-artifact-byte totals, concurrent candidate isolation, replay integrity, and two
-promotion interruptions. The browser lane exercises 177 checks across
+case planning, bounded JSON and artifact-source admission, typed recovery from
+descriptor-read failure, unique contained
+artifacts, exact artifact-byte totals, concurrent candidate isolation, replay
+integrity, and two promotion interruptions. The browser lane exercises 177 checks across
 Chromium, Firefox, and WebKit: a digest-bound smoke of the actual Issue #62
 production build, exact browser coordinates, every applicable target/scenario
 case, every controlled fault, applied matrix rendering/input state, and

@@ -1,7 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, relative, resolve, sep } from "node:path";
-import { ObserverError, sha256, stableStringify, validateReceipt } from "./contracts.mjs";
+import {
+  OBSERVER_RESOURCE_LIMITS,
+  ObserverError,
+  readBoundedRegularFile,
+  sha256,
+  stableStringify,
+  validateReceipt,
+} from "./contracts.mjs";
 import { validateReceiptSchema } from "./receipt-schema.mjs";
 
 function contained(root, candidate) {
@@ -73,8 +80,13 @@ export async function publishReceipt(root, inputReceipt, { injectFault = null, a
       if (!sourcePath) {
         throw new ObserverError("ARTIFACT_SOURCE_REQUIRED", "Each declared artifact requires a source for byte verification.", { artifactPath: artifact.path, restartFrom: "candidate" });
       }
-      const bytes = await readFile(sourcePath);
-      if (bytes.byteLength !== artifact.bytes || sha256(bytes) !== artifact.sha256) {
+      const bytes = await readBoundedRegularFile(sourcePath, {
+        boundary: `artifact_source.${artifact.path}`,
+        maxBytes: OBSERVER_RESOURCE_LIMITS.artifactBytes,
+        expectedBytes: artifact.bytes,
+        restartFrom: "candidate",
+      });
+      if (sha256(bytes) !== artifact.sha256) {
         throw new ObserverError("ARTIFACT_DIGEST_MISMATCH", "Artifact bytes must match the declared size and digest before promotion.", { artifactPath: artifact.path, restartFrom: "candidate" });
       }
       const destination = contained(candidateRoot, artifact.path);

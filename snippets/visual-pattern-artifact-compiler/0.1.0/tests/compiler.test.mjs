@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile, writeFile, mkdtemp, readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -10,6 +11,7 @@ import sharp from "sharp";
 import {
   DEFAULT_RESOURCE_LIMITS,
   VisualArtifactError,
+  compareOrdinalText,
   compileArtifactFamily,
   publishArtifactFamily,
   validateContract,
@@ -79,6 +81,24 @@ test("repeats exact bytes at one declared runtime coordinate", async () => {
       output.path,
     );
   }
+});
+
+test("orders manifest paths by locale-independent ordinal identity", () => {
+  const candidates = ["éclair.webp", "zeta.webp", "Alpha.webp", "Älpha.webp", "alpha.webp", "Zeta.webp"];
+  const expected = ["Alpha.webp", "Zeta.webp", "alpha.webp", "zeta.webp", "Älpha.webp", "éclair.webp"];
+  assert.deepEqual([...candidates].sort(compareOrdinalText), expected);
+
+  const compilerUrl = new URL("../src/compiler.mjs", import.meta.url).href;
+  const program = `import {compareOrdinalText} from ${JSON.stringify(compilerUrl)}; console.log(JSON.stringify(${JSON.stringify(candidates)}.sort(compareOrdinalText)));`;
+  const observations = ["C", "tr_TR.UTF-8"].map((locale) => {
+    const result = spawnSync(process.execPath, ["--input-type=module", "--eval", program], {
+      encoding: "utf8",
+      env: { ...process.env, LANG: locale, LC_ALL: locale },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout);
+  });
+  assert.deepEqual(observations, [expected, expected]);
 });
 
 test("one compiler atomically owns a fresh output directory", async () => {

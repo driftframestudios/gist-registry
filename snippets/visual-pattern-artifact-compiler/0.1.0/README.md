@@ -99,6 +99,8 @@ The package-local tests establish:
 - an inspected-clean metadata standing for EXIF, ICC, IPTC, and XMP fields;
 - byte-identical output across two builds at one Node, Sharp, and libvips
   coordinate;
+- locale-independent ordinal manifest ordering across mixed-case and non-ASCII
+  path specimens;
 - unique SVG IDs, complete local references, and connector painter order;
 - typed rejection of script-bearing, event-bearing, externally referenced,
   machine-private, externally declared, animated, or foreign-object sources;

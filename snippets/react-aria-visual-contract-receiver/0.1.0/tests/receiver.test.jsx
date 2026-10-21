@@ -1,5 +1,5 @@
 import React from "react";
-import {render, screen, waitFor, within} from "@testing-library/react";
+import {act, fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {describe, expect, test, vi} from "vitest";
 import {App} from "../src/app.jsx";
@@ -62,21 +62,26 @@ describe("visual-contract receiver", () => {
   });
 
   test("a newer preview aborts pending work while the current generation settles", async () => {
-    const user = userEvent.setup();
+    vi.useFakeTimers();
     const abort = vi.spyOn(AbortController.prototype, "abort");
-    render(<App settlementDelay={30} />);
-    const nativeRegion = regionForHeading("Browser semantics carry the first route");
-    const select = within(nativeRegion).getByLabelText("Specimen state");
-    const preview = within(nativeRegion).getByRole("button", {name: "Request native preview"});
+    try {
+      render(<App settlementDelay={30} />);
+      const nativeRegion = regionForHeading("Browser semantics carry the first route");
+      const select = within(nativeRegion).getByLabelText("Specimen state");
+      const preview = within(nativeRegion).getByRole("button", {name: "Request native preview"});
 
-    await user.click(preview);
-    await user.selectOptions(select, "release-receipt");
-    await user.click(preview);
+      fireEvent.click(preview);
+      fireEvent.change(select, {target: {value: "release-receipt"}});
+      fireEvent.click(preview);
 
-    expect(abort).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/request 2 accepted Release receipt/));
-    expect(screen.getByText("receiver:2:release-receipt")).toBeTruthy();
-    abort.mockRestore();
+      expect(abort).toHaveBeenCalledTimes(1);
+      await act(async () => vi.advanceTimersByTimeAsync(30));
+      expect(screen.getByRole("status").textContent).toMatch(/request 2 accepted Release receipt/);
+      expect(screen.getByText("receiver:2:release-receipt")).toBeTruthy();
+    } finally {
+      abort.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   test("unmount aborts pending preview work", async () => {

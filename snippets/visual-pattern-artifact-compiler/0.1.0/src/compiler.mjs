@@ -102,10 +102,17 @@ function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+// Artifact identity uses ordinal code-unit order. Locale collation belongs in a
+// receiving view and therefore stays outside manifest formation.
+export function compareOrdinalText(left, right) {
+  if (left === right) return 0;
+  return left < right ? -1 : 1;
+}
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stable(value[key])]));
+    return Object.fromEntries(Object.keys(value).sort(compareOrdinalText).map((key) => [key, stable(value[key])]));
   }
   return value;
 }
@@ -696,7 +703,7 @@ export async function compileArtifactFamily({ contractPath, svgPath, galleryShel
     },
     resourceLimits: limits,
     metadataStanding: "inspected_clean",
-    outputs: records.sort((a, b) => a.path.localeCompare(b.path)),
+    outputs: records.sort((a, b) => compareOrdinalText(a.path, b.path)),
   };
   const manifestBytes = Buffer.from(stableJson(manifest));
   await writeBoundedOutput("manifest.json", manifestBytes);
