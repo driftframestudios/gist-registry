@@ -71,8 +71,27 @@ test("gallery preserves meaning, reflow, media modes, and SVG bounds", async ({ 
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
       rootFontSize: Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+      overflowingElements: [...document.body.querySelectorAll("*")].flatMap(element => {
+        const bounds = element.getBoundingClientRect();
+        return bounds.left < -0.5
+          || bounds.right > document.documentElement.clientWidth + 0.5
+          // Browser table geometry rounds collapsed borders to whole CSS pixels.
+          // A one-pixel delta is representation rounding; larger deltas identify
+          // content that expands its own box and can widen the document.
+          || element.scrollWidth > element.clientWidth + 1
+          ? [{
+              element: element.tagName.toLowerCase(),
+              className: element.getAttribute("class") ?? "",
+              clientWidth: element.clientWidth,
+              scrollWidth: element.scrollWidth,
+              left: bounds.left,
+              right: bounds.right,
+            }]
+          : [];
+      }),
     }));
     expect(narrowGeometry.rootFontSize).toBe(32);
+    expect(narrowGeometry.overflowingElements).toEqual([]);
     expect(narrowGeometry.scrollWidth).toBeLessThanOrEqual(narrowGeometry.clientWidth);
 
     await page.emulateMedia({ forcedColors: "active", media: "screen" });

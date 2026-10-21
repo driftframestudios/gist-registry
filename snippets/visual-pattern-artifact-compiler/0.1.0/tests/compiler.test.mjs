@@ -55,6 +55,7 @@ test("compiles responsive derivatives, an accessible gallery, and a semantic com
   assert.match(gallery, /srcset="source-to-decision-route-640\.webp 640w, source-to-decision-route-1280\.webp 1280w, source-to-decision-route-1600\.webp 1600w"/);
   assert.match(gallery, /alt="Four connected panels/);
   assert.match(gallery, /Semantic companion/);
+  assert.match(gallery, /main \{[^}]*overflow-wrap: anywhere;[^}]*\}/u);
   const semantic = JSON.parse(await readFile(path.join(root, "candidate", "semantic-companion.json"), "utf8"));
   assert.deepEqual(semantic.readingOrder, ["source", "translation", "receiver", "receipt"]);
   for (const width of [640, 1280, 1600]) {
