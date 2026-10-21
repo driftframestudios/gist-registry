@@ -40,7 +40,7 @@
   },
   "technicalVeracity": {
     "status": "verified",
-    "basis": "Package-local Node tests establish state separation, generation ownership, stale settlement, rejection preservation, idempotent release, exact direct dependency pins, the upstream CSS artifact digest and deterministic projection mapping, authored HTML semantics, CSS condition contracts, explicit performance budgets, and a deterministic two-build manifest; jsdom interaction tests establish rendered label order, native selection, AbortSignal cancellation for superseded and unmounted work, focus return, live status, acceptance, and release receipt; Vite creates the production browser bundle in Node.js 26.11.0."
+    "basis": "Package-local Node tests establish state separation, generation ownership, stale settlement, rejection preservation, idempotent release, exact direct dependency pins, the upstream CSS artifact digest and deterministic projection mapping, authored HTML semantics, CSS condition contracts, explicit performance budgets, a profile-bound gzip observation, and a deterministic two-build manifest; jsdom interaction tests establish rendered label order, native selection, AbortSignal cancellation for superseded and unmounted work, focus return, live status, acceptance, and release receipt; Vite creates the production browser bundle across the supported Node maintenance lines."
   },
   "license": "Apache-2.0",
   "canonicalPath": "snippets/react-aria-visual-contract-receiver/0.1.0",
@@ -98,7 +98,7 @@
       "The checked lock pins React 19.3.1, React DOM 19.3.1, React Aria Components 1.22.1, React Stately 3.51.0, Vite 8.3.5, Vitest 5.0.5, jsdom 30.1.3, and Testing Library coordinates.",
       "The resolved lock and package tests passed in Node.js 26.11.0 on macOS; development-only transitive engine ranges require a current Node 22, 24, or 26 maintenance release.",
       "The component suite uses jsdom and the build produces browser-loadable assets. Cross-browser and assistive-technology observations remain a receiving-release activity.",
-      "The reviewed build baseline in expected/build-budget-contract.json records exact measured values for authored source, the dependency graph, runtime assets, source maps, and the complete build. Every dimension carries an explicit review threshold.",
+      "The reviewed build baseline in expected/build-budget-contract.json records exact deterministic measurements for authored source, the dependency graph, runtime assets, source maps, and the complete build. Gzip size records its Node, zlib, platform, architecture, format, and level coordinate. Every dimension carries an explicit review threshold.",
       "source/token-coordinate.json binds the Issue 61 acme/light candidate generated-output manifest digest 6d93df6cd3c1b80076e3d4b0e162899381cfb4d82b1c28ff9c8a2a64d30a6e68 and acme-light/tokens.css digest 7a5d1503f28c80f671fc27a6fbe879fbc532a55879d0f82db1c871158f29a632; receiver-css-token-projection-v1 records and tests the bounded adaptation; human source acceptance advances its standing."
     ]
   },

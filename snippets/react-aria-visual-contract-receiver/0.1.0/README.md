@@ -139,7 +139,7 @@ operating contract stays available to script-independent readers.
 | `npm run test:model` | Separate state ownership, generation gating, stale settlement, rejection preservation, idempotent release, dependency pins, exact upstream artifact and projection mapping, fixture digest, static semantics, and CSS condition contracts |
 | `npm run test:dom` | Rendered labels, label-before-control order, native interaction, superseded-work and unmount cancellation, focus return, live status, accepted coordinate, and stable release receipt in jsdom |
 | `npm run build` | React, React Aria Components, React Stately, CSS imports, and source modules form a browser-loadable production bundle whose interactive, native, and semantic routes resolve together |
-| `npm run verify:build` | Two isolated builds produce the same file inventory and digests; the reviewed baseline and every budget threshold agree with observed bytes and counts |
+| `npm run verify:build` | Two isolated builds produce the same file inventory and digests; deterministic measurements match their baseline; profile-sensitive gzip measurement carries its Node/zlib/platform coordinate; every dimension stays within its review threshold |
 
 The DOM suite supplies component evidence in jsdom. A receiving release adds
 its complete browser and assistive-technology matrix across Chromium, Firefox,
@@ -174,11 +174,14 @@ performance budget, security posture, and release decision.
 
 ## Measured build and review budgets
 
-The reviewed Node.js `26.11.0`, Vite `8.3.5`, macOS ARM64 coordinate produced
-the following deterministic baseline. A changed measurement inside its
-threshold still receives review because the expected baseline is exact; a
-threshold crossing identifies the dimension that needs an explicit budget
-decision.
+The reviewed Node.js `26.11.0`, zlib `1.2.12`, Vite `8.3.5`, macOS ARM64
+coordinate produced the following baseline. Authored and emitted byte counts,
+dependency counts, specimens, transitions, and the build manifest remain exact
+across the supported Node lanes. Gzip size belongs to its Node, zlib, platform,
+architecture, format, and level coordinate because compression implementations
+can produce distinct valid byte streams. Every profile must remain within the
+declared threshold; a matching profile must also match its exact reviewed
+observation.
 
 | Dimension | Measured | Review threshold |
 | --- | ---: | ---: |
@@ -188,13 +191,12 @@ decision.
 | Stable specimens | 3 | 25 |
 | Domain transition operations | 4 | 6 |
 | Runtime JavaScript | 406,452 bytes | 430,000 bytes |
-| Runtime JavaScript, gzip level 9 | 125,721 bytes | 135,000 bytes |
+| Runtime JavaScript, gzip level 9 (reviewed profile) | 125,721 bytes | 135,000 bytes |
 | HTML, CSS, and JavaScript runtime assets | 422,922 bytes | 440,000 bytes |
 | Source map | 2,211,622 bytes | 2,300,000 bytes |
 | Complete production build | 2,634,544 bytes | 2,700,000 bytes |
 
 The two-build manifest digest is
 `0ab2fc6e413287a139519e898886037b66a8bb2f545c4745a67585167b9d192f`.
-Elapsed time and peak resident memory vary with the executing environment, so
-the local receipt records both as environment-bound observations beside Node,
-platform, and architecture.
+The receipt records the active gzip coordinate, elapsed time, and peak resident
+memory as environment-bound observations beside the byte-exact build manifest.

@@ -118,6 +118,45 @@ function checkThresholds(observed, thresholds) {
   }
 }
 
+function gzipMeasurementCoordinate() {
+  return {
+    node: process.versions.node,
+    zlib: process.versions.zlib,
+    platform: process.platform,
+    architecture: process.arch,
+    format: "gzip",
+    level: 9
+  };
+}
+
+function checkExpectedMeasurements(observed, expected, thresholds) {
+  const deterministic = expected.deterministicMeasurements;
+  const profiled = expected.profiledMeasurements;
+  assert.ok(deterministic && typeof deterministic === "object" && !Array.isArray(deterministic));
+  assert.ok(profiled && typeof profiled === "object" && !Array.isArray(profiled));
+
+  const declared = [...Object.keys(deterministic), ...Object.keys(profiled)].sort();
+  assert.equal(new Set(declared).size, declared.length, "measurement owners must remain distinct");
+  assert.deepEqual(declared, Object.keys(observed).sort(), "each measurement requires one comparison owner");
+  assert.deepEqual(declared, Object.keys(thresholds).sort(), "each measurement requires one review threshold");
+
+  for (const [name, value] of Object.entries(deterministic)) {
+    assert.equal(observed[name], value, `${name} changed from its deterministic baseline`);
+  }
+
+  const currentCoordinates = {
+    runtimeJavaScriptGzipBytes: gzipMeasurementCoordinate()
+  };
+  for (const [name, baseline] of Object.entries(profiled)) {
+    assert.ok(Number.isFinite(baseline.observed) && baseline.observed > 0, `${name} requires a finite reviewed observation`);
+    assert.ok(baseline.coordinate && typeof baseline.coordinate === "object" && !Array.isArray(baseline.coordinate), `${name} requires a measurement coordinate`);
+    assert.ok(currentCoordinates[name], `${name} requires an executable coordinate owner`);
+    if (canonicalJson(baseline.coordinate) === canonicalJson(currentCoordinates[name])) {
+      assert.equal(observed[name], baseline.observed, `${name} changed at its reviewed measurement coordinate`);
+    }
+  }
+}
+
 const budgets = await readJson(resolve(packageRoot, "config/build-budgets.json"));
 const expected = await readJson(resolve(packageRoot, "expected/build-budget-contract.json"));
 const temporaryRoot = await mkdtemp(join(tmpdir(), "visual-contract-receiver-"));
@@ -136,7 +175,7 @@ try {
   checkThresholds(observed, budgets.thresholds);
   assert.equal(expected.coordinate, budgets.coordinate);
   assert.equal(expected.deterministicManifestSha256, deterministicManifestSha256);
-  assert.deepEqual(expected.measurements, observed);
+  checkExpectedMeasurements(observed, expected, budgets.thresholds);
 
   const elapsedMilliseconds = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
   const receipt = {
@@ -145,6 +184,9 @@ try {
     deterministicManifestSha256,
     manifest: first,
     measurements: observed,
+    measurementCoordinates: {
+      runtimeJavaScriptGzipBytes: gzipMeasurementCoordinate()
+    },
     thresholds: budgets.thresholds,
     observation: {
       node: process.version,

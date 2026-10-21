@@ -2,16 +2,28 @@
   "schemaVersion": "0.1.0",
   "coordinate": "react-aria-visual-contract-receiver@0.1.0",
   "deterministicManifestSha256": "0ab2fc6e413287a139519e898886037b66a8bb2f545c4745a67585167b9d192f",
-  "measurements": {
+  "deterministicMeasurements": {
     "authoredSourceBytes": 37455,
     "directDependencyCount": 9,
     "resolvedPackageCount": 128,
     "specimenCount": 3,
     "transitionOperationCount": 4,
     "runtimeJavaScriptBytes": 406452,
-    "runtimeJavaScriptGzipBytes": 125721,
     "runtimeAssetBytes": 422922,
     "sourceMapBytes": 2211622,
     "completeBuildBytes": 2634544
+  },
+  "profiledMeasurements": {
+    "runtimeJavaScriptGzipBytes": {
+      "observed": 125721,
+      "coordinate": {
+        "node": "26.11.0",
+        "zlib": "1.2.12",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "format": "gzip",
+        "level": 9
+      }
+    }
   }
 }

@@ -109,12 +109,29 @@ test("each measured build dimension carries an explicit review threshold", async
   assert.equal(budgets.coordinate, "react-aria-visual-contract-receiver@0.1.0");
   assert.equal(expected.coordinate, budgets.coordinate);
   assert.match(expected.deterministicManifestSha256, /^[a-f0-9]{64}$/u);
+  const profiledMeasurements = Object.fromEntries(
+    Object.entries(expected.profiledMeasurements).map(([name, entry]) => [name, entry.observed])
+  );
+  const measurements = {...expected.deterministicMeasurements, ...profiledMeasurements};
   assert.deepEqual(
-    Object.keys(expected.measurements).sort(),
+    Object.keys(measurements).sort(),
     Object.keys(budgets.thresholds).sort()
   );
-  for (const [name, value] of Object.entries(expected.measurements)) {
+  assert.equal(
+    Object.keys(expected.deterministicMeasurements).length + Object.keys(expected.profiledMeasurements).length,
+    Object.keys(measurements).length,
+    "each measurement must have one comparison owner"
+  );
+  for (const [name, value] of Object.entries(measurements)) {
     assert.ok(value > 0, `${name} must carry a measured value`);
     assert.ok(value <= budgets.thresholds[name], `${name} must remain inside its review threshold`);
   }
+  assert.deepEqual(expected.profiledMeasurements.runtimeJavaScriptGzipBytes.coordinate, {
+    node: "26.11.0",
+    zlib: "1.2.12",
+    platform: "darwin",
+    architecture: "arm64",
+    format: "gzip",
+    level: 9
+  });
 });
