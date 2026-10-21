@@ -364,6 +364,81 @@ test("concurrent identical publishers own separate candidate directories", async
   assert.deepEqual(await readdir(join(root, ".candidates")), []);
 });
 
+test("different-digest publishers compare the captured pointer under one process-safe reservation", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-cross-digest-pointer-cas-"));
+  const baseline = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const firstReceipt = makeReceipt();
+  firstReceipt.receiptId = "first-concurrent-pointer-candidate";
+  const secondReceipt = makeReceipt();
+  secondReceipt.receiptId = "second-concurrent-pointer-candidate";
+  let releaseFirst;
+  const firstMayCommit = new Promise(resolvePromise => { releaseFirst = resolvePromise; });
+  let firstOwnsPointer;
+  const firstOwnsPointerSignal = new Promise(resolvePromise => { firstOwnsPointer = resolvePromise; });
+  let secondCapturedPrior;
+  const secondCapturedPriorSignal = new Promise(resolvePromise => { secondCapturedPrior = resolvePromise; });
+
+  const first = publishReceipt(root, firstReceipt, {
+    artifactSources: artifactSources(),
+    injectFault: async ({ checkpoint }) => {
+      if (checkpoint !== "after_pointer_reservation_acquired") return;
+      firstOwnsPointer();
+      await firstMayCommit;
+    },
+  });
+  await firstOwnsPointerSignal;
+  const second = publishReceipt(root, secondReceipt, {
+    artifactSources: artifactSources(),
+    injectFault: async ({ checkpoint }) => {
+      if (checkpoint === "before_pointer_reservation_acquire") secondCapturedPrior();
+    },
+  });
+  await secondCapturedPriorSignal;
+  releaseFirst();
+
+  const firstPointer = await first;
+  await assert.rejects(
+    second,
+    error => error instanceof ObserverError && error.code === "PUBLICATION_POINTER_CONFLICT",
+  );
+  assert.notDeepEqual(firstPointer, baseline);
+  assert.deepEqual(JSON.parse(await readFile(join(root, "accepted-pointer.json"), "utf8")), firstPointer);
+  assert.equal((await readdir(root)).includes(".accepted-pointer.reservation"), false);
+});
+
+test("pointer commit rejects a replaced pointer reservation and preserves primary authority", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-pointer-reservation-replacement-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "pointer-reservation-replacement-successor";
+  let replacementPath;
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint, pointerReservationPath }) => {
+        if (checkpoint !== "after_pointer_reservation_acquired") return;
+        await rename(pointerReservationPath, `${pointerReservationPath}.held`);
+        replacementPath = pointerReservationPath;
+        await writeFile(pointerReservationPath, "replacement pointer owner\n", "utf8");
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "pointer_reservation"
+      && error.details.checkpoint === "pointer_reservation_release"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
+      && error.details.cleanupFailure.code === "PUBLICATION_POINTER_RESERVATION_RELEASE_FAILED"
+      && error.details.cleanupFailure.boundary === "pointer_reservation",
+  );
+  assert.equal(await readFile(replacementPath, "utf8"), "replacement pointer owner\n");
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
 test("digest reservation preserves a pre-existing destination instead of replacing it", async () => {
   const coordinateRoot = await mkdtemp(join(tmpdir(), "visual-receipt-coordinate-"));
   const receipt = makeReceipt();
@@ -470,11 +545,207 @@ test("a primary publication failure retains bounded reservation-cleanup context"
     }),
     error => error instanceof ObserverError
       && error.code === "INJECTED_PRIMARY"
-      && error.details.checkpoint === "before_reservation_release"
+      && error.details.checkpoint === "destination_reservation_release"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
       && Object.keys(error.details.cleanupFailure).sort().join(",") === "boundary,code,recovery"
       && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
       && error.details.cleanupFailure.boundary === "destination_reservation"
       && error.details.cleanupFailure.recovery === "accepted_coordinate_recovery",
+  );
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("cleanup reporting admits a hostile primary error without invoking proxy traps", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-reservation-hostile-primary-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "reservation-hostile-primary-successor";
+  let trapCalls = 0;
+  const hostilePrimary = new Proxy(
+    new ObserverError("HOSTILE_PRIMARY", "A caller-controlled primary failure.", { boundary: "caller" }),
+    {
+      get() {
+        trapCalls += 1;
+        throw new Error("primary get trap must remain idle");
+      },
+      getOwnPropertyDescriptor() {
+        trapCalls += 1;
+        throw new Error("primary descriptor trap must remain idle");
+      },
+      getPrototypeOf() {
+        trapCalls += 1;
+        throw new Error("primary prototype trap must remain idle");
+      },
+    },
+  );
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        await writeFile(join(reservationPath, "owner-note.txt"), "retained after hostile primary\n");
+        throw hostilePrimary;
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === hostilePrimary
+      && error.details.primaryFailure.code === "PUBLICATION_FAILED"
+      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
+  );
+  assert.equal(trapCalls, 0);
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("cleanup reporting inspects primary accessors as descriptors and leaves their getters idle", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-reservation-accessor-primary-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "reservation-accessor-primary-successor";
+  let getterCalls = 0;
+  const hostilePrimary = new Error("A caller-controlled accessor primary failure.");
+  for (const field of ["code", "details"]) {
+    Object.defineProperty(hostilePrimary, field, {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error(`${field} getter must remain idle`);
+      },
+    });
+  }
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        await writeFile(join(reservationPath, "owner-note.txt"), "retained after accessor primary\n");
+        throw hostilePrimary;
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === hostilePrimary
+      && error.details.primaryFailure.code === "PUBLICATION_FAILED"
+      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
+  );
+  assert.equal(getterCalls, 0);
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("successful cleanup still normalizes a hostile primary without invoking proxy traps", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-hostile-primary-clean-release-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "hostile-primary-clean-release-successor";
+  let trapCalls = 0;
+  const hostilePrimary = new Proxy(
+    new ObserverError("HOSTILE_PRIMARY", "A caller-controlled primary failure."),
+    {
+      get() {
+        trapCalls += 1;
+        throw new Error("primary get trap must remain idle");
+      },
+      getOwnPropertyDescriptor() {
+        trapCalls += 1;
+        throw new Error("primary descriptor trap must remain idle");
+      },
+      getPrototypeOf() {
+        trapCalls += 1;
+        throw new Error("primary prototype trap must remain idle");
+      },
+    },
+  );
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint }) => {
+        if (checkpoint === "before_reservation_release") throw hostilePrimary;
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === hostilePrimary
+      && error.details.causeCode === "PUBLICATION_FAILED"
+      && error.details.restartFrom === "pointer",
+  );
+  assert.equal(trapCalls, 0);
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("successful cleanup reads caller errors through own data descriptors", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-accessor-primary-clean-release-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "accessor-primary-clean-release-successor";
+  let getterCalls = 0;
+  const hostilePrimary = new Error("A caller-controlled accessor primary failure.");
+  for (const field of ["code", "details"]) {
+    Object.defineProperty(hostilePrimary, field, {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error(`${field} getter must remain idle`);
+      },
+    });
+  }
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint }) => {
+        if (checkpoint === "before_reservation_release") throw hostilePrimary;
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === hostilePrimary
+      && error.details.causeCode === "PUBLICATION_FAILED"
+      && error.details.reason === "A caller-controlled accessor primary failure."
+      && error.details.restartFrom === "pointer",
+  );
+  assert.equal(getterCalls, 0);
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("successful cleanup bounds oversized caller error strings before UTF-8 measurement", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-oversized-primary-clean-release-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "oversized-primary-clean-release-successor";
+  const oversizedPrimary = new ObserverError("C".repeat(513), "M".repeat(4_097));
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint }) => {
+        if (checkpoint === "before_reservation_release") throw oversizedPrimary;
+      },
+    }),
+    error => error instanceof ObserverError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === oversizedPrimary
+      && error.details.causeCode === "PUBLICATION_FAILED"
+      && error.details.reason === "Publication failed at the selected coordinate."
+      && error.details.restartFrom === "pointer",
   );
   assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
   assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);

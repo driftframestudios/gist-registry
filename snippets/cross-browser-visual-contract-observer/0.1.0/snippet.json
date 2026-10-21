@@ -26,7 +26,7 @@
   "provenance": {
     "class": "independent_synthetic_authoring",
     "description": "The faultable receiver, inventory, matrix, faults, observations, schema, tests, and prose are independently authored synthetic material. A focused smoke consumes the separate Issue #62 synthetic production build at its bound digest. Production design files, participant data, operational routes, private context, and product assets remain with their authorized owners.",
-    "temporalScope": "This version exercises Node.js 22 through 26 and Playwright 1.64.1 with lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370. Each receiving operating system, font set, scale, browser binary, and bitmap policy receives its own receipt.",
+    "temporalScope": "This version exercises Node.js 22, 24, or 26 and Playwright 1.64.1 with lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370. Each receiving operating system, font set, scale, browser binary, and bitmap policy receives its own receipt.",
     "sourceKeys": [
       "independent-authoring:cross-browser-visual-contract-observer",
       "realistic-synthetic:specimen-review-receiver",
@@ -73,7 +73,7 @@
     {"role":"expected_contract","path":"expected/observer-contract.json","declaredMediaType":"application/json"}
   ],
   "execution": {
-    "runtime": "Node.js >=22 <27; @playwright/test 1.64.1; lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370",
+    "runtime": "Node.js 22, 24, or 26; @playwright/test 1.64.1; lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370",
     "dependenciesPath": "package-lock.json",
     "commands": [
       {

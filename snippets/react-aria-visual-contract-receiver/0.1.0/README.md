@@ -19,7 +19,7 @@ accepted or rejected authority, and repeated release remains safe to inspect.
 
 ## Start here
 
-Requires Node.js 22 through 26. The checked lock resolves in Node.js `26.11.0`;
+Requires Node.js 22, 24, or 26. The checked lock resolves in Node.js `26.11.0`;
 some development-only transitive packages require a current Node 22, 24, or 26
 maintenance release.
 
@@ -211,3 +211,18 @@ The two-build manifest digest is
 `4194c2ee7dac24c2560a8a87c268257ff22f55cb649d4f4eb99dd2e58aeb29d5`.
 The receipt records the active gzip coordinate, elapsed time, and peak resident
 memory as environment-bound observations beside the byte-exact build manifest.
+
+## Local evidence publication boundary
+
+The build verifier writes `last-receipt.json` through an invocation-owned
+temporary file, rechecks the captured owner chain and leaf identity, and then
+uses one atomic rename for process-visible replacement. Portable Node.js
+addresses the final verification and rename by pathname. A process with the
+same filesystem credentials can race that interval when it writes outside this
+ownership protocol. A deployment with mutually untrusted local writers routes
+the evidence write through one service identity or a platform adapter with
+directory-descriptor-relative mutation and a no-replace/CAS primitive.
+
+Atomic replacement describes process-level visibility. Power-loss durability
+also requires filesystem- and platform-specific directory synchronization and
+a restart policy; the receiving deployment owns that guarantee.

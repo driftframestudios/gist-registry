@@ -173,8 +173,9 @@ the accepted root and artifacts directory identities, builds each invocation in
 a mode-`0700` private staging root, and records every created directory and file
 identity. Each write rechecks its parent chain; cleanup removes recorded leaves
 and empty directories individually rather than recursively deleting an adopted
-tree. A digest-scoped exclusive reservation serializes cooperating publishers,
-and an existing destination is verified without replacing it. Before pointer
+tree. A digest-scoped exclusive reservation protects each destination, while a
+pointer-wide reservation and prior-state comparison serialize different-digest
+pointer commits. An existing destination is verified without replacing it. Before pointer
 movement, promotion revalidates the complete accepted inventory, leaf
 identities, and bytes plus the temporary pointer's inode and content. A
 symbolic link or changed identity
@@ -191,12 +192,17 @@ filesystem credentials can still race a final pathname check and its following
 write, `rename`, or removal when that process disregards the reservation. The
 accepted root therefore remains an exclusive operational boundary; detected
 drift stays available for inspection.
-An interrupted owner that leaves a reservation without a destination requires
-operator inspection and reservation removal before that digest can retry.
+Atomic pointer replacement describes process-visible state. Power-loss
+durability additionally requires platform-specific directory synchronization
+and a restart policy supplied by the deployment adapter.
+An interrupted owner that leaves a digest or pointer reservation requires
+operator inspection and reservation removal before that publication can retry.
 A changed or nonempty reservation stops pointer movement and returns
 `accepted_coordinate_recovery`; when release fails beside another promotion
 error, that primary outcome remains authoritative and carries one bounded
 `cleanupFailure` record.
+Failure admission rejects over-limit strings by code-unit length before UTF-8
+measurement, which keeps recovery reporting within its declared byte envelope.
 A repeated digest rechecks the stored manifest digest, exact file inventory,
 byte counts, and file digests before the pointer moves. Promotion carries only
 the artifacts named by that manifest into the accepted coordinate. Every
@@ -204,7 +210,7 @@ publisher owns a distinct staging directory, so concurrent replay of the same
 manifest converges on one verified digest directory and one atomic pointer.
 Accepted-coordinate drift returns `accepted_coordinate_recovery`, the
 digest-safe `acceptedCoordinate`, and the `inspect_or_quarantine` action. This
-state sends the operator to the durable coordinate whose bytes need attention;
+state sends the operator to the accepted coordinate whose bytes need attention;
 candidate rebuilding resumes after that coordinate is inspected or
 quarantined.
 After the digest directory verifies, an injected stop before pointer movement

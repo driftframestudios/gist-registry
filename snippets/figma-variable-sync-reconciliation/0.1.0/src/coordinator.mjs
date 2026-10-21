@@ -1,5 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { assertSanitizedReceipt, digest } from "./canonical.mjs";
+import { assertSanitizedReceipt, compareOrdinal, digest } from "./canonical.mjs";
 import {
   ExecutionInterruptedError,
   LeaseError,
@@ -246,20 +246,25 @@ function admitCheckpointShape(checkpoint) {
 function formCheckpointPlanIndex(plan) {
   const createBatchByTempId = new Map();
   const completedCreateCountByBatch = [0];
+  const completedOperationCountByBatch = [0];
   const operationCountByBatch = [];
   let createCount = 0;
+  let operationCount = 0;
   for (const batch of plan.batches) {
     operationCountByBatch.push(batch.operations.length);
+    operationCount += batch.operations.length;
     for (const operation of batch.operations) {
       if (operation.type !== "create_variable") continue;
       createBatchByTempId.set(operation.tempId, batch.index);
       createCount += 1;
     }
     completedCreateCountByBatch.push(createCount);
+    completedOperationCountByBatch.push(operationCount);
   }
   return Object.freeze({
     batchCount: plan.batches.length,
     completedCreateCountByBatch: Object.freeze(completedCreateCountByBatch),
+    completedOperationCountByBatch: Object.freeze(completedOperationCountByBatch),
     createBatchByTempId,
     operationCountByBatch: Object.freeze(operationCountByBatch),
   });
@@ -269,21 +274,24 @@ function extendObservationTranscript(previousDigest, index, observation) {
   return digest({ previousDigest, index, observation });
 }
 
-function settlementTranscriptSeed({ runId, planDigest, initialRemoteRevision }) {
+function settlementTranscriptDigest(
+  { runId, planDigest, initialRemoteRevision },
+  planIndex,
+  completedBatchCount,
+) {
   return digest({
     schemaVersion: "0.1.0",
-    owner: "checkpoint_settlement_transcript",
+    owner: "checkpoint_settlement_coordinate",
     runId,
     planDigest,
     initialRemoteRevision,
+    completedBatchCount,
+    completedOperationCount: planIndex.completedOperationCountByBatch[completedBatchCount],
+    expectedRemoteRevision: initialRemoteRevision + completedBatchCount,
   });
 }
 
-function extendSettlementTranscript(previousDigest, batchIndex, observation) {
-  return digest({ previousDigest, batchIndex, observation });
-}
-
-function appendCheckpointObservation(checkpoint, observation) {
+function appendCheckpointObservation(checkpoint, observation, planIndex) {
   const index = checkpoint.observationCount;
   if (checkpoint.observations.length === MAX_CHECKPOINT_OBSERVATION_WINDOW) {
     const firstRetainedIndex = index - checkpoint.observations.length;
@@ -294,12 +302,12 @@ function appendCheckpointObservation(checkpoint, observation) {
       releasedObservation,
     );
     if (observationKind(releasedObservation.classification) === "settled") {
-      checkpoint.settlementBaseDigest = extendSettlementTranscript(
-        checkpoint.settlementBaseDigest,
-        releasedObservation.batchIndex,
-        releasedObservation,
-      );
       checkpoint.settlementBaseCount += 1;
+      checkpoint.settlementBaseDigest = settlementTranscriptDigest(
+        checkpoint,
+        planIndex,
+        checkpoint.settlementBaseCount,
+      );
     }
   }
   checkpoint.observationDigest = extendObservationTranscript(
@@ -310,12 +318,12 @@ function appendCheckpointObservation(checkpoint, observation) {
   checkpoint.observationCount += 1;
   checkpoint.observations.push(observation);
   if (observationKind(observation.classification) === "settled") {
-    checkpoint.settlementDigest = extendSettlementTranscript(
-      checkpoint.settlementDigest,
-      observation.batchIndex,
-      observation,
-    );
     checkpoint.settlementCount += 1;
+    checkpoint.settlementDigest = settlementTranscriptDigest(
+      checkpoint,
+      planIndex,
+      checkpoint.settlementCount,
+    );
   }
 }
 
@@ -429,12 +437,21 @@ function validateCheckpoint(checkpoint, { runId, planIndex, maxBatchBytes }) {
       observedCount: checkpoint.settlementCount,
     });
   }
-  const expectedSettlementSeed = settlementTranscriptSeed(checkpoint);
-  if (
-    checkpoint.settlementBaseCount === 0
-    && checkpoint.settlementBaseDigest !== expectedSettlementSeed
-  ) {
+  const expectedSettlementBaseDigest = settlementTranscriptDigest(
+    checkpoint,
+    planIndex,
+    checkpoint.settlementBaseCount,
+  );
+  if (checkpoint.settlementBaseDigest !== expectedSettlementBaseDigest) {
     throw checkpointAdmissionError("settlement_transcript_base");
+  }
+  const expectedSettlementDigest = settlementTranscriptDigest(
+    checkpoint,
+    planIndex,
+    checkpoint.settlementCount,
+  );
+  if (checkpoint.settlementDigest !== expectedSettlementDigest) {
+    throw checkpointAdmissionError("settlement_transcript_digest");
   }
   const expectedObservationWindow = Math.min(
     checkpoint.observationCount,
@@ -455,7 +472,6 @@ function validateCheckpoint(checkpoint, { runId, planIndex, maxBatchBytes }) {
   let previousBatchIndex = -1;
   let observedTranscriptDigest = checkpoint.observationBaseDigest;
   let observedSettlementCount = checkpoint.settlementBaseCount;
-  let observedSettlementDigest = checkpoint.settlementBaseDigest;
   const firstObservationIndex = checkpoint.observationCount - checkpoint.observations.length;
   for (const [index, observation] of checkpoint.observations.entries()) {
     const kind = observationKind(observation.classification);
@@ -505,11 +521,6 @@ function validateCheckpoint(checkpoint, { runId, planIndex, maxBatchBytes }) {
           observedOperationCount: observation.operationCount,
         });
       }
-      observedSettlementDigest = extendSettlementTranscript(
-        observedSettlementDigest,
-        observation.batchIndex,
-        observation,
-      );
       observedSettlementCount += 1;
     }
     observedTranscriptDigest = extendObservationTranscript(
@@ -521,10 +532,7 @@ function validateCheckpoint(checkpoint, { runId, planIndex, maxBatchBytes }) {
   if (observedTranscriptDigest !== checkpoint.observationDigest) {
     throw checkpointAdmissionError("observation_transcript_digest");
   }
-  if (
-    observedSettlementCount !== checkpoint.settlementCount
-    || observedSettlementDigest !== checkpoint.settlementDigest
-  ) {
+  if (observedSettlementCount !== checkpoint.settlementCount) {
     throw checkpointAdmissionError("settlement_missing", {
       expectedCount: checkpoint.settlementCount,
       observedCount: observedSettlementCount,
@@ -1068,11 +1076,34 @@ function verifyCreatedIdentityTransfer({ checkpoint, operations, results, snapsh
   return { accepted: true };
 }
 
-function extendRemoteIdentityLedger(checkpoint, snapshot, results) {
-  const identities = new Set(checkpoint.knownRemoteVariableIds);
-  for (const variable of snapshot.variables) identities.add(variable.id);
-  for (const result of results) identities.add(result.targetId);
-  checkpoint.knownRemoteVariableIds = [...identities].sort();
+function extendRemoteIdentityLedger(checkpoint, results) {
+  const createdTargetIds = results
+    .filter((result) => Object.hasOwn(result, "tempId"))
+    .map((result) => result.targetId)
+    .sort(compareOrdinal);
+  if (createdTargetIds.length === 0) return;
+
+  // Snapshot admission and identity-transfer verification establish that the
+  // existing ledger and this batch's created IDs are each sorted, unique, and
+  // disjoint. Merge those admitted runs once instead of sorting the growing
+  // historical ledger after every batch.
+  const knownTargetIds = checkpoint.knownRemoteVariableIds;
+  const merged = [];
+  let knownIndex = 0;
+  let createdIndex = 0;
+  while (knownIndex < knownTargetIds.length && createdIndex < createdTargetIds.length) {
+    if (compareOrdinal(knownTargetIds[knownIndex], createdTargetIds[createdIndex]) < 0) {
+      merged.push(knownTargetIds[knownIndex]);
+      knownIndex += 1;
+    } else {
+      merged.push(createdTargetIds[createdIndex]);
+      createdIndex += 1;
+    }
+  }
+  checkpoint.knownRemoteVariableIds = merged.concat(
+    knownTargetIds.slice(knownIndex),
+    createdTargetIds.slice(createdIndex),
+  );
 }
 
 function missingLiveRemoteIdentity(checkpoint, snapshot) {
@@ -1329,11 +1360,15 @@ export async function synchronizeVariables({
     }
     let checkpoint = existing;
     if (checkpoint === null) {
-      const initialSettlementDigest = settlementTranscriptSeed({
-        runId,
-        planDigest: plan.planDigest,
-        initialRemoteRevision: observedStart.revision,
-      });
+      const initialSettlementDigest = settlementTranscriptDigest(
+        {
+          runId,
+          planDigest: plan.planDigest,
+          initialRemoteRevision: observedStart.revision,
+        },
+        planIndex,
+        0,
+      );
       const initialCheckpoint = {
         schemaVersion: "0.1.0",
         runId,
@@ -1496,7 +1531,7 @@ export async function synchronizeVariables({
               attempt,
               classification: "bounded_retry",
               retryAfterMs: error.retryAfterMs,
-            });
+            }, planIndex);
             const persisted = await persistCurrentCheckpoint({
               checkpoint,
               restartAt: `persist:retry:batch:${batchIndex}`,
@@ -1536,7 +1571,7 @@ export async function synchronizeVariables({
               attempt,
               classification: reconciliation.classification,
               observedRemoteRevision: observation.remoteRevision,
-            });
+            }, planIndex);
             const persisted = await persistCurrentCheckpoint({
               checkpoint,
               restartAt: `persist:reconciliation:batch:${batchIndex}`,
@@ -1687,7 +1722,7 @@ export async function synchronizeVariables({
           recordTemporaryIdentity(checkpoint.tempIdToRealId, result.tempId, result.targetId);
         }
       }
-      extendRemoteIdentityLedger(checkpoint, settledSnapshot, settled.results);
+      extendRemoteIdentityLedger(checkpoint, settled.results);
       lastObservedSnapshot = settledSnapshot;
       checkpoint.nextBatchIndex = batchIndex + 1;
       checkpoint.expectedRemoteRevision = settled.remoteRevision;
@@ -1710,7 +1745,7 @@ export async function synchronizeVariables({
         classification: settled.disposition,
         remoteRevision: settled.remoteRevision,
         operationCount: settled.results.length,
-      });
+      }, planIndex);
       const persisted = await persistCurrentCheckpoint({
         checkpoint,
         restartAt: `persist:settlement:batch:${batchIndex}`,

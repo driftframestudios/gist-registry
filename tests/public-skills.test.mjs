@@ -141,12 +141,27 @@ test("visual-contract packages run across the declared Node.js maintenance lines
 
   const rootPackage = await json(resolve(repositoryRoot, "package.json"));
   assert.equal(rootPackage.engines.node, "^22 || ^24 || ^26");
+  const documentedNodeCoordinate = "Node.js 22, 24, or 26";
+  const continuousNodeRange = /Node\.js (?:>=22 <27|22 through 26|22–26)/u;
   for (const family of visualContractFamilies) {
     const packageRoot = resolve(repositoryRoot, "snippets", family, "0.1.0");
     const packageManifest = await json(resolve(packageRoot, "package.json"));
     const packageLock = await json(resolve(packageRoot, "package-lock.json"));
+    const artifactManifestText = await readFile(resolve(packageRoot, "snippet.json"), "utf8");
+    const artifactManifest = JSON.parse(artifactManifestText);
     assert.equal(packageManifest.engines.node, rootPackage.engines.node);
     assert.equal(packageLock.packages[""].engines.node, rootPackage.engines.node);
+    assert.match(artifactManifest.execution.runtime, new RegExp(documentedNodeCoordinate, "u"));
+    assert.doesNotMatch(artifactManifestText, continuousNodeRange);
+  }
+  for (const documentationPath of [
+    "planning/visual-contract-official-source-review.md",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/README.md",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/README.md",
+  ]) {
+    const documentation = await readFile(resolve(repositoryRoot, documentationPath), "utf8");
+    assert.match(documentation, new RegExp(documentedNodeCoordinate, "u"));
+    assert.doesNotMatch(documentation, continuousNodeRange);
   }
   assert.equal(
     rootPackage.scripts["prepare:visual-contracts:browsers"],
@@ -155,6 +170,19 @@ test("visual-contract packages run across the declared Node.js maintenance lines
   assert.match(
     rootPackage.scripts["test:visual-contracts:observer:browsers:0.1.0"],
     /prepare:visual-contracts:receiver:0\.1\.0/u,
+  );
+});
+
+test("the visual-receipt skill sizes work from explicit applicable cases", async () => {
+  const skill = await readFile(
+    resolve(repositoryRoot, ".agents/skills/visual-contract-receipt-design/SKILL.md"),
+    "utf8",
+  );
+  assert.match(skill, /Expected work is the\s+explicit applicable-case inventory/u);
+  assert.match(skill, /Cartesian product[\s\S]*?is only an upper bound/u);
+  assert.doesNotMatch(
+    skill,
+    /Expected work is the\s+finite product of targets, states, browsers, media variants, and selected\s+oracles/u,
   );
 });
 

@@ -14,7 +14,7 @@ rate, and workspace authority.
 
 ## Run the example
 
-Requires Node.js 22 through 26.
+Requires Node.js 22, 24, or 26.
 
 ```sh
 npm --prefix snippets/figma-variable-sync-reconciliation/0.1.0 ci --ignore-scripts
@@ -51,7 +51,7 @@ reviewed local contract
 | Approved local meaning | Receiving token system | The variable identity and value intended for synchronization |
 | Operation plan | `planner.mjs` | Stable intent IDs, dependency edges, batch envelope, and plan digest |
 | Writer authority | `InMemoryLeaseStore` | One active writer generation and expiry |
-| Resume point | `InMemoryCheckpointStore` | Current writer fence plus next batch, expected revision and state digest, pending transition projection, temporary-ID map, monotonic remote-ID ledger, resolved-byte high-water mark, bounded observation transcript, and completed-batch settlement accumulator |
+| Resume point | `InMemoryCheckpointStore` | Current writer fence plus next batch, expected revision and state digest, pending transition projection, temporary-ID map, monotonic remote-ID ledger, resolved-byte high-water mark, bounded observation transcript, and plan-bound completed-batch settlement coordinate |
 | Remote truth | `FakeVariableRemote` | Current variables, revision, and applied intent results |
 | Final result | Coordinator receipt | Accepted state digest, revisions, counts, and recovery history |
 
@@ -137,9 +137,13 @@ checkpoint systems with its own atomicity and availability evidence.
   or advance it. The coordinator caps total retry, reconciliation, and
   settlement observations before the next remote mutation while retaining the
   latest 128 records and one digest over the complete transcript. A separate
-  settlement count and digest chain stays aligned with `nextBatchIndex`; its
-  released-prefix coordinate keeps every retained observation at or beyond the
-  last completed batch.
+  settlement count and coordinate digest stays aligned with `nextBatchIndex`.
+  The coordinator derives each released-prefix and final settlement digest
+  from the admitted plan digest, initial revision, completed batch count,
+  cumulative operation count, and expected revision. Resume therefore verifies
+  the compact settlement summary against the immutable plan index before the
+  next batch can run, while retained observations preserve the detailed recent
+  history.
 - Every checkpoint save returns through the same structural and semantic
   admission path. The coordinator compares the store-returned record with the
   record submitted for persistence before that durable state can drive another
@@ -171,34 +175,50 @@ checkpoint systems with its own atomicity and availability evidence.
 
 ## Complexity and allocation
 
-Let `V` be operations, `E` dependency edges, `B` batches, `R` variables in
-the fake remote, `H` total checkpoint observations, and `W` the retained
-observation window (`W <= 128`).
+Let `V` be operations, `E` dependency edges, `B` batches, `R` live variables
+in the fake remote, `I` historical remote identities, `C` identities created
+in one batch, `T` durable temporary-ID mappings, `H` total checkpoint
+observations, and `W` the retained observation window (`W <= 128`).
 
 - graph admission and ordering: `O(V + E)` time and `O(V + E)` space;
 - collision and intent indexes: expected `O(V)` time and space;
 - batch formation: `O(V)` plus JSON encoding cost;
 - immutable checkpoint-plan indexes: `O(V + B)` once, followed by `O(1)` batch
   and create-progress lookups;
-- one observation append: `O(1)` observation and settlement-chain digest work;
+- one observation append: `O(1)` observation and settlement-coordinate digest
+  work;
   checkpoint admission replays at most `W` retained records, so transcript
   work remains `O(W)` time and space across `H` observations;
+- historical identity extension: `O(C log C + I)` time and `O(I + C)`
+  allocation. The coordinator sorts the newly created IDs and merges them with
+  the admitted ordinal ledger; it carries the growing ledger through
+  checkpoint persistence in that established ordinal form;
 - pending-transition projection: `O(R + batch_size)` time and space per batch;
 - fake-remote atomic application: `O(R + batch_size)` allocation per batch
-  because the simulator uses copy-on-write state; and
-- final ordering and digest: `O(R log R)` for locale-independent ordinal
-  output across receiving runtimes.
+  because the simulator uses copy-on-write state;
+- admitted snapshot and semantic transition ordering: `O(R log R)` per
+  readback for locale-independent output across receiving runtimes; and
+- final ordering and digest: `O(R log R)`.
 
-The checkpoint still carries the temporary-ID map and remote-identity ledger.
-Structural admission and exact store-return verification therefore scale with
-that durable coordinate's current serialized size. Remote snapshot projection
-also remains `O(B * R)` across a complete multi-batch run. The bounded
-transcript and immutable plan indexes remove the previous repeated scan of the
-entire growing observation history and completed plan prefix while continuing
-to expose the state that resume actually needs.
+The checkpoint carries the temporary-ID map and remote-identity ledger.
+Structural admission, cloning, canonical comparison, and exact store-return
+verification therefore scale with the current durable coordinate:
+`O(I + W + T log T)` per save, including canonical key ordering for the
+`T`-entry mapping.
+Across `B` one-create batches, full-state checkpoint persistence contributes
+`O(B * I_max)` identity bytes and scans, with `I_max = O(B)` in the
+create-only case. Admitted remote readbacks and semantic projections contribute
+`O(B * R log R)` in the local simulator. A receiving adapter can move the
+historical ledger into an append-capable transactional store while preserving
+the checkpoint's digest and writer fence. The bounded transcript, ordinal
+ledger merge, and immutable plan indexes reserve full-history work for the
+state that carries recovery authority.
 
-The scale evidence admits both a 1,000-operation chain and a 2,000-operation
-high-fan-out graph. The fan-out test counts the indexed vertex and edge work and
+The scale evidence admits a create-heavy 144-batch checkpoint run, a
+1,000-operation chain, and a 2,000-operation high-fan-out graph. The
+create-heavy run verifies the bounded transcript, complete temporary-ID map,
+unique ordinal historical ledger, and service-issued IDs that sort before the
+initial identity. The fan-out test counts the indexed vertex and edge work and
 contrasts it with repeated full-array dependency scans, making the structural
 `O(V + E)` difference inspectable while wall-clock timing remains an
 environment-bound observation. Boundary tests admit a batch at its exact byte

@@ -46,18 +46,24 @@ function transcriptDigest(baseDigest, observations, startIndex = 0) {
   );
 }
 
-function settlementTranscriptSeed({ runId, planDigest, initialRemoteRevision }) {
+function settlementTranscriptDigest(
+  { runId, planDigest, initialRemoteRevision },
+  plan,
+  completedBatchCount,
+) {
+  const completedOperationCount = plan.batches
+    .slice(0, completedBatchCount)
+    .reduce((count, batch) => count + batch.operations.length, 0);
   return digest({
     schemaVersion: "0.1.0",
-    owner: "checkpoint_settlement_transcript",
+    owner: "checkpoint_settlement_coordinate",
     runId,
     planDigest,
     initialRemoteRevision,
+    completedBatchCount,
+    completedOperationCount,
+    expectedRemoteRevision: initialRemoteRevision + completedBatchCount,
   });
-}
-
-function extendSettlementTranscript(previousDigest, batchIndex, observation) {
-  return digest({ previousDigest, batchIndex, observation });
 }
 
 function harness(overrides = {}) {
@@ -1378,22 +1384,34 @@ test("checkpoint admission rejects a retained observation that breaks the transc
 
 test("a truncated transcript cannot advance past a batch without a verifiable settlement", async () => {
   const runId = "truncated-settlement-guard";
-  const operations = [{
-    id: "deprecate-required-variable",
-    type: "deprecate_variable",
-    targetId: "var_0001",
-    dependsOn: [],
-    payload: {},
-  }];
-  const maxBatchBytes = encodedBatchBytes(operations);
+  const operations = [
+    {
+      id: "update-first-variable",
+      type: "update_variable",
+      targetId: "var_0001",
+      expectedVersion: 1,
+      dependsOn: [],
+      payload: { name: "first-variable-updated" },
+    },
+    {
+      id: "update-second-variable",
+      type: "update_variable",
+      targetId: "var_0002",
+      expectedVersion: 2,
+      dependsOn: [],
+      payload: { name: "second-variable-updated" },
+    },
+  ];
+  const maxBatchBytes = Math.max(...operations.map(operation => encodedBatchBytes([operation])));
   const plan = planOperations(operations, { maxBatchBytes });
+  assert.equal(plan.batches.length, 2);
   const remote = new FakeVariableRemote(fixture.remote);
   const remoteBefore = remote.snapshot();
   const checkpointStore = new InMemoryCheckpointStore();
   const observations = Array.from(
     { length: MAX_CHECKPOINT_OBSERVATION_WINDOW },
     () => ({
-      batchIndex: 0,
+      batchIndex: 1,
       attempt: 0,
       classification: "bounded_retry",
       retryAfterMs: 0,
@@ -1437,10 +1455,17 @@ test("a truncated transcript cannot advance past a batch without a verifiable se
 
   assert.equal(result.status, "friction");
   assert.equal(result.code, "checkpoint_invalid");
-  assert.equal(result.details.reason, "observation_order");
+  assert.equal(result.details.reason, "settlement_transcript_base");
   assert.equal(result.restartAt, "inspect_checkpoint");
   assert.deepEqual(remote.snapshot(), remoteBefore);
-  assert.equal(remote.snapshot().variables.find(({ id }) => id === "var_0001").deprecated, false);
+  assert.equal(
+    remote.snapshot().variables.find(({ id }) => id === "var_0001").name,
+    "color.accent.legacy",
+  );
+  assert.equal(
+    remote.snapshot().variables.find(({ id }) => id === "var_0002").name,
+    "component.action.background",
+  );
 });
 
 test("checkpoint admission rejects progress coordinates outside the planned batches", async () => {
@@ -1466,11 +1491,15 @@ test("checkpoint admission rejects progress coordinates outside the planned batc
 test("checkpoint admission rejects executable shapes before remote observation", async () => {
   const plan = planOperations(fixture.operations, { maxBatchBytes: fixture.maxBatchBytes });
   const snapshot = new FakeVariableRemote(fixture.remote).snapshot();
-  const settlementSeed = settlementTranscriptSeed({
-    runId: fixture.runId,
-    planDigest: plan.planDigest,
-    initialRemoteRevision: snapshot.revision,
-  });
+  const settlementSeed = settlementTranscriptDigest(
+    {
+      runId: fixture.runId,
+      planDigest: plan.planDigest,
+      initialRemoteRevision: snapshot.revision,
+    },
+    plan,
+    0,
+  );
   const baseCheckpoint = {
     schemaVersion: "0.1.0",
     runId: fixture.runId,
@@ -1603,11 +1632,15 @@ test("a full observation envelope returns friction before another remote mutatio
     retryAfterMs: 0,
   }));
   const observationBaseDigest = digest({ owner: "admitted_truncated_observation_prefix" });
-  const settlementSeed = settlementTranscriptSeed({
-    runId: fixture.runId,
-    planDigest: plan.planDigest,
-    initialRemoteRevision: remoteBefore.revision,
-  });
+  const settlementSeed = settlementTranscriptDigest(
+    {
+      runId: fixture.runId,
+      planDigest: plan.planDigest,
+      initialRemoteRevision: remoteBefore.revision,
+    },
+    plan,
+    0,
+  );
   const firstObservationIndex = MAX_CHECKPOINT_OBSERVATIONS - observations.length;
   h.checkpointStore.claimFence(fixture.runId, setupFencingToken);
   h.checkpointStore.save(fixture.runId, {
@@ -1866,28 +1899,107 @@ test("admitted-scale checkpointing retains a bounded observation window and full
   assert.equal(checkpoint.observationCount, operationCount);
   assert.equal(checkpoint.observationDigest, receipt.observationTranscript.digest);
   const plan = planOperations(operations, { maxBatchBytes });
-  let expectedSettlementDigest = settlementTranscriptSeed({
-    runId: "bounded-transcript-scale",
-    planDigest: plan.planDigest,
-    initialRemoteRevision: fixture.remote.revision,
-  });
-  for (let batchIndex = 0; batchIndex < operationCount; batchIndex += 1) {
-    const observation = {
-      batchIndex,
-      attempt: 0,
-      classification: "applied",
-      remoteRevision: fixture.remote.revision + batchIndex + 1,
-      operationCount: 1,
-    };
-    expectedSettlementDigest = extendSettlementTranscript(
-      expectedSettlementDigest,
-      batchIndex,
-      observation,
-    );
-  }
+  const expectedSettlementDigest = settlementTranscriptDigest(
+    {
+      runId: "bounded-transcript-scale",
+      planDigest: plan.planDigest,
+      initialRemoteRevision: fixture.remote.revision,
+    },
+    plan,
+    operationCount,
+  );
+  const expectedSettlementBaseDigest = settlementTranscriptDigest(
+    {
+      runId: "bounded-transcript-scale",
+      planDigest: plan.planDigest,
+      initialRemoteRevision: fixture.remote.revision,
+    },
+    plan,
+    operationCount - MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  );
   assert.equal(checkpoint.settlementCount, operationCount);
+  assert.equal(
+    checkpoint.settlementBaseCount,
+    operationCount - MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  );
+  assert.equal(checkpoint.settlementBaseDigest, expectedSettlementBaseDigest);
   assert.equal(checkpoint.settlementDigest, expectedSettlementDigest);
   assert.equal(receipt.settlementTranscript.digest, expectedSettlementDigest);
+});
+
+test("create-heavy checkpointing merges the historical identity ledger in ordinal order", async () => {
+  const operationCount = MAX_CHECKPOINT_OBSERVATION_WINDOW + 16;
+  const operations = Array.from({ length: operationCount }, (_, index) => ({
+    id: `create-ledger-${String(index).padStart(4, "0")}`,
+    type: "create_variable",
+    tempId: `tmp:ledger:${index}`,
+    dependsOn: [],
+    payload: {
+      name: `space.ledger.${index}`,
+      resolvedType: "FLOAT",
+      value: index,
+    },
+  }));
+  const maxBatchBytes = Math.max(
+    ...operations.map((operation) => encodedBatchBytes([operation])),
+  );
+  const plan = planOperations(operations, { maxBatchBytes });
+  assert.equal(plan.batches.length, operationCount);
+
+  const remote = new FakeVariableRemote({
+    issuedIdPrefix: "aa_",
+    revision: 3,
+    variables: [{
+      id: "zz_existing",
+      name: "space.existing",
+      resolvedType: "FLOAT",
+      value: 0,
+      referenceTo: null,
+      deprecated: false,
+      version: 1,
+    }],
+  });
+  const durableStore = new InMemoryCheckpointStore();
+  const persistedLedgers = [];
+  const checkpointStore = {
+    claimFence: durableStore.claimFence.bind(durableStore),
+    load: durableStore.load.bind(durableStore),
+    save(runId, checkpoint, options) {
+      persistedLedgers.push([...checkpoint.knownRemoteVariableIds]);
+      return durableStore.save(runId, checkpoint, options);
+    },
+  };
+  const base = harness({ remote, checkpointStore });
+  const runId = "create-heavy-ledger-scale";
+
+  const receipt = await runWith(base, {
+    runId,
+    operations,
+    maxBatchBytes,
+  });
+
+  assert.equal(receipt.status, "accepted");
+  assert.equal(receipt.batchCount, operationCount);
+  assert.equal(receipt.settlementTranscript.count, operationCount);
+  assert.equal(
+    receipt.settlementTranscript.releasedCount,
+    operationCount - MAX_CHECKPOINT_OBSERVATION_WINDOW,
+  );
+  assert.equal(Object.keys(receipt.tempIdToRealId).length, operationCount);
+  const checkpoint = durableStore.load(runId);
+  const expectedCreatedIds = Array.from(
+    { length: operationCount },
+    (_, index) => `aa_${String(index + 1).padStart(4, "0")}`,
+  );
+  assert.deepEqual(
+    checkpoint.knownRemoteVariableIds,
+    [...expectedCreatedIds, "zz_existing"],
+  );
+  assert.ok(persistedLedgers.every((ledger) => (
+    ledger.length <= operationCount + 1
+    && new Set(ledger).size === ledger.length
+    && ledger.every((identity, index) => index === 0 || ledger[index - 1] < identity)
+  )));
 });
 
 test("scale planning records linear graph counts", () => {

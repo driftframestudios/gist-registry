@@ -741,11 +741,145 @@ test("a primary promotion failure retains bounded reservation-cleanup context", 
     }),
     error => error instanceof PipelineError
       && error.code === "INJECTED_PRIMARY"
-      && error.details.checkpoint === "before_reservation_release"
+      && error.details.checkpoint === "destination_reservation_release"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === alternate.manifestDigest
       && Object.keys(error.details.cleanupFailure).sort().join(",") === "boundary,code,recovery"
       && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED"
       && error.details.cleanupFailure.boundary === "destination_reservation"
       && error.details.cleanupFailure.recovery === "accepted_coordinate_recovery",
+  );
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+});
+
+test("cleanup reporting admits a hostile primary error without invoking proxy traps", async t => {
+  const root = await temporaryRoot("dtcg-reservation-hostile-primary");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "hostile primary and cleanup failure");
+  let trapCalls = 0;
+  const hostilePrimary = new Proxy(
+    new PipelineError("HOSTILE_PRIMARY", "A caller-controlled primary failure.", { boundary: "caller" }),
+    {
+      get() {
+        trapCalls += 1;
+        throw new Error("primary get trap must remain idle");
+      },
+      getOwnPropertyDescriptor() {
+        trapCalls += 1;
+        throw new Error("primary descriptor trap must remain idle");
+      },
+      getPrototypeOf() {
+        trapCalls += 1;
+        throw new Error("primary prototype trap must remain idle");
+      },
+    },
+  );
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        await writeFile(resolve(reservationPath, "owner-note.txt"), "retained after hostile primary\n");
+        throw hostilePrimary;
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === hostilePrimary
+      && error.details.primaryFailure.code === "PUBLICATION_FAILED"
+      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
+  );
+  assert.equal(trapCalls, 0);
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+});
+
+test("cleanup reporting inspects primary accessors as descriptors and leaves their getters idle", async t => {
+  const root = await temporaryRoot("dtcg-reservation-accessor-primary");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "accessor primary and cleanup failure");
+  let getterCalls = 0;
+  const hostilePrimary = new Error("A caller-controlled accessor primary failure.");
+  for (const field of ["code", "details"]) {
+    Object.defineProperty(hostilePrimary, field, {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error(`${field} getter must remain idle`);
+      },
+    });
+  }
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        await writeFile(resolve(reservationPath, "owner-note.txt"), "retained after accessor primary\n");
+        throw hostilePrimary;
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === hostilePrimary
+      && error.details.primaryFailure.code === "PUBLICATION_FAILED"
+      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
+  );
+  assert.equal(getterCalls, 0);
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+});
+
+test("cleanup reporting bounds oversized primary strings before UTF-8 measurement", async t => {
+  const root = await temporaryRoot("dtcg-reservation-oversized-primary");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "oversized primary and cleanup failure");
+  const oversizedPrimary = new PipelineError("C".repeat(513), "M".repeat(4_097));
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await rename(reservationPath, `${reservationPath}.held`);
+        await mkdir(reservationPath);
+        await writeFile(resolve(reservationPath, "owner-note.txt"), "retained after oversized primary\n");
+        throw oversizedPrimary;
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_FAILED"
+      && error.cause === oversizedPrimary
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === alternate.manifestDigest
+      && error.details.primaryFailure.code === "PUBLICATION_FAILED"
+      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
   );
   assert.deepEqual(await readAcceptedPointer(accepted), pointer);
 });
@@ -962,6 +1096,8 @@ test("promotion awaits a function interruption and retains the established point
   assert.deepEqual(checkpoints, [
     "before_candidate_rename",
     "before_reservation_release",
+    "before_pointer_reservation_acquire",
+    "after_pointer_reservation_acquired",
     "before_pointer_write",
     "before_pointer_rename",
   ]);
@@ -1042,6 +1178,92 @@ test("concurrent replay keeps invocation-owned staging separate and promotes one
     (await readdir(resolve(accepted, "artifacts"))).sort(),
     [manifest.manifestDigest],
   );
+});
+
+test("different-digest publishers compare the captured pointer under one process-safe reservation", async t => {
+  const root = await temporaryRoot("dtcg-cross-digest-pointer-cas");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const baseline = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const firstManifest = alternateManifest(manifest, "first concurrent pointer candidate");
+  const secondManifest = alternateManifest(manifest, "second concurrent pointer candidate");
+  let releaseFirst;
+  const firstMayCommit = new Promise(resolvePromise => { releaseFirst = resolvePromise; });
+  let firstOwnsPointer;
+  const firstOwnsPointerSignal = new Promise(resolvePromise => { firstOwnsPointer = resolvePromise; });
+  let secondCapturedPrior;
+  const secondCapturedPriorSignal = new Promise(resolvePromise => { secondCapturedPrior = resolvePromise; });
+
+  const first = promoteCandidate({
+    candidateRoot: candidate,
+    acceptedRoot: accepted,
+    manifest: firstManifest,
+    injectFault: async ({ checkpoint }) => {
+      if (checkpoint !== "after_pointer_reservation_acquired") return;
+      firstOwnsPointer();
+      await firstMayCommit;
+    },
+  });
+  await firstOwnsPointerSignal;
+  const second = promoteCandidate({
+    candidateRoot: candidate,
+    acceptedRoot: accepted,
+    manifest: secondManifest,
+    injectFault: async ({ checkpoint }) => {
+      if (checkpoint === "before_pointer_reservation_acquire") secondCapturedPrior();
+    },
+  });
+  await secondCapturedPriorSignal;
+  releaseFirst();
+
+  const firstPointer = await first;
+  await assert.rejects(
+    second,
+    error => error instanceof PipelineError && error.code === "PUBLICATION_POINTER_CONFLICT",
+  );
+  assert.notDeepEqual(firstPointer, baseline);
+  assert.deepEqual(await readAcceptedPointer(accepted), firstPointer);
+  assert.equal((await readdir(accepted)).includes(".current.reservation"), false);
+});
+
+test("pointer commit rejects a replaced pointer reservation and preserves primary authority", async t => {
+  const root = await temporaryRoot("dtcg-pointer-reservation-replacement");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "pointer reservation replacement");
+  let replacementPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, pointerReservationPath }) => {
+        if (checkpoint !== "after_pointer_reservation_acquired") return;
+        await rename(pointerReservationPath, `${pointerReservationPath}.held`);
+        replacementPath = pointerReservationPath;
+        await writeFile(pointerReservationPath, "replacement pointer owner\n", "utf8");
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "pointer_reservation"
+      && error.details.checkpoint === "pointer_reservation_release"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && error.details.acceptedCoordinate === alternate.manifestDigest
+      && error.details.cleanupFailure.code === "PUBLICATION_POINTER_RESERVATION_RELEASE_FAILED"
+      && error.details.cleanupFailure.boundary === "pointer_reservation",
+  );
+  assert.equal(await readFile(replacementPath, "utf8"), "replacement pointer owner\n");
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
 });
 
 test("promotion rejects a corrupted preexisting digest directory and preserves the pointer", async t => {

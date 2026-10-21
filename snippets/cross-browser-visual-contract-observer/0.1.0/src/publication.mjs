@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import { lstat, mkdir, open, opendir, rename, rm, rmdir } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { types as utilTypes } from "node:util";
 import {
   OBSERVER_RESOURCE_LIMITS,
   ObserverError,
@@ -15,6 +16,16 @@ import { validateReceiptSchema } from "./receipt-schema.mjs";
 const reservationWaitMilliseconds = 10_000;
 const reservationPollMilliseconds = 10;
 const pointerVerificationAttempts = 16;
+const admittedFailureDetailFields = Object.freeze([
+  "stage",
+  "checkpoint",
+  "boundary",
+  "reason",
+  "restartFrom",
+  "restartAt",
+  "action",
+  "acceptedCoordinate",
+]);
 
 function contained(root, candidate) {
   const absoluteRoot = resolve(root);
@@ -26,7 +37,11 @@ function contained(root, candidate) {
 }
 
 function publicationRecoveryCoordinate(boundary) {
-  if (boundary === "temporary_pointer" || boundary === "accepted_pointer") return "pointer";
+  if (
+    boundary === "temporary_pointer"
+    || boundary === "accepted_pointer"
+    || boundary === "pointer_reservation"
+  ) return "pointer";
   if (boundary === "accepted_destination" || boundary.startsWith("accepted_file.")) {
     return "accepted_coordinate_recovery";
   }
@@ -63,27 +78,91 @@ function acceptedIntegrityMismatch(message, acceptedCoordinate, details = {}) {
   });
 }
 
+function ownDataValue(value, key) {
+  if (
+    value === null
+    || (typeof value !== "object" && typeof value !== "function")
+    || utilTypes.isProxy(value)
+  ) return undefined;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && Object.hasOwn(descriptor, "value") ? descriptor.value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function boundedOwnString(value, key, fallback, maxBytes = 512) {
+  const candidate = ownDataValue(value, key);
+  return typeof candidate === "string"
+    && candidate.length > 0
+    && candidate.length <= maxBytes
+    && Buffer.byteLength(candidate, "utf8") <= maxBytes
+    ? candidate
+    : fallback;
+}
+
+function admittedFailureDetails(error) {
+  const details = ownDataValue(error, "details");
+  if (details === null || typeof details !== "object" || utilTypes.isProxy(details)) {
+    return Object.freeze({});
+  }
+  try {
+    if (![Object.prototype, null].includes(Object.getPrototypeOf(details))) return Object.freeze({});
+  } catch {
+    return Object.freeze({});
+  }
+  const admitted = {};
+  for (const key of admittedFailureDetailFields) {
+    const value = boundedOwnString(details, key, null, 1_024);
+    if (value !== null) admitted[key] = value;
+  }
+  return Object.freeze(admitted);
+}
+
+function admittedObserverError(error) {
+  if (
+    error === null
+    || (typeof error !== "object" && typeof error !== "function")
+    || utilTypes.isProxy(error)
+  ) return null;
+  try {
+    if (Object.getPrototypeOf(error) !== ObserverError.prototype) return null;
+  } catch {
+    return null;
+  }
+  const code = boundedOwnString(error, "code", null);
+  const message = boundedOwnString(error, "message", null, 4_096);
+  if (code === null || message === null) return null;
+  return Object.freeze({ code, message, details: admittedFailureDetails(error) });
+}
+
 function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
+  const details = ownDataValue(error, "details");
   return Object.freeze({
-    code: typeof error?.code === "string" ? error.code : fallbackCode,
-    boundary: typeof error?.details?.boundary === "string"
-      ? error.details.boundary
-      : fallbackBoundary,
-    recovery: typeof error?.details?.restartFrom === "string"
-      ? error.details.restartFrom
-      : "accepted_coordinate_recovery",
+    code: boundedOwnString(error, "code", fallbackCode),
+    boundary: boundedOwnString(details, "boundary", fallbackBoundary),
+    recovery: boundedOwnString(details, "restartFrom", "accepted_coordinate_recovery"),
   });
 }
 
-function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoordinate) {
+function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoordinate, {
+  checkpoint = "destination_reservation_release",
+  cleanupBoundary = "destination_reservation",
+} = {}) {
   const cleanupFailure = boundedFailureContext(
     cleanupError,
     "PUBLICATION_RESERVATION_RELEASE_FAILED",
-    "destination_reservation",
+    cleanupBoundary,
   );
-  if (primaryError instanceof ObserverError) {
-    const retained = new ObserverError(primaryError.code, primaryError.message, {
-      ...primaryError.details,
+  const admittedPrimary = admittedObserverError(primaryError);
+  if (admittedPrimary) {
+    const retained = new ObserverError(admittedPrimary.code, admittedPrimary.message, {
+      ...admittedPrimary.details,
+      checkpoint,
+      restartFrom: "accepted_coordinate_recovery",
+      action: "inspect_or_quarantine",
+      acceptedCoordinate,
       cleanupFailure,
     });
     retained.cause = primaryError;
@@ -91,9 +170,9 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
   }
   const retained = new ObserverError(
     "PUBLICATION_FAILED",
-    "Receipt publication stopped, and its digest reservation requires inspection.",
+    "Receipt publication stopped, and its publication reservation requires inspection.",
     {
-      checkpoint: "destination_reservation_release",
+      checkpoint,
       restartFrom: "accepted_coordinate_recovery",
       action: "inspect_or_quarantine",
       acceptedCoordinate,
@@ -526,8 +605,10 @@ async function acquireDestinationReservation({ reservationPath, reservationBytes
       });
       if (destinationEntry) return null;
       const reservationEntry = await lstat(reservationPath).catch(readError => {
+        if (readError.code === "ENOENT") return null;
         throw publicationBoundaryError("destination_reservation", readError.code ?? "unreadable");
       });
+      if (reservationEntry === null) continue;
       if (!reservationEntry.isFile() || reservationEntry.isSymbolicLink()) {
         throw publicationBoundaryError("destination_reservation", "regular_file_required");
       }
@@ -541,6 +622,103 @@ async function acquireDestinationReservation({ reservationPath, reservationBytes
       await new Promise(resolveDelay => setTimeout(resolveDelay, reservationPollMilliseconds));
     }
   }
+}
+
+async function acquirePointerReservation({ reservationPath, reservationBytes, owners }) {
+  const deadline = Date.now() + reservationWaitMilliseconds;
+  while (true) {
+    try {
+      return await createOwnedFile(
+        reservationPath,
+        "pointer_reservation",
+        reservationBytes,
+        owners,
+      );
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      const reservationEntry = await lstat(reservationPath).catch(readError => {
+        if (readError.code === "ENOENT") return null;
+        throw publicationBoundaryError("pointer_reservation", readError.code ?? "unreadable");
+      });
+      if (reservationEntry === null) continue;
+      if (!reservationEntry.isFile() || reservationEntry.isSymbolicLink()) {
+        throw publicationBoundaryError("pointer_reservation", "regular_file_required");
+      }
+      if (Date.now() >= deadline) {
+        throw new ObserverError(
+          "PUBLICATION_POINTER_BUSY",
+          "Receipt publication could not acquire the accepted-pointer reservation within the bounded wait.",
+          { boundary: "pointer_reservation", restartFrom: "pointer" },
+        );
+      }
+      await new Promise(resolveDelay => setTimeout(resolveDelay, reservationPollMilliseconds));
+    }
+  }
+}
+
+async function releasePointerReservation(identity, owners, acceptedCoordinate) {
+  if (!identity) return;
+  try {
+    await removeOwnedFile(identity, owners, { strict: true });
+  } catch (error) {
+    throw new ObserverError(
+      "PUBLICATION_POINTER_RESERVATION_RELEASE_FAILED",
+      "The accepted-pointer reservation remains available for inspection before publication resumes.",
+      {
+        checkpoint: "pointer_reservation_release",
+        restartFrom: "accepted_coordinate_recovery",
+        action: "inspect_or_quarantine",
+        acceptedCoordinate,
+        failure: boundedFailureContext(error, "RESERVATION_RELEASE_FAILED", "pointer_reservation"),
+      },
+    );
+  }
+}
+
+async function capturePointerState(pointerPath, owner) {
+  await assertDirectoryIdentity(owner);
+  const entry = await lstat(pointerPath).catch(error => {
+    if (error.code === "ENOENT") return null;
+    throw publicationBoundaryError("accepted_pointer", error.code ?? "unreadable");
+  });
+  if (entry === null) return Object.freeze({ present: false });
+  if (!entry.isFile() || entry.isSymbolicLink()) {
+    throw publicationBoundaryError("accepted_pointer", "regular_file_required");
+  }
+  const identity = {
+    path: pointerPath,
+    boundary: "accepted_pointer",
+    dev: entry.dev,
+    ino: entry.ino,
+  };
+  const bytes = await readBoundedRegularFile(pointerPath, {
+    boundary: "accepted_pointer",
+    maxBytes: 4_096,
+    restartFrom: "pointer",
+  });
+  await assertDirectoryIdentity(owner);
+  await assertFileIdentity(identity);
+  return Object.freeze({ present: true, dev: entry.dev, ino: entry.ino, bytes });
+}
+
+function pointerStateMatches(expected, observed) {
+  return expected.present === observed.present
+    && (!expected.present || (
+      expected.dev === observed.dev
+      && expected.ino === observed.ino
+      && expected.bytes.equals(observed.bytes)
+    ));
+}
+
+async function requirePointerCommitAuthority(pointerPath, owner, expected, desiredBytes) {
+  const observed = await capturePointerState(pointerPath, owner);
+  if (observed.present && observed.bytes.equals(desiredBytes)) return "commit";
+  if (pointerStateMatches(expected, observed)) return "commit";
+  throw new ObserverError(
+    "PUBLICATION_POINTER_CONFLICT",
+    "The accepted pointer changed after this publication captured its prior state.",
+    { boundary: "accepted_pointer", restartFrom: "pointer" },
+  );
 }
 
 export function humanReceipt(inputReceipt) {
@@ -723,6 +901,7 @@ export async function publishReceipt(root, inputReceipt, {
   const candidateRoot = contained(absoluteRoot, `.candidates/${receipt.receiptId}.${randomUUID()}`);
   const acceptedRoot = contained(absoluteRoot, "accepted");
   const pointerPath = contained(absoluteRoot, "accepted-pointer.json");
+  const pointerReservationPath = contained(absoluteRoot, ".accepted-pointer.reservation");
   const destination = contained(acceptedRoot, receiptSha256);
   const reservationPath = contained(acceptedRoot, `.reservation-${receiptSha256}`);
   // A caller may either provision the directly addressed root or name the
@@ -738,6 +917,8 @@ export async function publishReceipt(root, inputReceipt, {
     privateMode: true,
   });
   const acceptedParent = await requireRegularDirectory(acceptedRoot, "accepted", { create: true });
+  const pointerExpectation = await capturePointerState(pointerPath, publicationRoot);
+  const pointerReservationBytes = Buffer.from(`${process.pid}-${randomUUID()}\n`);
   const candidateDirectories = [];
   const candidateFiles = [];
   const candidateDirectoryByPath = new Map();
@@ -746,6 +927,7 @@ export async function publishReceipt(root, inputReceipt, {
   let candidate = null;
   let candidatePromoted = false;
   let reservationIdentity = null;
+  let pointerReservationIdentity = null;
   let temporaryPointerIdentity = null;
   try {
     candidate = await createOwnedDirectory(
@@ -940,49 +1122,118 @@ export async function publishReceipt(root, inputReceipt, {
     const pointer = { schemaVersion: "0.1.0", receiptId: receipt.receiptId, receiptSha256, path: `accepted/${receiptSha256}/receipt.json` };
     const pointerBytes = Buffer.from(stableStringify(pointer));
     const temporaryPointer = resolve(dirname(pointerPath), `.accepted-pointer.${process.pid}.${randomUUID()}.tmp`);
-    await invokeFaultHook(injectFault, "before_pointer_rename", {
+    await invokeFaultHook(injectFault, "before_pointer_reservation_acquire", {
       root: absoluteRoot,
       accepted: acceptedRoot,
       destination,
       pointer: pointerPath,
-      temporaryPointer,
+      pointerReservationPath,
     });
-    await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
-    await assertFileIdentities(acceptedFileIdentities);
-    temporaryPointerIdentity = await createOwnedFile(
-      temporaryPointer,
-      "temporary_pointer",
-      pointerBytes,
-      [publicationRoot, acceptedParent, acceptedDestination],
-    );
-    await invokeFaultHook(injectFault, "after_pointer_write", {
-      root: absoluteRoot,
-      accepted: acceptedRoot,
-      destination,
-      pointer: pointerPath,
-      temporaryPointer,
+    pointerReservationIdentity = await acquirePointerReservation({
+      reservationPath: pointerReservationPath,
+      reservationBytes: pointerReservationBytes,
+      owners: [publicationRoot],
     });
-    await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
-    await assertFileIdentities(acceptedFileIdentities);
-    await assertOwnedFileBytes(
-      temporaryPointerIdentity,
-      pointerBytes,
-      [publicationRoot, acceptedParent, acceptedDestination],
-      "pointer",
-    );
-    await verifyAcceptedDestination(destination, expectedFiles, receiptSha256);
-    await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
-    await assertFileIdentities(acceptedFileIdentities);
-    await rename(temporaryPointer, pointerPath);
-    temporaryPointerIdentity = null;
-    const acceptedPointerBytes = await readSettledPointerBytes(pointerPath, pointerBytes);
-    if (!acceptedPointerBytes.equals(pointerBytes)) {
-      throw publicationBoundaryError("accepted_pointer", "file_bytes_changed");
+    let pointerPrimaryError = null;
+    try {
+      await assertOwnedFileBytes(
+        pointerReservationIdentity,
+        pointerReservationBytes,
+        [publicationRoot],
+        "pointer",
+      );
+      await invokeFaultHook(injectFault, "after_pointer_reservation_acquired", {
+        root: absoluteRoot,
+        accepted: acceptedRoot,
+        destination,
+        pointer: pointerPath,
+        pointerReservationPath,
+      });
+      const disposition = await requirePointerCommitAuthority(
+        pointerPath,
+        publicationRoot,
+        pointerExpectation,
+        pointerBytes,
+      );
+      if (disposition === "commit") {
+        await invokeFaultHook(injectFault, "before_pointer_rename", {
+          root: absoluteRoot,
+          accepted: acceptedRoot,
+          destination,
+          pointer: pointerPath,
+          temporaryPointer,
+        });
+        await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
+        await assertFileIdentities(acceptedFileIdentities);
+        temporaryPointerIdentity = await createOwnedFile(
+          temporaryPointer,
+          "temporary_pointer",
+          pointerBytes,
+          [publicationRoot, acceptedParent, acceptedDestination],
+        );
+        await invokeFaultHook(injectFault, "after_pointer_write", {
+          root: absoluteRoot,
+          accepted: acceptedRoot,
+          destination,
+          pointer: pointerPath,
+          temporaryPointer,
+        });
+        await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
+        await assertFileIdentities(acceptedFileIdentities);
+        await assertOwnedFileBytes(
+          temporaryPointerIdentity,
+          pointerBytes,
+          [publicationRoot, acceptedParent, acceptedDestination],
+          "pointer",
+        );
+        await verifyAcceptedDestination(destination, expectedFiles, receiptSha256);
+        await assertDirectoryIdentities([publicationRoot, acceptedParent, acceptedDestination]);
+        await assertFileIdentities(acceptedFileIdentities);
+        await assertOwnedFileBytes(
+          pointerReservationIdentity,
+          pointerReservationBytes,
+          [publicationRoot],
+          "pointer",
+        );
+        await rename(temporaryPointer, pointerPath);
+        temporaryPointerIdentity = null;
+        const acceptedPointerBytes = await readSettledPointerBytes(pointerPath, pointerBytes);
+        if (!acceptedPointerBytes.equals(pointerBytes)) {
+          throw publicationBoundaryError("accepted_pointer", "file_bytes_changed");
+        }
+      }
+    } catch (error) {
+      pointerPrimaryError = error;
     }
+    const acquiredPointerReservation = pointerReservationIdentity;
+    pointerReservationIdentity = null;
+    try {
+      await releasePointerReservation(acquiredPointerReservation, [publicationRoot], receiptSha256);
+    } catch (cleanupError) {
+      if (pointerPrimaryError) {
+        throw retainReservationCleanupFailure(pointerPrimaryError, cleanupError, receiptSha256, {
+          checkpoint: "pointer_reservation_release",
+          cleanupBoundary: "pointer_reservation",
+        });
+      }
+      throw cleanupError;
+    }
+    if (pointerPrimaryError) throw pointerPrimaryError;
     return pointer;
   } catch (error) {
     await removeOwnedFile(temporaryPointerIdentity, [publicationRoot]);
     let failure = error;
+    if (pointerReservationIdentity) {
+      try {
+        await releasePointerReservation(pointerReservationIdentity, [publicationRoot], receiptSha256);
+      } catch (cleanupError) {
+        failure = retainReservationCleanupFailure(error, cleanupError, receiptSha256, {
+          checkpoint: "pointer_reservation_release",
+          cleanupBoundary: "pointer_reservation",
+        });
+      }
+      pointerReservationIdentity = null;
+    }
     if (reservationIdentity) {
       try {
         await releaseDestinationReservation(
@@ -1003,15 +1254,21 @@ export async function publishReceipt(root, inputReceipt, {
         candidateFiles,
       );
     }
-    if (failure instanceof ObserverError) throw failure;
-    throw new ObserverError(
+    const admittedFailure = admittedObserverError(failure);
+    // Admission reads only bounded own data descriptors. Once admitted, the
+    // original typed failure remains authoritative, including structured
+    // recovery context created by this publisher.
+    if (admittedFailure) throw failure;
+    const retained = new ObserverError(
       "PUBLICATION_FAILED",
       "Receipt publication stopped at a recoverable coordinate.",
       {
-        causeCode: failure.code,
-        reason: failure.message,
+        causeCode: boundedOwnString(failure, "code", "PUBLICATION_FAILED"),
+        reason: boundedOwnString(failure, "message", "Publication failed at the selected coordinate.", 4_096),
         restartFrom: candidatePromoted ? "pointer" : "candidate",
       },
     );
+    retained.cause = failure;
+    throw retained;
   }
 }

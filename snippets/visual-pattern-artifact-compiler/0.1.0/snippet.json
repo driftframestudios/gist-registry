@@ -29,7 +29,7 @@
   "provenance": {
     "class": "independent_synthetic_authoring",
     "description": "The code, contract, SVG, gallery, prose, and fixtures are independently authored synthetic material. Visual Fidelity practice informs the mechanism while production art, private design files, operational URLs, participant data, and employer assets remain with their authorized owners.",
-    "temporalScope": "This version exercises Node.js 22 through 26 with Sharp 0.35.5, Playwright 1.64.1, and the libvips and browser coordinates resolved by its exact lock. Another runtime, browser revision, font set, encoder, or media target receives its own observation.",
+    "temporalScope": "This version exercises Node.js 22, 24, or 26 with Sharp 0.35.5, Playwright 1.64.1, and the libvips and browser coordinates resolved by its exact lock. Another runtime, browser revision, font set, encoder, or media target receives its own observation.",
     "sourceKeys": [
       "independent-authoring:visual-pattern-artifact-compiler",
       "realistic-synthetic:source-to-decision-route"
@@ -64,7 +64,7 @@
     {"role": "expected_contract", "path": "expected/contract-expectation.json", "declaredMediaType": "application/json"}
   ],
   "execution": {
-    "runtime": "Node.js >=22 <27; Sharp 0.35.5 and Playwright 1.64.1 with libvips and browser coordinates resolved by package-lock.json",
+    "runtime": "Node.js 22, 24, or 26; Sharp 0.35.5 and Playwright 1.64.1 with libvips and browser coordinates resolved by package-lock.json",
     "dependenciesPath": "package-lock.json",
     "commands": [
       {

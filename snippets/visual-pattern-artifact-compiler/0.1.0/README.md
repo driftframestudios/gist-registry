@@ -134,7 +134,7 @@ that directory as shared immutable state. A publisher interruption cleans its
 private candidate and temporary pointer while leaving accepted bytes available
 for a concurrent or resumed publisher. A separate retention policy can collect
 accepted digests that remain unreferenced after a bounded recovery window.
-An integrity mismatch at that durable coordinate returns
+An integrity mismatch at that accepted coordinate returns
 `accepted_coordinate_recovery`, the digest-safe `acceptedCoordinate`, and the
 `inspect_or_quarantine` action. The operator inspects or quarantines that
 coordinate before another candidate can reuse its digest. Reservation release
@@ -143,14 +143,20 @@ pointer movement, while a primary promotion error retains one bounded
 `cleanupFailure` record for the same recovery state.
 
 The portable publisher assumes one trusted writer domain honors its
-digest-scoped reservation. Node's cross-platform filesystem API supplies
+digest-scoped and pointer-wide reservations. The pointer commit compares the
+captured prior state while it owns the pointer reservation, so overlapping
+different-digest publishers expose a typed conflict. Node's cross-platform filesystem API supplies
 exclusive leaf creation and atomic rename, while directory-relative
 `openat`/`renameat2(RENAME_NOREPLACE)` transactions require a platform-specific
 adapter. A deployment that admits mutually untrusted local writers should use
 such an adapter or give one service identity sole write authority over the
 publication root. After an ungraceful process stop, an operator confirms the
-owning publisher has stopped and removes the empty reservation directory before
-retrying that digest.
+owning publisher has stopped and removes the empty digest or pointer
+reservation before retrying publication.
+
+Atomic rename describes process-visible pointer replacement. Power-loss
+durability additionally requires platform-specific directory synchronization
+and a restart policy supplied by the deployment adapter.
 
 The manifest records the exact Node, Sharp, and libvips versions used for the
 observation. Another runtime coordinate receives its own build and comparison
@@ -165,6 +171,8 @@ compiler holds each source document and one encoded derivative in memory at a
 time. The example observation records input/output bytes, elapsed time, and
 peak resident memory. A receiving performance exercise adds explicit
 thresholds for its deployment coordinate.
+Failure admission rejects over-limit strings by code-unit length before UTF-8
+measurement, keeping cleanup and recovery diagnostics inside a fixed envelope.
 
 ## Technical judgment
 

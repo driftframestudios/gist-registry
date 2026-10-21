@@ -3,6 +3,7 @@ import { constants as fsConstants } from "node:fs";
 import { lstat, mkdir, open, opendir, rename, rm, rmdir } from "node:fs/promises";
 import { release as osRelease } from "node:os";
 import path from "node:path";
+import { types as utilTypes } from "node:util";
 
 import sharp from "sharp";
 
@@ -89,6 +90,18 @@ const SRCSET_ATTRIBUTE = /\bsrcset\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/
 const CSS_URL = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^\s)'"`]+))\s*\)/giu;
 const PRIVATE_LOCATOR = /(?:\b(?:file|private-local)\s*:|\/(?:Users|home|private\/var)\/|[A-Za-z]:\\(?:Users|Documents|Desktop)\\|\\\\[^\s"'<>]+\\|\b(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?\b|\b10(?:\.\d{1,3}){3}\b|\b192\.168(?:\.\d{1,3}){2}\b|\b172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}\b)/iu;
 const EXTERNAL_LOCATOR = /(?:\b(?:https?|ftp|wss?|data|blob|file)\s*:|(?<!:)\/\/)/iu;
+const pointerReservationWaitMilliseconds = 10_000;
+const pointerReservationPollMilliseconds = 10;
+const admittedFailureDetailFields = Object.freeze([
+  "stage",
+  "checkpoint",
+  "boundary",
+  "reason",
+  "restartFrom",
+  "restartAt",
+  "action",
+  "acceptedCoordinate",
+]);
 
 export class VisualArtifactError extends Error {
   constructor(code, message, details = {}) {
@@ -892,27 +905,91 @@ function acceptedIntegrityMismatch(message, details = {}) {
   });
 }
 
+function ownDataValue(value, key) {
+  if (
+    value === null
+    || (typeof value !== "object" && typeof value !== "function")
+    || utilTypes.isProxy(value)
+  ) return undefined;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && Object.hasOwn(descriptor, "value") ? descriptor.value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function boundedOwnString(value, key, fallback, maxBytes = 512) {
+  const candidate = ownDataValue(value, key);
+  return typeof candidate === "string"
+    && candidate.length > 0
+    && candidate.length <= maxBytes
+    && Buffer.byteLength(candidate, "utf8") <= maxBytes
+    ? candidate
+    : fallback;
+}
+
+function admittedFailureDetails(error) {
+  const details = ownDataValue(error, "details");
+  if (details === null || typeof details !== "object" || utilTypes.isProxy(details)) {
+    return Object.freeze({});
+  }
+  try {
+    if (![Object.prototype, null].includes(Object.getPrototypeOf(details))) return Object.freeze({});
+  } catch {
+    return Object.freeze({});
+  }
+  const admitted = {};
+  for (const key of admittedFailureDetailFields) {
+    const value = boundedOwnString(details, key, null, 1_024);
+    if (value !== null) admitted[key] = value;
+  }
+  return Object.freeze(admitted);
+}
+
+function admittedVisualArtifactError(error) {
+  if (
+    error === null
+    || (typeof error !== "object" && typeof error !== "function")
+    || utilTypes.isProxy(error)
+  ) return null;
+  try {
+    if (Object.getPrototypeOf(error) !== VisualArtifactError.prototype) return null;
+  } catch {
+    return null;
+  }
+  const code = boundedOwnString(error, "code", null);
+  const message = boundedOwnString(error, "message", null, 4_096);
+  if (code === null || message === null) return null;
+  return Object.freeze({ code, message, details: admittedFailureDetails(error) });
+}
+
 function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
+  const details = ownDataValue(error, "details");
   return Object.freeze({
-    code: typeof error?.code === "string" ? error.code : fallbackCode,
-    boundary: typeof error?.details?.boundary === "string"
-      ? error.details.boundary
-      : fallbackBoundary,
-    recovery: typeof error?.details?.restartFrom === "string"
-      ? error.details.restartFrom
-      : "accepted_coordinate_recovery",
+    code: boundedOwnString(error, "code", fallbackCode),
+    boundary: boundedOwnString(details, "boundary", fallbackBoundary),
+    recovery: boundedOwnString(details, "restartFrom", "accepted_coordinate_recovery"),
   });
 }
 
-function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoordinate) {
+function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoordinate, {
+  checkpoint = "accepted_reservation_release",
+  cleanupBoundary = "accepted_reservation",
+} = {}) {
   const cleanupFailure = boundedFailureContext(
     cleanupError,
     "publication_reservation_release_failed",
-    "accepted_reservation",
+    cleanupBoundary,
   );
-  if (primaryError instanceof VisualArtifactError) {
-    const retained = new VisualArtifactError(primaryError.code, primaryError.message, {
-      ...primaryError.details,
+  const admittedPrimary = admittedVisualArtifactError(primaryError);
+  if (admittedPrimary) {
+    const retained = new VisualArtifactError(admittedPrimary.code, admittedPrimary.message, {
+      ...admittedPrimary.details,
+      checkpoint,
+      restartFrom: "accepted_coordinate_recovery",
+      action: "inspect_or_quarantine",
+      acceptedCoordinate,
       cleanupFailure,
     });
     retained.cause = primaryError;
@@ -920,9 +997,9 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
   }
   const retained = new VisualArtifactError(
     "publication_failed",
-    "Artifact publication stopped, and its accepted-coordinate reservation requires inspection.",
+    "Artifact publication stopped, and its publication reservation requires inspection.",
     {
-      checkpoint: "accepted_reservation_release",
+      checkpoint,
       restartFrom: "accepted_coordinate_recovery",
       action: "inspect_or_quarantine",
       acceptedCoordinate,
@@ -1123,6 +1200,110 @@ async function acquirePublicationReservation(parent, reservationPath) {
   }
   await assertPublicationDirectory(parent);
   return requirePublicationDirectory(reservationPath, "accepted_reservation");
+}
+
+async function acquirePointerReservation(root, reservationPath, reservationBytes) {
+  const deadline = Date.now() + pointerReservationWaitMilliseconds;
+  while (true) {
+    await assertPublicationDirectory(root);
+    try {
+      const identity = await writeOwnedPublicationFile(
+        reservationPath,
+        reservationBytes,
+        "pointer_reservation",
+        { cleanupRoot: root },
+      );
+      await assertPublicationDirectory(root);
+      await assertPublicationFileBytes(identity, reservationBytes);
+      return identity;
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      const reservationEntry = await lstat(reservationPath).catch(readError => {
+        if (readError.code === "ENOENT") return null;
+        throw publicationBoundaryError("pointer_reservation", readError.code ?? "unreadable");
+      });
+      if (reservationEntry === null) continue;
+      if (!reservationEntry.isFile() || reservationEntry.isSymbolicLink()) {
+        throw publicationBoundaryError("pointer_reservation", "regular_file_required");
+      }
+      if (Date.now() >= deadline) {
+        throw new VisualArtifactError(
+          "publication_pointer_busy",
+          "Artifact publication could not acquire the accepted-pointer reservation within the bounded wait.",
+          { checkpoint: "pointer_reservation", restartAt: "retry_pointer_promotion" },
+        );
+      }
+      await new Promise(resolveDelay => setTimeout(resolveDelay, pointerReservationPollMilliseconds));
+    }
+  }
+}
+
+async function releasePointerReservation(identity, root, acceptedCoordinate) {
+  if (!identity) return;
+  try {
+    await assertPublicationDirectory(root);
+    await assertPublicationFile(identity);
+    await rm(identity.path);
+  } catch (error) {
+    throw new VisualArtifactError(
+      "publication_pointer_reservation_release_failed",
+      "The accepted-pointer reservation remains available for inspection before publication resumes.",
+      {
+        checkpoint: "pointer_reservation_release",
+        restartFrom: "accepted_coordinate_recovery",
+        action: "inspect_or_quarantine",
+        acceptedCoordinate,
+        failure: boundedFailureContext(error, "reservation_release_failed", "pointer_reservation"),
+      },
+    );
+  }
+}
+
+async function capturePointerState(pointerPath, root) {
+  await assertPublicationDirectory(root);
+  const entry = await lstat(pointerPath).catch(error => {
+    if (error.code === "ENOENT") return null;
+    throw publicationBoundaryError("accepted_pointer", error.code ?? "unreadable");
+  });
+  if (entry === null) return Object.freeze({ present: false });
+  if (!entry.isFile() || entry.isSymbolicLink()) {
+    throw publicationBoundaryError("accepted_pointer", "regular_file_required");
+  }
+  const identity = {
+    path: pointerPath,
+    boundary: "accepted_pointer",
+    dev: entry.dev,
+    ino: entry.ino,
+    size: entry.size,
+  };
+  const bytes = await readBoundedFile(pointerPath, "publicationBytes", 4_096, {
+    expectedBytes: entry.size,
+    owner: "accepted pointer",
+    restartAt: "retry_pointer_promotion",
+  });
+  await assertPublicationDirectory(root);
+  await assertPublicationFile(identity);
+  return Object.freeze({ present: true, dev: entry.dev, ino: entry.ino, bytes });
+}
+
+function pointerStateMatches(expected, observed) {
+  return expected.present === observed.present
+    && (!expected.present || (
+      expected.dev === observed.dev
+      && expected.ino === observed.ino
+      && expected.bytes.equals(observed.bytes)
+    ));
+}
+
+async function requirePointerCommitAuthority(pointerPath, root, expected, desiredBytes) {
+  const observed = await capturePointerState(pointerPath, root);
+  if (observed.present && observed.bytes.equals(desiredBytes)) return "commit";
+  if (pointerStateMatches(expected, observed)) return "commit";
+  throw new VisualArtifactError(
+    "publication_pointer_conflict",
+    "The accepted pointer changed after this publication captured its prior state.",
+    { checkpoint: "pointer_promotion", restartAt: "retry_pointer_promotion" },
+  );
 }
 
 async function releasePublicationReservation(identity, parent, root, acceptedCoordinate) {
@@ -1392,9 +1573,13 @@ export async function publishArtifactFamily({
   let acceptedDir;
   let pointerTempIdentity;
   let reservationIdentity;
+  let pointerReservationIdentity;
   let acceptedCoordinate = null;
   const pointerPath = path.join(absolutePublicationRoot, "accepted-pointer.json");
   const pointerTempPath = path.join(absolutePublicationRoot, `.accepted-pointer-${nonce}.tmp`);
+  const pointerReservationPath = path.join(absolutePublicationRoot, ".accepted-pointer.reservation");
+  const pointerReservationBytes = Buffer.from(`${nonce}\n`, "utf8");
+  const pointerExpectation = await capturePointerState(pointerPath, rootIdentity);
   const candidateOwnership = {
     directoryIdentity: null,
     parentIdentity: candidateParent,
@@ -1508,40 +1693,100 @@ export async function publishArtifactFamily({
       relativePath: path.posix.join("accepted", compiled.manifestDigest),
     };
     const pointerBytes = Buffer.from(stableJson(pointer));
-    pointerTempIdentity = await writeOwnedPublicationFile(
-      pointerTempPath,
-      pointerBytes,
-      "temporary_pointer",
-      { cleanupRoot: rootIdentity },
-    );
     await faultInjector?.(Object.freeze({
-      checkpoint: "before_pointer_rename",
+      checkpoint: "before_pointer_reservation_acquire",
       root: absolutePublicationRoot,
       acceptedParent: acceptedParentPath,
       acceptedDir,
       pointerPath,
-      pointerTempPath,
+      pointerReservationPath,
     }));
-    await assertPublicationDirectory(rootIdentity);
-    await assertPublicationDirectory(acceptedParent);
-    await assertPublicationDirectory(acceptedIdentity);
-    await assertAcceptedFileIdentities(acceptedFileIdentities);
-    await verifyExistingAcceptedDirectory({
-      acceptedDir,
-      manifest: compiled.manifest,
-      manifestDigest: compiled.manifestDigest,
-    });
-    await assertPublicationDirectory(rootIdentity);
-    await assertPublicationDirectory(acceptedParent);
-    await assertPublicationDirectory(acceptedIdentity);
-    await assertAcceptedFileIdentities(acceptedFileIdentities);
-    await assertPublicationFileBytes(pointerTempIdentity, pointerBytes);
-    await rename(pointerTempPath, pointerPath);
-    pointerTempIdentity = null;
+    pointerReservationIdentity = await acquirePointerReservation(
+      rootIdentity,
+      pointerReservationPath,
+      pointerReservationBytes,
+    );
+    let pointerPrimaryError = null;
+    try {
+      await faultInjector?.(Object.freeze({
+        checkpoint: "after_pointer_reservation_acquired",
+        root: absolutePublicationRoot,
+        acceptedParent: acceptedParentPath,
+        acceptedDir,
+        pointerPath,
+        pointerReservationPath,
+      }));
+      const disposition = await requirePointerCommitAuthority(
+        pointerPath,
+        rootIdentity,
+        pointerExpectation,
+        pointerBytes,
+      );
+      if (disposition === "commit") {
+        pointerTempIdentity = await writeOwnedPublicationFile(
+          pointerTempPath,
+          pointerBytes,
+          "temporary_pointer",
+          { cleanupRoot: rootIdentity },
+        );
+        await faultInjector?.(Object.freeze({
+          checkpoint: "before_pointer_rename",
+          root: absolutePublicationRoot,
+          acceptedParent: acceptedParentPath,
+          acceptedDir,
+          pointerPath,
+          pointerTempPath,
+        }));
+        await assertPublicationDirectory(rootIdentity);
+        await assertPublicationDirectory(acceptedParent);
+        await assertPublicationDirectory(acceptedIdentity);
+        await assertAcceptedFileIdentities(acceptedFileIdentities);
+        await verifyExistingAcceptedDirectory({
+          acceptedDir,
+          manifest: compiled.manifest,
+          manifestDigest: compiled.manifestDigest,
+        });
+        await assertPublicationDirectory(rootIdentity);
+        await assertPublicationDirectory(acceptedParent);
+        await assertPublicationDirectory(acceptedIdentity);
+        await assertAcceptedFileIdentities(acceptedFileIdentities);
+        await assertPublicationFileBytes(pointerTempIdentity, pointerBytes);
+        await assertPublicationFileBytes(pointerReservationIdentity, pointerReservationBytes);
+        await rename(pointerTempPath, pointerPath);
+        pointerTempIdentity = null;
+      }
+    } catch (error) {
+      pointerPrimaryError = error;
+    }
+    const acquiredPointerReservation = pointerReservationIdentity;
+    pointerReservationIdentity = null;
+    try {
+      await releasePointerReservation(acquiredPointerReservation, rootIdentity, acceptedCoordinate);
+    } catch (cleanupError) {
+      if (pointerPrimaryError) {
+        throw retainReservationCleanupFailure(pointerPrimaryError, cleanupError, acceptedCoordinate, {
+          checkpoint: "pointer_reservation_release",
+          cleanupBoundary: "pointer_reservation",
+        });
+      }
+      throw cleanupError;
+    }
+    if (pointerPrimaryError) throw pointerPrimaryError;
     return Object.freeze({ ...compiled, pointer });
   } catch (error) {
     await removeOwnedPublicationFile(pointerTempIdentity, rootIdentity);
     let failure = error;
+    if (pointerReservationIdentity) {
+      try {
+        await releasePointerReservation(pointerReservationIdentity, rootIdentity, acceptedCoordinate);
+      } catch (cleanupError) {
+        failure = retainReservationCleanupFailure(error, cleanupError, acceptedCoordinate, {
+          checkpoint: "pointer_reservation_release",
+          cleanupBoundary: "pointer_reservation",
+        });
+      }
+      pointerReservationIdentity = null;
+    }
     if (reservationIdentity) {
       try {
         await releasePublicationReservation(

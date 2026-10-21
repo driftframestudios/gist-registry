@@ -72,7 +72,7 @@
     {"role": "expected_build_contract", "path": "expected/build-budget-contract.json", "declaredMediaType": "application/json"}
   ],
   "execution": {
-    "runtime": "Node.js >=22 <27 with a current maintenance release; browser bundle produced by Vite 8.3.5",
+    "runtime": "Node.js 22, 24, or 26 on a current maintenance release; browser bundle produced by Vite 8.3.5",
     "dependenciesPath": "package-lock.json",
     "commands": [
       {

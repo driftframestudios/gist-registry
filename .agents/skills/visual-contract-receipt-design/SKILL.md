@@ -78,8 +78,10 @@ Maintain three finite tiers:
 - full acceptance checks the declared release matrix.
 
 Record the signal and inventory that selected the tier. Expected work is the
-finite product of targets, states, browsers, media variants, and selected
-oracles.
+explicit applicable-case inventory for that tier multiplied by its browser
+coordinates. The Cartesian product of every declared target, state, browser,
+media variant, and oracle is only an upper bound; applicability rules determine
+which cases actually run.
 
 ## Operating sequence
 

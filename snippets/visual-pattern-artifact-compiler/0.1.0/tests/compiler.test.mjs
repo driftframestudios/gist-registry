@@ -750,11 +750,142 @@ test("a primary promotion failure retains bounded reservation-cleanup context", 
     }),
     error => error instanceof VisualArtifactError
       && error.code === "injected_fault"
-      && error.details.checkpoint === "before_reservation_release"
+      && error.details.checkpoint === "accepted_reservation_release"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
       && Object.keys(error.details.cleanupFailure).sort().join(",") === "boundary,code,recovery"
       && error.details.cleanupFailure.code === "publication_reservation_release_failed"
       && error.details.cleanupFailure.boundary === "accepted_reservation"
       && error.details.cleanupFailure.recovery === "accepted_coordinate_recovery",
+  );
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("cleanup reporting admits a hostile primary error without invoking proxy traps", async () => {
+  const root = await temporaryDirectory("reservation-hostile-primary");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises hostile primary error admission.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  let trapCalls = 0;
+  const hostilePrimary = new Proxy(
+    new VisualArtifactError("hostile_primary", "A caller-controlled primary failure.", { boundary: "caller" }),
+    {
+      get() {
+        trapCalls += 1;
+        throw new Error("primary get trap must remain idle");
+      },
+      getOwnPropertyDescriptor() {
+        trapCalls += 1;
+        throw new Error("primary descriptor trap must remain idle");
+      },
+      getPrototypeOf() {
+        trapCalls += 1;
+        throw new Error("primary prototype trap must remain idle");
+      },
+    },
+  );
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await writeFile(path.join(reservationPath, "owner-note.txt"), "retained after hostile primary\n");
+        throw hostilePrimary;
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_failed"
+      && error.cause === hostilePrimary
+      && error.details.primaryFailure.code === "publication_failed"
+      && error.details.cleanupFailure.code === "publication_reservation_release_failed",
+  );
+  assert.equal(trapCalls, 0);
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("cleanup reporting inspects primary accessors as descriptors and leaves their getters idle", async () => {
+  const root = await temporaryDirectory("reservation-accessor-primary");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises accessor primary error admission.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  let getterCalls = 0;
+  const hostilePrimary = new Error("A caller-controlled accessor primary failure.");
+  for (const field of ["code", "details"]) {
+    Object.defineProperty(hostilePrimary, field, {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error(`${field} getter must remain idle`);
+      },
+    });
+  }
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await writeFile(path.join(reservationPath, "owner-note.txt"), "retained after accessor primary\n");
+        throw hostilePrimary;
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_failed"
+      && error.cause === hostilePrimary
+      && error.details.primaryFailure.code === "publication_failed"
+      && error.details.cleanupFailure.code === "publication_reservation_release_failed",
+  );
+  assert.equal(getterCalls, 0);
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("cleanup reporting bounds oversized primary strings before UTF-8 measurement", async () => {
+  const root = await temporaryDirectory("reservation-oversized-primary");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises bounded primary error admission.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  const oversizedPrimary = new VisualArtifactError("c".repeat(513), "m".repeat(4_097));
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, reservationPath }) => {
+        if (checkpoint !== "before_reservation_release") return;
+        await writeFile(path.join(reservationPath, "owner-note.txt"), "retained after oversized primary\n");
+        throw oversizedPrimary;
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_failed"
+      && error.cause === oversizedPrimary
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
+      && error.details.primaryFailure.code === "publication_failed"
+      && error.details.cleanupFailure.code === "publication_reservation_release_failed",
   );
   assert.deepEqual(await readFile(pointerPath), pointerBefore);
 });
@@ -843,6 +974,98 @@ test("keeps a concurrently promoted digest valid when its creating publisher fau
   const acceptedManifest = JSON.parse(await readFile(acceptedManifestPath, "utf8"));
   assert.equal(acceptedManifest.artifactId, reuser.contract.artifactId);
   assert.deepEqual(await readdir(path.join(publicationRoot, ".candidates")), []);
+});
+
+test("different-digest publishers compare the captured pointer under one process-safe reservation", async () => {
+  const root = await temporaryDirectory("cross-digest-pointer-cas");
+  const publicationRoot = path.join(root, "publication");
+  const baseline = await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const firstContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  firstContract.caption = "The first concurrent pointer candidate.";
+  const firstContractPath = path.join(root, "first-contract.json");
+  await writeFile(firstContractPath, `${JSON.stringify(firstContract, null, 2)}\n`);
+  const secondContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  secondContract.caption = "The second concurrent pointer candidate.";
+  const secondContractPath = path.join(root, "second-contract.json");
+  await writeFile(secondContractPath, `${JSON.stringify(secondContract, null, 2)}\n`);
+  let releaseFirst;
+  const firstMayCommit = new Promise(resolvePromise => { releaseFirst = resolvePromise; });
+  let firstOwnsPointer;
+  const firstOwnsPointerSignal = new Promise(resolvePromise => { firstOwnsPointer = resolvePromise; });
+  let secondCapturedPrior;
+  const secondCapturedPriorSignal = new Promise(resolvePromise => { secondCapturedPrior = resolvePromise; });
+
+  const first = publishArtifactFamily({
+    ...sourcePaths,
+    contractPath: firstContractPath,
+    publicationRoot,
+    faultInjector: async ({ checkpoint }) => {
+      if (checkpoint !== "after_pointer_reservation_acquired") return;
+      firstOwnsPointer();
+      await firstMayCommit;
+    },
+  });
+  await firstOwnsPointerSignal;
+  const second = publishArtifactFamily({
+    ...sourcePaths,
+    contractPath: secondContractPath,
+    publicationRoot,
+    faultInjector: async ({ checkpoint }) => {
+      if (checkpoint === "before_pointer_reservation_acquire") secondCapturedPrior();
+    },
+  });
+  await secondCapturedPriorSignal;
+  releaseFirst();
+
+  const firstResult = await first;
+  await assert.rejects(
+    second,
+    error => error instanceof VisualArtifactError && error.code === "publication_pointer_conflict",
+  );
+  assert.notEqual(firstResult.manifestDigest, baseline.manifestDigest);
+  assert.equal(
+    JSON.parse(await readFile(path.join(publicationRoot, "accepted-pointer.json"), "utf8")).manifestDigest,
+    firstResult.manifestDigest,
+  );
+  assert.equal((await readdir(publicationRoot)).includes(".accepted-pointer.reservation"), false);
+});
+
+test("pointer commit rejects a replaced pointer reservation and preserves primary authority", async () => {
+  const root = await temporaryDirectory("pointer-reservation-replacement");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises pointer reservation replacement.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  let replacementPath;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, pointerReservationPath }) => {
+        if (checkpoint !== "after_pointer_reservation_acquired") return;
+        await rename(pointerReservationPath, `${pointerReservationPath}.held`);
+        replacementPath = pointerReservationPath;
+        await writeFile(pointerReservationPath, "replacement pointer owner\n", "utf8");
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_boundary_invalid"
+      && error.details.boundary === "pointer_reservation"
+      && error.details.checkpoint === "pointer_reservation_release"
+      && error.details.restartFrom === "accepted_coordinate_recovery"
+      && error.details.action === "inspect_or_quarantine"
+      && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)
+      && error.details.cleanupFailure.code === "publication_pointer_reservation_release_failed"
+      && error.details.cleanupFailure.boundary === "pointer_reservation",
+  );
+  assert.equal(await readFile(replacementPath, "utf8"), "replacement pointer owner\n");
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
 });
 
 test("rejects a corrupted preexisting accepted directory and preserves the pointer", async () => {

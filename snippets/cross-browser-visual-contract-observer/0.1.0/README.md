@@ -45,10 +45,10 @@ npm run install:visual-contracts:browsers
 npm run test:visual-contracts:observer:browsers:0.1.0
 ```
 
-The repository command installs both the observer and its bound Issue #62
-receiver from their lockfiles before execution. The browser command then builds
-that receiver package, recomputes the
-same sorted production-file manifest used by that package, and requires an
+The repository command installs the observer, its bound Issue #62 receiver,
+and the artifact compiler that shares the exact browser set. The browser
+command then builds that receiver package, recomputes the same sorted
+production-file manifest used by that package, and requires an
 exact receiver-coordinate digest before case-plan execution. It then
 serves those production bytes locally for one focused interactive smoke in
 each engine. The independent faultable fixture remains the subject of the
@@ -137,7 +137,7 @@ the earlier pointer and return a named restart checkpoint. A corrupted existing
 destination is rejected while the earlier pointer remains available. That
 integrity failure returns `accepted_coordinate_recovery`, its digest-safe
 `acceptedCoordinate`, and the `inspect_or_quarantine` action so recovery starts
-at the durable coordinate; candidate rebuilding resumes after that coordinate
+at the accepted coordinate; candidate rebuilding resumes after that coordinate
 is resolved.
 Reservation release participates in that acceptance boundary. A replaced or
 nonempty reservation stops pointer movement and returns the accepted digest for
@@ -149,6 +149,25 @@ descendant directory. Each publication recheck includes that full identity
 chain before it advances the private candidate, accepted directory, or pointer
 transition. A missing or redirected direct root returns typed
 `publication_root` recovery before candidate allocation.
+
+Cooperating publishers capture the prior pointer state, acquire one
+pointer-wide exclusive reservation, and compare that captured state before the
+atomic pointer rename. Identical replay remains idempotent; overlapping
+different-digest publishers return `PUBLICATION_POINTER_CONFLICT` to the
+publisher whose captured state became stale. Portable Node.js still addresses
+the final verification and `rename` by pathname. A process with the same
+filesystem credentials can race those two operations when it acts outside the
+reservation protocol. Deployments with mutually untrusted local writers route
+publication through one service identity or a platform adapter that provides
+directory-descriptor-relative mutation and a no-replace/CAS primitive.
+
+Here, atomic describes what cooperating processes observe at the pointer
+rename. Power-loss durability additionally requires filesystem- and
+platform-specific directory synchronization plus a recovery policy; this
+portable example leaves that guarantee to its deployment adapter.
+After an ungraceful process stop, an operator confirms the owning publisher has
+stopped and removes the empty digest or pointer reservation before retrying
+publication.
 Receipt admission allows up to 32 artifacts, 16 MiB per artifact, and 64 MiB
 in aggregate. A bounded iterative walk checks normalized observation depth,
 node count, and UTF-8 string bytes before publication clones or digests the
@@ -157,6 +176,8 @@ directly addressed regular source through one descriptor, confirms its file
 identity and actual byte count, and reads within the declared envelope. Sparse
 oversize files and symbolic-link sources return to the candidate boundary
 before body capture.
+Failure admission rejects over-limit strings by code-unit length before UTF-8
+measurement, so recovery reporting stays within the same bounded-work posture.
 
 ## Focused evidence
 
