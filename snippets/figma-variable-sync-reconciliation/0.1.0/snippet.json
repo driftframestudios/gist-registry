@@ -1,0 +1,217 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "figma-variable-sync-reconciliation",
+  "version": "0.1.0",
+  "artifactKind": "domain_exemplar",
+  "standing": "candidate",
+  "title": "Figma Variable synchronization and reconciliation",
+  "summary": "A deterministic fake remote makes side-effect-free preflight, dependency ordering, resolved-byte boundaries, one-writer leases, checkpoints, temporary identifiers, uncertain outcomes, concurrent drift, and final state reconciliation executable with realistic synthetic variable records.",
+  "use": {
+    "practicalQuestion": "How can a token synchronization caller preserve approved meaning and resume safely when remote writes are rate-limited, interrupted, concurrent, or accepted before the response is observed?",
+    "changedAbility": "A collaborator can run one operator-neutral state machine that plans dependency-ordered operations, carries a one-writer lease and durable checkpoint, reconciles uncertain outcomes before replay, and returns exact recovery coordinates for drift, interruption, and partial application.",
+    "readers": [
+      "AI collaborators implementing or reviewing remote design-token synchronization",
+      "Technical practitioners coordinating design-system source authority, API writes, recovery, and release evidence"
+    ],
+    "capabilities": [
+      "admit_typed_variable_operations",
+      "preflight_synchronization_request",
+      "order_operation_dependencies",
+      "form_bounded_request_batches",
+      "coordinate_single_writer_lease",
+      "persist_restart_checkpoint",
+      "resolve_temporary_identifiers",
+      "remeasure_resolved_request_batches",
+      "reconcile_unknown_outcomes",
+      "reconcile_final_remote_state",
+      "classify_concurrent_drift",
+      "replay_applied_intents",
+      "emit_sanitized_receipt"
+    ]
+  },
+  "provenance": {
+    "class": "authorized_source_synthesis",
+    "description": "A public, operator-neutral synthesis of design-token synchronization and distributed-operation recovery patterns using a deterministic in-process remote and realistic synthetic variables.",
+    "temporalScope": "This version is a Node.js 22, 24, or 26 coordination exemplar. Live service compatibility belongs to a separately versioned adapter verified against current official API documentation and a synthetic workspace.",
+    "sourceKeys": [
+      "public-source:figma-rest-api-variables",
+      "public-source:figma-rest-api-rate-limits",
+      "registry-practice:transaction-boundary-evidence-mapping",
+      "realistic-synthetic:figma-variable-sync-reconciliation"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Focused Node.js tests establish side-effect-free request preflight, one strict JSON data model for operations and canonical digests, descriptor-first array and record admission, typed operation admission, UTF-8 string and aggregate-plan ceilings, stable topological ordering, explicit creator dependencies for temporary references, locale-independent canonical and snapshot ordering, exact bounded admission of initial, post-settlement, and final remote snapshots, exact and post-resolution batch-envelope enforcement, a bounded incremental checkpoint transcript with recomputable completed-batch settlement coordinates, store-returned checkpoint verification, awaited synchronous and asynchronous collaborators, lease acquisition before initial checkpoint creation, generation-fenced checkpoint persistence across writer takeover, awaited release with typed primary and secondary failure ownership, takeover after expiry, checkpoint-plan and state-digest binding before resumed mutation, same-batch temporary-ID resolution, monotonic remote-ID ownership through a sorted new-ID merge, durable pre-dispatch and resumed complete-state projection verification, admitted Retry-After values with real default delay behavior, exact remote result-set and created-identity transfer admission, outcome-unknown read-and-reconcile decisions, idempotent post-apply resume, interrupted-run and post-completion drift conflicts, partial-intent routing, credential-shaped material findings, deterministic expected output, admitted-scale bounded update and create-heavy checkpoint runs, a 1,000-operation chain, and a 2,000-operation high-fan-out graph in the resolved runtime."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/figma-variable-sync-reconciliation/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_definition", "path": "package.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_lock", "path": "package-lock.json", "declaredMediaType": "application/json"},
+    {"role": "source", "path": "src/canonical.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/coordinator.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/errors.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/example.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/fake-remote.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/planner.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/remote-contract.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/stores.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "test", "path": "tests/reconciliation.test.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "fixture", "path": "fixtures/accepted-sync.json", "declaredMediaType": "application/json"},
+    {"role": "fixture", "path": "fixtures/dependency-cycle.json", "declaredMediaType": "application/json"},
+    {"role": "expected_contract", "path": "expected/accepted-receipt.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Node.js 22, 24, or 26; standard-library runtime behavior",
+    "dependenciesPath": "package-lock.json",
+    "commands": [
+      {
+        "name": "run",
+        "command": "npm --prefix snippets/figma-variable-sync-reconciliation/0.1.0 run example",
+        "establishes": "Prints the deterministic accepted synchronization receipt for the realistic synthetic fixture."
+      },
+      {
+        "name": "test",
+        "command": "npm --prefix snippets/figma-variable-sync-reconciliation/0.1.0 test",
+        "establishes": "Exercises side-effect-free preflight, typed graph admission, descriptor-first data boundaries, string, operation, plan, batch, identity-ledger, and observation ceilings, leases, generation-fenced state-bearing checkpoints with store-returned verification, exact remote result-set, created-identity transfer, plan-bound completed-batch settlement coordinates, complete batch-state transition admission, same-batch temporary targets, retries, uncertain outcomes, interruption resume, pre-resume and final revision-and-state reconciliation, partial application, sanitized receipts, deterministic output, create-heavy checkpoint behavior, and chain and fan-out scale accounting."
+      }
+    ],
+    "fixtures": [
+      "fixtures/accepted-sync.json",
+      "fixtures/dependency-cycle.json"
+    ],
+    "expectedResults": [
+      "expected/accepted-receipt.json"
+    ],
+    "environmentNotes": [
+      "The runtime uses Node.js standard-library modules and an artifact-local lock with zero third-party runtime dependencies.",
+      "The deterministic fake remote uses copy-on-write state to make one request boundary atomic and inspectable.",
+      "The fixture clock and synthetic identifiers keep the expected receipt stable across clean runs.",
+      "A live adapter retains exact service compatibility, authentication, rate, network, response, and workspace authority."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Which local coordinate, remote revision, intent IDs, and checkpoint give one synchronization run its complete identity?",
+      "How does the caller distinguish absent work, already-applied work, partial application, and concurrent drift before replay?",
+      "Which request and graph limits are verified at admission and which remain adapter-owned?",
+      "What exact observation releases promotion from candidate state to an accepted remote coordinate?"
+    ],
+    "decisionRules": [
+      "Admit bounded portable run coordinates, credential-safe request material, typed operations, execution limits, and an acyclic dependency graph before consulting snapshot, checkpoint, lease, or mutation collaborators.",
+      "Bind one run ID to one plan digest, expected remote revision, lease generation, and durable batch checkpoint.",
+      "Inspect intent results after an uncertain outcome and replay only the stable operations classified as safe to retry.",
+      "Return both prepared and observed coordinates when remote drift changes the operation meaning.",
+      "Measure each fully resolved batch before dispatch, and route representation growth to its exact replanning coordinate.",
+      "Read the remote after execution and accept the run when its revision and state digest match the durable reconciled checkpoint."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "One accepted remote variable state whose local meaning, operation intents, checkpoints, revisions, and final digest remain linked."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "A successful response is one observation; read-and-reconcile distinguishes already applied, safe to retry, partial, and conflicting remote states."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Stable intent IDs, expected revisions, a one-writer lease, durable checkpoints, and final readback keep retry and resume behavior bounded."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Plan typed variable operations as a dependency graph, execute bounded batches under one lease, checkpoint after observed acceptance, and reconcile uncertain outcomes before replay."
+      },
+      {
+        "mode": "review",
+        "instruction": "Inject response loss, pre-apply timeout, post-apply interruption, rate delay, partial intent history, changed plans, and concurrent drift; inspect the returned owner and restart coordinate."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Bind the state machine to one exact live adapter, durable lease/checkpoint stores, a synthetic workspace, and current official service limits before operational use."
+      }
+    ],
+    "codeExemplarGranularity": "One dependency-light Node.js synchronization simulator with typed operations, deterministic fake remote, realistic synthetic fixtures, expected receipt, and focused state-transition tests.",
+    "complexityAndAllocation": "Graph admission is O(V + E); the high-fan-out evidence contrasts indexed edge visits with repeated O(VE) full-array dependency scans; batch formation and post-resolution remeasurement are linear plus encoding; historical identity extension sorts the C new IDs and merges the admitted I-entry ledger in O(C log C + I), while full-state checkpoint verification remains O(I + W + T log T) per save; hash indexes give expected constant-cost intent and variable lookups; admitted remote readbacks and semantic projection sort O(R log R) per batch; fake-remote atomic requests use O(R + batch_size) copy-on-write allocation."
+  },
+  "boundaries": {
+    "evidence": "The checks establish side-effect-free preflight, the indexed planner, UTF-8 string and aggregate-plan ceilings, exact and resolved batch-byte boundaries, an incrementally hashed 128-record checkpoint window and plan-bound completed-batch settlement coordinates inside the 50,000-observation run envelope, deterministic fake-remote transactions, exact apply and intent-read result-set admission, durable pre-dispatch and resumed complete-state projection verification, awaited synchronous and asynchronous collaborators, the process-local generation-fenced lease and state-bearing checkpoint model, awaited release with typed primary and bounded secondary failure ownership, bounded retry and reconciliation classifications, idempotent resume, pre-resume and final-state drift responses, sanitized receipts, admitted-scale bounded update and create-heavy checkpoint runs, and chain and high-fan-out scale counts in the resolved Node.js environment.",
+    "trust": "All variables, identifiers, faults, and receipts are realistic synthetic material. Stable intent IDs and SHA-256 digests provide local comparison. Authenticated service identity, caller authorization, workspace ownership, live response authenticity, and organizational release acceptance remain receiving-system decisions.",
+    "transfer": "A receiving system selects an exact live API adapter, credential scope, persistent lease and checkpoint stores, network and response limits, request envelope, production scale, accountable release owner, and rollback observation, then exercises the same fault and reconciliation matrix in a synthetic workspace."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "The operation graph can carry unresolved dependencies, a cycle, a field outside the typed contract, or an operation larger than the request envelope.",
+      "A service-issued identifier can expand a previously admitted batch beyond its request envelope.",
+      "Another writer can retain the lease or the remote revision can move after planning.",
+      "A request can receive a bounded retry signal, time out before application, or lose a success response after application.",
+      "Execution can stop after remote acceptance and before the next durable checkpoint.",
+      "A writer can lose its lease while a remote or checkpoint call is in flight, and a successor generation can take authority.",
+      "Remote revision or state can drift after an interrupted application or after the final durable checkpoint.",
+      "A remote response can omit, repeat, misidentify, or reshape operation results.",
+      "A remote can contain a partial intent set that needs an accountable reconciliation decision."
+    ],
+    "recoveryMoves": [
+      "Return the exact operation, dependency, field, or byte boundary to the plan owner before remote work begins.",
+      "Remeasure the fully resolved batch before dispatch and return its exact replanning coordinate when issued identifiers expand the representation.",
+      "Wait for lease expiry or return the observed revision and form a current plan from remote truth.",
+      "Honor the bounded delay or read intent results and classify the batch before replay.",
+      "Resume the same plan and stable intent IDs from the earlier checkpoint; idempotent remote results advance the run.",
+      "Fence each checkpoint write with the current lease generation, renew around the awaited store call, and reconcile remote intent results when a successor generation takes authority.",
+      "Compare the observed revision and state digest with the durable expected coordinates and route drift to batch or final reconciliation.",
+      "Admit every remote snapshot and one exact result for each requested operation before hashing, classification, or checkpoint advancement, and return typed protocol friction when either response contract differs.",
+      "Return applied and absent intent identities to a human decision owner while preserving both coordinates."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "depends_on",
+      "target": "gist-registry:issue-61",
+      "reason": "The accepted token identity and authority vocabulary from the deterministic DTCG pipeline supply the future shared source coordinate."
+    },
+    {
+      "type": "work_state",
+      "target": "gist-registry:issue-65",
+      "reason": "Issue 65 owns the executable synchronization and reconciliation acceptance decision and review."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "This operator-neutral remote-operation exemplar tests the shared domain-exemplar envelope while its operation and receipt details remain artifact-local."
+    }
+  ],
+  "extensions": {
+    "resourceLimits": {
+      "operations": 10000,
+      "dependenciesPerOperation": 128,
+      "valueNodes": 10000,
+      "valueDepth": 20,
+      "valueStringBytes": 65536,
+      "operationBytes": 262144,
+      "planBytes": 4194304,
+      "batchBytes": 262144,
+      "checkpointObservations": 50000,
+      "checkpointRemoteVariableIds": 20000
+    },
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        {"publicationName": "00-README.md", "sourcePath": "README.md"},
+        {"publicationName": "coordinator.mjs", "sourcePath": "src/coordinator.mjs"},
+        {"publicationName": "remote-contract.mjs", "sourcePath": "src/remote-contract.mjs"},
+        {"publicationName": "planner.mjs", "sourcePath": "src/planner.mjs"},
+        {"publicationName": "fake-remote.mjs", "sourcePath": "src/fake-remote.mjs"},
+        {"publicationName": "stores.mjs", "sourcePath": "src/stores.mjs"},
+        {"publicationName": "reconciliation.test.mjs", "sourcePath": "tests/reconciliation.test.mjs"},
+        {"publicationName": "accepted-sync.json", "sourcePath": "fixtures/accepted-sync.json"},
+        {"publicationName": "accepted-receipt.json", "sourcePath": "expected/accepted-receipt.json"}
+      ]
+    }
+  }
+}

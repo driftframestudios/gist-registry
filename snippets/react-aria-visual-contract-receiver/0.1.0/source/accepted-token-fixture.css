@@ -1,0 +1,38 @@
+/*
+ * Bounded receiver projection adapted from acme-light/tokens.css in
+ * style-dictionary-dtcg-pipeline@0.1.0 by receiver-css-token-projection-v1.
+ * The companion JSON binds the generated-output manifest, exact input artifact,
+ * selection, renames, value normalization, and projected fixture digest.
+ */
+:root {
+  --color-cobalt-600: #2546f5;
+  --color-cobalt-700: #1833c8;
+  --color-cream-050: #fffaf0;
+  --color-cream-100: #f7efd8;
+  --color-ink-900: #11284d;
+  --color-ink-950: #081427;
+  --color-signal-lime: #efff45;
+  --color-signal-coral: #ff766d;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --border-thin: 1px;
+  --border-strong: 2px;
+  --duration-quick: 120ms;
+
+  --surface-canvas: var(--color-cream-050);
+  --surface-panel: var(--color-cream-100);
+  --surface-inverse: var(--color-ink-950);
+  --text-primary: var(--color-ink-900);
+  --text-inverse: var(--color-cream-050);
+  --text-action: var(--color-cobalt-700);
+  --action-background: var(--color-cobalt-600);
+  --action-background-pressed: var(--color-cobalt-700);
+  --action-focus-ring: var(--color-signal-lime);
+  --status-warning: var(--color-signal-coral);
+  --control-gap: var(--space-2);
+  --control-padding: var(--space-3);
+  --select-caret-inset: var(--space-3);
+  --panel-padding: var(--space-4);
+  --state-change-duration: var(--duration-quick);
+}

@@ -27,7 +27,7 @@ authority and evidence roles.
 **Current coordinate:**
 [`migration-reconciliation-cutover@0.1.0`](0.1.0/README.md).
 
-## Next evidence-bearing route
+## Next verification step
 
 The current version is a runnable domain exemplar and proposed compact Gist
 source set. A durable coordination and persistence owner receives multi-process

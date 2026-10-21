@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "0.1.0",
+  "stateSequence": [
+    "draft",
+    "request",
+    "accepted",
+    "released"
+  ],
+  "requestSettlement": {
+    "owner": "current monotonic generation",
+    "cancellation": "a newer request and receiver teardown abort pending work",
+    "lateResult": "stale",
+    "rejectedResult": "preserves earlier accepted state"
+  },
+  "release": {
+    "identity": "accepted generation plus stable specimen ID",
+    "replay": "returns the same receipt"
+  },
+  "receiverRoutes": [
+    "native HTML",
+    "React Aria Components with React Stately collection data",
+    "script-independent semantic companion"
+  ],
+  "visualConditions": [
+    "narrow reflow",
+    "right-to-left logical layout",
+    "forced colors",
+    "reduced motion",
+    "print"
+  ],
+  "buildContract": {
+    "cleanBuildCount": 2,
+    "manifestComparison": "byte inventory and SHA-256 digest equality",
+    "budgetDimensions": [
+      "authored source",
+      "dependency graph",
+      "collection and transitions",
+      "runtime JavaScript",
+      "compressed JavaScript",
+      "runtime assets",
+      "source maps",
+      "complete build"
+    ],
+    "environmentObservations": [
+      "elapsed time",
+      "peak resident memory"
+    ]
+  }
+}

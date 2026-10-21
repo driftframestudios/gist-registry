@@ -41,7 +41,7 @@ version and receives its own revision-and-digest observation after publication.
 [`0.1.0`](0.1.0/README.md) remains the concise same-byte and single-failure
 reading.
 
-## Next evidence-bearing route
+## Next verification step
 
 Exact source-and-test selections orient a reader to the observed-effect and
 caller-retained recovery architecture at the accepted `0.1.1` boundary. A

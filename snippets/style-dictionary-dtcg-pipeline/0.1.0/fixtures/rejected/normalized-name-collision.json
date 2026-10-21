@@ -1,0 +1,4 @@
+{
+  "focus_ring": { "$type": "color", "$value": { "colorSpace": "srgb", "components": [0.1450980392, 0.2745098039, 0.9607843137], "alpha": 1, "hex": "#2546f5" } },
+  "focus-ring": { "$type": "color", "$value": { "colorSpace": "srgb", "components": [0.937254902, 1, 0.2705882353], "alpha": 1, "hex": "#efff45" } }
+}

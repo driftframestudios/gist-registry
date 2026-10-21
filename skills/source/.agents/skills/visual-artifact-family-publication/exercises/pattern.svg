@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" role="img" aria-labelledby="title description">
+  <title id="title">Synthetic operating map</title>
+  <desc id="description">Three cards connect source, review, and accepted publication.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path id="arrow-shape" d="M 0 0 L 10 5 L 0 10 z" />
+    </marker>
+  </defs>
+  <g id="connectors" fill="none" stroke="currentColor" stroke-width="4" marker-end="url(#arrow)">
+    <path id="source-to-review" d="M 180 120 H 225" />
+    <path id="review-to-accepted" d="M 375 120 H 420" />
+  </g>
+  <g id="cards">
+    <rect id="source-card" x="20" y="60" width="160" height="120" rx="8" />
+    <rect id="review-card" x="220" y="60" width="160" height="120" rx="8" />
+    <rect id="accepted-card" x="420" y="60" width="160" height="120" rx="8" />
+  </g>
+</svg>

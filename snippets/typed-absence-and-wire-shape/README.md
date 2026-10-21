@@ -22,7 +22,7 @@ round-trip evidence.
 **Current coordinate:**
 [`typed-absence-and-wire-shape@0.1.0`](0.1.0/README.md).
 
-## Next evidence-bearing route
+## Next verification step
 
 The current version is a runnable code sample and proposed compact Gist source
 set. A receiving API can bind its schema, generated client, transport,

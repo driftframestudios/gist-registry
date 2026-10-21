@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Specimen review receiver</title>
+  <style>
+    :root {
+      --contract-canvas: #fffaf0;
+      --contract-ink: #11284d;
+      --contract-action: #2546f5;
+      --contract-focus: #efff45;
+      --contract-warning: #ff766d;
+      color-scheme: light;
+      font-family: system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--contract-ink); background: var(--contract-canvas); overflow-wrap: anywhere; }
+    main { inline-size: min(100% - 2rem, 48rem); margin-inline: auto; padding-block: 1rem 3rem; }
+    .skip-link { position: absolute; inset-block-start: .25rem; inset-inline-start: -100vw; }
+    .skip-link:focus { inset-inline-start: .25rem; z-index: 4; background: white; padding: .5rem; }
+    .field { display: grid; gap: .35rem; margin-block: 1rem; }
+    label { font-weight: 750; }
+    select {
+      appearance: none;
+      min-block-size: 2.75rem;
+      inline-size: 100%;
+      padding: .6rem 2.75rem .6rem .75rem;
+      padding-inline-end: 2.75rem;
+      color: inherit;
+      border: 2px solid currentColor;
+      border-radius: .25rem;
+      background-color: white;
+      background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+      background-position: right 17px center, right 12px center;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+    :dir(rtl) select { padding: .6rem .75rem .6rem 2.75rem; background-position: left 17px center, left 12px center; }
+    :focus-visible { outline: 4px solid var(--contract-focus); outline-offset: 3px; }
+    .workflow { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin-block: 1.5rem; }
+    .workflow svg { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; z-index: 0; overflow: visible; }
+    .card { position: relative; z-index: 1; min-inline-size: 0; padding: 1rem; border: 2px solid var(--contract-ink); background: white; }
+    .actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+    button { min-block-size: 2.75rem; padding: .6rem 1rem; border: 2px solid currentColor; background: var(--contract-action); color: white; font: inherit; font-weight: 700; }
+    output { display: block; min-block-size: 3rem; margin-block-start: 1rem; padding: .75rem; border-inline-start: .4rem solid var(--contract-action); background: white; }
+    .semantic-companion { border-collapse: collapse; table-layout: fixed; inline-size: 100%; margin-block-start: 1.5rem; }
+    .semantic-companion th, .semantic-companion td { border: 1px solid currentColor; padding: .5rem; text-align: start; }
+    .fault-semantic-visible #family-label { display: block; inline-size: 0; block-size: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .fault-geometry-select-collapse #family { inline-size: 1px; min-inline-size: 0; max-inline-size: 1px; padding-inline: 0; overflow: hidden; }
+    .fault-geometry-card-clipped .card { block-size: 3rem; overflow: hidden; }
+    .fault-computed { --contract-action: #777777; }
+    .fault-bitmap .workflow svg { z-index: 3; }
+    .connector-narrow { display: none; }
+    @media (max-width: 34rem) {
+      .workflow { grid-template-columns: 1fr; gap: 0; }
+      .workflow svg { position: relative; grid-row: 2; block-size: 2rem; }
+      #candidate { grid-row: 1; }
+      #accepted { grid-row: 3; }
+      .connector-wide { display: none; }
+      .connector-narrow { display: inline; }
+      .fault-geometry-card-reversed #candidate { grid-row: 3; }
+      .fault-geometry-card-reversed #accepted { grid-row: 1; }
+      .fault-geometry-card-overlap #candidate,
+      .fault-geometry-card-overlap #accepted { grid-row: 1; grid-column: 1; }
+    }
+    @media (prefers-reduced-motion: no-preference) { output { transition: border-color 120ms linear; } }
+    @media (forced-colors: active) { button { forced-color-adjust: auto; } .card { background: Canvas; } }
+    @media print { .actions { display: none; } main { inline-size: 100%; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#receiver">Skip to receiver</a>
+  <main id="receiver">
+    <h1>Specimen review receiver</h1>
+    <p id="intro">Choose a family and review state, then request a candidate preview. The accepted state stays visible while the request settles.</p>
+    <figure>
+      <img id="orientation-image" width="160" height="80" alt="Two cards connected from candidate to accepted state" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='80' viewBox='0 0 160 80'%3E%3Crect x='2' y='18' width='58' height='44' fill='%23fff' stroke='%2312294d'/%3E%3Cpath d='M62 40h34' stroke='%231748d1' stroke-width='4'/%3E%3Crect x='98' y='18' width='58' height='44' fill='%23fff' stroke='%2312294d'/%3E%3C/svg%3E">
+      <figcaption>The candidate remains distinct from the accepted state until review completes.</figcaption>
+    </figure>
+    <div class="field" id="family-field">
+      <label id="family-label" for="family">Specimen family</label>
+      <select id="family" aria-describedby="family-help">
+        <option value="solid">Solid tumor</option>
+        <option value="liquid">Liquid biopsy</option>
+      </select>
+      <span id="family-help">This choice sets the candidate family.</span>
+    </div>
+    <div class="field">
+      <label for="state">Review state</label>
+      <select id="state">
+        <option value="accepted">Accepted</option>
+        <option value="pending">Pending</option>
+        <option value="success">Success</option>
+        <option value="warning">Warning</option>
+        <option value="invalid">Invalid</option>
+        <option value="stale">Stale result</option>
+      </select>
+    </div>
+    <section class="workflow" aria-label="Candidate and accepted state relationship">
+      <svg aria-hidden="true" viewBox="0 0 720 160" preserveAspectRatio="none">
+        <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="currentColor"/></marker></defs>
+        <path id="connector" class="connector-wide" d="M300 80 H420" stroke="currentColor" stroke-width="4" marker-end="url(#arrow)"/>
+        <path class="connector-narrow" d="M360 0 V160" stroke="currentColor" stroke-width="4" marker-end="url(#arrow)"/>
+      </svg>
+      <article class="card" id="candidate"><h2>Candidate</h2><p>Draft intent remains local until acceptance.</p></article>
+      <article class="card" id="accepted"><h2>Accepted</h2><p data-accepted>Solid tumor · accepted</p></article>
+    </section>
+    <div class="actions">
+      <button type="button" id="preview">Request preview</button>
+      <button type="button" id="accept">Accept current candidate</button>
+    </div>
+    <output id="status" role="status" aria-live="polite">Ready. Accepted generation 0.</output>
+    <table class="semantic-companion">
+      <caption>Script-independent state reading</caption>
+      <tbody><tr><th scope="row">Accepted coordinate</th><td>receiver-synthetic-0.1.0 · generation 0</td></tr><tr><th scope="row">Recovery</th><td>The accepted state remains available while a candidate settles.</td></tr></tbody>
+    </table>
+  </main>
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const fault = params.get("fault");
+    if (fault) document.documentElement.classList.add(`fault-${fault}`);
+    if (params.get("dir") === "rtl") document.documentElement.dir = "rtl";
+    if (params.get("image") === "missing") document.querySelector("#orientation-image").src = "/missing-orientation.svg";
+    if (params.get("font") === "missing") document.documentElement.style.fontFamily = "MissingContractFont, system-ui, sans-serif";
+    if (fault === "semantic") document.querySelector('label[for="family"]').removeAttribute("for");
+    let requestedGeneration = 0;
+    let acceptedGeneration = 0;
+    const status = document.querySelector("#status");
+    const preview = document.querySelector("#preview");
+    const requestedState = params.get("state");
+    const stateControl = document.querySelector("#state");
+    if (requestedState && [...stateControl.options].some(option => option.value === requestedState)) {
+      stateControl.value = requestedState;
+      const stateLabel = stateControl.selectedOptions[0].textContent;
+      if (requestedState === "pending") {
+        requestedGeneration = 1;
+        status.value = "Pending generation 1. Accepted generation 0 remains active.";
+      } else if (requestedState === "stale") {
+        status.value = "Stale generation 1 set aside. Accepted generation 0 remains active.";
+      } else {
+        document.querySelector("[data-accepted]").textContent = `Solid tumor · ${requestedState}`;
+        status.value = `${stateLabel} state is visible at accepted generation 0.`;
+      }
+    }
+    preview.addEventListener("click", async () => {
+      const generation = ++requestedGeneration;
+      status.value = `Pending generation ${generation}. Accepted generation ${acceptedGeneration} remains active.`;
+      await new Promise(resolve => setTimeout(resolve, fault === "interaction" ? 30 : 5));
+      if (fault === "interaction") {
+        acceptedGeneration = generation;
+        document.querySelector("[data-accepted]").textContent = `Late response · accepted`;
+        document.body.tabIndex = -1;
+        document.body.focus();
+        status.value = `Late generation ${generation} replaced the accepted state.`;
+        return;
+      }
+      if (generation !== requestedGeneration || params.get("stale") === "1") {
+        status.value = `Stale generation ${generation} set aside. Accepted generation ${acceptedGeneration} remains active.`;
+        return;
+      }
+      status.value = `Candidate generation ${generation} ready for review.`;
+    });
+    document.querySelector("#accept").addEventListener("click", () => {
+      acceptedGeneration = requestedGeneration;
+      const family = document.querySelector("#family").selectedOptions[0].textContent;
+      const state = document.querySelector("#state").value;
+      document.querySelector("[data-accepted]").textContent = `${family} · ${state}`;
+      status.value = `Accepted generation ${acceptedGeneration}.`;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+{
+  "alpha": { "$type": "color", "$value": "{beta}" },
+  "beta": { "$type": "color", "$value": "{alpha}" }
+}

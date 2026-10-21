@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visual-contract receiver semantic companion</title>
+    <link rel="stylesheet" href="../src/styles.css" />
+  </head>
+  <body>
+    <main class="standalone-page">
+      <header>
+        <p class="eyebrow">Script-independent semantic companion</p>
+        <h1>What the receiver protects</h1>
+        <p>
+          Native HTML and React Aria receive the same visual tokens and domain
+          state. Each layer keeps one bounded responsibility, which makes the
+          interface easier to inspect, test, recover, and replace.
+        </p>
+        <p><a href="../receiver-entry.html">Open the interactive comparison</a></p>
+      </header>
+
+      <section class="standalone-panel" aria-labelledby="contract-title">
+        <h2 id="contract-title">State contract</h2>
+        <table class="contract-table">
+          <tbody>
+            <tr>
+              <th scope="row">Draft</th>
+              <td>The visitor’s current stable specimen ID.</td>
+            </tr>
+            <tr>
+              <th scope="row">Request</th>
+              <td>The draft ID plus a monotonic generation and settlement state.</td>
+            </tr>
+            <tr>
+              <th scope="row">Accepted</th>
+              <td>The current generation that passed the preview decision.</td>
+            </tr>
+            <tr>
+              <th scope="row">Released</th>
+              <td>A stable receipt bound to one accepted coordinate.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="standalone-panel" aria-labelledby="settlement-title">
+        <h2 id="settlement-title">Settlement and recovery</h2>
+        <ul>
+          <li>A newer request generation becomes the current settlement owner.</li>
+          <li>A late response returns a stale result and preserves current state.</li>
+          <li>A rejected request preserves the earlier accepted coordinate.</li>
+          <li>A repeated release returns the same receipt.</li>
+          <li>Visible status text announces each current outcome.</li>
+        </ul>
+      </section>
+
+      <section class="standalone-panel" aria-labelledby="rendering-title">
+        <h2 id="rendering-title">Rendering responsibilities</h2>
+        <table class="contract-table">
+          <tbody>
+            <tr>
+              <th scope="row">Native route</th>
+              <td>Browser-owned label, select, button, disclosure, focus, and reading order.</td>
+            </tr>
+            <tr>
+              <th scope="row">React Aria route</th>
+              <td>Headless interaction semantics with stable React Stately collection keys.</td>
+            </tr>
+            <tr>
+              <th scope="row">Domain model</th>
+              <td>Framework-neutral transitions for draft, request, acceptance, and release.</td>
+            </tr>
+            <tr>
+              <th scope="row">Token fixture</th>
+              <td>A bounded, provenance-mapped projection of the accepted Acme light token coordinate.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>

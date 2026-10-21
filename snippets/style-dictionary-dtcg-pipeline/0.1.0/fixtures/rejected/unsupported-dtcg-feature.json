@@ -1,0 +1,11 @@
+{
+  "hero": {
+    "gradient": {
+      "$type": "gradient",
+      "$value": [
+        { "color": { "colorSpace": "srgb", "components": [0.0901960784, 0.2274509804, 0.5607843137], "alpha": 1, "hex": "#173a8f" }, "position": 0 },
+        { "color": { "colorSpace": "srgb", "components": [0.9490196078, 0.4039215686, 0.368627451], "alpha": 1, "hex": "#f2675e" }, "position": 1 }
+      ]
+    }
+  }
+}

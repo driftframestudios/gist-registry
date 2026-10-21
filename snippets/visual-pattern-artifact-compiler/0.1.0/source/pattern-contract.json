@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "source-to-decision-route",
+  "title": "Source-to-decision route",
+  "description": "A synthetic operating diagram traces a reviewed source through semantic translation, a receiving component, and an accepted decision receipt.",
+  "alt": "Four connected panels trace a reviewed source through semantic translation and a receiving component to an accepted decision receipt.",
+  "caption": "A source-owned contract keeps authored meaning, rendered state, and the accepted decision receipt connected.",
+  "outputBaseName": "source-to-decision-route",
+  "outputMediaType": "image/webp",
+  "metadataPolicy": "strip_and_inspect",
+  "fontCoordinate": "ui-sans-serif, system-ui, sans-serif",
+  "sourceStanding": "independent_synthetic_authoring",
+  "rightsStanding": "Apache-2.0",
+  "owner": "Gist Registry Issue 64",
+  "intrinsic": {
+    "width": 1200,
+    "height": 720
+  },
+  "widths": [640, 1280, 1600],
+  "states": [
+    {"id": "source", "label": "Reviewed source", "meaning": "A named owner supplies accepted meaning and provenance."},
+    {"id": "translation", "label": "Semantic translation", "meaning": "The compiler maps meaning into a declared target grammar."},
+    {"id": "receiver", "label": "Accessible receiver", "meaning": "A component carries the same states through interaction and alternate media."},
+    {"id": "receipt", "label": "Decision receipt", "meaning": "A bounded observation records the accepted coordinate and consequence."}
+  ],
+  "readingOrder": ["source", "translation", "receiver", "receipt"]
+}

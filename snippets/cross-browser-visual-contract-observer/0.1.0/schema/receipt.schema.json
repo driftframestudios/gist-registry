@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kindlight.io/snippets/cross-browser-visual-contract-observer/0.1.0/schema/receipt.schema.json",
+  "title": "Visual-contract observation receipt",
+  "type": "object",
+  "required": ["schemaVersion","receiptId","caseId","targetId","decisionBoundary","source","receiver","subject","environment","viewportMedia","observation","result","artifacts","measurements","standing","classification","restartFrom"],
+  "properties": {
+    "schemaVersion": {"const":"0.1.0"},
+    "receiptId": {"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256},
+    "caseId": {"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":1024},
+    "targetId": {"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256},
+    "decisionBoundary": {"type":"string","minLength":1,"maxLength":16384},
+    "source": {"$ref":"#/$defs/generatedOutputCoordinate"},
+    "receiver": {"$ref":"#/$defs/productionBuildCoordinate"},
+    "subject": {
+      "type":"object",
+      "required":["kind","path","sha256","bytes"],
+      "properties": {
+        "kind":{"const":"synthetic_receiver_fixture"},
+        "path":{"type":"string","pattern":"^artifacts/(?:[A-Za-z0-9][A-Za-z0-9._-]*/)*[A-Za-z0-9][A-Za-z0-9._-]*$","maxLength":1024},
+        "sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+        "bytes":{"type":"integer","minimum":1,"maximum":16777216}
+      },
+      "additionalProperties":false
+    },
+    "environment": {
+      "type":"object",
+      "required":["coordinateKind","playwrightVersion","browserName","browserVersion","browserRevision","node","platform","arch","fontSet","headless"],
+      "properties": {
+        "coordinateKind":{"enum":["browser_runtime","model_fixture"]},
+        "playwrightVersion":{"const":"1.64.1"},
+        "browserName":{"enum":["chromium","firefox","webkit"]},
+        "browserVersion":{"type":"string","minLength":1,"maxLength":256},
+        "browserRevision":{"type":"string","minLength":1,"maxLength":256},
+        "node":{"type":"string","minLength":1,"maxLength":256},
+        "platform":{"type":"string","minLength":1,"maxLength":256},
+        "arch":{"type":"string","minLength":1,"maxLength":256},
+        "fontSet":{"type":"string","minLength":1,"maxLength":16384},
+        "headless":{"type":"boolean"}
+      },
+      "additionalProperties":false
+    },
+    "viewportMedia": {
+      "type":"object",
+      "required":["scenarioId","width","height","textScale","direction","media","colorMode","motion","image","font","input","state","javaScript"],
+      "properties": {
+        "scenarioId":{"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256},
+        "width":{"type":"integer","minimum":1,"maximum":8192},
+        "height":{"type":"integer","minimum":1,"maximum":8192},
+        "textScale":{"enum":[1,2,4]},
+        "direction":{"enum":["ltr","rtl"]},
+        "media":{"enum":["screen","print"]},
+        "colorMode":{"enum":["normal","forced"]},
+        "motion":{"enum":["full","reduced"]},
+        "image":{"enum":["available","missing"]},
+        "font":{"enum":["system","missing"]},
+        "input":{"enum":["keyboard","pointer","touch","none"]},
+        "state":{"enum":["accepted","invalid","pending","stale","success","warning"]},
+        "javaScript":{"type":"boolean"}
+      },
+      "additionalProperties":false
+    },
+    "observation": {"enum":["semantic","interaction","geometry","computed_style","bitmap_crop"]},
+    "result": {"type":"object","required":["status","normalized"],"properties":{"status":{"enum":["pass","fail","friction"]},"normalized":{}},"additionalProperties":false},
+    "artifacts": {"type":"array","minItems":1,"maxItems":32,"items":{"type":"object","required":["path","sha256","bytes"],"properties":{"path":{"type":"string","pattern":"^artifacts/(?:[A-Za-z0-9][A-Za-z0-9._-]*/)*[A-Za-z0-9][A-Za-z0-9._-]*$","maxLength":1024},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"bytes":{"type":"integer","minimum":1,"maximum":16777216}},"additionalProperties":false}},
+    "measurements": {"type":"object","required":["elapsedMs","emittedBytes","peakRssBytes","assertionCount"],"properties":{"elapsedMs":{"type":"number","minimum":0},"emittedBytes":{"type":"integer","minimum":0,"maximum":67108864},"peakRssBytes":{"type":"integer","minimum":0},"assertionCount":{"type":"integer","minimum":1}},"additionalProperties":false},
+    "standing": {"enum":["candidate","accepted"]},
+    "classification": {"enum":["contract_change","deterministic_implementation_change","declared_engine_platform_variance","environmental_drift","test_harness_fault","bounded_follow_up"]},
+    "restartFrom": {"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256}
+  },
+  "additionalProperties":false,
+  "$defs": {
+    "generatedOutputCoordinate":{"type":"object","required":["semanticId","version","coordinate","manifestKind","manifestSha256"],"properties":{"semanticId":{"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256},"version":{"type":"string","pattern":"^[0-9]+\\.[0-9]+\\.[0-9]+$","maxLength":256},"coordinate":{"type":"object","required":["brand","mode"],"properties":{"brand":{"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256},"mode":{"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256}},"additionalProperties":false},"manifestKind":{"const":"generated_output_manifest"},"manifestSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false},
+    "productionBuildCoordinate":{"type":"object","required":["semanticId","version","manifestKind","manifestSha256"],"properties":{"semanticId":{"type":"string","pattern":"^[a-z0-9][a-z0-9._-]*$","maxLength":256},"version":{"type":"string","pattern":"^[0-9]+\\.[0-9]+\\.[0-9]+$","maxLength":256},"manifestKind":{"const":"production_build_manifest"},"manifestSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false}
+  }
+}

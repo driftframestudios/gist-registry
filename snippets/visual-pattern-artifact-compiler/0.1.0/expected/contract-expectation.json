@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "source-to-decision-route",
+  "widths": [640, 1280, 1600],
+  "declaredMediaType": "image/webp",
+  "semanticStateOrder": ["source", "translation", "receiver", "receipt"],
+  "sourceAdmission": {
+    "standing": "static_self_contained",
+    "localReferenceForm": "#semantic-id",
+    "typedRejections": [
+      "active_source_content",
+      "external_source_reference",
+      "private_source_locator",
+      "unsupported_source_element"
+    ]
+  },
+  "resourceLimits": {
+    "contractBytes": 65536,
+    "svgBytes": 1048576,
+    "galleryShellBytes": 262144,
+    "totalSourceBytes": 1310720,
+    "states": 64,
+    "widths": 8,
+    "intrinsicPixels": 32000000,
+    "derivativePixels": 64000000,
+    "outputBytes": 16777216,
+    "sourceReferences": 64
+  },
+  "requiredGeneratedFiles": [
+    "gallery.html",
+    "semantic-companion.json",
+    "source.svg",
+    "source-to-decision-route-640.webp",
+    "source-to-decision-route-1280.webp",
+    "source-to-decision-route-1600.webp",
+    "manifest.json"
+  ]
+}

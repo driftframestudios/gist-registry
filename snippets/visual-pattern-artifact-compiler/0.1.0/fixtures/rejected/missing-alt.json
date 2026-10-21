@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "0.1.0",
+  "artifactId": "missing-alt",
+  "title": "Missing alternative text",
+  "description": "A rejected fixture exercises the alternative-text owner.",
+  "alt": "",
+  "caption": "The contract requires concise alternative text.",
+  "outputBaseName": "missing-alt",
+  "outputMediaType": "image/webp",
+  "metadataPolicy": "strip_and_inspect",
+  "fontCoordinate": "ui-sans-serif, system-ui, sans-serif",
+  "sourceStanding": "independent_synthetic_authoring",
+  "rightsStanding": "Apache-2.0",
+  "owner": "Gist Registry Issue 64",
+  "intrinsic": {"width": 1200, "height": 720},
+  "widths": [640],
+  "states": [{"id": "source", "label": "Source", "meaning": "Meaning."}],
+  "readingOrder": ["source"]
+}

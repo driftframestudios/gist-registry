@@ -38,7 +38,7 @@ durability, and platform-specific hardening retain distinct future probes.
 Source acceptance, manifest maturity, immutable tagging, and publication remain
 separately legible.
 
-## Next evidence-bearing route
+## Next verification step
 
 The accepted successor supplies complete runnable source and focused evidence
 for trusted-parent, cooperative-writer promotion across file and directory

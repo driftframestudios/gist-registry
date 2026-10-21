@@ -1,0 +1,8 @@
+{
+  "$description": "Research light-mode overrides.",
+  "action": {
+    "background": { "$type": "color", "$value": "{color.ink.900}" },
+    "background-pressed": { "$type": "color", "$value": "{color.ink.950}" },
+    "focus-ring": { "$type": "color", "$value": "{color.signal.coral}" }
+  }
+}

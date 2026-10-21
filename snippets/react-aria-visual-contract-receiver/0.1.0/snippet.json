@@ -1,0 +1,202 @@
+{
+  "$schema": "../../../schemas/0.1.0/registry-artifact.schema.json",
+  "schemaVersion": "0.1.0",
+  "semanticId": "react-aria-visual-contract-receiver",
+  "version": "0.1.0",
+  "artifactKind": "code_sample",
+  "standing": "candidate",
+  "title": "React Aria visual-contract receiver",
+  "summary": "A native HTML and React Aria receiver applies one bounded token coordinate while a framework-neutral state machine keeps draft choice, generation-gated preview settlement, accepted state, and idempotent release explicit.",
+  "use": {
+    "practicalQuestion": "How can native HTML and a React Aria interface receive the same visual contract while preserving semantic labels, stable identities, current async settlement, and repeatable release?",
+    "changedAbility": "A collaborator can run and inspect two semantic receiver routes, test their shared state model apart from rendering, and identify the exact token and release coordinate that each accepted state carries.",
+    "readers": [
+      "Front-end practitioners implementing accessible design-token receivers",
+      "AI collaborators reviewing component state, async settlement, semantic HTML, and visual-system transfer"
+    ],
+    "capabilities": [
+      "render_native_semantic_receiver",
+      "render_react_aria_receiver",
+      "retain_stable_collection_ids",
+      "separate_draft_request_accepted_release",
+      "abort_superseded_async_work",
+      "gate_async_settlement_by_generation",
+      "release_idempotent_receipt",
+      "preserve_script_independent_reading",
+      "exercise_responsive_accessibility_conditions"
+    ]
+  },
+  "provenance": {
+    "class": "authorized_source_synthesis",
+    "description": "A public, operator-neutral synthesis of React Aria Components, React Stately collection data, native HTML semantics, design-token reception, and asynchronous UI state patterns using synthetic content.",
+    "temporalScope": "This version pins the resolved October 2026 React and build dependency coordinates. Current service, browser, assistive-technology, and package compatibility belongs to each receiving release.",
+    "sourceKeys": [
+      "public-source:react-aria-components",
+      "public-source:react-stately",
+      "public-source:html-form-semantics",
+      "registry-exemplar:style-dictionary-dtcg-pipeline-v0-1-0",
+      "realistic-synthetic:visual-contract-receiver"
+    ]
+  },
+  "technicalVeracity": {
+    "status": "verified",
+    "basis": "Package-local Node tests establish state separation, generation ownership, stale settlement, rejection preservation, idempotent release, exact direct dependency pins, the upstream CSS artifact digest and deterministic projection mapping, authored HTML semantics, CSS condition contracts, explicit performance budgets, a profile-bound gzip observation, and a deterministic two-build manifest; jsdom interaction tests establish rendered label order, native selection, AbortSignal cancellation for superseded and unmounted work, focus return, live status, acceptance, and release receipt; Vite creates the production browser bundle across the supported Node maintenance lines."
+  },
+  "license": "Apache-2.0",
+  "canonicalPath": "snippets/react-aria-visual-contract-receiver/0.1.0",
+  "representations": [
+    {"role": "orientation", "path": "README.md", "declaredMediaType": "text/markdown"},
+    {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_definition", "path": "package.json", "declaredMediaType": "application/json"},
+    {"role": "dependency_lock", "path": "package-lock.json", "declaredMediaType": "application/json"},
+    {"role": "build_configuration", "path": "vite.config.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "browser_entry", "path": "receiver-entry.html", "declaredMediaType": "text/html"},
+    {"role": "source", "path": "src/model.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/controller.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/app.jsx", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/main.jsx", "declaredMediaType": "text/javascript"},
+    {"role": "source", "path": "src/styles.css", "declaredMediaType": "text/css"},
+    {"role": "native_route", "path": "source/native-receiver.html", "declaredMediaType": "text/html"},
+    {"role": "semantic_companion", "path": "source/semantic-reading.html", "declaredMediaType": "text/html"},
+    {"role": "dependency_coordinate", "path": "source/token-coordinate.json", "declaredMediaType": "application/json"},
+    {"role": "fixture", "path": "source/accepted-token-fixture.css", "declaredMediaType": "text/css"},
+    {"role": "projection_adapter", "path": "tools/token-projection.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "upstream_test_fixture", "path": "tests/fixtures/acme-light.tokens.css", "declaredMediaType": "text/css"},
+    {"role": "build_budget", "path": "config/build-budgets.json", "declaredMediaType": "application/json"},
+    {"role": "build_verifier", "path": "tools/verify-build.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "test", "path": "tests/model.test.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "test", "path": "tests/receiver.test.jsx", "declaredMediaType": "text/javascript"},
+    {"role": "test_support", "path": "tests/setup.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "test", "path": "tests/static-contract.test.mjs", "declaredMediaType": "text/javascript"},
+    {"role": "expected_contract", "path": "expected/receiver-contract.json", "declaredMediaType": "application/json"},
+    {"role": "expected_build_contract", "path": "expected/build-budget-contract.json", "declaredMediaType": "application/json"}
+  ],
+  "execution": {
+    "runtime": "Node.js 22, 24, or 26 on a current maintenance release; browser bundle produced by Vite 8.3.5",
+    "dependenciesPath": "package-lock.json",
+    "commands": [
+      {
+        "name": "run",
+        "command": "npm --prefix snippets/react-aria-visual-contract-receiver/0.1.0 run dev",
+        "establishes": "Serves the native, React Aria, and semantic companion routes for browser inspection."
+      },
+      {
+        "name": "test",
+        "command": "npm --prefix snippets/react-aria-visual-contract-receiver/0.1.0 test",
+        "establishes": "Runs pure model and static-contract evidence, jsdom component interaction evidence, and two isolated production builds with exact manifest and budget verification."
+      }
+    ],
+    "fixtures": [
+      "source/accepted-token-fixture.css",
+      "source/token-coordinate.json"
+    ],
+    "expectedResults": [
+      "expected/receiver-contract.json",
+      "expected/build-budget-contract.json"
+    ],
+    "environmentNotes": [
+      "The checked lock pins React 19.3.1, React DOM 19.3.1, React Aria Components 1.22.1, React Stately 3.51.0, Vite 8.3.5, Vitest 5.0.5, jsdom 30.1.3, and Testing Library coordinates.",
+      "The resolved lock and package tests passed in Node.js 26.11.0 on macOS; development-only transitive engine ranges require a current Node 22, 24, or 26 maintenance release.",
+      "The component suite uses jsdom and the build produces browser-loadable assets. Cross-browser and assistive-technology observations remain a receiving-release activity.",
+      "The reviewed build baseline in expected/build-budget-contract.json records exact deterministic measurements for authored source, the dependency graph, runtime assets, source maps, and the complete build. Gzip size records its Node, zlib, platform, architecture, format, and level coordinate. Every dimension carries an explicit review threshold.",
+      "source/token-coordinate.json binds the Issue 61 acme/light candidate generated-output manifest digest cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79 and acme-light/tokens.css digest 7a5d1503f28c80f671fc27a6fbe879fbc532a55879d0f82db1c871158f29a632; receiver-css-token-projection-v1 records and tests the bounded adaptation; human source acceptance advances its standing."
+    ]
+  },
+  "practice": {
+    "reviewQuestions": [
+      "Which stable product identity travels through the native control, React Stately collection, async request, accepted state, and release receipt?",
+      "Which generation owns settlement when responses arrive in a different order from requests?",
+      "Can a reader understand the operating contract from authored HTML while the interactive bundle is still loading?",
+      "Do labels, caret spacing, focus, status, reflow, right-to-left direction, forced colors, motion preference, and print remain coherent together?"
+    ],
+    "decisionRules": [
+      "Keep collection IDs in domain data and reuse them across native options, React Stately items, requests, accepted coordinates, and receipts.",
+      "Capture one draft ID in each request ticket and settle only the current monotonic generation.",
+      "Preserve an earlier accepted coordinate when a later current request receives a rejected outcome.",
+      "Bind release identity to the accepted generation and specimen ID so replay returns the same receipt.",
+      "Keep visible labels immediately above controls and place decorative carets from the logical end edge."
+    ],
+    "semanticMarkers": [
+      {
+        "marker": "TARGET",
+        "meaning": "One accepted token coordinate and one domain state machine reach native and React Aria controls with inspectable semantic parity."
+      },
+      {
+        "marker": "CONTRAST",
+        "meaning": "Visual similarity alone leaves draft, request ownership, acceptance, release identity, and fallback reading ambiguous."
+      },
+      {
+        "marker": "GUARD",
+        "meaning": "Stable IDs, monotonic generations, typed settlement results, idempotent receipts, visible labels, live status, and bounded token identity keep the receiver recoverable."
+      }
+    ],
+    "instructionYields": [
+      {
+        "mode": "implementation",
+        "instruction": "Keep domain state framework-neutral, feed stable item keys into React Stately, use React Aria for interaction semantics, and retain a native semantic route and source-readable companion."
+      },
+      {
+        "mode": "review",
+        "instruction": "Exercise overlapping request generations, rejection after an earlier acceptance, repeat release, keyboard focus, live status, narrow reflow, right-to-left layout, forced colors, reduced motion, and print."
+      },
+      {
+        "mode": "transfer",
+        "instruction": "Bind the final accepted generated-output manifest and CSS artifact digests, rerun the named projection adapter, select the receiving browser and assistive-technology matrix, connect the preview and release services, and record the resulting observations at the release coordinate."
+      }
+    ],
+    "codeExemplarGranularity": "One exact-version Vite package with a pure JavaScript state machine, a subscription controller, native HTML and React Aria receiver routes, a script-independent semantic companion, a bounded token fixture, focused tests, and an exact dependency lock.",
+    "complexityAndAllocation": "Building the stable specimen index costs O(S) time and space; domain transitions and lookups cost expected O(1); subscriber notification costs O(L); opening the listbox renders O(S) items; accepted and released state retain bounded O(1) domain data."
+  },
+  "boundaries": {
+    "evidence": "The checks establish local model transitions, AbortSignal cancellation ownership, generation-gated settlement, idempotent release, exact direct dependency pins, the byte-exact upstream CSS artifact and deterministic projection mapping, authored semantic routes, CSS condition declarations, DOM interaction behavior, focus return, live status, two-build byte identity, and production bundle measurements against explicit thresholds in the resolved environment.",
+    "trust": "All specimen names, states, tokens, and receipts are realistic synthetic material. The Issue 61 family, version, acme/light coordinate, generated-output manifest kind and digest, generated CSS artifact path and digest, and bounded adapter are explicit; human source acceptance remains a distinct decision.",
+    "transfer": "A receiving system selects its accepted token manifest, content, locale, browsers, assistive technologies, preview and release services, authorization, persistence, performance budget, telemetry, security controls, and accountable release owner, then records live observations against that coordinate."
+  },
+  "failureRecovery": {
+    "failureModes": [
+      "A response can arrive after a newer request has taken settlement authority.",
+      "A current preview can receive a rejected outcome after an earlier coordinate was accepted.",
+      "A release caller can retry after losing the first response.",
+      "A component implementation can replace stable IDs with view positions or hide the input label inside the control.",
+      "The bounded projection can drift from its bound generated-output manifest or exact upstream CSS artifact."
+    ],
+    "recoveryMoves": [
+      "Return a stale result with both generations and preserve current state.",
+      "Keep the earlier accepted coordinate while the rejected request carries its own visible status.",
+      "Return the same receipt for the same accepted generation and specimen ID.",
+      "Restore domain keys and visible label-before-control order, then rerun model and DOM evidence.",
+      "Compare the recorded manifest, upstream artifact, and projected fixture digests; rerun receiver-css-token-projection-v1 against accepted output and rerun the complete package test."
+    ]
+  },
+  "relationships": [
+    {
+      "type": "depends_on",
+      "target": "style-dictionary-dtcg-pipeline@0.1.0",
+      "reason": "The accepted acme/light token coordinate supplies the receiver's bounded visual roles."
+    },
+    {
+      "type": "work_state",
+      "target": "gist-registry:issue-62",
+      "reason": "Issue 62 owns the first native HTML and React Aria visual-contract receiver coordinate."
+    },
+    {
+      "type": "schema_nursery",
+      "target": "gist-registry:issue-4",
+      "reason": "This executable UI receiver tests the shared code-sample envelope while its state and accessibility details remain artifact-local."
+    }
+  ],
+  "extensions": {
+    "gistCandidate": {
+      "standing": "awaiting_human_publication_review",
+      "orderedFiles": [
+        {"publicationName": "00-README.md", "sourcePath": "README.md"},
+        {"publicationName": "model.mjs", "sourcePath": "src/model.mjs"},
+        {"publicationName": "controller.mjs", "sourcePath": "src/controller.mjs"},
+        {"publicationName": "app.jsx", "sourcePath": "src/app.jsx"},
+        {"publicationName": "native-receiver.html", "sourcePath": "source/native-receiver.html"},
+        {"publicationName": "semantic-reading.html", "sourcePath": "source/semantic-reading.html"},
+        {"publicationName": "receiver.test.jsx", "sourcePath": "tests/receiver.test.jsx"}
+      ]
+    }
+  }
+}
