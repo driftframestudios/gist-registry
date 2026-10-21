@@ -36,10 +36,12 @@ Official sources:
 
 Playwright 1.64.0 and 1.64.1 pin Linux WebKit r2370. Playwright maintainers
 reproduced severe `backdrop-filter` rendering slowdown on constrained two-CPU
-runners, while a later WebKit roll on the development line repaired it. Record
-this as a versioned environment exception when the exact combination appears.
-Use a stable released coordinate that contains the repair, or a previously
-validated coordinate, once available for the receiving project.
+runners. WebKit r2373 and later restore the reported non-overlapping case;
+overlapping `backdrop-filter` elements still show compounding slowdown in
+r2376. Record the browser, resource, and overlap composition as one environment
+coordinate. Retain Playwright 1.63 or another independently validated stable
+coordinate until a released successor passes the receiving project's exact
+composition.
 
 Official issue: [Playwright #43426](https://github.com/microsoft/playwright/issues/43426)
 

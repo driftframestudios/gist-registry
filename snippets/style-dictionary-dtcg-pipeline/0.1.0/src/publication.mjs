@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { lstat, mkdir, opendir, rename, rm, writeFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { lstat, mkdir, open, opendir, rename, rm, rmdir } from "node:fs/promises";
 import { basename, dirname, relative, resolve, sep } from "node:path";
 import {
   DEFAULT_LIMITS,
   compareOrdinal,
+  PipelineError,
   readBoundedFile,
   sha256,
   stableStringify,
@@ -24,6 +26,9 @@ const rootManifestFields = new Set([
   "recoveryCoordinate",
   "manifestDigest",
 ]);
+const supportedFaults = new Set(["after_copy", "before_pointer", "after_pointer_write"]);
+const reservationWaitMilliseconds = 10_000;
+const reservationPollMilliseconds = 10;
 
 function contained(root, candidate, label) {
   const owner = resolve(root);
@@ -35,9 +40,44 @@ function contained(root, candidate, label) {
 }
 
 function requireAllowedFields(value, allowed, label) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
-  for (const key in value) {
-    if (Object.hasOwn(value, key) && !allowed.has(key)) throw new Error(`${label} contains unsupported field ${key}`);
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be a plain data object`);
+  }
+  const prototype = Object.getPrototypeOf(value);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const keys = Reflect.ownKeys(descriptors);
+  if (
+    (prototype !== Object.prototype && prototype !== null)
+    || keys.some(key => typeof key !== "string")
+    || keys.some(key => {
+      const descriptor = descriptors[key];
+      return descriptor.enumerable !== true || !Object.hasOwn(descriptor, "value");
+    })
+  ) {
+    throw new Error(`${label} must be a plain data object`);
+  }
+  for (const key of keys) {
+    if (!allowed.has(key)) throw new Error(`${label} contains unsupported field ${key}`);
+  }
+}
+
+function requireDenseDataArray(value, label, limit) {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
+  requireSafeCount(value.length, `${label} count`, limit);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const keys = Reflect.ownKeys(descriptors).filter(key => key !== "length");
+  if (
+    Object.getPrototypeOf(value) !== Array.prototype
+    || keys.length !== value.length
+    || keys.some((key, index) => {
+      const descriptor = descriptors[key];
+      return typeof key !== "string"
+        || key !== String(index)
+        || descriptor.enumerable !== true
+        || !Object.hasOwn(descriptor, "value");
+    })
+  ) {
+    throw new Error(`${label} must be a dense data array`);
   }
 }
 
@@ -65,8 +105,7 @@ function validateManifestEnvelope(manifest) {
   requireBoundedString(manifest.compiler.package, "candidate manifest compiler package", 256);
   requireBoundedString(manifest.compiler.version, "candidate manifest compiler version", 64);
 
-  if (!Array.isArray(manifest.matrix)) throw new Error("candidate manifest matrix must be an array");
-  requireSafeCount(manifest.matrix.length, "candidate manifest matrix coordinate count", DEFAULT_LIMITS.generatedFiles);
+  requireDenseDataArray(manifest.matrix, "candidate manifest matrix", DEFAULT_LIMITS.generatedFiles);
   for (const coordinate of manifest.matrix) {
     requireAllowedFields(coordinate, new Set(["brand", "mode"]), "candidate manifest matrix coordinate");
     requireBoundedString(coordinate.brand, "candidate manifest brand", 128);
@@ -77,8 +116,7 @@ function validateManifestEnvelope(manifest) {
     throw new Error("candidate manifest matrix coordinates must be unique");
   }
 
-  if (!Array.isArray(manifest.sourceInputs)) throw new Error("candidate manifest sourceInputs must be an array");
-  requireSafeCount(manifest.sourceInputs.length, "candidate manifest source input count", DEFAULT_LIMITS.generatedFiles);
+  requireDenseDataArray(manifest.sourceInputs, "candidate manifest sourceInputs", DEFAULT_LIMITS.generatedFiles);
   const sourcePaths = new Set();
   for (const source of manifest.sourceInputs) {
     requireAllowedFields(source, new Set(["coordinate", "candidatePath", "bytes", "sha256"]), "candidate source input");
@@ -96,8 +134,7 @@ function validateManifestEnvelope(manifest) {
     throw new Error("candidate source inputs must match the ordered matrix coordinates");
   }
 
-  if (!Array.isArray(manifest.artifacts)) throw new Error("candidate manifest artifacts must be an array");
-  requireSafeCount(manifest.artifacts.length, "candidate manifest artifact count", DEFAULT_LIMITS.generatedFiles);
+  requireDenseDataArray(manifest.artifacts, "candidate manifest artifacts", DEFAULT_LIMITS.generatedFiles);
   if (manifest.artifactCount !== manifest.artifacts.length) {
     throw new Error("candidate manifest artifactCount must equal the artifact inventory");
   }
@@ -184,16 +221,297 @@ async function requireContainedRegularFile(root, candidate, label) {
   return { path, entry: leafEntry };
 }
 
-async function requireRegularDirectory(path, label) {
-  const entry = await lstat(path).catch(() => null);
-  if (!entry?.isDirectory() || entry.isSymbolicLink()) {
-    throw new Error(`${label} must be a regular directory`);
+function publicationBoundaryError(boundary, reason) {
+  return new PipelineError(
+    "PUBLICATION_BOUNDARY_INVALID",
+    "Promotion requires stable, directly addressed regular directories.",
+    { stage: "promotion", boundary, reason, restartFrom: "promotion" },
+  );
+}
+
+async function requireRegularDirectory(path, boundary, { create = false, recursive = false } = {}) {
+  if (create) {
+    try {
+      await mkdir(path, { recursive });
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+  }
+  let entry;
+  try {
+    entry = await lstat(path);
+  } catch (error) {
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+  }
+  if (!entry.isDirectory() || entry.isSymbolicLink()) {
+    throw publicationBoundaryError(boundary, "regular_directory_required");
+  }
+  return { path, boundary, dev: entry.dev, ino: entry.ino };
+}
+
+async function assertDirectoryIdentity(identity) {
+  let entry;
+  try {
+    entry = await lstat(identity.path);
+  } catch (error) {
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+  }
+  if (
+    !entry.isDirectory()
+    || entry.isSymbolicLink()
+    || entry.dev !== identity.dev
+    || entry.ino !== identity.ino
+  ) {
+    throw publicationBoundaryError(identity.boundary, "directory_identity_changed");
+  }
+}
+
+async function assertDirectoryIdentities(identities) {
+  for (const identity of identities) await assertDirectoryIdentity(identity);
+}
+
+async function requireRegularFileIdentity(path, boundary) {
+  let entry;
+  try {
+    entry = await lstat(path);
+  } catch (error) {
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+  }
+  if (!entry.isFile() || entry.isSymbolicLink()) {
+    throw publicationBoundaryError(boundary, "regular_file_required");
+  }
+  return { path, boundary, dev: entry.dev, ino: entry.ino };
+}
+
+async function assertFileIdentity(identity) {
+  let entry;
+  try {
+    entry = await lstat(identity.path);
+  } catch (error) {
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+  }
+  if (
+    !entry.isFile()
+    || entry.isSymbolicLink()
+    || entry.dev !== identity.dev
+    || entry.ino !== identity.ino
+  ) {
+    throw publicationBoundaryError(identity.boundary, "file_identity_changed");
+  }
+}
+
+async function createOwnedDirectory(path, boundary, owners, { mode = 0o700 } = {}) {
+  await assertDirectoryIdentities(owners);
+  await mkdir(path, { mode });
+  const identity = await requireRegularDirectory(path, boundary);
+  await assertDirectoryIdentities(owners);
+  await assertDirectoryIdentity(identity);
+  return identity;
+}
+
+async function createOwnedFile(path, boundary, bytes, owners, { mode = 0o644, identities = null } = {}) {
+  const payload = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
+  await assertDirectoryIdentities(owners);
+  let handle;
+  let identity = null;
+  let primaryError = null;
+  try {
+    const flags = fsConstants.O_WRONLY
+      | fsConstants.O_CREAT
+      | fsConstants.O_EXCL
+      | (fsConstants.O_NOFOLLOW ?? 0);
+    handle = await open(path, flags, mode);
+    const entry = await handle.stat();
+    if (!entry.isFile()) throw publicationBoundaryError(boundary, "regular_file_required");
+    identity = { path, boundary, dev: entry.dev, ino: entry.ino };
+    identities?.push(identity);
+    await handle.writeFile(payload);
+    await handle.sync();
+    const settledEntry = await handle.stat();
+    if (
+      !settledEntry.isFile()
+      || settledEntry.dev !== identity.dev
+      || settledEntry.ino !== identity.ino
+      || settledEntry.size !== payload.byteLength
+    ) {
+      throw publicationBoundaryError(boundary, "file_identity_changed_during_write");
+    }
+  } catch (error) {
+    primaryError = error;
+    throw error;
+  } finally {
+    if (handle) {
+      try {
+        await handle.close();
+      } catch (error) {
+        if (primaryError === null) throw error;
+      }
+    }
+  }
+  await assertDirectoryIdentities(owners);
+  await assertFileIdentity(identity);
+  return identity;
+}
+
+async function assertOwnedFileBytes(identity, expectedBytes, owners) {
+  await assertDirectoryIdentities(owners);
+  await assertFileIdentity(identity);
+  const observed = await readBoundedFile(identity.path, {
+    maxBytes: expectedBytes.byteLength,
+    stage: "promotion",
+    dimension: "publication_bytes",
+    label: identity.boundary,
+    restartFrom: "promotion",
+  });
+  if (!observed.equals(expectedBytes)) {
+    throw publicationBoundaryError(identity.boundary, "file_bytes_changed");
+  }
+  await assertDirectoryIdentities(owners);
+  await assertFileIdentity(identity);
+}
+
+async function invokeFaultHook(injectFault, checkpoint, coordinates) {
+  if (typeof injectFault === "function") {
+    await injectFault(Object.freeze({ checkpoint, ...coordinates }));
+  }
+}
+
+async function removeOwnedEmptyDirectory(identity, owners, { strict = false } = {}) {
+  if (!identity) return true;
+  try {
+    await assertDirectoryIdentities(owners);
+    await assertDirectoryIdentity(identity);
+    await rmdir(identity.path);
+    return true;
+  } catch (error) {
+    if (strict) throw error;
+    // Ownership drift makes path-based cleanup unsafe. The stable root remains
+    // the recovery coordinate for operator inspection.
+    return false;
+  }
+}
+
+async function removeOwnedFile(identity, owners, { strict = false } = {}) {
+  if (!identity) return true;
+  try {
+    await assertDirectoryIdentities(owners);
+    await assertFileIdentity(identity);
+    await rm(identity.path);
+    return true;
+  } catch (error) {
+    if (strict) throw error;
+    // Preserve a changed path for operator inspection rather than deleting
+    // material through an owner boundary that moved.
+    return false;
+  }
+}
+
+async function removeOwnedTree(rootIdentity, owners, directoryIdentities, fileIdentities, { strict = false } = {}) {
+  if (!rootIdentity) return true;
+  try {
+    await assertDirectoryIdentities(owners);
+    await assertDirectoryIdentity(rootIdentity);
+    for (const identity of [...fileIdentities].reverse()) {
+      await assertDirectoryIdentities(owners);
+      await assertDirectoryIdentity(rootIdentity);
+      await assertFileIdentity(identity);
+      await rm(identity.path);
+    }
+    for (const identity of [...directoryIdentities].reverse()) {
+      await assertDirectoryIdentities(owners);
+      await assertDirectoryIdentity(rootIdentity);
+      await assertDirectoryIdentity(identity);
+      await rmdir(identity.path);
+    }
+    await assertDirectoryIdentities(owners);
+    await assertDirectoryIdentity(rootIdentity);
+    await rmdir(rootIdentity.path);
+    return true;
+  } catch (error) {
+    if (strict) throw error;
+    // Remove only identities created by this invocation. Any missing,
+    // replaced, or additional entry leaves the remainder for inspection.
+    return false;
+  }
+}
+
+async function ensureOwnedDirectoryPath({
+  rootPath,
+  directoryPath,
+  rootIdentity,
+  owners,
+  identitiesByPath,
+  createdDirectories,
+}) {
+  const relativePath = relative(rootPath, directoryPath);
+  if (relativePath === "") return rootIdentity;
+  const segments = relativePath.split(sep).filter(Boolean);
+  let currentPath = rootPath;
+  let parentIdentity = rootIdentity;
+  for (const segment of segments) {
+    currentPath = contained(rootPath, resolve(currentPath, segment), "staging directory");
+    let identity = identitiesByPath.get(currentPath);
+    if (!identity) {
+      identity = await createOwnedDirectory(
+        currentPath,
+        `staging_directory.${relative(rootPath, currentPath).split(sep).join("/")}`,
+        [...owners, rootIdentity, parentIdentity],
+        { mode: 0o755 },
+      );
+      identitiesByPath.set(currentPath, identity);
+      createdDirectories.push(identity);
+    } else {
+      await assertDirectoryIdentities([...owners, rootIdentity, parentIdentity, identity]);
+    }
+    parentIdentity = identity;
+  }
+  return parentIdentity;
+}
+
+async function acquireDestinationReservation({
+  reservationPath,
+  reservationBytes,
+  destination,
+  owners,
+}) {
+  const deadline = Date.now() + reservationWaitMilliseconds;
+  while (true) {
+    try {
+      return await createOwnedFile(
+        reservationPath,
+        "destination_reservation",
+        reservationBytes,
+        owners,
+        { mode: 0o600 },
+      );
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      const destinationEntry = await lstat(destination).catch(readError => {
+        if (readError.code === "ENOENT") return null;
+        throw readError;
+      });
+      if (destinationEntry) return null;
+      const reservationEntry = await lstat(reservationPath).catch(readError => {
+        throw publicationBoundaryError("destination_reservation", readError.code ?? "unreadable");
+      });
+      if (!reservationEntry.isFile() || reservationEntry.isSymbolicLink()) {
+        throw publicationBoundaryError("destination_reservation", "regular_file_required");
+      }
+      if (Date.now() >= deadline) {
+        throw new PipelineError(
+          "PUBLICATION_RESERVATION_BUSY",
+          "Promotion could not acquire the destination reservation within the bounded wait.",
+          { stage: "promotion", restartFrom: "promotion" },
+        );
+      }
+      await new Promise(resolveDelay => setTimeout(resolveDelay, reservationPollMilliseconds));
+    }
   }
 }
 
 async function verifyExistingDestination(destination, manifest) {
   validateManifestEnvelope(manifest);
-  await requireRegularDirectory(destination, "artifact destination integrity root");
+  await requireRegularDirectory(destination, "accepted_destination");
   const manifestPath = contained(destination, resolve(destination, "manifest.json"), "accepted manifest");
   const manifestEntry = await lstat(manifestPath).catch(() => null);
   if (!manifestEntry?.isFile() || manifestEntry.isSymbolicLink()) {
@@ -239,7 +557,30 @@ async function verifyExistingDestination(destination, manifest) {
   }
 }
 
+async function captureAcceptedFileIdentities(destination, manifest) {
+  const relativePaths = ["manifest.json", ...manifest.artifacts.map(artifact => artifact.path)];
+  const identities = [];
+  for (const relativePath of relativePaths) {
+    identities.push(await requireRegularFileIdentity(
+      contained(destination, resolve(destination, relativePath), "accepted artifact identity"),
+      `accepted_file.${relativePath}`,
+    ));
+  }
+  return identities;
+}
+
 export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, injectFault = null }) {
+  if (
+    injectFault !== null
+    && typeof injectFault !== "function"
+    && !supportedFaults.has(injectFault)
+  ) {
+    throw new PipelineError(
+      "INVALID_FAULT_INJECTOR",
+      "Promotion fault injection requires a supported checkpoint or async-compatible function.",
+      { stage: "promotion", restartFrom: "configuration" },
+    );
+  }
   validateManifestEnvelope(manifest);
   // Snapshot the admitted envelope once so caller-side mutation cannot change
   // the coordinate while asynchronous staging is in progress.
@@ -252,10 +593,16 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
   assertSafeAcceptedDigest(digest);
   const destination = contained(artifactsRoot, resolve(artifactsRoot, digest), "artifact destination");
   const invocationId = `${process.pid}-${randomUUID()}`;
-  const staging = contained(
+  const privateStagingRoot = contained(
     artifactsRoot,
     resolve(artifactsRoot, `.candidate-${digest}-${invocationId}`),
-    "artifact staging",
+    "private staging root",
+  );
+  const staging = contained(privateStagingRoot, resolve(privateStagingRoot, "payload"), "artifact staging");
+  const reservationPath = contained(
+    artifactsRoot,
+    resolve(artifactsRoot, `.reservation-${digest}`),
+    "destination reservation",
   );
   const capturedSources = [];
   for (const source of manifest.sourceInputs) {
@@ -292,17 +639,43 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
   if (sha256(stableStringify(capturedSources)) !== manifest.sourceDigest) {
     throw new Error("candidate source digest differs from the captured source family");
   }
-  const acceptedEntry = await lstat(accepted).catch(() => null);
-  if (acceptedEntry) await requireRegularDirectory(accepted, "accepted root");
-  else await mkdir(accepted, { recursive: true });
-  await requireRegularDirectory(accepted, "accepted root");
-  const artifactsEntry = await lstat(artifactsRoot).catch(() => null);
-  if (artifactsEntry) await requireRegularDirectory(artifactsRoot, "accepted artifacts root");
-  else await mkdir(artifactsRoot, { recursive: true });
-  await requireRegularDirectory(artifactsRoot, "accepted artifacts root");
+  const acceptedIdentity = await requireRegularDirectory(
+    accepted,
+    "accepted_root",
+    { create: true, recursive: true },
+  );
+  const artifactsIdentity = await requireRegularDirectory(
+    artifactsRoot,
+    "accepted_artifacts_root",
+    { create: true },
+  );
+  await assertDirectoryIdentity(acceptedIdentity);
+  const pointerPath = resolve(accepted, "current.json");
+  const reservationBytes = Buffer.from(`${invocationId}\n`, "utf8");
+  const stagingDirectories = [];
+  const stagingFiles = [];
+  const stagingDirectoriesByPath = new Map();
   let temporaryPointer = null;
+  let temporaryPointerIdentity = null;
+  let reservationIdentity = null;
+  let privateStagingIdentity = null;
+  let stagingIdentity = null;
+  let stagingPromoted = false;
   try {
-    await mkdir(staging, { recursive: true });
+    privateStagingIdentity = await createOwnedDirectory(
+      privateStagingRoot,
+      "private_staging_root",
+      [acceptedIdentity, artifactsIdentity],
+      { mode: 0o700 },
+    );
+    stagingIdentity = await createOwnedDirectory(
+      staging,
+      "staging_payload",
+      [acceptedIdentity, artifactsIdentity, privateStagingIdentity],
+      { mode: 0o755 },
+    );
+    stagingDirectories.push(stagingIdentity);
+    stagingDirectoriesByPath.set(staging, stagingIdentity);
     for (const artifact of manifest.artifacts) {
       const { path: sourcePath, entry } = await requireContainedRegularFile(
         candidate,
@@ -323,18 +696,129 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
         throw new Error(`candidate artifact ${artifact.path} digest differs from the manifest`);
       }
       const stagingPath = contained(staging, resolve(staging, artifact.path), "staged artifact");
-      await mkdir(dirname(stagingPath), { recursive: true });
-      await writeFile(stagingPath, bytes, { flag: "wx" });
+      const parentIdentity = await ensureOwnedDirectoryPath({
+        rootPath: staging,
+        directoryPath: dirname(stagingPath),
+        rootIdentity: stagingIdentity,
+        owners: [acceptedIdentity, artifactsIdentity, privateStagingIdentity],
+        identitiesByPath: stagingDirectoriesByPath,
+        createdDirectories: stagingDirectories,
+      });
+      for (const identity of stagingFiles) await assertFileIdentity(identity);
+      await createOwnedFile(
+        stagingPath,
+        `staged_artifact.${artifact.path}`,
+        bytes,
+        [acceptedIdentity, artifactsIdentity, privateStagingIdentity, stagingIdentity, parentIdentity],
+        { identities: stagingFiles },
+      );
+      for (const identity of stagingFiles) await assertFileIdentity(identity);
     }
     if (injectFault === "after_copy") throw new Error("injected promotion fault after candidate copy");
-    await writeFile(resolve(staging, "manifest.json"), stableStringify(manifest), "utf8");
+    const manifestBytes = Buffer.from(stableStringify(manifest), "utf8");
+    await createOwnedFile(
+      resolve(staging, "manifest.json"),
+      "staged_manifest",
+      manifestBytes,
+      [acceptedIdentity, artifactsIdentity, privateStagingIdentity, stagingIdentity],
+      { identities: stagingFiles },
+    );
+    await assertDirectoryIdentities([
+      acceptedIdentity,
+      artifactsIdentity,
+      privateStagingIdentity,
+      ...stagingDirectories,
+    ]);
+    for (const identity of stagingFiles) await assertFileIdentity(identity);
     await verifyExistingDestination(staging, manifest);
-    try {
-      await rename(staging, destination);
-    } catch (error) {
-      if (!["EEXIST", "EISDIR", "ENOTDIR", "ENOTEMPTY"].includes(error.code)) throw error;
-      await rm(staging, { recursive: true, force: true });
-      await verifyExistingDestination(destination, manifest);
+    await invokeFaultHook(injectFault, "before_candidate_rename", {
+      acceptedRoot: accepted,
+      artifactsRoot,
+      staging,
+      destination,
+    });
+    await assertDirectoryIdentities([
+      acceptedIdentity,
+      artifactsIdentity,
+      privateStagingIdentity,
+      ...stagingDirectories,
+    ]);
+    for (const identity of stagingFiles) await assertFileIdentity(identity);
+    await verifyExistingDestination(staging, manifest);
+
+    reservationIdentity = await acquireDestinationReservation({
+      reservationPath,
+      reservationBytes,
+      destination,
+      owners: [acceptedIdentity, artifactsIdentity],
+    });
+    if (reservationIdentity) {
+      await assertOwnedFileBytes(
+        reservationIdentity,
+        reservationBytes,
+        [acceptedIdentity, artifactsIdentity],
+      );
+    }
+    const existingDestination = await lstat(destination).catch(error => {
+      if (error.code === "ENOENT") return null;
+      throw error;
+    });
+    if (existingDestination === null) {
+      await assertDirectoryIdentities([
+        acceptedIdentity,
+        artifactsIdentity,
+        privateStagingIdentity,
+        ...stagingDirectories,
+      ]);
+      for (const identity of stagingFiles) await assertFileIdentity(identity);
+      if (reservationIdentity) {
+        await assertOwnedFileBytes(
+          reservationIdentity,
+          reservationBytes,
+          [acceptedIdentity, artifactsIdentity],
+        );
+      }
+      try {
+        await rename(staging, destination);
+        stagingPromoted = true;
+      } catch (error) {
+        if (!["EEXIST", "EISDIR", "ENOTDIR", "ENOTEMPTY"].includes(error.code)) throw error;
+      }
+    }
+    if (stagingPromoted) {
+      await removeOwnedEmptyDirectory(
+        privateStagingIdentity,
+        [acceptedIdentity, artifactsIdentity],
+        { strict: true },
+      );
+      privateStagingIdentity = null;
+    } else {
+      await removeOwnedTree(
+        privateStagingIdentity,
+        [acceptedIdentity, artifactsIdentity],
+        stagingDirectories,
+        stagingFiles,
+        { strict: true },
+      );
+      privateStagingIdentity = null;
+      stagingIdentity = null;
+    }
+    const destinationIdentity = await requireRegularDirectory(destination, "accepted_destination");
+    await assertDirectoryIdentity(artifactsIdentity);
+    await verifyExistingDestination(destination, manifest);
+    const destinationFileIdentities = await captureAcceptedFileIdentities(destination, manifest);
+    if (reservationIdentity) {
+      await assertOwnedFileBytes(
+        reservationIdentity,
+        reservationBytes,
+        [acceptedIdentity, artifactsIdentity],
+      );
+      await removeOwnedFile(
+        reservationIdentity,
+        [acceptedIdentity, artifactsIdentity],
+        { strict: true },
+      );
+      reservationIdentity = null;
     }
     if (injectFault === "before_pointer") throw new Error("injected promotion fault before pointer update");
     const pointer = {
@@ -342,24 +826,73 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
       artifactDirectory: `artifacts/${digest}`,
       sourceDigest: manifest.sourceDigest,
     };
+    const pointerBytes = Buffer.from(stableStringify(pointer), "utf8");
     temporaryPointer = contained(
       accepted,
       resolve(accepted, `.current-${process.pid}-${randomUUID()}.json`),
       "temporary accepted pointer",
     );
-    await writeFile(temporaryPointer, stableStringify(pointer), "utf8");
+    await invokeFaultHook(injectFault, "before_pointer_write", {
+      acceptedRoot: accepted,
+      artifactsRoot,
+      destination,
+      pointerPath,
+      temporaryPointer,
+    });
+    temporaryPointerIdentity = await createOwnedFile(
+      temporaryPointer,
+      "temporary_pointer",
+      pointerBytes,
+      [acceptedIdentity, artifactsIdentity, destinationIdentity],
+    );
     if (injectFault === "after_pointer_write") throw new Error("injected promotion fault after pointer write");
-    await rename(temporaryPointer, resolve(accepted, "current.json"));
+    await invokeFaultHook(injectFault, "before_pointer_rename", {
+      acceptedRoot: accepted,
+      artifactsRoot,
+      destination,
+      pointerPath,
+      temporaryPointer,
+    });
+    await assertDirectoryIdentities([acceptedIdentity, artifactsIdentity, destinationIdentity]);
+    for (const identity of destinationFileIdentities) await assertFileIdentity(identity);
+    await assertOwnedFileBytes(
+      temporaryPointerIdentity,
+      pointerBytes,
+      [acceptedIdentity, artifactsIdentity, destinationIdentity],
+    );
+    await verifyExistingDestination(destination, manifest);
+    await assertDirectoryIdentities([acceptedIdentity, artifactsIdentity, destinationIdentity]);
+    for (const identity of destinationFileIdentities) await assertFileIdentity(identity);
+    await assertOwnedFileBytes(
+      temporaryPointerIdentity,
+      pointerBytes,
+      [acceptedIdentity, artifactsIdentity, destinationIdentity],
+    );
+    await rename(temporaryPointer, pointerPath);
     return pointer;
   } catch (error) {
-    await rm(staging, { recursive: true, force: true });
-    if (temporaryPointer) await rm(temporaryPointer, { force: true });
+    await removeOwnedFile(temporaryPointerIdentity, [acceptedIdentity]);
+    await removeOwnedFile(reservationIdentity, [acceptedIdentity, artifactsIdentity]);
+    if (stagingPromoted) {
+      await removeOwnedEmptyDirectory(privateStagingIdentity, [acceptedIdentity, artifactsIdentity]);
+    } else {
+      await removeOwnedTree(
+        privateStagingIdentity,
+        [acceptedIdentity, artifactsIdentity],
+        stagingDirectories,
+        stagingFiles,
+      );
+    }
     throw error;
   }
 }
 
 export async function readAcceptedPointer(acceptedRoot) {
-  return JSON.parse((await readBoundedFile(resolve(acceptedRoot, "current.json"), {
+  const accepted = resolve(acceptedRoot);
+  if (await lstat(accepted).catch(() => null)) {
+    await requireRegularDirectory(accepted, "accepted_root");
+  }
+  return JSON.parse((await readBoundedFile(resolve(accepted, "current.json"), {
     maxBytes: 4_096,
     stage: "accepted_pointer",
     dimension: "pointer_bytes",

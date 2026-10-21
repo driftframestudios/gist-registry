@@ -3,7 +3,7 @@ import { lstat, mkdtemp, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
-import { evaluateControlledObservation, OBSERVER_RESOURCE_LIMITS, ObserverError, readBoundedRegularFile, readJson, selectTier, validateInventory, validateMatrix } from "../src/contracts.mjs";
+import { evaluateControlledObservation, inspectPngScreenshot, OBSERVER_RESOURCE_LIMITS, ObserverError, readBoundedRegularFile, readJson, selectTier, validateBitmapCaptureEnvelope, validateBitmapScreenshotBytes, validateInventory, validateMatrix } from "../src/contracts.mjs";
 import { packageRoot } from "../tools/paths.mjs";
 
 const inventory = await readJson(resolve(packageRoot, "inventory/decisions.json"));
@@ -88,6 +88,119 @@ test("finite matrix carries the declared accessibility and media dimensions", ()
   });
 });
 
+test("inventory, matrix, and tier selection admit descriptor values before business validation", () => {
+  const accessorInventory = structuredClone(inventory);
+  let inventoryGetterCalls = 0;
+  Object.defineProperty(accessorInventory.targets[0], "decision", {
+    enumerable: true,
+    configurable: true,
+    get() {
+      inventoryGetterCalls += 1;
+      return "untrusted getter value";
+    },
+  });
+  assert.throws(
+    () => validateInventory(accessorInventory),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "decision_inventory.targets[0]"
+      && error.details.reason === "accessor_fields_present"
+      && error.details.restartFrom === "inventory",
+  );
+  assert.equal(inventoryGetterCalls, 0);
+
+  const accessorMatrix = structuredClone(matrix);
+  let matrixGetterCalls = 0;
+  Object.defineProperty(accessorMatrix.scenarios[0].viewport, "width", {
+    enumerable: true,
+    configurable: true,
+    get() {
+      matrixGetterCalls += 1;
+      return 1440;
+    },
+  });
+  assert.throws(
+    () => validateMatrix(accessorMatrix),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "observation_matrix.scenarios[0].viewport"
+      && error.details.reason === "accessor_fields_present"
+      && error.details.restartFrom === "matrix",
+  );
+  assert.equal(matrixGetterCalls, 0);
+
+  let selectionGetterCalls = 0;
+  const accessorSelection = {};
+  Object.defineProperty(accessorSelection, "tier", {
+    enumerable: true,
+    configurable: true,
+    get() {
+      selectionGetterCalls += 1;
+      return "full";
+    },
+  });
+  assert.throws(
+    () => selectTier(accessorSelection, inventory, matrix),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "tier_selection"
+      && error.details.reason === "accessor_fields_present"
+      && error.details.restartFrom === "selection",
+  );
+  assert.equal(selectionGetterCalls, 0);
+});
+
+test("admission accepts transparent proxies without reading through get traps", () => {
+  let getTrapCalls = 0;
+  const proxiedInventory = structuredClone(inventory);
+  proxiedInventory.targets = new Proxy(proxiedInventory.targets, {
+    get(target, key, receiver) {
+      getTrapCalls += 1;
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  const proxiedMatrix = structuredClone(matrix);
+  proxiedMatrix.scenarios = new Proxy(proxiedMatrix.scenarios, {
+    get(target, key, receiver) {
+      getTrapCalls += 1;
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  const selection = new Proxy({ tier: "smoke" }, {
+    get(target, key, receiver) {
+      getTrapCalls += 1;
+      return Reflect.get(target, key, receiver);
+    },
+  });
+
+  assert.equal(validateInventory(proxiedInventory).targetCount, inventory.targets.length);
+  assert.equal(validateMatrix(proxiedMatrix).scenarioCount, matrix.scenarios.length);
+  assert.equal(selectTier(selection, proxiedInventory, proxiedMatrix).tier, "smoke");
+  assert.equal(getTrapCalls, 0);
+});
+
+test("admission rejects Array subclasses before invoking inherited iteration", () => {
+  let iteratorCalls = 0;
+  class ActiveArray extends Array {
+    [Symbol.iterator]() {
+      iteratorCalls += 1;
+      throw new Error("array iteration escaped admission");
+    }
+  }
+  const subclassInventory = structuredClone(inventory);
+  subclassInventory.targets = new ActiveArray(...subclassInventory.targets);
+
+  assert.throws(
+    () => validateInventory(subclassInventory),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "decision_inventory.targets"
+      && error.details.reason === "plain_array_required"
+      && error.details.restartFrom === "inventory",
+  );
+  assert.equal(iteratorCalls, 0);
+});
+
 test("inventory and matrix reject fields outside their closed contracts", () => {
   const inventoryWithExtra = structuredClone(inventory);
   inventoryWithExtra.generatedAt = "later";
@@ -162,6 +275,153 @@ test("matrix caps scenario count and viewport dimensions", () => {
     () => validateMatrix(oversizedViewport),
     error => error instanceof ObserverError && error.code === "VIEWPORT_INVALID",
   );
+
+  const exactPixelProduct = structuredClone(matrix);
+  exactPixelProduct.scenarios[0].viewport = { width: 2048, height: 2048 };
+  assert.doesNotThrow(() => validateMatrix(exactPixelProduct));
+
+  const excessivePixelProduct = structuredClone(matrix);
+  excessivePixelProduct.scenarios[0].viewport = { width: 2049, height: 2048 };
+  assert.throws(
+    () => validateMatrix(excessivePixelProduct),
+    error => (
+      error instanceof ObserverError
+      && error.code === "RESOURCE_LIMIT_EXCEEDED"
+      && error.details.boundary === "matrix_scenario.baseline.viewportPixels"
+    ),
+  );
+});
+
+test("bitmap admission caps crop, decoded pixels, regions, and encoded bytes before comparison", () => {
+  assert.deepEqual(
+    validateBitmapCaptureEnvelope({
+      cropWidth: 2048,
+      cropHeight: 2048,
+      pixelWidth: 2048,
+      pixelHeight: 2048,
+      cardCount: OBSERVER_RESOURCE_LIMITS.bitmapCardRegions,
+    }),
+    {
+      cropWidth: 2048,
+      cropHeight: 2048,
+      pixelWidth: 2048,
+      pixelHeight: 2048,
+      cardCount: OBSERVER_RESOURCE_LIMITS.bitmapCardRegions,
+      pixels: OBSERVER_RESOURCE_LIMITS.bitmapPixels,
+    },
+  );
+  for (const [candidate, boundary] of [
+    [{ cropWidth: 2048, cropHeight: 2048, pixelWidth: 2049, pixelHeight: 2048, cardCount: 2 }, "bitmap.pixels"],
+    [{ cropWidth: OBSERVER_RESOURCE_LIMITS.bitmapCropWidth + 1, cropHeight: 1, pixelWidth: 1, pixelHeight: 1, cardCount: 2 }, "bitmap.cropWidth"],
+    [{ cropWidth: 1, cropHeight: OBSERVER_RESOURCE_LIMITS.bitmapCropHeight + 1, pixelWidth: 1, pixelHeight: 1, cardCount: 2 }, "bitmap.cropHeight"],
+    [{ cropWidth: 1, cropHeight: 1, pixelWidth: 1, pixelHeight: 1, cardCount: OBSERVER_RESOURCE_LIMITS.bitmapCardRegions + 1 }, "bitmap.cardRegions"],
+  ]) {
+    assert.throws(
+      () => validateBitmapCaptureEnvelope(candidate),
+      error => error instanceof ObserverError && error.code === "RESOURCE_LIMIT_EXCEEDED" && error.details.boundary === boundary,
+    );
+  }
+  assert.equal(
+    validateBitmapScreenshotBytes(OBSERVER_RESOURCE_LIMITS.bitmapScreenshotBytes, "bitmap.visibleScreenshotBytes"),
+    OBSERVER_RESOURCE_LIMITS.bitmapScreenshotBytes,
+  );
+  assert.throws(
+    () => validateBitmapScreenshotBytes(OBSERVER_RESOURCE_LIMITS.bitmapScreenshotBytes + 1, "bitmap.visibleScreenshotBytes"),
+    error => error instanceof ObserverError && error.code === "RESOURCE_LIMIT_EXCEEDED" && error.details.boundary === "bitmap.visibleScreenshotBytes",
+  );
+
+  const exactBoundaryPng = Buffer.alloc(24);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(exactBoundaryPng);
+  exactBoundaryPng.writeUInt32BE(13, 8);
+  exactBoundaryPng.write("IHDR", 12, "ascii");
+  exactBoundaryPng.writeUInt32BE(2048, 16);
+  exactBoundaryPng.writeUInt32BE(2048, 20);
+  assert.deepEqual(inspectPngScreenshot(exactBoundaryPng, "bitmap.testScreenshotBytes"), {
+    pixelWidth: 2048,
+    pixelHeight: 2048,
+  });
+  assert.throws(
+    () => inspectPngScreenshot(Buffer.alloc(24), "bitmap.testScreenshotBytes"),
+    error => error instanceof ObserverError && error.code === "BITMAP_INPUT_INVALID",
+  );
+
+  let bitmapGetCalls = 0;
+  const proxiedPng = new Proxy(exactBoundaryPng, {
+    get(source, key, receiver) {
+      bitmapGetCalls += 1;
+      return Reflect.get(source, key, receiver);
+    },
+  });
+  assert.throws(
+    () => inspectPngScreenshot(proxiedPng, "bitmap.testScreenshotBytes"),
+    error => error instanceof ObserverError
+      && error.code === "BITMAP_INPUT_INVALID"
+      && error.details.restartFrom === "receiver_bitmap_boundary",
+  );
+  assert.equal(bitmapGetCalls, 0);
+});
+
+test("exported bitmap and observation evaluators snapshot plain data before reading values", () => {
+  let envelopeGetterCalls = 0;
+  const envelope = {
+    cropHeight: 100,
+    pixelWidth: 100,
+    pixelHeight: 100,
+    cardCount: 2,
+  };
+  Object.defineProperty(envelope, "cropWidth", {
+    enumerable: true,
+    configurable: true,
+    get() {
+      envelopeGetterCalls += 1;
+      return 100;
+    },
+  });
+  assert.throws(
+    () => validateBitmapCaptureEnvelope(envelope),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "bitmap_capture"
+      && error.details.reason === "accessor_fields_present"
+      && error.details.restartFrom === "receiver_bitmap_boundary",
+  );
+  assert.equal(envelopeGetterCalls, 0);
+
+  const target = structuredClone(inventory.targets.find(candidate => candidate.oracle === "semantic"));
+  let targetGetterCalls = 0;
+  Object.defineProperty(target, "oracle", {
+    enumerable: true,
+    configurable: true,
+    get() {
+      targetGetterCalls += 1;
+      return "semantic";
+    },
+  });
+  assert.throws(
+    () => evaluateControlledObservation(target, accepted["family-label"]),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "controlled_observation.target"
+      && error.details.reason === "accessor_fields_present"
+      && error.details.restartFrom === "inventory",
+  );
+  assert.equal(targetGetterCalls, 0);
+
+  let observedGetCalls = 0;
+  const proxiedObservation = new Proxy(structuredClone(accepted["family-label"]), {
+    get(source, key, receiver) {
+      observedGetCalls += 1;
+      return Reflect.get(source, key, receiver);
+    },
+  });
+  assert.equal(
+    evaluateControlledObservation(
+      inventory.targets.find(candidate => candidate.oracle === "semantic"),
+      proxiedObservation,
+    ).status,
+    "pass",
+  );
+  assert.equal(observedGetCalls, 0);
 });
 
 test("tier selection builds the exact executable applicability plan", () => {
@@ -221,6 +481,57 @@ for (const target of inventory.targets) {
     assert.equal(evaluateControlledObservation(target, rejected).status, "fail");
   });
 }
+
+test("semantic oracle requires a visible, named, viewport-contained label above its control", () => {
+  const target = inventory.targets.find(candidate => candidate.oracle === "semantic");
+  const base = accepted[target.id];
+  const mutations = [
+    { ...base, accessibleName: "" },
+    { ...base, labelVisible: false },
+    { ...base, label: { ...base.label, width: 0, right: base.label.left } },
+    { ...base, label: { ...base.label, left: -20, right: -20 + base.label.width } },
+    { ...base, label: { ...base.label, top: base.control.top, bottom: base.control.top + base.label.height }, labelPosition: "other" },
+  ];
+  for (const mutation of mutations) {
+    assert.equal(evaluateControlledObservation(target, mutation).status, "fail");
+  }
+});
+
+test("geometry oracle requires named controls, contained content, and ordered non-overlapping cards", () => {
+  const target = inventory.targets.find(candidate => candidate.oracle === "geometry");
+  const base = accepted[target.id];
+  const mutations = [
+    { ...base, controls: [] },
+    { ...base, scrollWidth: base.viewportWidth + 1 },
+    { ...base, controls: base.controls.map((control, index) => index === 0 ? { ...control, height: 43 } : control) },
+    { ...base, controls: base.controls.map((control, index) => index === 0 ? { ...control, width: 43, right: control.left + 43 } : control) },
+    { ...base, controls: base.controls.map((control, index) => index === 0 ? { ...control, left: -1, right: control.width - 1 } : control) },
+    { ...base, controls: base.controls.map((control, index) => index === 0 ? { ...control, id: base.controls[1].id } : control) },
+    { ...base, controls: base.controls.filter(control => control.id !== "family") },
+    { ...base, cards: base.cards.map(card => card.id === "accepted" ? { ...card, top: base.cards[0].top, bottom: base.cards[0].bottom } : card) },
+    { ...base, cards: [...base.cards].reverse().map((card, index) => ({ ...card, top: 200 + index * 152, bottom: 288 + index * 152 })) },
+    { ...base, cards: base.cards.map((card, index) => index === 0 ? { ...card, scrollHeight: card.clientHeight + 20 } : card) },
+    { ...base, workflow: { ...base.workflow, scrollWidth: base.workflow.clientWidth + 20 } },
+  ];
+  for (const mutation of mutations) {
+    assert.equal(evaluateControlledObservation(target, mutation).status, "fail");
+  }
+});
+
+test("bitmap oracle requires a visible raster difference with zero changed pixels inside card regions", () => {
+  const target = inventory.targets.find(candidate => candidate.oracle === "bitmap_crop");
+  const base = accepted[target.id];
+  const mutations = [
+    { ...base, referenceSha256: base.screenshotSha256 },
+    { ...base, metric: { ...base.metric, changedPixels: 0 } },
+    { ...base, metric: { ...base.metric, cardPixels: 0 } },
+    { ...base, metric: { ...base.metric, cardChangedPixels: 1 } },
+    { ...base, metric: { ...base.metric, totalPixels: base.metric.totalPixels + 1 } },
+  ];
+  for (const mutation of mutations) {
+    assert.equal(evaluateControlledObservation(target, mutation).status, "fail");
+  }
+});
 
 test("expected contract stays aligned with inventory and matrix", async () => {
   const expected = await readJson(resolve(packageRoot, "expected/observer-contract.json"));

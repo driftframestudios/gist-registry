@@ -168,6 +168,33 @@ for (const caseDefinition of fullPlan.cases) {
         await expect(page.locator("#state")).toHaveValue(scenario.state);
         const result = await observeTarget(page, target, { artifactDirectory: resolve(packageRoot, ".artifacts/browser", testInfo.project.name, target.id, scenario.id) });
         expect(result.status).toBe("pass");
+        if (target.oracle === "semantic") {
+          expect(result.normalized.accessibleName).toBe("Specimen family");
+          expect(result.normalized.labelVisible).toBe(true);
+          expect(result.normalized.label.width).toBeGreaterThan(0);
+          expect(result.normalized.label.height).toBeGreaterThan(0);
+          expect(result.normalized.label.bottom).toBeLessThanOrEqual(result.normalized.control.top + 0.5);
+        }
+        if (target.oracle === "geometry") {
+          expect(result.normalized.controls.map(control => control.id).sort()).toEqual(["accept", "family", "preview", "state"]);
+          expect(result.normalized.cards.map(card => card.id).sort()).toEqual(["accepted", "candidate"]);
+          for (const control of result.normalized.controls) {
+            expect(control.width, `${control.id} width`).toBeGreaterThanOrEqual(44);
+            expect(control.height, `${control.id} height`).toBeGreaterThanOrEqual(44);
+            expect(control.left, `${control.id} inline start`).toBeGreaterThanOrEqual(-0.5);
+            expect(control.right, `${control.id} inline end`).toBeLessThanOrEqual(result.normalized.viewportWidth + 0.5);
+          }
+          for (const card of result.normalized.cards) {
+            expect(card.scrollWidth, `${card.id} inline content`).toBeLessThanOrEqual(card.clientWidth + 1);
+            expect(card.scrollHeight, `${card.id} block content`).toBeLessThanOrEqual(card.clientHeight + 1);
+          }
+        }
+        if (target.oracle === "bitmap_crop") {
+          expect(result.normalized.screenshotSha256).not.toBe(result.normalized.referenceSha256);
+          expect(result.normalized.metric.changedPixels).toBeGreaterThan(0);
+          expect(result.normalized.metric.cardPixels).toBeGreaterThan(0);
+          expect(result.normalized.metric.cardChangedPixels).toBe(0);
+        }
         const receipt = formBrowserReceipt({
           receiptId: `${target.id}-${scenario.id}-${browserName}`,
           target,
@@ -201,6 +228,17 @@ for (const caseDefinition of fullPlan.cases) {
         await applyScenario(page, scenario);
         const result = await observeTarget(page, target, { artifactDirectory: resolve(packageRoot, ".artifacts/browser-faults", testInfo.project.name, target.id, scenario.id) });
         expect(result.status).toBe("fail");
+        if (target.oracle === "geometry") {
+          expect(result.normalized.scrollWidth).toBeLessThanOrEqual(result.normalized.viewportWidth);
+          const candidate = result.normalized.cards.find(card => card.id === "candidate");
+          const accepted = result.normalized.cards.find(card => card.id === "accepted");
+          expect(accepted.top).toBeLessThan(candidate.bottom);
+          expect(accepted.left).toBeLessThan(candidate.right);
+        }
+        if (target.oracle === "bitmap_crop") {
+          expect(result.normalized.metric.changedPixels).toBeGreaterThan(0);
+          expect(result.normalized.metric.cardChangedPixels).toBeGreaterThan(0);
+        }
       } finally {
         await context.close();
       }
@@ -265,3 +303,50 @@ for (const caseDefinition of fullPlan.cases) {
     }
   });
 }
+
+for (const fault of [
+  "geometry-select-collapse",
+  "geometry-card-reversed",
+  "geometry-card-clipped",
+]) {
+  test(`${fault} independently fails the geometry contract`, async ({ browser }) => {
+    const scenario = scenariosById.get("narrow-200");
+    const target = targetsById.get("narrow-reflow");
+    const context = await browser.newContext(scenarioContext(scenario));
+    const page = await context.newPage();
+    try {
+      await loadReceiver(page, scenarioQuery(scenario, { fault }));
+      await applyScenario(page, scenario);
+      const result = await observeTarget(page, target);
+      expect(result.status).toBe("fail");
+      if (fault === "geometry-select-collapse") {
+        expect(result.normalized.controls.find(control => control.id === "family").width).toBeLessThan(44);
+      } else if (fault === "geometry-card-reversed") {
+        const candidate = result.normalized.cards.find(card => card.id === "candidate");
+        const accepted = result.normalized.cards.find(card => card.id === "accepted");
+        expect(accepted.top).toBeLessThan(candidate.top);
+      } else {
+        expect(result.normalized.cards.some(card => card.scrollHeight > card.clientHeight + 1)).toBe(true);
+      }
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+test("a zero-area clipped label fails the semantic oracle while retaining its accessible name", async ({ browser }) => {
+  const scenario = scenariosById.get("baseline");
+  const target = targetsById.get("family-label");
+  const context = await browser.newContext(scenarioContext(scenario));
+  const page = await context.newPage();
+  try {
+    await loadReceiver(page, scenarioQuery(scenario, { fault: "semantic-visible" }));
+    await applyScenario(page, scenario);
+    const result = await observeTarget(page, target);
+    expect(result.status).toBe("fail");
+    expect(result.normalized.accessibleName).toBe("Specimen family");
+    expect(result.normalized.label.width * result.normalized.label.height).toBe(0);
+  } finally {
+    await context.close();
+  }
+});

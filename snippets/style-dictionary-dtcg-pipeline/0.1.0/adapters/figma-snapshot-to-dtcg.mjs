@@ -11,6 +11,60 @@ const sensitiveText = /(?:api[_ -]?key|authorization|bearer|password|private[_ -
 const privateLocator = /https?:\/\/(?:localhost|127\.0\.0\.1|[^/]*\.internal)(?:[/:]|$)/iu;
 const reservedSegments = new Set(["__proto__", "prototype", "constructor"]);
 
+function invalidSourceValue(variable, reason) {
+  throw new PipelineError("FIGMA_VALUE_INVALID", `Variable ${variable.name} requires a valid ${variable.resolvedType} value.`, {
+    stage: "figma_adapter",
+    variableId: variable.id,
+    sourceType: variable.resolvedType,
+    reason,
+    restartFrom: "source_snapshot",
+  });
+}
+
+function channelToHex(channel) {
+  return Math.round(channel * 255).toString(16).padStart(2, "0");
+}
+
+function adaptSourceValue(variable, value) {
+  if (variable.resolvedType === "BOOLEAN") {
+    if (typeof value !== "boolean") invalidSourceValue(variable, "boolean_required");
+    return value;
+  }
+  if (variable.resolvedType === "FLOAT") {
+    if (typeof value !== "number" || !Number.isFinite(value)) invalidSourceValue(variable, "finite_number_required");
+    return value;
+  }
+  if (variable.resolvedType === "STRING") {
+    if (typeof value !== "string") invalidSourceValue(variable, "string_required");
+    return value;
+  }
+  const prototype = value !== null && typeof value === "object" ? Object.getPrototypeOf(value) : null;
+  if (
+    value === null
+    || typeof value !== "object"
+    || Array.isArray(value)
+    || (prototype !== Object.prototype && prototype !== null)
+  ) {
+    invalidSourceValue(variable, "rgba_object_required");
+  }
+  const keys = Object.keys(value).sort(compareOrdinal);
+  if (!(["b", "g", "r"].every(key => keys.includes(key)) && keys.every(key => ["a", "b", "g", "r"].includes(key)))) {
+    invalidSourceValue(variable, "rgba_object_shape");
+  }
+  const alpha = Object.hasOwn(value, "a") ? value.a : 1;
+  for (const [channel, component] of [["r", value.r], ["g", value.g], ["b", value.b], ["a", alpha]]) {
+    if (typeof component !== "number" || !Number.isFinite(component) || component < 0 || component > 1) {
+      invalidSourceValue(variable, `${channel}_channel_out_of_range`);
+    }
+  }
+  return {
+    colorSpace: "srgb",
+    components: [value.r, value.g, value.b],
+    alpha,
+    hex: `#${channelToHex(value.r)}${channelToHex(value.g)}${channelToHex(value.b)}`,
+  };
+}
+
 function safeSegments(name) {
   if (typeof name !== "string" || !name.trim()) {
     throw new PipelineError("FIGMA_NAME_REQUIRED", "Each source variable requires a stable name.", {
@@ -214,7 +268,7 @@ export function adaptFigmaSnapshot(snapshot, { modeName = "Light" } = {}) {
       }
       assignToken(document, segments, {
         $type: type,
-        $value: structuredClone(variable.valuesByMode[mode.id]),
+        $value: adaptSourceValue(variable, variable.valuesByMode[mode.id]),
         ...(typeof variable.description === "string" && variable.description.trim()
           ? { $description: variable.description.trim() }
           : {}),

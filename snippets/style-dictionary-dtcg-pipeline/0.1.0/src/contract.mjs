@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { open } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { lstat, open } from "node:fs/promises";
 
 export const DEFAULT_LIMITS = Object.freeze({
   sourceBytes: 512_000,
@@ -15,6 +16,25 @@ export const DEFAULT_LIMITS = Object.freeze({
 const reservedKeys = new Set(["__proto__", "prototype", "constructor"]);
 const referencePattern = /^\{([a-zA-Z0-9_.-]+)\}$/u;
 const supportedTokenTypes = new Set(["boolean", "color", "dimension", "duration", "number", "string"]);
+const supportedColorSpaces = new Set([
+  "a98-rgb",
+  "display-p3",
+  "hsl",
+  "hwb",
+  "lab",
+  "lch",
+  "oklab",
+  "oklch",
+  "prophoto-rgb",
+  "rec2020",
+  "srgb",
+  "srgb-linear",
+  "xyz-d50",
+  "xyz-d65",
+]);
+const tokenProperties = new Set(["$deprecated", "$description", "$extensions", "$type", "$value"]);
+const groupProperties = new Set(["$deprecated", "$description", "$extensions", "$type"]);
+const SOURCE_FILE_SYSTEM = Object.freeze({ lstat, open });
 
 export class PipelineError extends Error {
   constructor(code, message, details = {}) {
@@ -71,14 +91,58 @@ export async function readBoundedFile(
     dimension = "source_bytes",
     label = "Token source",
     restartFrom = "source",
+    fileSystem = SOURCE_FILE_SYSTEM,
   } = {},
 ) {
   assertByteLimit(maxBytes);
-  const handle = await open(path, "r");
+  let pathEntry;
+  try {
+    pathEntry = await fileSystem.lstat(path);
+  } catch (error) {
+    throw new PipelineError("SOURCE_FILE_UNREADABLE", `${label} requires a readable file.`, {
+      stage,
+      reason: error.message,
+      restartFrom,
+    });
+  }
+  if (!pathEntry.isFile() || pathEntry.isSymbolicLink()) {
+    throw new PipelineError("REGULAR_FILE_REQUIRED", `${label} must be a directly addressed regular file.`, {
+      stage,
+      restartFrom,
+    });
+  }
+  if (pathEntry.size > maxBytes) {
+    throw new PipelineError("RESOURCE_ENVELOPE_EXCEEDED", `${label} exceeds the byte envelope.`, {
+      stage,
+      dimension,
+      observed: pathEntry.size,
+      limit: maxBytes,
+      restartFrom,
+    });
+  }
+
+  let handle;
+  try {
+    const flags = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0);
+    handle = await fileSystem.open(path, flags);
+  } catch (error) {
+    throw new PipelineError("SOURCE_FILE_UNREADABLE", `${label} changed or became unreadable before capture.`, {
+      stage,
+      reason: error.message,
+      restartFrom,
+    });
+  }
+  let primaryError = null;
   try {
     const entry = await handle.stat();
     if (!entry.isFile()) {
       throw new PipelineError("REGULAR_FILE_REQUIRED", `${label} must be a regular file.`, {
+        stage,
+        restartFrom,
+      });
+    }
+    if (entry.dev !== pathEntry.dev || entry.ino !== pathEntry.ino) {
+      throw new PipelineError("SOURCE_FILE_CHANGED", `${label} changed before capture completed.`, {
         stage,
         restartFrom,
       });
@@ -116,9 +180,29 @@ export async function readBoundedFile(
       }
       chunks.push(chunk.subarray(0, bytesRead));
     }
+    const settledEntry = await handle.stat();
+    if (observed !== entry.size || settledEntry.size !== entry.size || settledEntry.mtimeMs !== entry.mtimeMs) {
+      throw new PipelineError("SOURCE_FILE_CHANGED", `${label} changed during bounded capture.`, {
+        stage,
+        restartFrom,
+      });
+    }
     return Buffer.concat(chunks, observed);
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    await handle.close();
+    try {
+      await handle.close();
+    } catch (error) {
+      if (primaryError === null) {
+        throw new PipelineError("SOURCE_FILE_CLOSE_FAILED", `${label} requires operator recovery after capture.`, {
+          stage,
+          reason: error.message,
+          restartFrom,
+        });
+      }
+    }
   }
 }
 
@@ -136,7 +220,9 @@ export async function readJson(path, { maxBytes = DEFAULT_LIMITS.sourceBytes } =
 }
 
 function isRecord(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function assertSafeKey(key, path) {
@@ -151,6 +237,7 @@ function assertSafeKey(key, path) {
 
 function assertDepth(value, depth, limits, path) {
   const pending = [{ value, depth, path }];
+  const active = new WeakSet();
   let sourceNodes = 1;
   let sourceStringBytes = 0;
   const sourceNodeLimit = limits.sourceNodes ?? DEFAULT_LIMITS.sourceNodes;
@@ -183,6 +270,10 @@ function assertDepth(value, depth, limits, path) {
   };
   while (pending.length > 0) {
     const current = pending.pop();
+    if (current.leave) {
+      active.delete(current.value);
+      continue;
+    }
     if (current.depth > limits.depth) {
       throw new PipelineError("RESOURCE_ENVELOPE_EXCEEDED", "Token source exceeds the nesting envelope.", {
         stage: "preflight",
@@ -197,22 +288,95 @@ function assertDepth(value, depth, limits, path) {
       admitString(current.value, current.path);
       continue;
     }
+    if (
+      current.value === null
+      || typeof current.value === "boolean"
+      || (typeof current.value === "number" && Number.isFinite(current.value))
+    ) {
+      continue;
+    }
+    if (typeof current.value !== "object") {
+      throw new PipelineError("INVALID_JSON_VALUE", "Token source values must stay within the JSON data model.", {
+        stage: "admission",
+        tokenPath: current.path || "$",
+        observedType: typeof current.value,
+        restartFrom: "source",
+      });
+    }
+    if (active.has(current.value)) {
+      throw new PipelineError("INVALID_JSON_VALUE", "Token source values must form an acyclic JSON tree.", {
+        stage: "admission",
+        tokenPath: current.path || "$",
+        reason: "cyclic_reference",
+        restartFrom: "source",
+      });
+    }
+    active.add(current.value);
+    pending.push({ ...current, leave: true });
     if (Array.isArray(current.value)) {
+      if (sourceNodes + current.value.length > sourceNodeLimit) {
+        throw new PipelineError("RESOURCE_ENVELOPE_EXCEEDED", "Token source exceeds the node envelope.", {
+          stage: "preflight",
+          dimension: "source_nodes",
+          observed: sourceNodes + current.value.length,
+          limit: sourceNodeLimit,
+          tokenPath: current.path,
+          restartFrom: "source",
+        });
+      }
+      const ownKeys = Reflect.ownKeys(current.value).filter(key => key !== "length");
+      const denseIndexes = ownKeys.every(key => (
+        typeof key === "string"
+        && /^(?:0|[1-9][0-9]*)$/u.test(key)
+        && Number(key) < current.value.length
+        && Object.getOwnPropertyDescriptor(current.value, key)?.enumerable === true
+        && Object.hasOwn(Object.getOwnPropertyDescriptor(current.value, key) ?? {}, "value")
+      ));
+      if (!denseIndexes || ownKeys.length !== current.value.length) {
+        throw new PipelineError("INVALID_JSON_VALUE", "Token source arrays require dense JSON elements.", {
+          stage: "admission",
+          tokenPath: current.path || "$",
+          reason: "sparse_or_extended_array",
+          restartFrom: "source",
+        });
+      }
       for (let index = current.value.length - 1; index >= 0; index -= 1) {
+        const descriptor = Object.getOwnPropertyDescriptor(current.value, String(index));
         admitNode({
-          value: current.value[index],
+          value: descriptor.value,
           depth: current.depth + 1,
           path: `${current.path}[${index}]`,
         });
       }
     } else if (isRecord(current.value)) {
-      for (const key in current.value) {
-        if (!Object.hasOwn(current.value, key)) continue;
+      const ownKeys = Reflect.ownKeys(current.value);
+      for (let index = ownKeys.length - 1; index >= 0; index -= 1) {
+        const key = ownKeys[index];
+        const descriptor = Object.getOwnPropertyDescriptor(current.value, key);
+        if (
+          typeof key !== "string"
+          || descriptor?.enumerable !== true
+          || !Object.hasOwn(descriptor ?? {}, "value")
+        ) {
+          throw new PipelineError("INVALID_JSON_VALUE", "Token source objects require enumerable string data properties.", {
+            stage: "admission",
+            tokenPath: current.path || "$",
+            reason: "non_json_property",
+            restartFrom: "source",
+          });
+        }
         const childPath = current.path ? `${current.path}.${key}` : key;
         assertSafeKey(key, childPath);
         admitString(key, childPath);
-        admitNode({ value: current.value[key], depth: current.depth + 1, path: childPath });
+        admitNode({ value: descriptor.value, depth: current.depth + 1, path: childPath });
       }
+    } else {
+      throw new PipelineError("INVALID_JSON_VALUE", "Token source objects require a plain JSON object shape.", {
+        stage: "admission",
+        tokenPath: current.path || "$",
+        reason: "non_plain_object",
+        restartFrom: "source",
+      });
     }
   }
   return { sourceNodes, sourceStringBytes };
@@ -226,36 +390,240 @@ export function normalizeCssName(path) {
     .replace(/-+/gu, "-");
 }
 
+function invalidDtcgValue(tokenPath, expectedType, reason) {
+  throw new PipelineError("INVALID_DTCG_VALUE", `Token ${tokenPath} requires a valid ${expectedType} value.`, {
+    stage: "admission",
+    tokenPath,
+    expectedType,
+    reason,
+    restartFrom: "source",
+  });
+}
+
+function assertExactValueKeys(value, expectedKeys, tokenPath, type) {
+  if (!isRecord(value)) invalidDtcgValue(tokenPath, type, "object_required");
+  const actualKeys = Object.keys(value).sort(compareOrdinal);
+  const allowedKeys = [...expectedKeys].sort(compareOrdinal);
+  if (
+    actualKeys.length !== allowedKeys.length
+    || actualKeys.some((key, index) => key !== allowedKeys[index])
+  ) {
+    invalidDtcgValue(tokenPath, type, "unexpected_value_shape");
+  }
+}
+
+function componentInRange(component, minimum, maximum, includeMaximum = true) {
+  return component >= minimum && (includeMaximum ? component <= maximum : component < maximum);
+}
+
+function validateColorValue(value, tokenPath) {
+  if (!isRecord(value)) invalidDtcgValue(tokenPath, "color", "structured_color_required");
+  const actualKeys = Object.keys(value).sort(compareOrdinal);
+  const allowedKeys = ["alpha", "colorSpace", "components", "hex"];
+  if (
+    actualKeys.some(key => !allowedKeys.includes(key))
+    || !Object.hasOwn(value, "colorSpace")
+    || !Object.hasOwn(value, "components")
+  ) {
+    invalidDtcgValue(tokenPath, "color", "unexpected_value_shape");
+  }
+  if (typeof value.colorSpace !== "string" || !supportedColorSpaces.has(value.colorSpace)) {
+    invalidDtcgValue(tokenPath, "color", "unsupported_color_space");
+  }
+  if (!Array.isArray(value.components) || value.components.length !== 3) {
+    invalidDtcgValue(tokenPath, "color", "three_components_required");
+  }
+  if (Object.hasOwn(value, "alpha") && (
+    typeof value.alpha !== "number"
+    || !Number.isFinite(value.alpha)
+    || !componentInRange(value.alpha, 0, 1)
+  )) {
+    invalidDtcgValue(tokenPath, "color", "alpha_out_of_range");
+  }
+  if (Object.hasOwn(value, "hex") && (
+    typeof value.hex !== "string"
+    || !/^#[0-9a-fA-F]{6}$/u.test(value.hex)
+  )) {
+    invalidDtcgValue(tokenPath, "color", "six_digit_hex_required");
+  }
+
+  const numericComponent = (index, minimum, maximum, includeMaximum = true) => {
+    const component = value.components[index];
+    if (component === "none") return;
+    if (
+      typeof component !== "number"
+      || !Number.isFinite(component)
+      || !componentInRange(component, minimum, maximum, includeMaximum)
+    ) {
+      invalidDtcgValue(tokenPath, "color", `component_${index}_out_of_range`);
+    }
+  };
+  if (["srgb", "srgb-linear", "display-p3", "a98-rgb", "prophoto-rgb", "rec2020", "xyz-d65", "xyz-d50"].includes(value.colorSpace)) {
+    for (let index = 0; index < 3; index += 1) numericComponent(index, 0, 1);
+  } else if (["hsl", "hwb"].includes(value.colorSpace)) {
+    numericComponent(0, 0, 360, false);
+    numericComponent(1, 0, 100);
+    numericComponent(2, 0, 100);
+  } else if (value.colorSpace === "lab") {
+    numericComponent(0, 0, 100);
+    numericComponent(1, -Infinity, Infinity);
+    numericComponent(2, -Infinity, Infinity);
+  } else if (value.colorSpace === "lch") {
+    numericComponent(0, 0, 100);
+    numericComponent(1, 0, Infinity);
+    numericComponent(2, 0, 360, false);
+  } else if (value.colorSpace === "oklab") {
+    numericComponent(0, 0, 1);
+    numericComponent(1, -Infinity, Infinity);
+    numericComponent(2, -Infinity, Infinity);
+  } else {
+    numericComponent(0, 0, 1);
+    numericComponent(1, 0, Infinity);
+    numericComponent(2, 0, 360, false);
+  }
+}
+
+function validateDirectTokenValue(type, value, tokenPath) {
+  if (type === "boolean") {
+    if (typeof value !== "boolean") invalidDtcgValue(tokenPath, type, "boolean_required");
+    return;
+  }
+  if (type === "number") {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      invalidDtcgValue(tokenPath, type, "finite_json_number_required");
+    }
+    return;
+  }
+  if (type === "string") {
+    if (typeof value !== "string") invalidDtcgValue(tokenPath, type, "string_required");
+    return;
+  }
+  if (type === "color") {
+    validateColorValue(value, tokenPath);
+    return;
+  }
+  const units = type === "dimension" ? new Set(["px", "rem"]) : new Set(["ms", "s"]);
+  assertExactValueKeys(value, ["unit", "value"], tokenPath, type);
+  if (typeof value.value !== "number" || !Number.isFinite(value.value)) {
+    invalidDtcgValue(tokenPath, type, "finite_numeric_value_required");
+  }
+  if (typeof value.unit !== "string" || !units.has(value.unit)) {
+    invalidDtcgValue(tokenPath, type, "unsupported_unit");
+  }
+}
+
+function assertMetadata(node, path, allowedProperties) {
+  for (const key of Object.keys(node)) {
+    if (key.startsWith("$") && !allowedProperties.has(key)) {
+      throw new PipelineError("UNSUPPORTED_DTCG_FEATURE", `Property ${key} at ${path || "$"} is outside the admitted subset.`, {
+        stage: "admission",
+        tokenPath: path || "$",
+        property: key,
+        restartFrom: "source",
+      });
+    }
+  }
+  if (Object.hasOwn(node, "$description") && typeof node.$description !== "string") {
+    throw new PipelineError("INVALID_DTCG_STRUCTURE", `Description at ${path || "$"} requires a JSON string.`, {
+      stage: "admission",
+      tokenPath: path || "$",
+      property: "$description",
+      restartFrom: "source",
+    });
+  }
+  if (Object.hasOwn(node, "$extensions") && !isRecord(node.$extensions)) {
+    throw new PipelineError("INVALID_DTCG_STRUCTURE", `Extensions at ${path || "$"} require a JSON object.`, {
+      stage: "admission",
+      tokenPath: path || "$",
+      property: "$extensions",
+      restartFrom: "source",
+    });
+  }
+  if (Object.hasOwn(node, "$deprecated") && !["boolean", "string"].includes(typeof node.$deprecated)) {
+    throw new PipelineError("INVALID_DTCG_STRUCTURE", `Deprecation metadata at ${path || "$"} requires a boolean or string.`, {
+      stage: "admission",
+      tokenPath: path || "$",
+      property: "$deprecated",
+      restartFrom: "source",
+    });
+  }
+  if (Object.hasOwn(node, "$type") && typeof node.$type !== "string") {
+    throw new PipelineError("INVALID_DTCG_STRUCTURE", `Type metadata at ${path || "$"} requires a JSON string.`, {
+      stage: "admission",
+      tokenPath: path || "$",
+      property: "$type",
+      restartFrom: "source",
+    });
+  }
+}
+
+function assertTokenOrGroupName(name, path) {
+  if (name.startsWith("$") || /[{}.]/u.test(name)) {
+    throw new PipelineError("INVALID_TOKEN_PATH", `Token and group name ${name} at ${path} uses a reserved path character.`, {
+      stage: "admission",
+      tokenPath: path,
+      restartFrom: "source",
+    });
+  }
+}
+
 export function collectTokens(document, { limits = DEFAULT_LIMITS } = {}) {
   limits = { ...DEFAULT_LIMITS, ...limits };
   assertDepth(document, 0, limits, "");
+  if (!isRecord(document)) {
+    throw new PipelineError("INVALID_DTCG_STRUCTURE", "A token document requires a root JSON object.", {
+      stage: "admission",
+      tokenPath: "$",
+      restartFrom: "source",
+    });
+  }
   const tokens = new Map();
   const walk = (node, path = [], inheritedType = null) => {
-    if (!isRecord(node)) return;
+    const nodePath = path.join(".");
+    if (!isRecord(node)) {
+      throw new PipelineError("INVALID_DTCG_STRUCTURE", `Token or group ${nodePath || "$"} requires a JSON object.`, {
+        stage: "admission",
+        tokenPath: nodePath || "$",
+        restartFrom: "source",
+      });
+    }
+    const isToken = Object.hasOwn(node, "$value");
+    assertMetadata(node, nodePath, isToken ? tokenProperties : groupProperties);
     const type = typeof node.$type === "string" ? node.$type : inheritedType;
-    if (Object.hasOwn(node, "$value")) {
-      const tokenPath = path.join(".");
+    if (type && !supportedTokenTypes.has(type)) {
+      throw new PipelineError("UNSUPPORTED_DTCG_FEATURE", `${nodePath || "Token document"} uses a type outside the admitted subset.`, {
+        stage: "admission",
+        tokenPath: nodePath || "$",
+        observedType: type,
+        restartFrom: "source",
+      });
+    }
+    if (isToken) {
+      const tokenPath = nodePath;
       if (!tokenPath) {
         throw new PipelineError("INVALID_TOKEN_PATH", "A token requires a stable path.", {
           stage: "admission",
           restartFrom: "source",
         });
       }
-      if (!type) {
+      const childProperty = Object.keys(node).find(key => !key.startsWith("$"));
+      if (childProperty) {
+        throw new PipelineError("TOKEN_GROUP_CONFLICT", `Token ${tokenPath} also declares child ${childProperty}.`, {
+          stage: "admission",
+          tokenPath,
+          childProperty,
+          restartFrom: "source",
+        });
+      }
+      const alias = typeof node.$value === "string" ? node.$value.match(referencePattern) : null;
+      if (!type && !alias) {
         throw new PipelineError("MISSING_TYPE", `Token ${tokenPath} requires an inherited or local $type.`, {
           stage: "admission",
           tokenPath,
           restartFrom: "source",
         });
       }
-      if (!supportedTokenTypes.has(type)) {
-        throw new PipelineError("UNSUPPORTED_DTCG_FEATURE", `Token ${tokenPath} uses a type outside the admitted subset.`, {
-          stage: "admission",
-          tokenPath,
-          observedType: type,
-          restartFrom: "source",
-        });
-      }
+      if (!alias) validateDirectTokenValue(type, node.$value, tokenPath);
       if (tokens.has(tokenPath)) {
         throw new PipelineError("DUPLICATE_TOKEN", `Token ${tokenPath} appears more than once.`, {
           stage: "admission",
@@ -284,7 +652,9 @@ export function collectTokens(document, { limits = DEFAULT_LIMITS } = {}) {
     }
     for (const [key, child] of Object.entries(node)) {
       if (key.startsWith("$")) continue;
-      assertSafeKey(key, [...path, key].join("."));
+      const childPath = [...path, key].join(".");
+      assertSafeKey(key, childPath);
+      assertTokenOrGroupName(key, childPath);
       walk(child, [...path, key], type);
     }
   };
@@ -330,16 +700,6 @@ export function validateTokenGraph(document, { limits = DEFAULT_LIMITS } = {}) {
         stage: "graph",
         tokenPath: token.path,
         reference: match[1],
-        restartFrom: "source",
-      });
-    }
-    if (target.type !== token.type) {
-      throw new PipelineError("REFERENCE_TYPE_MISMATCH", `Token ${token.path} and ${target.path} use different types.`, {
-        stage: "graph",
-        tokenPath: token.path,
-        reference: target.path,
-        expectedType: token.type,
-        observedType: target.type,
         restartFrom: "source",
       });
     }
@@ -422,6 +782,43 @@ export function validateTokenGraph(document, { limits = DEFAULT_LIMITS } = {}) {
           });
         }
       }
+    }
+  }
+
+  // Alias-only tokens may inherit type from their resolved target. Every
+  // untyped token is assigned once, so this second pass remains O(N + E).
+  for (const startToken of tokens.values()) {
+    if (startToken.type) continue;
+    const trail = [];
+    let current = startToken;
+    while (!current.type) {
+      trail.push(current);
+      const targetPath = edges.get(current.path)[0];
+      if (!targetPath) {
+        throw new PipelineError("MISSING_TYPE", `Token ${current.path} requires an inherited, local, or referenced type.`, {
+          stage: "graph",
+          tokenPath: current.path,
+          restartFrom: "source",
+        });
+      }
+      current = tokens.get(targetPath);
+    }
+    for (const token of trail) token.type = current.type;
+  }
+
+  for (const token of tokens.values()) {
+    const targetPath = edges.get(token.path)[0];
+    if (!targetPath) continue;
+    const target = tokens.get(targetPath);
+    if (target.type !== token.type) {
+      throw new PipelineError("REFERENCE_TYPE_MISMATCH", `Token ${token.path} and ${target.path} use different types.`, {
+        stage: "graph",
+        tokenPath: token.path,
+        reference: target.path,
+        expectedType: token.type,
+        observedType: target.type,
+        restartFrom: "source",
+      });
     }
   }
 
@@ -558,7 +955,9 @@ export function semanticDiff(accepted, candidate) {
     if (stableStringify(previous.extensions) !== stableStringify(token.extensions)) changedExtensions.push(path);
     const previousRaw = beforeRaw.get(path)?.value;
     const candidateRaw = afterRaw.get(path)?.value;
-    if (typeof previousRaw === "string" && referencePattern.test(previousRaw) && previousRaw !== candidateRaw) {
+    const previousAliasTarget = typeof previousRaw === "string" ? previousRaw.match(referencePattern)?.[1] ?? null : null;
+    const candidateAliasTarget = typeof candidateRaw === "string" ? candidateRaw.match(referencePattern)?.[1] ?? null : null;
+    if (previousAliasTarget !== candidateAliasTarget) {
       changedAliasTargets.push(path);
     } else if (stableStringify(previous.value) !== stableStringify(token.value)) {
       changedValues.push(path);

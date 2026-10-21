@@ -8,9 +8,9 @@ TypeScript declarations. It gives collaborators an exact place to inspect a
 source problem, a semantic change, a generated artifact, or an interrupted
 promotion.
 
-The package implements the DTCG Format Module 2025.10 subset named in
+The package implements the DTCG Format Module and Color Module 2025.10 subset named in
 [`config/compatibility-envelope.json`](config/compatibility-envelope.json).
-The DTCG report carries Final Community Group Report standing.
+Both DTCG reports carry Final Community Group Report standing.
 Style Dictionary 5.7.0 supplies the compiler, and the artifact-local lockfile
 binds its dependency graph.
 
@@ -54,6 +54,28 @@ bindings, and intentional brand/mode overrides. Source layers keep one owner
 per token path; the final variant layer owns explicit coordinate overrides.
 Every asynchronous compiler call and injected pre-coordinate hook is awaited.
 
+## Admitted token values
+
+Admission validates the direct value syntax before compiler work begins. A
+full-token curly-brace alias may inherit its type from the resolved target;
+an explicitly typed alias must match that target.
+
+| Type | Direct value admitted by this coordinate |
+| --- | --- |
+| `boolean` | JSON boolean |
+| `number` | finite JSON number |
+| `string` | JSON string |
+| `dimension` | `{ "value": number, "unit": "px" | "rem" }` |
+| `duration` | `{ "value": number, "unit": "ms" | "s" }` |
+| `color` | Color Module object with a supported `colorSpace`, three bounded `components`, optional alpha from `0` through `1`, and optional six-digit `hex` fallback |
+
+Structured colors admit the fourteen color spaces named by the 2025.10 Color
+Module and the `none` component keyword. Token and group objects receive
+separate structural validation. A token that also carries a child token or
+group returns a typed conflict at the source path. Direct callers receive the
+same JSON-tree admission as file-backed callers, including finite-number,
+plain-object, dense-array, data-property, and cycle checks.
+
 ## Build matrix and receiver meaning
 
 The matrix contains four finite coordinates:
@@ -76,7 +98,8 @@ carries the same token inventory.
 - added and removed token identities;
 - changed types;
 - changed descriptions and extensions;
-- changed alias targets, including component/state bindings; and
+- changed alias topology, including literal-to-alias, alias-to-literal, target
+  changes, and component/state bindings; and
 - changed resolved values.
 
 Brand and mode belong to the build coordinate, so a reviewer compares exact
@@ -94,6 +117,9 @@ restart point:
 | unresolved alias | `UNRESOLVED_REFERENCE` | restore the referenced token in source |
 | circular alias | `ALIAS_CYCLE` | revise the reported reference path |
 | type mismatch | `REFERENCE_TYPE_MISMATCH` | align the declared semantic type |
+| invalid direct value | `INVALID_DTCG_VALUE` | restore the declared type's value syntax |
+| token/group overlap | `TOKEN_GROUP_CONFLICT` | assign the path one structural role |
+| non-JSON direct-call value | `INVALID_JSON_VALUE` | supply a finite JSON tree |
 | unsupported subset feature | `UNSUPPORTED_DTCG_FEATURE` | extend and review the envelope or select an admitted type |
 | duplicate source owner | `SOURCE_COLLISION` | assign one source owner or declare a variant override |
 | generated-name collision | `NORMALIZED_NAME_COLLISION` | choose distinct target-safe paths |
@@ -101,9 +127,10 @@ restart point:
 | incomplete Figma mode | `FIGMA_MODE_VALUE_REQUIRED` | provide the required coordinate value |
 | interrupted promotion | injected promotion fault | resume from the preserved accepted pointer |
 
-The Figma-shaped adapter is a pure, synthetic boundary example. It returns a
-DTCG candidate and bounded source map after checking supported types, required
-modes, normalized identities, and approved public text. Live Figma credentials,
+The Figma-shaped adapter is a pure, synthetic boundary example. It converts
+bounded RGBA channels into structured sRGB token values and returns a DTCG
+candidate plus source map after checking supported types, required modes,
+normalized identities, and approved public text. Live Figma credentials,
 file keys, and service calls belong to a separately reviewed adapter.
 
 ## Complexity and resource envelope
@@ -140,8 +167,32 @@ rejects symlinks at every candidate path component, and parses the generated
 JavaScript module as static data. Candidate code stays inert while CSS,
 JavaScript, and declaration inventories are compared. Promotion copies the verified family into a
 manifest-digest directory only after the closed manifest envelope, exact source
-size, and source digest pass, and then atomically replaces
-`accepted/current.json`.
+size, and source digest pass. Manifest admission accepts dense JSON arrays and
+plain enumerable data records before reading their fields. Promotion captures
+the accepted root and artifacts directory identities, builds each invocation in
+a mode-`0700` private staging root, and records every created directory and file
+identity. Each write rechecks its parent chain; cleanup removes recorded leaves
+and empty directories individually rather than recursively deleting an adopted
+tree. A digest-scoped exclusive reservation serializes cooperating publishers,
+and an existing destination is verified without replacing it. Before pointer
+movement, promotion revalidates the complete accepted inventory, leaf
+identities, and bytes plus the temporary pointer's inode and content. A
+symbolic link or changed identity
+returns typed publication-boundary friction while the established pointer keeps
+its prior coordinate. A replacement temporary file stays in place for operator
+inspection. Promotion then atomically replaces `accepted/current.json`.
+
+Portable Node.js supplies pathname-based mutation and atomic replacement.
+Directory-descriptor-relative mutation and a cross-platform
+`rename`-without-replace operation for directories require a platform-specific
+adapter. The private staging root, exclusive reservation, and repeated identity
+checks close normal publisher interleavings, while a process with the same
+filesystem credentials can still race a final pathname check and its following
+write, `rename`, or removal when that process disregards the reservation. The
+accepted root therefore remains an exclusive operational boundary; detected
+drift stays available for inspection.
+An interrupted owner that leaves a reservation without a destination requires
+operator inspection and reservation removal before that digest can retry.
 A repeated digest rechecks the stored manifest digest, exact file inventory,
 byte counts, and file digests before the pointer moves. Promotion carries only
 the artifacts named by that manifest into the accepted coordinate. Every
@@ -151,6 +202,12 @@ After the digest directory verifies, an injected stop before pointer movement
 preserves the previous pointer and leaves those immutable accepted bytes ready
 for retry. A separate retention policy may collect unreferenced digest
 directories after their review and recovery window.
+
+Deterministic recovery tests can retain the string checkpoints `after_copy`,
+`before_pointer`, and `after_pointer_write`. A function hook receives a frozen
+coordinate at `before_candidate_rename`, `before_pointer_write`, and
+`before_pointer_rename`; promotion awaits each hook before it rechecks directory
+ownership and crosses the corresponding boundary.
 
 ## Adapting the package
 
@@ -167,6 +224,8 @@ directories after their review and recovery window.
 
 - [DTCG Format Module 2025.10](https://www.designtokens.org/TR/2025.10/format/)
   defines the stable format behavior used by this subset.
+- [DTCG Color Module 2025.10](https://www.designtokens.org/TR/2025.10/color/)
+  defines the structured color spaces, components, alpha, and fallback syntax.
 - [DTCG technical reports](https://www.designtokens.org/technical-reports/)
   distinguish stable and draft modules.
 - [Style Dictionary 5.7.0 package coordinate](https://github.com/style-dictionary/style-dictionary/blob/v5.7.0/package.json)

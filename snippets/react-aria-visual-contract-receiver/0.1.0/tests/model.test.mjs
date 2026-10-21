@@ -6,7 +6,8 @@ import {
   chooseDraft,
   createReceiverState,
   releaseAccepted,
-  settlePreview
+  settlePreview,
+  RECEIVER_TRANSITIONS
 } from "../src/model.mjs";
 
 test("draft, request, accepted, and released state remain distinct", () => {
@@ -75,6 +76,55 @@ test("release is idempotent for one accepted coordinate", () => {
   assert.equal(second.kind, "replayed");
   assert.equal(second.receiptId, first.receiptId);
   assert.equal(controller.getSnapshot().released.receiptId, first.receiptId);
+});
+
+test("a terminal acceptance replay preserves its release receipt", () => {
+  const controller = createReceiverController("review-routing");
+  const ticket = controller.beginPreview();
+  controller.settlePreview(ticket, "accepted");
+  const released = controller.release();
+  const beforeReplay = controller.getSnapshot();
+
+  const replay = controller.settlePreview(ticket, "accepted");
+
+  assert.deepEqual(replay, {
+    kind: "settlement_replayed",
+    generation: ticket.generation,
+    outcome: "accepted"
+  });
+  assert.equal(controller.getSnapshot(), beforeReplay);
+  assert.equal(controller.getSnapshot().released.receiptId, released.receiptId);
+});
+
+test("a terminal rejection keeps authority when a conflicting settlement arrives", () => {
+  const controller = createReceiverController("participant-intake");
+  const ticket = controller.beginPreview();
+  controller.settlePreview(ticket, "rejected");
+  const rejectedState = controller.getSnapshot();
+
+  const conflict = controller.settlePreview(ticket, "accepted");
+
+  assert.deepEqual(conflict, {
+    kind: "settlement_conflict",
+    generation: ticket.generation,
+    attemptedOutcome: "accepted",
+    settledOutcome: "rejected"
+  });
+  assert.equal(controller.getSnapshot(), rejectedState);
+  assert.equal(controller.getSnapshot().accepted, null);
+});
+
+test("the transition inventory owns every controller state change", () => {
+  assert.deepEqual(Object.keys(RECEIVER_TRANSITIONS), [
+    "chooseDraft",
+    "beginPreview",
+    "settlePreview",
+    "releaseAccepted"
+  ]);
+  assert.ok(Object.isFrozen(RECEIVER_TRANSITIONS));
+  for (const transition of Object.values(RECEIVER_TRANSITIONS)) {
+    assert.equal(typeof transition, "function");
+  }
 });
 
 test("typed admission reports unknown specimen identities and outcomes", () => {

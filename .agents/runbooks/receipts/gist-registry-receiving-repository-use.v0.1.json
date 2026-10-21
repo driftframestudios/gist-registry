@@ -17,13 +17,24 @@
         "version": "0.1.0",
         "canonicalPath": "snippets/style-dictionary-dtcg-pipeline/0.1.0",
         "sourceStanding": "candidate_source_coordinate",
-        "sourceDigest": "6d93df6cd3c1b80076e3d4b0e162899381cfb4d82b1c28ff9c8a2a64d30a6e68"
+        "digest": {
+          "algorithm": "sha256",
+          "subject": "generated_output_manifest",
+          "value": "cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79",
+          "closure": [
+            {
+              "label": "manifestSha256",
+              "path": "snippets/react-aria-visual-contract-receiver/0.1.0/source/token-coordinate.json",
+              "selector": "/acceptedCoordinate/manifestSha256"
+            }
+          ]
+        }
       },
       "deliveryMode": "reference",
       "localAdapter": "snippets/react-aria-visual-contract-receiver/0.1.0/tools/token-projection.mjs",
       "signal": {
         "command": "npm --prefix snippets/react-aria-visual-contract-receiver/0.1.0 run test:model",
-        "observation": "11 tests passed; the bounded fixture, upstream manifest coordinate, artifact digest, selection, renames, normalization, native semantics, and receiver CSS contracts agreed",
+        "observation": "Focused model and static contract tests passed; the bounded fixture, upstream manifest coordinate, artifact digest, selection, renames, normalization, native semantics, and receiver CSS contracts agreed",
         "result": "candidate"
       },
       "fit": "The receiver can project one exact generated CSS artifact into the 29 custom properties used by its native and React Aria routes while preserving the upstream coordinate and fixture digest.",
@@ -43,13 +54,34 @@
         "version": "0.1.0",
         "canonicalPath": "snippets/visual-pattern-artifact-compiler/0.1.0",
         "sourceStanding": "candidate_source_coordinate",
-        "sourceDigest": "b5f16c2ebb3469a99a95f80a57a6b9fd5796a93f443a13abc77491041c114678"
+        "digest": {
+          "algorithm": "sha256",
+          "subject": "aggregate_authored_sources",
+          "value": "146dec06578c97cba6aa9b2989f0f5e48fd3179e1d9a44cabb26eae386f6265b",
+          "closure": [
+            {
+              "label": "contractSha256",
+              "path": "snippets/visual-pattern-artifact-compiler/0.1.0/source/pattern-contract.json",
+              "selector": "file-bytes"
+            },
+            {
+              "label": "galleryShellSha256",
+              "path": "snippets/visual-pattern-artifact-compiler/0.1.0/source/gallery-shell.html",
+              "selector": "file-bytes"
+            },
+            {
+              "label": "svgSha256",
+              "path": "snippets/visual-pattern-artifact-compiler/0.1.0/source/pattern.svg",
+              "selector": "file-bytes"
+            }
+          ]
+        }
       },
       "deliveryMode": "vendored_coordinate_candidate",
       "localAdapter": "snippets/visual-pattern-artifact-compiler/0.1.0/src/compiler.mjs",
       "signal": {
         "command": "npm --prefix snippets/visual-pattern-artifact-compiler/0.1.0 test",
-        "observation": "14 tests passed; all 20 declared manifest representations were regular files and present; the installed direct dependency graph matched the lock",
+        "observation": "Focused package tests passed; every declared manifest representation was a regular file and present; the installed direct dependency graph matched the lock",
         "result": "candidate"
       },
       "fit": "The vendored package boundary passed source admission, deterministic generation, semantic-companion, metadata, resource-limit, interruption, concurrency, integrity, and accepted-pointer recovery checks against the installed lock graph.",

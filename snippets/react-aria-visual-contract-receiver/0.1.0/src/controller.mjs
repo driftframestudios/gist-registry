@@ -1,10 +1,14 @@
 import {
+  createReceiverState,
+  RECEIVER_TRANSITIONS
+} from "./model.mjs";
+
+const {
   beginPreview,
   chooseDraft,
-  createReceiverState,
   releaseAccepted,
   settlePreview
-} from "./model.mjs";
+} = RECEIVER_TRANSITIONS;
 
 /**
  * A framework-neutral owner for the receiver state machine.

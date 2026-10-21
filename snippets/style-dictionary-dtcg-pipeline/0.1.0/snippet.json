@@ -6,7 +6,7 @@
   "artifactKind": "harness_material",
   "standing": "candidate",
   "title": "Deterministic DTCG and Style Dictionary pipeline",
-  "summary": "A bounded DTCG Format Module 2025.10 subset compiles through Style Dictionary 5.7.0 into deterministic CSS, immutable JavaScript, typed declarations, semantic diffs, measured observations, and a recoverable accepted pointer.",
+  "summary": "A bounded DTCG Format and Color Module 2025.10 subset compiles through Style Dictionary 5.7.0 into deterministic CSS, immutable JavaScript, typed declarations, semantic diffs, measured observations, and a recoverable accepted pointer.",
   "use": {
     "practicalQuestion": "How can reviewed token meaning compile across brands, modes, and targets while collisions, unsupported values, source leakage, semantic changes, interruption, and recovery remain inspectable?",
     "changedAbility": "A collaborator can run one exact-version source-to-artifact transaction, inspect its typed failures and meaning changes, and preserve the last accepted coordinate through interruption.",
@@ -26,16 +26,17 @@
   "provenance": {
     "class": "independent_synthetic_authoring",
     "description": "The token names, values, Figma-shaped snapshot, code, prose, and fault fixtures are independently authored synthetic material. Public specifications and package documentation support the format and compiler boundaries.",
-    "temporalScope": "This version implements the declared DTCG Format Module 2025.10 subset through Style Dictionary 5.7.0 on Node.js 22 through 26. Another compiler, format subset, target, or service adapter receives its own observation.",
+    "temporalScope": "This version implements the declared DTCG Format and Color Module 2025.10 subset through Style Dictionary 5.7.0 on Node.js 22 through 26. Another compiler, format subset, target, or service adapter receives its own observation.",
     "sourceKeys": [
       "independent-authoring:style-dictionary-dtcg-pipeline",
       "public-specification:dtcg-format-2025-10",
+      "public-specification:dtcg-color-2025-10",
       "public-package:style-dictionary-5-7-0"
     ]
   },
   "technicalVeracity": {
     "status": "verified",
-    "basis": "Package-local tests establish finite graph admission, pre-clone string and node ceilings, stat-first sparse-file rejection, source and target collision handling, prototype-safe Figma-shaped adaptation, typed rejected fixtures, semantic diffs, 100/1000/10000-token scale behavior, awaited hooks, exclusive non-destructive candidate-directory ownership, locale-stable ordinal output, captured-input and live-source parity, non-executing generated-module inspection, component-wise symlink rejection, cross-target parity, closed digest manifests, and accepted-pointer recovery."
+    "basis": "Package-local tests establish strict JSON-tree admission, the declared per-type value syntax, structured colors, token/group separation, alias type inference and topology diffs, finite graph admission, pre-clone string and node ceilings, stat-first sparse-file rejection, source and target collision handling, prototype-safe Figma-shaped adaptation, typed rejected fixtures, 100/1000/10000-token scale behavior, awaited hooks, exclusive non-destructive candidate-directory ownership, locale-stable ordinal output, captured-input and live-source parity, non-executing generated-module inspection, component-wise symlink rejection, cross-target parity, closed digest manifests, and accepted-pointer recovery."
   },
   "license": "Apache-2.0",
   "canonicalPath": "snippets/style-dictionary-dtcg-pipeline/0.1.0",
@@ -156,7 +157,7 @@
   },
   "failureRecovery": {
     "failureModes": [
-      "A source can introduce an unsupported type, unresolved reference, cycle, conflicting owner, or secret-shaped description.",
+      "A source can introduce an unsupported type, invalid direct value, token/group conflict, unresolved reference, cycle, conflicting owner, or secret-shaped description.",
       "Two source paths can normalize to one target identifier.",
       "A target build can return an incomplete or divergent artifact catalog.",
       "An interruption can occur after accepted bytes are staged and before the pointer moves."

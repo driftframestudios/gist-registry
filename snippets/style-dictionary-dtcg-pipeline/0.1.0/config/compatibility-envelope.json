@@ -1,5 +1,6 @@
 {
   "format": "DTCG Format Module 2025.10 subset",
+  "color": "DTCG Color Module 2025.10",
   "tokenTypes": ["boolean", "color", "dimension", "duration", "number", "string"],
   "references": ["curly-brace alias"],
   "requiredDimensions": {

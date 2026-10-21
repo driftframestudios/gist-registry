@@ -5,13 +5,19 @@ import test from "node:test";
 import { assertSanitizedReceipt, canonicalJson, digest } from "../src/canonical.mjs";
 import { MAX_CHECKPOINT_OBSERVATIONS, synchronizeVariables } from "../src/coordinator.mjs";
 import { FakeVariableRemote } from "../src/fake-remote.mjs";
-import { LeaseError, PlanError } from "../src/errors.mjs";
+import { ExecutionInterruptedError, LeaseError, PlanError } from "../src/errors.mjs";
 import {
   encodedBatchBytes,
   orderOperations,
   PLANNER_RESOURCE_LIMITS,
   planOperations,
 } from "../src/planner.mjs";
+import {
+  admitRemoteIntentObservation,
+  admitRemoteSettlement,
+  admitRemoteSnapshot,
+  REMOTE_CONTRACT_LIMITS,
+} from "../src/remote-contract.mjs";
 import { InMemoryCheckpointStore, InMemoryLeaseStore } from "../src/stores.mjs";
 
 const fixture = JSON.parse(
@@ -59,6 +65,18 @@ function asyncMethodAdapter(target, methodNames, calls = []) {
   );
 }
 
+function remoteWithSnapshotFault(remote, faultAt, invalidSnapshot) {
+  let snapshotCalls = 0;
+  return {
+    applyBatch: remote.applyBatch.bind(remote),
+    readIntentResults: remote.readIntentResults.bind(remote),
+    snapshot() {
+      snapshotCalls += 1;
+      return snapshotCalls === faultAt ? invalidSnapshot : remote.snapshot();
+    },
+  };
+}
+
 test("planner produces stable topological batches and detects cycles", () => {
   const ordered = orderOperations(fixture.operations);
   assert.deepEqual(
@@ -77,6 +95,56 @@ test("planner produces stable topological batches and detects cycles", () => {
   assert.throws(
     () => orderOperations(cycleFixture.operations),
     (error) => error instanceof PlanError && error.code === "dependency_cycle",
+  );
+});
+
+test("temporary coordinates carry an explicit dependency on their creator", () => {
+  const creator = {
+    id: "create-source",
+    type: "create_variable",
+    tempId: "tmp:source",
+    dependsOn: [],
+    payload: { name: "source", resolvedType: "COLOR", value: "#315cf5" },
+  };
+  const referencingCreate = {
+    id: "create-receiver",
+    type: "create_variable",
+    tempId: "tmp:receiver",
+    dependsOn: [],
+    payload: {
+      name: "receiver",
+      resolvedType: "COLOR",
+      value: "#315cf5",
+      referenceTo: "tmp:source",
+    },
+  };
+  const targetingUpdate = {
+    id: "update-source",
+    type: "update_variable",
+    targetId: "tmp:source",
+    dependsOn: [],
+    payload: { name: "source.current" },
+  };
+
+  for (const [consumer, field] of [
+    [referencingCreate, "payload.referenceTo"],
+    [targetingUpdate, "targetId"],
+  ]) {
+    assert.throws(
+      () => orderOperations([consumer, creator]),
+      (error) =>
+        error instanceof PlanError
+        && error.code === "temporary_reference_dependency_required"
+        && error.details.operationId === consumer.id
+        && error.details.creatorOperationId === creator.id
+        && error.details.field === field,
+    );
+  }
+
+  referencingCreate.dependsOn = [creator.id];
+  assert.deepEqual(
+    orderOperations([referencingCreate, creator]).map(({ id }) => id),
+    [creator.id, referencingCreate.id],
   );
 });
 
@@ -101,6 +169,265 @@ test("canonical objects and remote snapshots use locale-independent ordinal orde
   );
 });
 
+test("planner and canonical digests admit one explicit JSON data model", () => {
+  const baseOperation = {
+    id: "create-json-value",
+    type: "create_variable",
+    tempId: "tmp:json-value",
+    dependsOn: [],
+    payload: { name: "json.value", resolvedType: "STRING", value: "accepted" },
+  };
+  const customPrototype = Object.create({ inherited: true });
+  customPrototype.own = "value";
+  const cyclic = {};
+  cyclic.self = cyclic;
+  const sparse = [];
+  sparse[1] = "value";
+  const extended = ["value"];
+  extended.note = "outside-json-array";
+  const accessor = {};
+  Object.defineProperty(accessor, "value", { enumerable: true, get: () => "value" });
+
+  for (const value of [
+    new Map([["key", "value"]]),
+    new Set(["value"]),
+    new Date("2026-10-21T00:00:00.000Z"),
+    new Uint8Array([1, 2, 3]),
+    customPrototype,
+    cyclic,
+    sparse,
+    extended,
+    accessor,
+    -0,
+    undefined,
+  ]) {
+    const operation = {
+      ...baseOperation,
+      payload: { ...baseOperation.payload, value },
+    };
+    assert.throws(
+      () => planOperations([operation]),
+      error =>
+        error instanceof PlanError
+        && (error.code === "non_json_value" || error.code === "invalid_number"),
+    );
+    assert.throws(() => canonicalJson(value), TypeError);
+  }
+
+  const left = { alpha: [1, { beta: "first" }] };
+  const sameMeaningDifferentOrder = { alpha: [1, { beta: "first" }] };
+  const changedMeaning = { alpha: [1, { beta: "second" }] };
+  assert.equal(digest(left), digest(sameMeaningDifferentOrder));
+  assert.notEqual(digest(left), digest(changedMeaning));
+  assert.doesNotThrow(() => planOperations([baseOperation]));
+
+  const nullPrototypeValue = Object.create(null);
+  nullPrototypeValue.accepted = true;
+  assert.doesNotThrow(() => planOperations([{
+    ...baseOperation,
+    payload: { ...baseOperation.payload, value: nullPrototypeValue },
+  }]));
+
+  const admittedValues = [null, true, false, 0, 1, "1", [], [1], {}, { a: 1 }, { a: "1" }];
+  const planDigests = admittedValues.map(value => planOperations([{
+    ...baseOperation,
+    payload: { ...baseOperation.payload, value },
+  }]).planDigest);
+  assert.equal(new Set(planDigests).size, admittedValues.length);
+});
+
+test("array and result admission establishes a data-only shape before reading values", () => {
+  let operationReads = 0;
+  const operations = [];
+  Object.defineProperty(operations, "0", {
+    enumerable: true,
+    get() {
+      operationReads += 1;
+      throw new Error("operation getter executed");
+    },
+  });
+  operations.length = 1;
+  assert.throws(
+    () => planOperations(operations),
+    error => error instanceof PlanError && error.code === "invalid_operation_list",
+  );
+  assert.equal(operationReads, 0);
+
+  const operation = structuredClone(fixture.operations[1]);
+  let resultReads = 0;
+  const results = [];
+  Object.defineProperty(results, "0", {
+    enumerable: true,
+    get() {
+      resultReads += 1;
+      throw new Error("result getter executed");
+    },
+  });
+  results.length = 1;
+  const arrayAdmission = admitRemoteSettlement(
+    { disposition: "applied", remoteRevision: 8, results },
+    [operation],
+  );
+  assert.equal(arrayAdmission.accepted, false);
+  assert.equal(arrayAdmission.reason, "result_set_shape");
+  assert.equal(resultReads, 0);
+
+  let operationIdReads = 0;
+  const result = {
+    type: operation.type,
+    targetId: operation.targetId,
+  };
+  Object.defineProperty(result, "operationId", {
+    enumerable: true,
+    get() {
+      operationIdReads += 1;
+      throw new Error("operation id getter executed");
+    },
+  });
+  const recordAdmission = admitRemoteSettlement(
+    { disposition: "applied", remoteRevision: 8, results: [result] },
+    [operation],
+  );
+  assert.equal(recordAdmission.accepted, false);
+  assert.equal(recordAdmission.reason, "field_shape");
+  assert.equal(operationIdReads, 0);
+});
+
+test("remote result envelopes reject oversized dense and sparse arrays before element inspection", () => {
+  const operation = structuredClone(fixture.operations[1]);
+  let denseElementReads = 0;
+  const dense = [{}, {}];
+  Object.defineProperty(dense, "0", {
+    enumerable: true,
+    get() {
+      denseElementReads += 1;
+      throw new Error("oversized dense element executed");
+    },
+  });
+  const sparse = [];
+  sparse.length = 2;
+
+  for (const results of [dense, sparse]) {
+    const settlement = admitRemoteSettlement(
+      { disposition: "applied", remoteRevision: 8, results },
+      [operation],
+    );
+    assert.equal(settlement.accepted, false);
+    assert.equal(settlement.reason, "result_set_shape");
+
+    const observation = admitRemoteIntentObservation(
+      { remoteRevision: 8, results },
+      [operation],
+    );
+    assert.equal(observation.accepted, false);
+    assert.equal(observation.reason, "result_set_shape");
+  }
+  assert.equal(denseElementReads, 0);
+});
+
+test("present optional fields with undefined values fail typed planner admission", () => {
+  const create = structuredClone(fixture.operations[0]);
+  const update = structuredClone(fixture.operations[1]);
+  const candidates = [
+    { ...create, tempId: undefined },
+    { ...create, dependsOn: undefined },
+    { ...create, payload: { ...create.payload, name: undefined } },
+    { ...update, targetId: undefined },
+    { ...update, expectedVersion: undefined },
+    { ...update, payload: undefined },
+  ];
+  for (const candidate of candidates) {
+    assert.throws(
+      () => planOperations([candidate]),
+      error => error instanceof PlanError,
+    );
+  }
+});
+
+test("operation and payload records reject executable or inherited object shape", () => {
+  const operation = Object.create({ inherited: true });
+  Object.assign(operation, {
+    id: "custom-operation",
+    type: "create_variable",
+    tempId: "tmp:custom-operation",
+    dependsOn: [],
+    payload: { name: "custom", resolvedType: "STRING", value: "value" },
+  });
+  assert.throws(
+    () => planOperations([operation]),
+    error => error instanceof PlanError && error.code === "invalid_operation",
+  );
+
+  const payload = Object.create({ inherited: true });
+  Object.assign(payload, { name: "custom", resolvedType: "STRING", value: "value" });
+  assert.throws(
+    () => planOperations([{ ...operation, __proto__: Object.prototype, payload }]),
+    error => error instanceof PlanError && error.code === "invalid_payload",
+  );
+});
+
+test("remote snapshot admission is exact, bounded, unique, and JSON-shaped", () => {
+  const valid = new FakeVariableRemote(fixture.remote).snapshot();
+  assert.equal(admitRemoteSnapshot(valid).accepted, true);
+
+  const duplicate = structuredClone(valid);
+  duplicate.variables.push(structuredClone(duplicate.variables[0]));
+  const unknownField = structuredClone(valid);
+  unknownField.variables[0].unexpected = true;
+  const cyclic = structuredClone(valid);
+  cyclic.variables[0].value = {};
+  cyclic.variables[0].value.self = cyclic.variables[0].value;
+  let deepValue = "leaf";
+  for (let depth = 0; depth <= REMOTE_CONTRACT_LIMITS.valueDepth; depth += 1) {
+    deepValue = [deepValue];
+  }
+  const deep = structuredClone(valid);
+  deep.variables[0].value = deepValue;
+  const oversizedString = structuredClone(valid);
+  oversizedString.variables[0].value = "x".repeat(REMOTE_CONTRACT_LIMITS.stringBytes + 1);
+  const nonJson = structuredClone(valid);
+  nonJson.variables[0].value = new Map([["a", 1]]);
+
+  for (const invalid of [
+    { ...valid, revision: -1 },
+    { ...valid, variables: {} },
+    duplicate,
+    unknownField,
+    cyclic,
+    deep,
+    oversizedString,
+    nonJson,
+  ]) {
+    assert.equal(admitRemoteSnapshot(invalid).accepted, false);
+  }
+});
+
+test("invalid initial, settled, and final snapshots return typed friction at durable boundaries", async () => {
+  const operation = structuredClone(fixture.operations[1]);
+  const invalidSnapshot = { revision: fixture.remote.revision, variables: {} };
+  const expectations = [
+    { faultAt: 1, source: "initial_snapshot", restartAt: "reconcile:initial", nextBatchIndex: null },
+    { faultAt: 2, source: "settled_snapshot", restartAt: "reconcile:batch:0", nextBatchIndex: 0 },
+    { faultAt: 3, source: "final_snapshot", restartAt: "reconcile:final", nextBatchIndex: 1 },
+  ];
+
+  for (const expectation of expectations) {
+    const base = harness();
+    const remote = remoteWithSnapshotFault(base.remote, expectation.faultAt, invalidSnapshot);
+    const result = await runWith(
+      { ...base, remote },
+      { operations: [operation], maxBatchBytes: 4096 },
+    );
+    assert.equal(result.status, "friction");
+    assert.equal(result.code, "remote_protocol_invalid");
+    assert.equal(result.details.source, expectation.source);
+    assert.equal(result.details.reason, "snapshot_variables");
+    assert.equal(result.restartAt, expectation.restartAt);
+    const checkpoint = base.checkpointStore.load(fixture.runId);
+    assert.equal(checkpoint?.nextBatchIndex ?? null, expectation.nextBatchIndex);
+  }
+});
+
 test("preflight rejects unsafe coordinates and operation envelopes before calling collaborators", async () => {
   const calls = [];
   const collaborators = {
@@ -110,6 +437,9 @@ test("preflight rejects unsafe coordinates and operation envelopes before callin
       },
     },
     checkpointStore: {
+      claimFence() {
+        calls.push("checkpoint.claimFence");
+      },
       load() {
         calls.push("checkpoint.load");
       },
@@ -237,7 +567,11 @@ test("async remote, store, lease, clock, and fault collaborators settle before a
       ["snapshot", "applyBatch", "readIntentResults"],
       calls,
     ),
-    checkpointStore: asyncMethodAdapter(base.checkpointStore, ["load", "save"], calls),
+    checkpointStore: asyncMethodAdapter(
+      base.checkpointStore,
+      ["claimFence", "load", "save"],
+      calls,
+    ),
     leaseStore: asyncLeaseStore,
     clock: asyncMethodAdapter(base.clock, ["now"], calls),
     sleep: async (durationMs) => base.sleep(durationMs),
@@ -248,7 +582,16 @@ test("async remote, store, lease, clock, and fault collaborators settle before a
   assert.equal(result.status, "accepted");
   assert.equal(releaseSettled, true);
   assert.equal(calls.at(-1), "release");
-  for (const methodName of ["acquire", "renew", "load", "save", "snapshot", "applyBatch", "now"]) {
+  for (const methodName of [
+    "acquire",
+    "renew",
+    "claimFence",
+    "load",
+    "save",
+    "snapshot",
+    "applyBatch",
+    "now",
+  ]) {
     assert.ok(calls.includes(methodName), methodName);
   }
 });
@@ -261,7 +604,10 @@ test("async retry and outcome-unknown rejections enter the same bounded reconcil
       base.remote,
       ["snapshot", "applyBatch", "readIntentResults"],
     ),
-    checkpointStore: asyncMethodAdapter(base.checkpointStore, ["load", "save"]),
+    checkpointStore: asyncMethodAdapter(
+      base.checkpointStore,
+      ["claimFence", "load", "save"],
+    ),
     leaseStore: asyncMethodAdapter(base.leaseStore, ["acquire", "renew", "release"]),
   }, {
     faultFor: async ({ batchIndex, attempt }) => {
@@ -310,6 +656,7 @@ test("a primary async collaborator failure retains authority when lease release 
   const base = harness();
   const primaryFailure = new Error("synthetic checkpoint read fault");
   const checkpointStore = {
+    claimFence: async (...args) => base.checkpointStore.claimFence(...args),
     load: async () => {
       throw primaryFailure;
     },
@@ -340,6 +687,35 @@ test("Retry-After is bounded, observed, and followed by the accepted path", asyn
   assert.equal(receipt.observations[0].classification, "bounded_retry");
 });
 
+test("Retry-After admits a safe non-negative integer before checkpointing or sleeping", async () => {
+  const h = harness();
+  let sleepCalls = 0;
+  const result = await runWith(
+    {
+      ...h,
+      sleep: async () => {
+        sleepCalls += 1;
+      },
+    },
+    {
+      faultFor: ({ batchIndex, attempt }) =>
+        batchIndex === 0 && attempt === 0
+          ? { kind: "retry_after", retryAfterMs: -1 }
+          : null,
+    },
+  );
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "remote_protocol_invalid");
+  assert.equal(result.details.source, "retry_after");
+  assert.equal(result.details.reason, "retry_after_ms");
+  assert.equal(result.restartAt, "reconcile:batch:0");
+  assert.equal(sleepCalls, 0);
+  const checkpoint = h.checkpointStore.load(fixture.runId);
+  assert.equal(checkpoint.nextBatchIndex, 0);
+  assert.deepEqual(checkpoint.observations, []);
+});
+
 test("a lost success response is read and reconciled before progress continues", async () => {
   const h = harness();
   const receipt = await runWith(h, {
@@ -365,6 +741,346 @@ test("an unobserved pre-apply timeout is read as absent and retried", async () =
   assert.ok(receipt.observations.some((item) => item.classification === "safe_to_retry"));
 });
 
+test("a partial apply settlement preserves the durable checkpoint as typed protocol friction", async () => {
+  const base = harness();
+  const remoteBefore = base.remote.snapshot();
+  const underlyingRemote = base.remote;
+  const partialRemote = {
+    snapshot: underlyingRemote.snapshot.bind(underlyingRemote),
+    readIntentResults: underlyingRemote.readIntentResults.bind(underlyingRemote),
+    applyBatch(operations, options) {
+      return underlyingRemote.applyBatch([operations[0]], options);
+    },
+  };
+
+  const result = await runWith({ ...base, remote: partialRemote });
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "remote_protocol_invalid");
+  assert.equal(result.details.source, "apply_batch");
+  assert.equal(result.details.reason, "result_count");
+  assert.equal(result.details.expectedCount, 2);
+  assert.equal(result.details.observedCount, 1);
+  assert.equal(result.restartAt, "reconcile:batch:0");
+  const checkpoint = base.checkpointStore.load(fixture.runId);
+  assert.equal(checkpoint.nextBatchIndex, 0);
+  assert.equal(checkpoint.expectedRemoteRevision, remoteBefore.revision);
+  assert.equal(checkpoint.expectedRemoteStateDigest, digest(remoteBefore));
+});
+
+test("a duplicate operation result cannot satisfy an exact apply settlement", async () => {
+  const base = harness();
+  const underlyingRemote = base.remote;
+  const duplicateResultRemote = {
+    snapshot: underlyingRemote.snapshot.bind(underlyingRemote),
+    readIntentResults: underlyingRemote.readIntentResults.bind(underlyingRemote),
+    applyBatch(operations, options) {
+      const settlement = underlyingRemote.applyBatch(operations, options);
+      return {
+        ...settlement,
+        results: [settlement.results[0], settlement.results[0]],
+      };
+    },
+  };
+
+  const result = await runWith({ ...base, remote: duplicateResultRemote });
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "remote_protocol_invalid");
+  assert.equal(result.details.source, "apply_batch");
+  assert.equal(result.details.reason, "duplicate_operation_id");
+  assert.equal(base.checkpointStore.load(fixture.runId).nextBatchIndex, 0);
+});
+
+test("an incomplete intent observation preserves the checkpoint before classification", async () => {
+  const base = harness();
+  const remoteBefore = base.remote.snapshot();
+  const underlyingRemote = base.remote;
+  const incompleteObservationRemote = {
+    snapshot: underlyingRemote.snapshot.bind(underlyingRemote),
+    applyBatch: underlyingRemote.applyBatch.bind(underlyingRemote),
+    readIntentResults() {
+      return { remoteRevision: underlyingRemote.snapshot().revision, results: [] };
+    },
+  };
+
+  const result = await runWith(
+    { ...base, remote: incompleteObservationRemote },
+    {
+      faultFor: ({ batchIndex, attempt }) =>
+        batchIndex === 0 && attempt === 0 ? { kind: "timeout_before_apply" } : null,
+    },
+  );
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "remote_protocol_invalid");
+  assert.equal(result.details.source, "intent_observation");
+  assert.equal(result.details.reason, "result_count");
+  assert.equal(result.restartAt, "reconcile:batch:0");
+  assert.deepEqual(base.remote.snapshot(), remoteBefore);
+  const checkpoint = base.checkpointStore.load(fixture.runId);
+  assert.equal(checkpoint.nextBatchIndex, 0);
+  assert.equal(checkpoint.expectedRemoteStateDigest, digest(remoteBefore));
+});
+
+test("an intent observation cannot alias two created temporary identities", async () => {
+  const operations = [
+    {
+      id: "create-one",
+      type: "create_variable",
+      tempId: "tmp:one",
+      dependsOn: [],
+      payload: { name: "one", resolvedType: "STRING", value: "one" },
+    },
+    {
+      id: "create-two",
+      type: "create_variable",
+      tempId: "tmp:two",
+      dependsOn: [],
+      payload: { name: "two", resolvedType: "STRING", value: "two" },
+    },
+  ];
+  const base = harness({ remote: new FakeVariableRemote() });
+  const underlyingRemote = base.remote;
+  const aliasingObservationRemote = {
+    snapshot: underlyingRemote.snapshot.bind(underlyingRemote),
+    applyBatch: underlyingRemote.applyBatch.bind(underlyingRemote),
+    readIntentResults(operationIds) {
+      const observation = underlyingRemote.readIntentResults(operationIds);
+      const firstTargetId = observation.results[0].result.targetId;
+      observation.results[1].result.targetId = firstTargetId;
+      return observation;
+    },
+  };
+
+  const result = await runWith(
+    { ...base, remote: aliasingObservationRemote },
+    {
+      runId: "duplicate-created-observation",
+      operations,
+      maxBatchBytes: 4096,
+      faultFor: ({ batchIndex, attempt }) =>
+        batchIndex === 0 && attempt === 0 ? { kind: "response_lost" } : null,
+    },
+  );
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "remote_protocol_invalid");
+  assert.equal(result.details.source, "intent_observation");
+  assert.equal(result.details.reason, "duplicate_created_target_id");
+  const checkpoint = base.checkpointStore.load("duplicate-created-observation");
+  assert.equal(checkpoint.nextBatchIndex, 0);
+  assert.deepEqual(checkpoint.tempIdToRealId, {});
+});
+
+test("same-batch temporary targets reconcile under arbitrary transport order", async () => {
+  const operations = [
+    {
+      id: "create-same-batch",
+      type: "create_variable",
+      tempId: "tmp:same-batch",
+      dependsOn: [],
+      payload: { name: "before", resolvedType: "STRING", value: "value" },
+    },
+    {
+      id: "update-same-batch",
+      type: "update_variable",
+      targetId: "tmp:same-batch",
+      expectedVersion: 1,
+      dependsOn: ["create-same-batch"],
+      payload: { name: "after" },
+    },
+  ];
+
+  for (const faultKind of [null, "response_lost", "interrupt_after_apply"]) {
+    const base = harness({ remote: new FakeVariableRemote() });
+    const underlyingRemote = base.remote;
+    const reorderedRemote = {
+      snapshot: underlyingRemote.snapshot.bind(underlyingRemote),
+      applyBatch(batch, options) {
+        const settlement = underlyingRemote.applyBatch(batch, options);
+        settlement.results.reverse();
+        return settlement;
+      },
+      readIntentResults(operationIds) {
+        const observation = underlyingRemote.readIntentResults(operationIds);
+        observation.results.reverse();
+        return observation;
+      },
+    };
+    const runId = `same-batch-${faultKind ?? "direct"}`;
+    const first = await runWith(
+      { ...base, remote: reorderedRemote },
+      {
+        runId,
+        operations,
+        maxBatchBytes: 4096,
+        faultFor: ({ batchIndex, attempt }) =>
+          batchIndex === 0 && attempt === 0 && faultKind ? { kind: faultKind } : null,
+      },
+    );
+    const receipt = faultKind === "interrupt_after_apply"
+      ? await runWith(
+          { ...base, remote: reorderedRemote },
+          { runId, operations, maxBatchBytes: 4096 },
+        )
+      : first;
+
+    if (faultKind === "interrupt_after_apply") assert.equal(first.status, "interrupted");
+    assert.equal(receipt.status, "accepted");
+    assert.equal(receipt.tempIdToRealId["tmp:same-batch"], "var_0001");
+    assert.equal(underlyingRemote.snapshot().variables[0].name, "after");
+    assert.equal(underlyingRemote.snapshot().variables[0].version, 2);
+  }
+});
+
+test("the durable identity ledger rejects reused and preexisting create targets", async () => {
+  const create = (suffix) => ({
+    id: `create-${suffix}`,
+    type: "create_variable",
+    tempId: `tmp:${suffix}`,
+    dependsOn: [],
+    payload: { name: suffix, resolvedType: "STRING", value: suffix },
+  });
+  const operations = [create("one"), create("two")];
+  const maxBatchBytes = encodedBatchBytes([operations[0]]);
+
+  const base = harness({ remote: new FakeVariableRemote() });
+  const underlyingRemote = base.remote;
+  let firstTargetId;
+  let applyCount = 0;
+  const reusedIdRemote = {
+    snapshot: underlyingRemote.snapshot.bind(underlyingRemote),
+    readIntentResults: underlyingRemote.readIntentResults.bind(underlyingRemote),
+    applyBatch(batch, options) {
+      const settlement = underlyingRemote.applyBatch(batch, options);
+      applyCount += 1;
+      if (applyCount === 1) firstTargetId = settlement.results[0].targetId;
+      if (applyCount === 2) settlement.results[0].targetId = firstTargetId;
+      return settlement;
+    },
+  };
+  const reused = await runWith(
+    { ...base, remote: reusedIdRemote },
+    { runId: "reused-create-id", operations, maxBatchBytes },
+  );
+  assert.equal(reused.status, "friction");
+  assert.equal(reused.code, "remote_protocol_invalid");
+  assert.equal(reused.details.source, "created_identity_transfer");
+  assert.equal(reused.details.reason, "created_target_identity_reused");
+  const checkpoint = base.checkpointStore.load("reused-create-id");
+  assert.equal(checkpoint.nextBatchIndex, 1);
+  assert.deepEqual(checkpoint.knownRemoteVariableIds, ["var_0001"]);
+
+  const existingBase = harness();
+  const existingUnderlying = existingBase.remote;
+  const preexistingIdRemote = {
+    snapshot: existingUnderlying.snapshot.bind(existingUnderlying),
+    readIntentResults: existingUnderlying.readIntentResults.bind(existingUnderlying),
+    applyBatch(batch, options) {
+      const settlement = existingUnderlying.applyBatch(batch, options);
+      settlement.results[0].targetId = fixture.remote.variables[0].id;
+      return settlement;
+    },
+  };
+  const preexisting = await runWith(
+    { ...existingBase, remote: preexistingIdRemote },
+    { runId: "preexisting-create-id", operations: [create("new")], maxBatchBytes: 4096 },
+  );
+  assert.equal(preexisting.status, "friction");
+  assert.equal(preexisting.details.reason, "created_target_identity_reused");
+});
+
+test("created identity transfer verifies settled state and retains deleted identities", async () => {
+  const create = {
+    id: "create-then-delete",
+    type: "create_variable",
+    tempId: "tmp:create-then-delete",
+    dependsOn: [],
+    payload: { name: "temporary", resolvedType: "STRING", value: "temporary" },
+  };
+  const remove = {
+    id: "delete-created",
+    type: "delete_variable",
+    targetId: create.tempId,
+    expectedVersion: 1,
+    dependsOn: [create.id],
+    payload: {},
+  };
+  const base = harness({ remote: new FakeVariableRemote() });
+  const accepted = await runWith(base, {
+    runId: "create-delete-ledger",
+    operations: [create, remove],
+    maxBatchBytes: 4096,
+  });
+  assert.equal(accepted.status, "accepted");
+  assert.equal(base.remote.snapshot().variables.length, 0);
+  const checkpoint = base.checkpointStore.load("create-delete-ledger");
+  assert.deepEqual(checkpoint.knownRemoteVariableIds, ["var_0001"]);
+  assert.equal(checkpoint.tempIdToRealId[create.tempId], "var_0001");
+  const resumed = await runWith(base, {
+    runId: "create-delete-ledger",
+    operations: [create, remove],
+    maxBatchBytes: 4096,
+  });
+  assert.equal(resumed.status, "accepted");
+
+  const mismatchBase = harness({ remote: new FakeVariableRemote() });
+  const mismatchUnderlying = mismatchBase.remote;
+  let applied = false;
+  const mismatchedSnapshotRemote = {
+    readIntentResults: mismatchUnderlying.readIntentResults.bind(mismatchUnderlying),
+    applyBatch(batch, options) {
+      const settlement = mismatchUnderlying.applyBatch(batch, options);
+      applied = true;
+      return settlement;
+    },
+    snapshot() {
+      const snapshot = mismatchUnderlying.snapshot();
+      if (applied) snapshot.variables[0].name = "unexpected";
+      return snapshot;
+    },
+  };
+  const mismatch = await runWith(
+    { ...mismatchBase, remote: mismatchedSnapshotRemote },
+    { runId: "created-state-mismatch", operations: [create], maxBatchBytes: 4096 },
+  );
+  assert.equal(mismatch.status, "friction");
+  assert.equal(mismatch.details.reason, "created_target_state_mismatch");
+});
+
+test("settled state must equal the complete projected batch transition", async () => {
+  const base = harness();
+  const underlyingRemote = base.remote;
+  let applied = false;
+  const sideEffectSnapshotRemote = {
+    readIntentResults: underlyingRemote.readIntentResults.bind(underlyingRemote),
+    applyBatch(batch, options) {
+      const settlement = underlyingRemote.applyBatch(batch, options);
+      applied = true;
+      return settlement;
+    },
+    snapshot() {
+      const snapshot = underlyingRemote.snapshot();
+      if (applied) {
+        snapshot.variables.find(({ id }) => id === "var_0002").value = "unexpected-side-effect";
+      }
+      return snapshot;
+    },
+  };
+
+  const result = await runWith(
+    { ...base, remote: sideEffectSnapshotRemote },
+    { operations: [structuredClone(fixture.operations[1])], maxBatchBytes: 4096 },
+  );
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "remote_protocol_invalid");
+  assert.equal(result.details.source, "settled_state_transition");
+  assert.equal(result.details.reason, "batch_transition_state_mismatch");
+  assert.equal(base.checkpointStore.load(fixture.runId).nextBatchIndex, 0);
+});
+
 test("resume after post-apply interruption replays the intent set idempotently", async () => {
   const h = harness();
   const interrupted = await runWith(h, {
@@ -379,6 +1095,75 @@ test("resume after post-apply interruption replays the intent set idempotently",
   assert.ok(resumed.observations.some((item) => item.classification === "idempotent_replay"));
 });
 
+test("same-revision state drift stops resume before another remote mutation", async () => {
+  const base = harness();
+  const underlyingRemote = base.remote;
+  let applyCalls = 0;
+  let exposeDrift = false;
+  const stateDriftRemote = {
+    snapshot() {
+      const snapshot = underlyingRemote.snapshot();
+      if (exposeDrift) snapshot.variables[0].value = "#486ff7";
+      return snapshot;
+    },
+    readIntentResults: underlyingRemote.readIntentResults.bind(underlyingRemote),
+    applyBatch(operations, options) {
+      applyCalls += 1;
+      if (applyCalls === 2) {
+        throw new ExecutionInterruptedError({ phase: "before_apply" });
+      }
+      return underlyingRemote.applyBatch(operations, options);
+    },
+  };
+
+  const interrupted = await runWith({ ...base, remote: stateDriftRemote });
+  assert.equal(interrupted.status, "interrupted");
+  const checkpointBeforeResume = base.checkpointStore.load(fixture.runId);
+  assert.equal(checkpointBeforeResume.nextBatchIndex, 1);
+  exposeDrift = true;
+  const applyCallsBeforeResume = applyCalls;
+
+  const resumed = await runWith({ ...base, remote: stateDriftRemote });
+
+  assert.equal(resumed.status, "conflict");
+  assert.equal(resumed.code, "checkpoint_remote_drift");
+  assert.equal(resumed.batchIndex, 1);
+  assert.equal(resumed.details.expectedRevision, resumed.details.observedRevision);
+  assert.notEqual(resumed.details.expectedStateDigest, resumed.details.observedStateDigest);
+  assert.equal(resumed.restartAt, "reconcile:resume");
+  assert.equal(applyCalls, applyCallsBeforeResume);
+  assert.deepEqual(base.checkpointStore.load(fixture.runId), checkpointBeforeResume);
+});
+
+test("resume rejects a checkpoint whose identity ledger omits a live remote variable", async () => {
+  const base = harness();
+  const accepted = await runWith(base);
+  assert.equal(accepted.status, "accepted");
+  const checkpoint = base.checkpointStore.load(fixture.runId);
+  checkpoint.knownRemoteVariableIds = checkpoint.knownRemoteVariableIds.filter(
+    (remoteId) => remoteId !== "var_0002",
+  );
+  base.checkpointStore.save(fixture.runId, checkpoint, {
+    fencingToken: base.checkpointStore.inspectFence(fixture.runId),
+  });
+  let applyCalls = 0;
+  const remote = {
+    snapshot: base.remote.snapshot.bind(base.remote),
+    readIntentResults: base.remote.readIntentResults.bind(base.remote),
+    applyBatch(...args) {
+      applyCalls += 1;
+      return base.remote.applyBatch(...args);
+    },
+  };
+
+  const resumed = await runWith({ ...base, remote });
+  assert.equal(resumed.status, "friction");
+  assert.equal(resumed.code, "checkpoint_invalid");
+  assert.equal(resumed.details.reason, "remote_identity_ledger_missing");
+  assert.equal(resumed.restartAt, "inspect_checkpoint");
+  assert.equal(applyCalls, 0);
+});
+
 test("drift between interrupted application and resume returns a typed conflict", async () => {
   const h = harness();
   const interrupted = await runWith(h, {
@@ -390,9 +1175,11 @@ test("drift between interrupted application and resume returns a typed conflict"
 
   const resumed = await runWith(h);
   assert.equal(resumed.status, "conflict");
-  assert.equal(resumed.code, "remote_revision_changed_after_settlement");
-  assert.deepEqual(resumed.details, { expectedRevision: 8, observedRevision: 9 });
-  assert.equal(resumed.restartAt, "reconcile:batch:0");
+  assert.equal(resumed.code, "checkpoint_remote_drift");
+  assert.equal(resumed.details.expectedRevision, 7);
+  assert.equal(resumed.details.observedRevision, 9);
+  assert.notEqual(resumed.details.expectedStateDigest, resumed.details.observedStateDigest);
+  assert.equal(resumed.restartAt, "reconcile:resume");
 });
 
 test("drift after completion fails final revision and state reconciliation", async () => {
@@ -416,7 +1203,9 @@ test("checkpoint admission rejects completed progress with a missing settlement 
   assert.equal(accepted.status, "accepted");
   const checkpoint = h.checkpointStore.load(fixture.runId);
   checkpoint.observations = [];
-  h.checkpointStore.save(fixture.runId, checkpoint);
+  h.checkpointStore.save(fixture.runId, checkpoint, {
+    fencingToken: h.checkpointStore.inspectFence(fixture.runId),
+  });
   const remoteBefore = h.remote.snapshot();
 
   const result = await runWith(h);
@@ -433,7 +1222,9 @@ test("checkpoint admission rejects progress coordinates outside the planned batc
   assert.equal(accepted.status, "accepted");
   const checkpoint = h.checkpointStore.load(fixture.runId);
   checkpoint.nextBatchIndex += 1;
-  h.checkpointStore.save(fixture.runId, checkpoint);
+  h.checkpointStore.save(fixture.runId, checkpoint, {
+    fencingToken: h.checkpointStore.inspectFence(fixture.runId),
+  });
   const remoteBefore = h.remote.snapshot();
 
   const result = await runWith(h);
@@ -445,10 +1236,127 @@ test("checkpoint admission rejects progress coordinates outside the planned batc
   assert.deepEqual(h.remote.snapshot(), remoteBefore);
 });
 
+test("checkpoint admission rejects executable shapes before remote observation", async () => {
+  const plan = planOperations(fixture.operations, { maxBatchBytes: fixture.maxBatchBytes });
+  const snapshot = new FakeVariableRemote(fixture.remote).snapshot();
+  const baseCheckpoint = {
+    schemaVersion: "0.1.0",
+    runId: fixture.runId,
+    planDigest: plan.planDigest,
+    nextBatchIndex: 0,
+    expectedRemoteRevision: snapshot.revision,
+    expectedRemoteStateDigest: digest(snapshot),
+    initialRemoteRevision: snapshot.revision,
+    maxResolvedBatchBytes: 0,
+    tempIdToRealId: {},
+    knownRemoteVariableIds: snapshot.variables.map(({ id }) => id),
+    observations: [],
+  };
+  let getterReads = 0;
+  const accessorCheckpoint = { ...baseCheckpoint };
+  Object.defineProperty(accessorCheckpoint, "planDigest", {
+    enumerable: true,
+    get() {
+      getterReads += 1;
+      throw new Error("checkpoint getter executed");
+    },
+  });
+  const symbolCheckpoint = { ...baseCheckpoint, [Symbol("outside-contract")]: true };
+  const inheritedCheckpoint = Object.assign(
+    Object.create({ inherited: true }),
+    baseCheckpoint,
+  );
+
+  for (const checkpoint of [accessorCheckpoint, symbolCheckpoint, inheritedCheckpoint]) {
+    let snapshotCalls = 0;
+    const leaseStore = new InMemoryLeaseStore();
+    const result = await runWith({
+      checkpointStore: {
+        claimFence: (_runId, fencingToken) => fencingToken,
+        load: () => checkpoint,
+        save: () => {
+          throw new Error("save should remain unreachable");
+        },
+      },
+      leaseStore,
+      remote: {
+        snapshot() {
+          snapshotCalls += 1;
+          return snapshot;
+        },
+      },
+      clock: { now: () => fixture.clockStartMs },
+      sleep: async () => {},
+    });
+    assert.equal(result.status, "friction");
+    assert.equal(result.code, "checkpoint_invalid");
+    assert.equal(snapshotCalls, 0);
+    assert.equal(leaseStore.inspect(), null);
+  }
+  assert.equal(getterReads, 0);
+});
+
+test("checkpoint persistence admits and confirms the store-returned record", async () => {
+  for (const saveResult of [undefined, null, { stale: true }]) {
+    const base = harness();
+    let applyCalls = 0;
+    const remote = {
+      snapshot: base.remote.snapshot.bind(base.remote),
+      readIntentResults: base.remote.readIntentResults.bind(base.remote),
+      applyBatch(...args) {
+        applyCalls += 1;
+        return base.remote.applyBatch(...args);
+      },
+    };
+    const result = await runWith({
+      ...base,
+      remote,
+      checkpointStore: {
+        claimFence: (_runId, fencingToken) => fencingToken,
+        load: () => null,
+        save: () => saveResult,
+      },
+    });
+    assert.equal(result.status, "friction");
+    assert.equal(result.code, "checkpoint_persistence_invalid");
+    assert.equal(result.restartAt, "persist:initial_checkpoint");
+    assert.equal(applyCalls, 0);
+    assert.equal(base.leaseStore.inspect(), null);
+  }
+});
+
+test("remote diagnostics retain structural location without source vocabulary", async () => {
+  const sensitiveKey = "private_partner_api_token_name";
+  const remote = new FakeVariableRemote(fixture.remote);
+  const malformedSnapshot = remote.snapshot();
+  const malformedValue = {};
+  Object.defineProperty(malformedValue, sensitiveKey, {
+    enumerable: false,
+    value: "value",
+  });
+  malformedSnapshot.variables[0].value = malformedValue;
+  const result = await runWith({
+    ...harness(),
+    remote: {
+      snapshot: () => malformedSnapshot,
+      applyBatch: remote.applyBatch.bind(remote),
+      readIntentResults: remote.readIntentResults.bind(remote),
+    },
+  });
+  const serialized = JSON.stringify(result);
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "remote_protocol_invalid");
+  assert.equal(result.details.path, "variables[0].value.property[0]");
+  assert.equal(serialized.includes(sensitiveKey), false);
+  assert.ok(Buffer.byteLength(serialized, "utf8") < 2_048);
+});
+
 test("a full observation envelope returns friction before another remote mutation", async () => {
   const h = harness();
   const plan = planOperations(fixture.operations, { maxBatchBytes: fixture.maxBatchBytes });
   const remoteBefore = h.remote.snapshot();
+  const setupFencingToken = 1;
+  h.checkpointStore.claimFence(fixture.runId, setupFencingToken);
   h.checkpointStore.save(fixture.runId, {
     schemaVersion: "0.1.0",
     runId: fixture.runId,
@@ -459,13 +1367,14 @@ test("a full observation envelope returns friction before another remote mutatio
     initialRemoteRevision: remoteBefore.revision,
     maxResolvedBatchBytes: 0,
     tempIdToRealId: {},
+    knownRemoteVariableIds: remoteBefore.variables.map(({ id }) => id),
     observations: Array.from({ length: MAX_CHECKPOINT_OBSERVATIONS }, () => ({
       batchIndex: 0,
       attempt: 0,
       classification: "bounded_retry",
       retryAfterMs: 0,
     })),
-  });
+  }, { fencingToken: setupFencingToken });
 
   const result = await runWith(h);
   assert.equal(result.status, "friction");
@@ -526,6 +1435,41 @@ test("an active lease returns a precise owner and expiry", () => {
   assert.equal(takeover.generation, 2);
 });
 
+test("lease authority admission rejects executable and extended records without invoking getters", async () => {
+  let getterReads = 0;
+  const accessorAuthority = {
+    generation: 1,
+    expiresAtMs: fixture.clockStartMs + 30_000,
+  };
+  Object.defineProperty(accessorAuthority, "owner", {
+    enumerable: true,
+    get() {
+      getterReads += 1;
+      throw new Error("lease owner getter executed");
+    },
+  });
+  const symbolAuthority = {
+    owner: fixture.owner,
+    generation: 1,
+    expiresAtMs: fixture.clockStartMs + 30_000,
+    [Symbol("outside-contract")]: true,
+  };
+
+  for (const authority of [accessorAuthority, symbolAuthority]) {
+    const base = harness();
+    const result = await runWith({
+      ...base,
+      leaseStore: {
+        acquire: () => authority,
+      },
+    });
+    assert.equal(result.status, "friction");
+    assert.equal(result.code, "lease_authority_invalid");
+    assert.equal(base.checkpointStore.load(fixture.runId), null);
+  }
+  assert.equal(getterReads, 0);
+});
+
 test("lease generations fence concurrent runs that reuse an owner label", () => {
   const leaseStore = new InMemoryLeaseStore();
   const first = leaseStore.acquire({ owner: "writer-a", nowMs: 100, ttlMs: 50 });
@@ -536,6 +1480,65 @@ test("lease generations fence concurrent runs that reuse an owner label", () => 
   assert.equal(leaseStore.release({ owner: "writer-a", generation: first.generation }), true);
   const second = leaseStore.acquire({ owner: "writer-a", nowMs: 130, ttlMs: 50 });
   assert.equal(second.generation, 2);
+});
+
+test("checkpoint fencing preserves successor authority when a writer expires after remote apply", async () => {
+  const checkpointStore = new InMemoryCheckpointStore();
+  const underlyingLeaseStore = new InMemoryLeaseStore();
+  const remote = new FakeVariableRemote(fixture.remote);
+  let nowMs = fixture.clockStartMs;
+  let renewCalls = 0;
+  const leaseStore = {
+    acquire: underlyingLeaseStore.acquire.bind(underlyingLeaseStore),
+    release(request) {
+      const released = underlyingLeaseStore.release(request);
+      if (!released) throw new Error("expired generation cannot release the successor lease");
+      return released;
+    },
+    renew(request) {
+      renewCalls += 1;
+      if (renewCalls === 4) {
+        nowMs = request.nowMs + request.ttlMs;
+        const successor = underlyingLeaseStore.acquire({
+          owner: "successor-writer",
+          nowMs,
+          ttlMs: request.ttlMs,
+        });
+        checkpointStore.claimFence(fixture.runId, successor.generation);
+      }
+      return underlyingLeaseStore.renew(request);
+    },
+  };
+
+  const result = await runWith(
+    {
+      remote,
+      checkpointStore,
+      leaseStore,
+      clock: { now: () => nowMs },
+      sleep: async (durationMs) => {
+        nowMs += durationMs;
+      },
+    },
+    { operations: [structuredClone(fixture.operations[1])], maxBatchBytes: 4096 },
+  );
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "lease_lost");
+  assert.equal(result.batchIndex, 0);
+  assert.equal(result.details.checkpointPersistence, "earlier_checkpoint_retained");
+  assert.equal(result.restartAt, "reconcile:batch:0");
+  assert.equal(remote.snapshot().revision, fixture.remote.revision + 1);
+  assert.equal(checkpointStore.load(fixture.runId).nextBatchIndex, 0);
+  assert.equal(checkpointStore.inspectFence(fixture.runId), 2);
+  assert.throws(
+    () => checkpointStore.save(
+      fixture.runId,
+      checkpointStore.load(fixture.runId),
+      { fencingToken: 1 },
+    ),
+    error => error instanceof LeaseError && error.code === "checkpoint_fence_rejected",
+  );
 });
 
 test("the example receipt matches its committed deterministic result", async () => {

@@ -39,20 +39,20 @@ test("source coordinates bind the current candidate manifests", () => {
       version: "0.1.0",
       coordinate: { brand: "acme", mode: "light" },
       manifestKind: "generated_output_manifest",
-      manifestSha256: "6d93df6cd3c1b80076e3d4b0e162899381cfb4d82b1c28ff9c8a2a64d30a6e68",
+      manifestSha256: "cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79",
       standing: "candidate",
     },
     receiver: {
       semanticId: "react-aria-visual-contract-receiver",
       version: "0.1.0",
       manifestKind: "production_build_manifest",
-      manifestSha256: "0ab2fc6e413287a139519e898886037b66a8bb2f545c4745a67585167b9d192f",
+      manifestSha256: "4194c2ee7dac24c2560a8a87c268257ff22f55cb649d4f4eb99dd2e58aeb29d5",
       standing: "candidate",
     },
     observationFixture: {
       kind: "synthetic_receiver_fixture",
       path: "source/receiver.html",
-      sha256: "d48c633d3b91cc48d3c56f8ae79935b275fc31fc1c0862d81297d50c3334c982",
+      sha256: "23937db40f1195b149ea8173b2267c13de73a47f196c5be2bf808bc16f3a3d8b",
     },
     bindingRule: "The token source binds the Issue #61 generated-output manifest and its acme/light coordinate. The receiver binds the Issue #62 deterministic production-build manifest, which the browser lane rebuilds, rehashes, and directly smokes. Fault-oracle receipts separately carry the exact synthetic receiver fixture bytes they actually loaded. Refresh dependency standing and digests from accepted manifests before adapting this harness to a receiver release.",
   });
@@ -72,6 +72,106 @@ test("typed receipt admits a complete exact coordinate", () => {
   assert.equal(validateReceiptSchema(makeReceipt()).receiptId, "semantic-chromium-baseline");
 });
 
+test("receipt descriptor admission rejects accessors without invoking them", () => {
+  const candidate = makeReceipt();
+  let getterCalls = 0;
+  Object.defineProperty(candidate, "receiptId", {
+    configurable: true,
+    enumerable: true,
+    get() {
+      getterCalls += 1;
+      return "getter-derived-receipt";
+    },
+  });
+
+  assert.throws(
+    () => validateReceipt(candidate),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt"
+      && error.details.reason === "accessor_fields_present",
+  );
+  assert.throws(
+    () => validateReceiptSchema(candidate),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt"
+      && error.details.reason === "accessor_fields_present",
+  );
+  assert.equal(getterCalls, 0);
+});
+
+test("receipt descriptor admission rejects hidden and symbol fields", () => {
+  const hidden = makeReceipt();
+  Object.defineProperty(hidden.source, "privateCoordinate", {
+    enumerable: false,
+    value: "internal",
+  });
+  assert.throws(
+    () => validateReceipt(hidden),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt.source"
+      && error.details.reason === "hidden_fields_present",
+  );
+  assert.throws(
+    () => validateReceiptSchema(hidden),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt.source"
+      && error.details.reason === "hidden_fields_present",
+  );
+
+  const symbolic = makeReceipt();
+  symbolic.result.normalized[Symbol("private-coordinate")] = "internal";
+  assert.throws(
+    () => validateReceipt(symbolic),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt.result.normalized"
+      && error.details.reason === "symbol_fields_present",
+  );
+  assert.throws(
+    () => validateReceiptSchema(symbolic),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt.result.normalized"
+      && error.details.reason === "symbol_fields_present",
+  );
+});
+
+test("receipt arrays require dense plain-data indices", () => {
+  const sparse = makeReceipt();
+  sparse.artifacts = new Array(1);
+  assert.throws(
+    () => validateReceipt(sparse),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt.artifacts"
+      && error.details.reason === "dense_array_required",
+  );
+
+  const accessor = makeReceipt();
+  const artifact = accessor.artifacts[0];
+  let getterCalls = 0;
+  Object.defineProperty(accessor.artifacts, "0", {
+    configurable: true,
+    enumerable: true,
+    get() {
+      getterCalls += 1;
+      return artifact;
+    },
+  });
+  assert.throws(
+    () => validateReceipt(accessor),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "receipt.artifacts"
+      && error.details.reason === "accessor_fields_present",
+  );
+  assert.equal(getterCalls, 0);
+});
+
 test("versioned JSON Schema returns a bounded field error", () => {
   const candidate = makeReceipt();
   candidate.unowned = true;
@@ -88,7 +188,15 @@ test("receipt requires the exact Playwright coordinate", () => {
 });
 
 test("receipt contains every artifact path", () => {
-  for (const path of ["../outside.png", "artifacts/../outside.png", "artifacts/./alias.png", "artifacts//alias.png", "artifacts/"]) {
+  for (const path of [
+    "../outside.png",
+    "artifacts/../outside.png",
+    "artifacts/./alias.png",
+    "artifacts//alias.png",
+    "artifacts/",
+    "artifacts/line\n- injected.png",
+    "artifacts/name with spaces.png",
+  ]) {
     const candidate = makeReceipt();
     candidate.artifacts.push({ path, sha256: "c".repeat(64), bytes: 10 });
     assert.throws(() => validateReceipt(candidate), error => error instanceof ObserverError && error.code === "ARTIFACT_BOUNDARY_INVALID");

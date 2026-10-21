@@ -112,10 +112,16 @@ The package-local tests establish:
 - candidate cleanup after an interrupted render;
 - atomic ownership of each fresh candidate output directory when compilers
   start concurrently;
+- private-candidate boundary and leaf identity checks around every output
+  write, with changed coordinates retained for operator inspection;
+- digest-scoped destination reservations that serialize cooperative promotion
+  while preserving any existing accepted coordinate;
 - integrity verification when a content-addressed accepted directory already
   exists;
 - accepted-pointer continuity through an injected stop after accepted bytes
   are verified and before pointer promotion;
+- accepted-directory and leaf identity plus content verification immediately
+  before pointer commit, together with temporary-pointer identity checks;
 - immutable accepted bytes through a concurrent reuse-and-promote interleaving,
   even when the publisher that created those bytes stops before pointer
   promotion; and
@@ -128,6 +134,16 @@ that directory as shared immutable state. A publisher interruption cleans its
 private candidate and temporary pointer while leaving accepted bytes available
 for a concurrent or resumed publisher. A separate retention policy can collect
 accepted digests that remain unreferenced after a bounded recovery window.
+
+The portable publisher assumes one trusted writer domain honors its
+digest-scoped reservation. Node's cross-platform filesystem API supplies
+exclusive leaf creation and atomic rename, while directory-relative
+`openat`/`renameat2(RENAME_NOREPLACE)` transactions require a platform-specific
+adapter. A deployment that admits mutually untrusted local writers should use
+such an adapter or give one service identity sole write authority over the
+publication root. After an ungraceful process stop, an operator confirms the
+owning publisher has stopped and removes the empty reservation directory before
+retrying that digest.
 
 The manifest records the exact Node, Sharp, and libvips versions used for the
 observation. Another runtime coordinate receives its own build and comparison

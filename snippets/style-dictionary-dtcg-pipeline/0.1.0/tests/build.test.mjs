@@ -1,10 +1,17 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, readdir, rm, symlink, truncate, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { DEFAULT_LIMITS, PipelineError, sha256, stableStringify } from "../src/contract.mjs";
+import {
+  DEFAULT_LIMITS,
+  PipelineError,
+  readBoundedFile,
+  readJson,
+  sha256,
+  stableStringify,
+} from "../src/contract.mjs";
 import { promoteCandidate, readAcceptedPointer } from "../src/publication.mjs";
 import { buildCandidates } from "../tools/build-candidates.mjs";
 import { createManifest } from "../tools/make-manifest.mjs";
@@ -13,6 +20,14 @@ import { verifyGenerated } from "../tools/verify-generated.mjs";
 
 async function temporaryRoot(name) {
   return mkdtemp(join(tmpdir(), `${name}-`));
+}
+
+function alternateManifest(manifest, suffix) {
+  const alternate = structuredClone(manifest);
+  delete alternate.manifestDigest;
+  alternate.formatProfile = `${alternate.formatProfile} ${suffix}`;
+  alternate.manifestDigest = sha256(stableStringify(alternate));
+  return alternate;
 }
 
 test("two clean builds produce byte-identical artifact inventories", async t => {
@@ -116,6 +131,44 @@ test("manifest creation rejects a symlinked captured source", async t => {
   );
 });
 
+test("authored source admission rejects a symbolic-link coordinate", async t => {
+  const root = await temporaryRoot("dtcg-symlinked-authored-source");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outsidePath = resolve(root, "outside-source.json");
+  const linkedPath = resolve(root, "linked-source.json");
+  await writeFile(outsidePath, '{"token":{"$type":"number","$value":1}}\n', "utf8");
+  await symlink(outsidePath, linkedPath);
+
+  await assert.rejects(
+    readJson(linkedPath),
+    error => error instanceof PipelineError && error.code === "REGULAR_FILE_REQUIRED",
+  );
+});
+
+test("bounded source capture rejects a path replaced before descriptor ownership", async () => {
+  const pathEntry = {
+    dev: 1,
+    ino: 10,
+    size: 1,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  let closed = false;
+  const fileSystem = {
+    lstat: async () => pathEntry,
+    open: async () => ({
+      stat: async () => ({ ...pathEntry, ino: 11 }),
+      close: async () => { closed = true; },
+    }),
+  };
+
+  await assert.rejects(
+    readBoundedFile("synthetic-source.json", { maxBytes: 1, fileSystem }),
+    error => error instanceof PipelineError && error.code === "SOURCE_FILE_CHANGED",
+  );
+  assert.equal(closed, true);
+});
+
 test("the stable manifest coordinate binds both downstream receivers", async t => {
   const root = await temporaryRoot("dtcg-receiver-coordinate");
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -217,7 +270,13 @@ test("promotion rejects an intermediate candidate-directory symlink", async t =>
     promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest }),
     /must traverse regular directories/u,
   );
-  await assert.rejects(readAcceptedPointer(accepted), error => error.code === "ENOENT");
+  await assert.rejects(
+    readAcceptedPointer(accepted),
+    error => error instanceof PipelineError
+      && error.code === "SOURCE_FILE_UNREADABLE"
+      && error.details.stage === "accepted_pointer"
+      && error.details.restartFrom === "promotion",
+  );
 });
 
 test("candidate building preserves a caller directory that already contains material", async t => {
@@ -283,10 +342,22 @@ test("promotion moves one pointer after complete verification", async t => {
     error => error.code === "ENOENT",
   );
 
-  const candidateManifest = structuredClone(manifest);
-  delete candidateManifest.manifestDigest;
-  candidateManifest.formatProfile = `${candidateManifest.formatProfile} synthetic alternate`;
-  candidateManifest.manifestDigest = sha256(stableStringify(candidateManifest));
+  const candidateManifest = alternateManifest(manifest, "synthetic alternate");
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: candidateManifest,
+      injectFault: "after_copy",
+    }),
+    /injected promotion fault/u,
+  );
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+  await assert.rejects(
+    readFile(resolve(accepted, "artifacts", candidateManifest.manifestDigest, "manifest.json")),
+    error => error.code === "ENOENT",
+  );
+
   await assert.rejects(
     promoteCandidate({
       candidateRoot: candidate,
@@ -324,6 +395,457 @@ test("promotion moves one pointer after complete verification", async t => {
   );
 });
 
+test("promotion admits the manifest as plain data before reading its fields", async t => {
+  const root = await temporaryRoot("dtcg-manifest-data-admission");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+
+  let getterCalls = 0;
+  const accessorManifest = structuredClone(manifest);
+  Object.defineProperty(accessorManifest, "manifestDigest", {
+    enumerable: true,
+    get() {
+      getterCalls += 1;
+      return manifest.manifestDigest;
+    },
+  });
+  await assert.rejects(
+    promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest: accessorManifest }),
+    /plain data object/u,
+  );
+  assert.equal(getterCalls, 0);
+
+  const symbolManifest = structuredClone(manifest);
+  symbolManifest[Symbol("hidden authority")] = true;
+  await assert.rejects(
+    promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest: symbolManifest }),
+    /plain data object/u,
+  );
+
+  const customPrototypeManifest = Object.assign(
+    Object.create({ inheritedAuthority: true }),
+    structuredClone(manifest),
+  );
+  await assert.rejects(
+    promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest: customPrototypeManifest }),
+    /plain data object/u,
+  );
+
+  const hiddenFieldManifest = structuredClone(manifest);
+  Object.defineProperty(hiddenFieldManifest, "hiddenAuthority", {
+    enumerable: false,
+    value: true,
+  });
+  await assert.rejects(
+    promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest: hiddenFieldManifest }),
+    /plain data object/u,
+  );
+
+  const accessorMatrix = structuredClone(manifest);
+  let matrixGetterCalls = 0;
+  Object.defineProperty(accessorMatrix.matrix, "0", {
+    enumerable: true,
+    get() {
+      matrixGetterCalls += 1;
+      return manifest.matrix[0];
+    },
+  });
+  await assert.rejects(
+    promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest: accessorMatrix }),
+    /dense data array/u,
+  );
+  assert.equal(matrixGetterCalls, 0);
+  await assert.rejects(readAcceptedPointer(accepted), error => (
+    error instanceof PipelineError
+    && error.code === "SOURCE_FILE_UNREADABLE"
+    && error.details.stage === "accepted_pointer"
+  ));
+});
+
+test("promotion rejects an accepted-root identity swap before candidate rename", async t => {
+  const root = await temporaryRoot("dtcg-promotion-root-swap");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  const heldAccepted = resolve(root, "accepted-held");
+  const outside = resolve(root, "outside");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  await mkdir(outside);
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest,
+      injectFault: async ({ checkpoint }) => {
+        if (checkpoint !== "before_candidate_rename") return;
+        await rename(accepted, heldAccepted);
+        await symlink(outside, accepted);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "accepted_root",
+  );
+  assert.deepEqual(await readdir(outside), []);
+  await rm(accepted);
+  await rename(heldAccepted, accepted);
+  await assert.rejects(readAcceptedPointer(accepted), error => (
+    error instanceof PipelineError
+    && error.code === "SOURCE_FILE_UNREADABLE"
+    && error.details.stage === "accepted_pointer"
+  ));
+});
+
+test("promotion rejects symbolic links at its accepted root and artifacts child", async t => {
+  const root = await temporaryRoot("dtcg-promotion-static-boundaries");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  const outside = resolve(root, "outside");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  await mkdir(outside);
+  await symlink(outside, accepted);
+
+  await assert.rejects(
+    promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "accepted_root",
+  );
+  await rm(accepted);
+  await mkdir(accepted);
+  await symlink(outside, resolve(accepted, "artifacts"));
+  await assert.rejects(
+    promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "accepted_artifacts_root",
+  );
+  assert.deepEqual(await readdir(outside), []);
+});
+
+test("promotion rejects an artifacts-directory identity swap before candidate rename", async t => {
+  const root = await temporaryRoot("dtcg-promotion-artifacts-swap");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  const heldArtifacts = resolve(root, "artifacts-held");
+  const outside = resolve(root, "outside");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  await mkdir(outside);
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest,
+      injectFault: async ({ checkpoint, artifactsRoot }) => {
+        if (checkpoint !== "before_candidate_rename") return;
+        await rename(artifactsRoot, heldArtifacts);
+        await symlink(outside, artifactsRoot);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "accepted_artifacts_root",
+  );
+  assert.deepEqual(await readdir(outside), []);
+  await rm(resolve(accepted, "artifacts"));
+  await rename(heldArtifacts, resolve(accepted, "artifacts"));
+  await assert.rejects(readAcceptedPointer(accepted), error => (
+    error instanceof PipelineError
+    && error.code === "SOURCE_FILE_UNREADABLE"
+    && error.details.stage === "accepted_pointer"
+  ));
+});
+
+test("promotion preserves a replaced staging leaf and refuses to claim it", async t => {
+  const root = await temporaryRoot("dtcg-promotion-staging-leaf-swap");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const artifact = manifest.artifacts[0];
+  let replacementPath;
+  let heldPath;
+  let destinationPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest,
+      injectFault: async ({ checkpoint, staging, destination }) => {
+        if (checkpoint !== "before_candidate_rename") return;
+        destinationPath = destination;
+        replacementPath = resolve(staging, artifact.path);
+        heldPath = `${replacementPath}.held`;
+        const bytes = await readFile(replacementPath);
+        await rename(replacementPath, heldPath);
+        await writeFile(replacementPath, bytes);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.reason === "file_identity_changed",
+  );
+  assert.deepEqual(await readFile(replacementPath), await readFile(heldPath));
+  await assert.rejects(readFile(resolve(destinationPath, "manifest.json")), error => error.code === "ENOENT");
+  await assert.rejects(readAcceptedPointer(accepted), error => (
+    error instanceof PipelineError
+    && error.code === "SOURCE_FILE_UNREADABLE"
+    && error.details.stage === "accepted_pointer"
+  ));
+});
+
+test("promotion never replaces a concurrently reserved empty digest directory", async t => {
+  const root = await temporaryRoot("dtcg-promotion-empty-destination");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  let destinationPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest,
+      injectFault: async ({ checkpoint, destination }) => {
+        if (checkpoint !== "before_candidate_rename") return;
+        destinationPath = destination;
+        await mkdir(destination);
+      },
+    }),
+    /artifact destination integrity mismatch: manifest\.json must be a regular file/u,
+  );
+  assert.deepEqual(await readdir(destinationPath), []);
+  await assert.rejects(readAcceptedPointer(accepted), error => (
+    error instanceof PipelineError
+    && error.code === "SOURCE_FILE_UNREADABLE"
+    && error.details.stage === "accepted_pointer"
+  ));
+});
+
+test("pointer commit revalidates accepted leaf bytes after the final interleaving", async t => {
+  const root = await temporaryRoot("dtcg-promotion-accepted-leaf-drift");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "accepted leaf drift");
+  const artifact = alternate.artifacts[0];
+  let corruptedPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, destination }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        corruptedPath = resolve(destination, artifact.path);
+        const bytes = await readFile(corruptedPath);
+        bytes[0] ^= 1;
+        await writeFile(corruptedPath, bytes);
+      },
+    }),
+    new RegExp(`artifact destination integrity mismatch: ${artifact.path.replace(".", "\\.")} bytes differ`, "u"),
+  );
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+  assert.notEqual(sha256(await readFile(corruptedPath)), artifact.sha256);
+});
+
+test("pointer commit rejects a same-content accepted leaf replacement", async t => {
+  const root = await temporaryRoot("dtcg-promotion-accepted-leaf-identity");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "accepted leaf identity drift");
+  const artifact = alternate.artifacts[0];
+  let replacementPath;
+  let heldPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, destination }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        replacementPath = resolve(destination, artifact.path);
+        heldPath = `${replacementPath}.held`;
+        const bytes = await readFile(replacementPath);
+        await rename(replacementPath, heldPath);
+        await writeFile(replacementPath, bytes);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === `accepted_file.${artifact.path}`
+      && error.details.reason === "file_identity_changed",
+  );
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+  assert.deepEqual(await readFile(replacementPath), await readFile(heldPath));
+});
+
+test("pointer commit rejects in-place temporary-pointer drift and removes only its own inode", async t => {
+  const root = await temporaryRoot("dtcg-promotion-pointer-byte-drift");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const pointerBytes = await readFile(resolve(accepted, "current.json"));
+  const alternate = alternateManifest(manifest, "temporary pointer byte drift");
+  let temporaryPointerPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, temporaryPointer }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        temporaryPointerPath = temporaryPointer;
+        await writeFile(temporaryPointer, pointerBytes);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "temporary_pointer"
+      && error.details.reason === "file_bytes_changed",
+  );
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+  await assert.rejects(readFile(temporaryPointerPath), error => error.code === "ENOENT");
+});
+
+test("pointer cleanup preserves a replacement temporary file it did not create", async t => {
+  const root = await temporaryRoot("dtcg-promotion-pointer-inode-swap");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "temporary pointer inode swap");
+  const foreignBytes = Buffer.from("foreign temporary pointer\n", "utf8");
+  let temporaryPointerPath;
+  let heldPath;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint, temporaryPointer }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        temporaryPointerPath = temporaryPointer;
+        heldPath = `${temporaryPointer}.held`;
+        await rename(temporaryPointer, heldPath);
+        await writeFile(temporaryPointer, foreignBytes);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "temporary_pointer"
+      && error.details.reason === "file_identity_changed",
+  );
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+  assert.deepEqual(await readFile(temporaryPointerPath), foreignBytes);
+  assert.ok((await readFile(heldPath)).byteLength > 0);
+});
+
+test("promotion preserves the accepted pointer when the root moves before pointer rename", async t => {
+  const root = await temporaryRoot("dtcg-promotion-pointer-root-swap");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  const heldAccepted = resolve(root, "accepted-held");
+  const outside = resolve(root, "outside");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "pointer-boundary swap");
+  await mkdir(outside);
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        await rename(accepted, heldAccepted);
+        await symlink(outside, accepted);
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "accepted_root",
+  );
+  assert.deepEqual(await readdir(outside), []);
+  await rm(accepted);
+  await rename(heldAccepted, accepted);
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+  const recoveryPointers = (await readdir(accepted)).filter(name => name.startsWith(".current-"));
+  assert.equal(recoveryPointers.length, 1);
+  assert.equal(
+    JSON.parse(await readFile(resolve(accepted, recoveryPointers[0]), "utf8")).acceptedDigest,
+    alternate.manifestDigest,
+  );
+});
+
+test("promotion awaits a function interruption and retains the established pointer", async t => {
+  const root = await temporaryRoot("dtcg-promotion-function-interruption");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "function interruption");
+  const checkpoints = [];
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint }) => {
+        checkpoints.push(checkpoint);
+        await new Promise(resolveDelay => setTimeout(resolveDelay, 2));
+        if (checkpoint === "before_pointer_rename") {
+          throw new Error("injected function interruption before pointer rename");
+        }
+      },
+    }),
+    /injected function interruption before pointer rename/u,
+  );
+  assert.deepEqual(checkpoints, [
+    "before_candidate_rename",
+    "before_pointer_write",
+    "before_pointer_rename",
+  ]);
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+  assert.deepEqual((await readdir(accepted)).filter(name => name.startsWith(".current-")), []);
+});
+
 test("promotion rejects an over-count manifest before staging artifact paths", async t => {
   const root = await temporaryRoot("dtcg-promotion-count-envelope");
   const candidate = resolve(root, "candidate");
@@ -345,9 +867,15 @@ test("promotion rejects an over-count manifest before staging artifact paths", a
 
   await assert.rejects(
     promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest: oversized }),
-    /artifact count exceeds the configured envelope/u,
+    /artifacts count exceeds the configured envelope/u,
   );
-  await assert.rejects(readAcceptedPointer(accepted), error => error.code === "ENOENT");
+  await assert.rejects(
+    readAcceptedPointer(accepted),
+    error => error instanceof PipelineError
+      && error.code === "SOURCE_FILE_UNREADABLE"
+      && error.details.stage === "accepted_pointer"
+      && error.details.restartFrom === "promotion",
+  );
 });
 
 test("promotion rejects captured-input tampering before accepted staging", async t => {
@@ -364,7 +892,13 @@ test("promotion rejects captured-input tampering before accepted staging", async
     promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest }),
     /candidate source .* bytes differ from the manifest/u,
   );
-  await assert.rejects(readAcceptedPointer(accepted), error => error.code === "ENOENT");
+  await assert.rejects(
+    readAcceptedPointer(accepted),
+    error => error instanceof PipelineError
+      && error.code === "SOURCE_FILE_UNREADABLE"
+      && error.details.stage === "accepted_pointer"
+      && error.details.restartFrom === "promotion",
+  );
 });
 
 test("concurrent replay keeps invocation-owned staging separate and promotes one complete coordinate", async t => {
@@ -424,9 +958,17 @@ test("promotion rejects a symlinked preexisting digest directory", async t => {
 
   await assert.rejects(
     promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest }),
-    /artifact destination integrity root must be a regular directory/u,
+    error => error instanceof PipelineError
+      && error.code === "PUBLICATION_BOUNDARY_INVALID"
+      && error.details.boundary === "accepted_destination",
   );
-  await assert.rejects(readAcceptedPointer(accepted), error => error.code === "ENOENT");
+  await assert.rejects(
+    readAcceptedPointer(accepted),
+    error => error instanceof PipelineError
+      && error.code === "SOURCE_FILE_UNREADABLE"
+      && error.details.stage === "accepted_pointer"
+      && error.details.restartFrom === "promotion",
+  );
 });
 
 test("the build awaits each asynchronous coordinate hook", async t => {

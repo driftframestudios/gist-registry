@@ -7,7 +7,7 @@
     "mode": "light",
     "canonicalPath": "snippets/style-dictionary-dtcg-pipeline/0.1.0",
     "manifestKind": "generated_output_manifest",
-    "manifestSha256": "6d93df6cd3c1b80076e3d4b0e162899381cfb4d82b1c28ff9c8a2a64d30a6e68",
+    "manifestSha256": "cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79",
     "manifestStanding": "candidate_source_coordinate",
     "generatedArtifact": {
       "artifactKind": "generated_css_artifact",

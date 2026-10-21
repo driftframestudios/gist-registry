@@ -14,10 +14,10 @@ dependency upgrade.
 
 | Concern | Official source | Coordinate observed | Implementation boundary |
 | --- | --- | --- | --- |
-| Design Tokens Community Group | [Format Module 2025.10](https://www.designtokens.org/TR/2025.10/format/), [technical reports](https://www.designtokens.org/technical-reports/), [Resolver draft](https://www.designtokens.org/tr/drafts/resolver/) | Format Module 2025.10 | Describe the implemented Format Module subset. Treat Resolver behavior as draft-scoped. |
+| Design Tokens Community Group | [Format Module 2025.10](https://www.designtokens.org/TR/2025.10/format/), [Resolver Module 2025.10](https://www.designtokens.org/tr/2025.10/resolver/), [technical reports](https://www.designtokens.org/technical-reports/) | Stable Final Community Group Reports, 2025.10 | Describe the implemented Format Module subset and bind Resolver behavior to stable 2025.10. Treat additions from later living drafts as draft-scoped until a successor report stabilizes them. |
 | Style Dictionary | [installation](https://styledictionary.com/getting-started/installation/), [API](https://styledictionary.com/reference/api/), [configuration](https://styledictionary.com/reference/config/), [DTCG utilities](https://styledictionary.com/reference/utils/dtcg/), [reference utilities](https://styledictionary.com/reference/utils/references/), [v5 migration](https://styledictionary.com/versions/v5/migration/) | 5.7.0; repository package envelope Node.js 22–26 | Await asynchronous builds, retain the exact lock coordinate, and use `formatAllPlatforms()` when review should precede filesystem writes. |
 | React Aria Components and React Stately | [React Aria getting started](https://react-aria.adobe.com/getting-started), [Adobe source](https://github.com/adobe/react-spectrum) | `react-aria-components` 1.22.1; `react-stately` 3.51.0 observed in the package registry | Use React Aria Components as the unstyled compositional receiver. Give React Stately explicit state and collection ownership. Bind package and import claims to the lockfile. |
-| React Spectrum | [Spectrum 2 collections](https://react-spectrum.adobe.com/collections), [Spectrum v3 collections](https://react-spectrum.adobe.com/v3/collections.html), [Spectrum 2 releases](https://react-spectrum.adobe.com/releases/index.html), [Spectrum 2 styling](https://react-spectrum.adobe.com/styling) | Spectrum 2 stable since 1.0.0; named release 1.8.0 on 2026-10-08; package patch 1.8.2 observed | Treat Spectrum 2 and React Spectrum v3 as distinct generations. When both operate in one tree, Adobe directs the Spectrum 2 Provider to the innermost position. |
+| React Spectrum | [Spectrum 2 collections](https://react-spectrum.adobe.com/collections), [Spectrum v3 collections](https://react-spectrum.adobe.com/v3/collections.html), [Spectrum 2 releases](https://react-spectrum.adobe.com/releases/index.html), [Spectrum 2 styling](https://react-spectrum.adobe.com/styling) | Spectrum 2 stable since 1.0.0; named release 1.8.0 on 2026-10-08; package patch 1.8.1 observed | Treat Spectrum 2 and React Spectrum v3 as distinct generations. When both operate in one tree, Adobe directs the Spectrum 2 Provider to the innermost position. |
 | Playwright | [browser installation](https://playwright.dev/docs/browsers), [test setup](https://playwright.dev/docs/intro), [visual comparisons](https://playwright.dev/docs/test-snapshots), [ARIA snapshots](https://playwright.dev/docs/aria-snapshots) | 1.64.1 observed | Reinstall the matching browser binaries after package upgrades. Bind visual receipts to package, browser revision, OS, fonts and render settings. |
 | Sharp and libvips | [installation](https://sharp.pixelplumbing.com/install/), [output API](https://sharp.pixelplumbing.com/api-output/), [input metadata](https://sharp.pixelplumbing.com/api-input/), [releases](https://github.com/lovell/sharp/releases) | Sharp 0.35.5; Node 20.9+; runtime libvips coordinate varies by package and platform | Record Node, OS, architecture, libc, Sharp and runtime libvips. Declare materially relevant WebP options explicitly and verify the output artifact. |
 | Figma Variables REST API | [overview](https://developers.figma.com/docs/rest-api/variables/), [endpoints](https://developers.figma.com/docs/rest-api/variables-endpoints/), [rate limits](https://developers.figma.com/docs/rest-api/rate-limits/), [errors](https://developers.figma.com/docs/rest-api/errors/) | Service behavior observed 2026-10-21 | Bind rate numbers and endpoint behavior to the observation date. Reconcile live state before replaying an unknown-outcome write. |
@@ -85,14 +85,17 @@ dependency upgrade.
 
 Playwright maintainers reproduced a Linux WebKit r2370 regression in 1.64.0
 and 1.64.1 where pages using `backdrop-filter` can render at approximately zero
-frames per second on two-CPU runners. The later WebKit roll on Playwright's main
-branch resolves the reported case. See the
+frames per second on two-CPU runners. WebKit r2373 and later restore the
+reported non-overlapping case. A maintainer's follow-up records a partial
+repair: overlapping `backdrop-filter` elements still compound paint time
+severely in r2376. See the
 [official issue](https://github.com/microsoft/playwright/issues/43426).
 
-Treat this as a coordinate-specific environment exception. A stable harness
-can use a previously validated coordinate or the first stable release that
-contains the corrected WebKit roll. Publication examples remain on stable
-dependencies.
+Treat this as a coordinate- and composition-specific environment exception.
+Exercise the receiver's exact overlap composition before advancing the browser
+coordinate. A stable harness can retain Playwright 1.63 or another independently
+validated coordinate until a released successor passes that case. Publication
+examples remain on stable dependencies.
 
 ### Figma Variables
 

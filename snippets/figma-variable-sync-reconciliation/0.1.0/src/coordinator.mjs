@@ -1,3 +1,4 @@
+import { setTimeout as delay } from "node:timers/promises";
 import { assertSanitizedReceipt, digest } from "./canonical.mjs";
 import {
   ExecutionInterruptedError,
@@ -7,11 +8,23 @@ import {
   RemoteConflictError,
   RetryAfterError,
 } from "./errors.mjs";
-import { encodedBatchBytes, planOperations } from "./planner.mjs";
+import {
+  encodedBatchBytes,
+  planOperations,
+  PLANNER_RESOURCE_LIMITS,
+} from "./planner.mjs";
+import {
+  admitRemoteIntentObservation,
+  admitRemoteSettlement,
+  admitRemoteSnapshot,
+  REMOTE_CONTRACT_LIMITS,
+} from "./remote-contract.mjs";
 
 const coordinatePattern = /^[a-z0-9][a-z0-9._-]*$/iu;
 const digestPattern = /^[a-f0-9]{64}$/u;
 export const MAX_CHECKPOINT_OBSERVATIONS = 50_000;
+export const MAX_CHECKPOINT_REMOTE_VARIABLE_IDS =
+  REMOTE_CONTRACT_LIMITS.variables + PLANNER_RESOURCE_LIMITS.operations;
 const checkpointKeys = new Set([
   "schemaVersion",
   "runId",
@@ -22,6 +35,7 @@ const checkpointKeys = new Set([
   "initialRemoteRevision",
   "maxResolvedBatchBytes",
   "tempIdToRealId",
+  "knownRemoteVariableIds",
   "observations",
 ]);
 const settledClassifications = new Set([
@@ -60,18 +74,64 @@ function checkpointAdmissionError(reason, details = {}) {
 }
 
 function isRecord(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function requireDataProperties(record, owner) {
+  if (!isRecord(record)) throw checkpointAdmissionError("record_shape", { owner });
+  const descriptors = Object.getOwnPropertyDescriptors(record);
+  const keys = Reflect.ownKeys(descriptors);
+  if (keys.some(key => {
+    const descriptor = descriptors[key];
+    return typeof key !== "string" || !descriptor.enumerable || !("value" in descriptor);
+  })) {
+    throw checkpointAdmissionError("data_property_shape", { owner });
+  }
+  return descriptors;
 }
 
 function requireExactKeys(record, admitted, owner) {
-  const observed = Object.keys(record).sort();
+  const descriptors = requireDataProperties(record, owner);
+  const observed = Reflect.ownKeys(descriptors).sort();
   const expected = [...admitted].sort();
   if (
     observed.length !== expected.length ||
     observed.some((key, index) => key !== expected[index])
   ) {
-    throw checkpointAdmissionError("field_set", { owner, expected, observed });
+    throw checkpointAdmissionError("field_set", {
+      owner,
+      expectedFieldCount: expected.length,
+      observedFieldCount: observed.length,
+    });
   }
+  return descriptors;
+}
+
+function requireDataArray(value, owner, maximum) {
+  if (
+    !Array.isArray(value)
+    || Object.getPrototypeOf(value) !== Array.prototype
+    || value.length > maximum
+  ) {
+    throw checkpointAdmissionError("array_shape", { owner, limit: maximum });
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const keys = Reflect.ownKeys(descriptors).filter(key => key !== "length");
+  if (
+    keys.length !== value.length
+    || keys.some((key, index) => {
+      const descriptor = descriptors[key];
+      return typeof key !== "string"
+        || key !== String(index)
+        || !descriptor.enumerable
+        || !("value" in descriptor);
+    })
+  ) {
+    throw checkpointAdmissionError("array_shape", { owner, limit: maximum });
+  }
+  return keys.map(key => descriptors[key].value);
 }
 
 function requireCheckpointInteger(value, field, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
@@ -80,20 +140,72 @@ function requireCheckpointInteger(value, field, { min = 0, max = Number.MAX_SAFE
   }
 }
 
-function observationKind(observation) {
-  if (observation.classification === "bounded_retry") return "retry";
-  if (reconciliationClassifications.has(observation.classification)) return "reconciliation";
-  if (settledClassifications.has(observation.classification)) return "settled";
-  throw checkpointAdmissionError("observation_classification", {
-    classification: observation.classification,
+function observationKind(classification) {
+  if (classification === "bounded_retry") return "retry";
+  if (reconciliationClassifications.has(classification)) return "reconciliation";
+  if (settledClassifications.has(classification)) return "settled";
+  throw checkpointAdmissionError("observation_classification");
+}
+
+function admitCheckpointShape(checkpoint) {
+  const descriptors = requireExactKeys(checkpoint, checkpointKeys, "checkpoint");
+  const temporaryDescriptors = requireDataProperties(
+    descriptors.tempIdToRealId.value,
+    "checkpoint.tempIdToRealId",
+  );
+  const tempIdToRealId = Object.create(null);
+  for (const key of Reflect.ownKeys(temporaryDescriptors)) {
+    Object.defineProperty(tempIdToRealId, key, {
+      configurable: true,
+      enumerable: true,
+      value: temporaryDescriptors[key].value,
+      writable: true,
+    });
+  }
+
+  const observationValues = requireDataArray(
+    descriptors.observations.value,
+    "checkpoint.observations",
+    MAX_CHECKPOINT_OBSERVATIONS,
+  );
+  const observations = observationValues.map((observation, index) => {
+    const observationDescriptors = requireDataProperties(
+      observation,
+      `checkpoint.observations[${index}]`,
+    );
+    const classification = observationDescriptors.classification?.value;
+    const kind = observationKind(classification);
+    const exactDescriptors = requireExactKeys(
+      observation,
+      observationKeysByKind[kind],
+      `checkpoint.observations[${index}]`,
+    );
+    return Object.fromEntries(
+      Reflect.ownKeys(exactDescriptors).map(key => [key, exactDescriptors[key].value]),
+    );
   });
+  const knownRemoteVariableIds = requireDataArray(
+    descriptors.knownRemoteVariableIds.value,
+    "checkpoint.knownRemoteVariableIds",
+    MAX_CHECKPOINT_REMOTE_VARIABLE_IDS,
+  );
+
+  return {
+    schemaVersion: descriptors.schemaVersion.value,
+    runId: descriptors.runId.value,
+    planDigest: descriptors.planDigest.value,
+    nextBatchIndex: descriptors.nextBatchIndex.value,
+    expectedRemoteRevision: descriptors.expectedRemoteRevision.value,
+    expectedRemoteStateDigest: descriptors.expectedRemoteStateDigest.value,
+    initialRemoteRevision: descriptors.initialRemoteRevision.value,
+    maxResolvedBatchBytes: descriptors.maxResolvedBatchBytes.value,
+    tempIdToRealId,
+    knownRemoteVariableIds,
+    observations,
+  };
 }
 
 function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
-  if (!isRecord(checkpoint)) {
-    throw checkpointAdmissionError("record_shape");
-  }
-  requireExactKeys(checkpoint, checkpointKeys, "checkpoint");
   if (checkpoint.schemaVersion !== "0.1.0") {
     throw checkpointAdmissionError("schema_version", {
       observed: checkpoint.schemaVersion,
@@ -124,10 +236,6 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
   requireCheckpointInteger(checkpoint.maxResolvedBatchBytes, "maxResolvedBatchBytes", {
     max: maxBatchBytes,
   });
-  if (!isRecord(checkpoint.tempIdToRealId)) {
-    throw checkpointAdmissionError("temporary_id_map_shape");
-  }
-
   const completedTempIds = new Set(
     plan.batches
       .slice(0, checkpoint.nextBatchIndex)
@@ -141,16 +249,35 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
       .filter((operation) => operation.type === "create_variable")
       .map((operation) => operation.tempId),
   );
+  const knownRemoteVariableIds = new Set();
+  let previousRemoteVariableId = null;
+  for (const [index, remoteId] of checkpoint.knownRemoteVariableIds.entries()) {
+    if (
+      typeof remoteId !== "string"
+      || remoteId.length < 1
+      || remoteId.length > 512
+      || knownRemoteVariableIds.has(remoteId)
+      || (previousRemoteVariableId !== null && previousRemoteVariableId > remoteId)
+    ) {
+      throw checkpointAdmissionError("remote_variable_identity", { index });
+    }
+    knownRemoteVariableIds.add(remoteId);
+    previousRemoteVariableId = remoteId;
+  }
+  const mappedRemoteIds = new Set();
   for (const [tempId, remoteId] of Object.entries(checkpoint.tempIdToRealId)) {
     if (
       !knownTempIds.has(tempId) ||
       !completedTempIds.has(tempId) ||
       typeof remoteId !== "string" ||
       remoteId.length < 1 ||
-      remoteId.length > 512
+      remoteId.length > 512 ||
+      !knownRemoteVariableIds.has(remoteId) ||
+      mappedRemoteIds.has(remoteId)
     ) {
       throw checkpointAdmissionError("temporary_id_progress", { tempId });
     }
+    mappedRemoteIds.add(remoteId);
   }
   for (const tempId of completedTempIds) {
     if (!Object.hasOwn(checkpoint.tempIdToRealId, tempId)) {
@@ -158,22 +285,10 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
     }
   }
 
-  if (
-    !Array.isArray(checkpoint.observations) ||
-    checkpoint.observations.length > MAX_CHECKPOINT_OBSERVATIONS
-  ) {
-    throw checkpointAdmissionError("observation_envelope", {
-      limit: MAX_CHECKPOINT_OBSERVATIONS,
-    });
-  }
   const settledByBatch = new Map();
   let previousBatchIndex = -1;
   for (const [index, observation] of checkpoint.observations.entries()) {
-    if (!isRecord(observation)) {
-      throw checkpointAdmissionError("observation_shape", { index });
-    }
-    const kind = observationKind(observation);
-    requireExactKeys(observation, observationKeysByKind[kind], `observations[${index}]`);
+    const kind = observationKind(observation.classification);
     requireCheckpointInteger(observation.batchIndex, `observations[${index}].batchIndex`, {
       max: plan.batches.length - 1,
     });
@@ -233,6 +348,71 @@ function validateCheckpoint(checkpoint, { runId, plan, maxBatchBytes }) {
   return checkpoint;
 }
 
+async function persistCheckpoint({
+  checkpointStore,
+  runId,
+  checkpoint,
+  plan,
+  maxBatchBytes,
+  restartAt,
+  batchIndex = null,
+  fencingToken,
+  renewLease,
+  leaseFailureRestartAt,
+}) {
+  let saved;
+  let saveSettled = false;
+  try {
+    // Renewal proves live ownership around the awaited store write. The store's
+    // atomic fencing token closes the expiry/takeover race between these checks.
+    await renewLease();
+    saved = await checkpointStore.save(runId, checkpoint, { fencingToken });
+    saveSettled = true;
+    await renewLease();
+  } catch (error) {
+    if (error instanceof LeaseError) {
+      return {
+        accepted: false,
+        leaseAuthorityLost: true,
+        result: statusResult("friction", {
+          code: error.code,
+          runId,
+          ...(batchIndex === null ? {} : { batchIndex }),
+          details: {
+            ...error.details,
+            checkpointPersistence: saveSettled
+              ? "store_returned_record_requires_authority_reconciliation"
+              : "earlier_checkpoint_retained",
+          },
+          restartAt: leaseFailureRestartAt,
+        }),
+      };
+    }
+    throw error;
+  }
+  try {
+    const admitted = admitCheckpointShape(saved);
+    validateCheckpoint(admitted, { runId, plan, maxBatchBytes });
+    if (digest(admitted) !== digest(checkpoint)) {
+      throw checkpointAdmissionError("persistence_mismatch");
+    }
+    return { accepted: true, value: admitted };
+  } catch (error) {
+    if (error instanceof PlanError && error.code === "checkpoint_invalid") {
+      return {
+        accepted: false,
+        result: statusResult("friction", {
+          code: "checkpoint_persistence_invalid",
+          runId,
+          details: error.details,
+          restartAt,
+        }),
+      };
+    }
+    throw error;
+  }
+}
+
 function validateCoordinate(value, field) {
   if (
     typeof value !== "string" ||
@@ -246,6 +426,48 @@ function validateCoordinate(value, field) {
       { field },
     );
   }
+}
+
+function admitLeaseAuthority(value, { owner, expectedGeneration = null, nowMs }) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new LeaseError("lease_authority_invalid", "The lease store returned an invalid authority record.");
+  }
+  const prototype = Object.getPrototypeOf(value);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const ownKeys = Reflect.ownKeys(descriptors);
+  const keys = ownKeys.every((key) => typeof key === "string")
+    ? [...ownKeys].sort()
+    : [];
+  const expectedKeys = ["expiresAtMs", "generation", "owner"];
+  const exactDataShape = (prototype === Object.prototype || prototype === null)
+    && keys.length === ownKeys.length
+    && keys.length === expectedKeys.length
+    && keys.every((key, index) => {
+      const descriptor = descriptors[key];
+      return key === expectedKeys[index]
+        && typeof key === "string"
+        && descriptor.enumerable
+        && "value" in descriptor;
+    });
+  if (!exactDataShape) {
+    throw new LeaseError("lease_authority_invalid", "The lease store returned an invalid authority record.");
+  }
+  const admitted = Object.fromEntries(keys.map((key) => [key, descriptors[key].value]));
+  if (
+    admitted.owner !== owner
+    || !Number.isSafeInteger(admitted.generation)
+    || admitted.generation < 1
+    || (expectedGeneration !== null && admitted.generation !== expectedGeneration)
+    || !Number.isSafeInteger(admitted.expiresAtMs)
+    || admitted.expiresAtMs <= nowMs
+  ) {
+    throw new LeaseError(
+      "lease_authority_invalid",
+      "The lease store returned authority that does not match the current writer coordinate.",
+      { owner, expectedGeneration },
+    );
+  }
+  return admitted;
 }
 
 function validateIntegerOption(value, field, { min, max }) {
@@ -298,6 +520,44 @@ function statusResult(status, fields) {
   const result = { status, ...fields };
   assertSanitizedReceipt(result);
   return result;
+}
+
+function remoteProtocolInvalidResult({
+  runId,
+  batchIndex,
+  source,
+  admission,
+  restartAt = `reconcile:batch:${batchIndex}`,
+}) {
+  const { accepted: _accepted, reason, ...details } = admission;
+  return statusResult("friction", {
+    code: "remote_protocol_invalid",
+    runId,
+    batchIndex,
+    details: { source, reason, ...details },
+    restartAt,
+  });
+}
+
+function checkpointRemoteDriftResult({
+  runId,
+  batchIndex,
+  checkpoint,
+  observedSnapshot,
+  observedStateDigest,
+}) {
+  return statusResult("conflict", {
+    code: "checkpoint_remote_drift",
+    runId,
+    batchIndex,
+    details: {
+      expectedRevision: checkpoint.expectedRemoteRevision,
+      observedRevision: observedSnapshot.revision,
+      expectedStateDigest: checkpoint.expectedRemoteStateDigest,
+      observedStateDigest,
+    },
+    restartAt: "reconcile:resume",
+  });
 }
 
 function hasObservationCapacity(checkpoint, required = 1) {
@@ -357,6 +617,204 @@ function recordTemporaryIdentity(tempIdToRealId, tempId, targetId) {
   });
 }
 
+function resolveBatchCoordinate(identifier, batchTempIdToRealId) {
+  return batchTempIdToRealId.get(identifier) ?? identifier;
+}
+
+function expectedCreatedVariablesAfterBatch(operations, results) {
+  const batchTempIdToRealId = new Map(
+    results
+      .filter((result) => Object.hasOwn(result, "tempId"))
+      .map((result) => [result.tempId, result.targetId]),
+  );
+  const createdTargetIds = new Set(batchTempIdToRealId.values());
+  const expectedByTargetId = new Map();
+
+  for (const operation of operations) {
+    if (operation.type === "create_variable") {
+      const targetId = batchTempIdToRealId.get(operation.tempId);
+      expectedByTargetId.set(targetId, {
+        id: targetId,
+        name: operation.payload.name,
+        resolvedType: operation.payload.resolvedType,
+        value: structuredClone(operation.payload.value),
+        referenceTo: operation.payload.referenceTo
+          ? resolveBatchCoordinate(operation.payload.referenceTo, batchTempIdToRealId)
+          : null,
+        deprecated: false,
+        version: 1,
+      });
+      continue;
+    }
+
+    const targetId = resolveBatchCoordinate(operation.targetId, batchTempIdToRealId);
+    if (!createdTargetIds.has(targetId) || !expectedByTargetId.has(targetId)) continue;
+    const current = expectedByTargetId.get(targetId);
+    if (operation.type === "delete_variable") {
+      expectedByTargetId.delete(targetId);
+      continue;
+    }
+    const next = structuredClone(current);
+    if (operation.type === "update_variable") {
+      if (Object.hasOwn(operation.payload, "name")) next.name = operation.payload.name;
+      if (Object.hasOwn(operation.payload, "value")) {
+        next.value = structuredClone(operation.payload.value);
+      }
+    } else if (operation.type === "rewire_reference") {
+      next.referenceTo = resolveBatchCoordinate(
+        operation.payload.referenceTo,
+        batchTempIdToRealId,
+      );
+    } else if (operation.type === "deprecate_variable") {
+      next.deprecated = true;
+    }
+    next.version = current.version + 1;
+    expectedByTargetId.set(targetId, next);
+  }
+
+  return { batchTempIdToRealId, expectedByTargetId };
+}
+
+function verifyCreatedIdentityTransfer({ checkpoint, operations, results, snapshot }) {
+  const priorRemoteIds = new Set(checkpoint.knownRemoteVariableIds);
+  const priorMappedIds = new Set(Object.values(checkpoint.tempIdToRealId));
+  const snapshotById = new Map(snapshot.variables.map((variable) => [variable.id, variable]));
+  const { batchTempIdToRealId, expectedByTargetId } = expectedCreatedVariablesAfterBatch(
+    operations,
+    results,
+  );
+
+  for (const [tempId, targetId] of batchTempIdToRealId) {
+    if (priorRemoteIds.has(targetId) || priorMappedIds.has(targetId)) {
+      return { accepted: false, reason: "created_target_identity_reused", tempId };
+    }
+    const expected = expectedByTargetId.get(targetId);
+    const observed = snapshotById.get(targetId);
+    if (expected === undefined) {
+      if (observed !== undefined) {
+        return { accepted: false, reason: "deleted_created_target_present", tempId };
+      }
+      continue;
+    }
+    if (observed === undefined || digest(observed) !== digest(expected)) {
+      return { accepted: false, reason: "created_target_state_mismatch", tempId };
+    }
+  }
+  return { accepted: true };
+}
+
+function projectBatchTransition({ priorSnapshot, operations, results, remoteRevision }) {
+  const batchTempIdToRealId = new Map(
+    results
+      .filter((result) => Object.hasOwn(result, "tempId"))
+      .map((result) => [result.tempId, result.targetId]),
+  );
+  const variables = new Map(
+    priorSnapshot.variables.map((variable) => [variable.id, structuredClone(variable)]),
+  );
+
+  for (const operation of operations) {
+    if (operation.type === "create_variable") {
+      const targetId = batchTempIdToRealId.get(operation.tempId);
+      if (variables.has(targetId)) {
+        return { accepted: false, reason: "batch_transition_create_collision" };
+      }
+      const referenceTo = operation.payload.referenceTo
+        ? resolveBatchCoordinate(operation.payload.referenceTo, batchTempIdToRealId)
+        : null;
+      if (referenceTo !== null && !variables.has(referenceTo)) {
+        return { accepted: false, reason: "batch_transition_reference_missing" };
+      }
+      variables.set(targetId, {
+        id: targetId,
+        name: operation.payload.name,
+        resolvedType: operation.payload.resolvedType,
+        value: structuredClone(operation.payload.value),
+        referenceTo,
+        deprecated: false,
+        version: 1,
+      });
+      continue;
+    }
+
+    const targetId = resolveBatchCoordinate(operation.targetId, batchTempIdToRealId);
+    const current = variables.get(targetId);
+    if (current === undefined) {
+      return { accepted: false, reason: "batch_transition_target_missing" };
+    }
+    if (
+      Object.hasOwn(operation, "expectedVersion")
+      && operation.expectedVersion !== current.version
+    ) {
+      return { accepted: false, reason: "batch_transition_version_mismatch" };
+    }
+    if (operation.type === "delete_variable") {
+      variables.delete(targetId);
+      continue;
+    }
+    const next = structuredClone(current);
+    if (operation.type === "update_variable") {
+      if (Object.hasOwn(operation.payload, "name")) next.name = operation.payload.name;
+      if (Object.hasOwn(operation.payload, "value")) {
+        next.value = structuredClone(operation.payload.value);
+      }
+    } else if (operation.type === "rewire_reference") {
+      const referenceTo = resolveBatchCoordinate(
+        operation.payload.referenceTo,
+        batchTempIdToRealId,
+      );
+      if (!variables.has(referenceTo)) {
+        return { accepted: false, reason: "batch_transition_reference_missing" };
+      }
+      next.referenceTo = referenceTo;
+    } else if (operation.type === "deprecate_variable") {
+      next.deprecated = true;
+    }
+    next.version = current.version + 1;
+    variables.set(targetId, next);
+  }
+
+  if ([...variables.values()].some(
+    (variable) => variable.referenceTo !== null && !variables.has(variable.referenceTo),
+  )) {
+    return { accepted: false, reason: "batch_transition_dangling_reference" };
+  }
+
+  return {
+    accepted: true,
+    value: {
+      revision: remoteRevision,
+      variables: [...variables.values()].sort((left, right) =>
+        left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
+    },
+  };
+}
+
+function verifyBatchTransition({ priorSnapshot, operations, results, snapshot }) {
+  const projected = projectBatchTransition({
+    priorSnapshot,
+    operations,
+    results,
+    remoteRevision: snapshot.revision,
+  });
+  if (!projected.accepted) return projected;
+  return digest(projected.value) === digest(snapshot)
+    ? { accepted: true }
+    : { accepted: false, reason: "batch_transition_state_mismatch" };
+}
+
+function extendRemoteIdentityLedger(checkpoint, snapshot, results) {
+  const identities = new Set(checkpoint.knownRemoteVariableIds);
+  for (const variable of snapshot.variables) identities.add(variable.id);
+  for (const result of results) identities.add(result.targetId);
+  checkpoint.knownRemoteVariableIds = [...identities].sort();
+}
+
+function missingLiveRemoteIdentity(checkpoint, snapshot) {
+  const known = new Set(checkpoint.knownRemoteVariableIds);
+  return snapshot.variables.find((variable) => !known.has(variable.id))?.id ?? null;
+}
+
 export async function synchronizeVariables({
   runId,
   owner,
@@ -369,7 +827,7 @@ export async function synchronizeVariables({
   maxRetryAfterMs = 5_000,
   leaseTtlMs = 30_000,
   clock = { now: () => Date.now() },
-  sleep = async () => {},
+  sleep = delay,
   faultFor = () => null,
 }) {
   const plan = preflightSynchronization({
@@ -384,11 +842,13 @@ export async function synchronizeVariables({
   const startedAtMs = await clock.now();
   let lease;
   try {
-    lease = await leaseStore.acquire({
+    const acquiredAtMs = await clock.now();
+    const acquired = await leaseStore.acquire({
       owner,
-      nowMs: await clock.now(),
+      nowMs: acquiredAtMs,
       ttlMs: leaseTtlMs,
     });
+    lease = admitLeaseAuthority(acquired, { owner, nowMs: acquiredAtMs });
   } catch (error) {
     if (error instanceof LeaseError) {
       return statusResult("friction", {
@@ -403,10 +863,82 @@ export async function synchronizeVariables({
 
   let executionError;
   let executionFailed = false;
+  let leaseAuthorityLost = false;
   try {
-    const existing = await checkpointStore.load(runId);
-    if (existing) {
-      if (!isRecord(existing) || !digestPattern.test(existing.planDigest ?? "")) {
+    let claimedFencingToken;
+    try {
+      claimedFencingToken = await checkpointStore.claimFence(runId, lease.generation);
+    } catch (error) {
+      if (error instanceof LeaseError) {
+        return statusResult("friction", {
+          code: error.code,
+          runId,
+          details: error.details,
+          restartAt: "acquire_writer_lease",
+        });
+      }
+      throw error;
+    }
+    if (claimedFencingToken !== lease.generation) {
+      return statusResult("friction", {
+        code: "checkpoint_fence_unconfirmed",
+        runId,
+        details: { owner, generation: lease.generation },
+        restartAt: "acquire_writer_lease",
+      });
+    }
+    const renewWriterLease = async () => {
+      const renewedAtMs = await clock.now();
+      const renewed = await leaseStore.renew({
+        owner,
+        generation: lease.generation,
+        nowMs: renewedAtMs,
+        ttlMs: leaseTtlMs,
+      });
+      return admitLeaseAuthority(renewed, {
+        owner,
+        expectedGeneration: lease.generation,
+        nowMs: renewedAtMs,
+      });
+    };
+    const persistCurrentCheckpoint = async ({
+      checkpoint,
+      restartAt,
+      leaseFailureRestartAt,
+      batchIndex = null,
+    }) => {
+      const persisted = await persistCheckpoint({
+        checkpointStore,
+        runId,
+        checkpoint,
+        plan,
+        maxBatchBytes,
+        restartAt,
+        batchIndex,
+        fencingToken: lease.generation,
+        renewLease: renewWriterLease,
+        leaseFailureRestartAt,
+      });
+      if (persisted.leaseAuthorityLost) leaseAuthorityLost = true;
+      return persisted;
+    };
+    const storedCheckpoint = await checkpointStore.load(runId);
+    let existing = null;
+    if (storedCheckpoint !== null) {
+      try {
+        existing = admitCheckpointShape(storedCheckpoint);
+      } catch (error) {
+        if (error instanceof PlanError && error.code === "checkpoint_invalid") {
+          return statusResult("friction", {
+            code: error.code,
+            runId,
+            details: error.details,
+            restartAt: "inspect_checkpoint",
+          });
+        }
+        throw error;
+      }
+      if (!digestPattern.test(existing.planDigest)) {
         return statusResult("friction", {
           code: "checkpoint_invalid",
           runId,
@@ -437,10 +969,80 @@ export async function synchronizeVariables({
         throw error;
       }
     }
-    const observedStart = await remote.snapshot();
-    let checkpoint =
-      existing ??
-      await checkpointStore.save(runId, {
+    const observedStartAdmission = admitRemoteSnapshot(await remote.snapshot());
+    if (!observedStartAdmission.accepted) {
+      return remoteProtocolInvalidResult({
+        runId,
+        batchIndex: existing?.nextBatchIndex ?? 0,
+        source: "initial_snapshot",
+        admission: observedStartAdmission,
+        restartAt: "reconcile:initial",
+      });
+    }
+    const observedStart = observedStartAdmission.value;
+    let resumeSettlement = null;
+    const observedStateDigest = digest(observedStart);
+    const checkpointMatchesObservedStart = existing !== null
+      && observedStart.revision === existing.expectedRemoteRevision
+      && observedStateDigest === existing.expectedRemoteStateDigest;
+    if (checkpointMatchesObservedStart) {
+      if (missingLiveRemoteIdentity(existing, observedStart) !== null) {
+        return statusResult("friction", {
+          code: "checkpoint_invalid",
+          runId,
+          details: { reason: "remote_identity_ledger_missing" },
+          restartAt: "inspect_checkpoint",
+        });
+      }
+    } else if (existing && existing.nextBatchIndex < plan.batches.length) {
+      const batchIndex = existing.nextBatchIndex;
+      const pendingBatch = plan.batches[batchIndex];
+      const resolvedOperations = resolveBatchOperations(
+        pendingBatch.operations,
+        existing.tempIdToRealId,
+      );
+      const onePendingBatchAdvanced =
+        observedStart.revision === existing.expectedRemoteRevision + 1;
+      if (onePendingBatchAdvanced) {
+        const response = await remote.readIntentResults(pendingBatch.operationIds);
+        const admission = admitRemoteIntentObservation(response, resolvedOperations);
+        if (!admission.accepted) {
+          return remoteProtocolInvalidResult({
+            runId,
+            batchIndex,
+            source: "resume_intent_observation",
+            admission,
+          });
+        }
+        const reconciliation = resolveReconciliation(admission.value);
+        if (
+          reconciliation.classification === "already_applied"
+          && admission.value.remoteRevision === observedStart.revision
+        ) {
+          // A single exact intent set explains this one-revision advance; no write is replayed.
+          resumeSettlement = {
+            batchIndex,
+            value: {
+              disposition: "idempotent_replay",
+              remoteRevision: admission.value.remoteRevision,
+              results: reconciliation.results,
+            },
+          };
+        }
+      }
+      if (!resumeSettlement) {
+        return checkpointRemoteDriftResult({
+          runId,
+          batchIndex,
+          checkpoint: existing,
+          observedSnapshot: observedStart,
+          observedStateDigest,
+        });
+      }
+    }
+    let checkpoint = existing;
+    if (checkpoint === null) {
+      const initialCheckpoint = {
         schemaVersion: "0.1.0",
         runId,
         planDigest: plan.planDigest,
@@ -450,9 +1052,19 @@ export async function synchronizeVariables({
         initialRemoteRevision: observedStart.revision,
         maxResolvedBatchBytes: 0,
         tempIdToRealId: {},
+        knownRemoteVariableIds: observedStart.variables.map(({ id }) => id),
         observations: [],
+      };
+      const persisted = await persistCurrentCheckpoint({
+        checkpoint: initialCheckpoint,
+        restartAt: "persist:initial_checkpoint",
+        leaseFailureRestartAt: "acquire_writer_lease",
       });
+      if (!persisted.accepted) return persisted.result;
+      checkpoint = persisted.value;
+    }
     const resumedFromBatch = checkpoint.nextBatchIndex;
+    let lastObservedSnapshot = observedStart;
     for (let batchIndex = checkpoint.nextBatchIndex; batchIndex < plan.batches.length; batchIndex += 1) {
       const batch = plan.batches[batchIndex];
       const resolvedOperations = resolveBatchOperations(
@@ -474,7 +1086,11 @@ export async function synchronizeVariables({
         });
       }
       let attempt = 0;
-      let settled = null;
+      const settlementContinuesEarlierRun = resumeSettlement?.batchIndex === batchIndex;
+      let settled = settlementContinuesEarlierRun
+        ? resumeSettlement.value
+        : null;
+      if (settled) resumeSettlement = null;
 
       while (!settled) {
         if (!hasObservationCapacity(checkpoint)) {
@@ -485,14 +1101,10 @@ export async function synchronizeVariables({
           });
         }
         try {
-          await leaseStore.renew({
-            owner,
-            generation: lease.generation,
-            nowMs: await clock.now(),
-            ttlMs: leaseTtlMs,
-          });
+          await renewWriterLease();
         } catch (error) {
           if (error instanceof LeaseError) {
+            leaseAuthorityLost = true;
             return statusResult("friction", {
               code: error.code,
               runId,
@@ -505,12 +1117,30 @@ export async function synchronizeVariables({
         }
         const fault = await faultFor({ batchIndex, attempt, batch });
         try {
-          settled = await remote.applyBatch(resolvedOperations, {
+          const response = await remote.applyBatch(resolvedOperations, {
             expectedRevision: checkpoint.expectedRemoteRevision,
             fault,
           });
+          const admission = admitRemoteSettlement(response, resolvedOperations);
+          if (!admission.accepted) {
+            return remoteProtocolInvalidResult({
+              runId,
+              batchIndex,
+              source: "apply_batch",
+              admission,
+            });
+          }
+          settled = admission.value;
         } catch (error) {
           if (error instanceof RetryAfterError) {
+            if (!Number.isSafeInteger(error.retryAfterMs) || error.retryAfterMs < 0) {
+              return remoteProtocolInvalidResult({
+                runId,
+                batchIndex,
+                source: "retry_after",
+                admission: { accepted: false, reason: "retry_after_ms" },
+              });
+            }
             if (attempt >= maxRetries || error.retryAfterMs > maxRetryAfterMs) {
               return statusResult("friction", {
                 code: "retry_budget_exhausted",
@@ -527,14 +1157,31 @@ export async function synchronizeVariables({
               classification: "bounded_retry",
               retryAfterMs: error.retryAfterMs,
             });
-            await checkpointStore.save(runId, checkpoint);
+            const persisted = await persistCurrentCheckpoint({
+              checkpoint,
+              restartAt: `persist:retry:batch:${batchIndex}`,
+              leaseFailureRestartAt: `batch:${batchIndex}`,
+              batchIndex,
+            });
+            if (!persisted.accepted) return persisted.result;
+            checkpoint = persisted.value;
             await sleep(error.retryAfterMs);
             attempt += 1;
             continue;
           }
 
           if (error instanceof OutcomeUnknownError) {
-            const observation = await remote.readIntentResults(batch.operationIds);
+            const response = await remote.readIntentResults(batch.operationIds);
+            const admission = admitRemoteIntentObservation(response, resolvedOperations);
+            if (!admission.accepted) {
+              return remoteProtocolInvalidResult({
+                runId,
+                batchIndex,
+                source: "intent_observation",
+                admission,
+              });
+            }
+            const observation = admission.value;
             const reconciliation = resolveReconciliation(observation);
             const requiredObservations = reconciliation.classification === "already_applied" ? 2 : 1;
             if (!hasObservationCapacity(checkpoint, requiredObservations)) {
@@ -550,7 +1197,14 @@ export async function synchronizeVariables({
               classification: reconciliation.classification,
               observedRemoteRevision: observation.remoteRevision,
             });
-            await checkpointStore.save(runId, checkpoint);
+            const persisted = await persistCurrentCheckpoint({
+              checkpoint,
+              restartAt: `persist:reconciliation:batch:${batchIndex}`,
+              leaseFailureRestartAt: `reconcile:batch:${batchIndex}`,
+              batchIndex,
+            });
+            if (!persisted.accepted) return persisted.result;
+            checkpoint = persisted.value;
             if (reconciliation.classification === "already_applied") {
               settled = {
                 disposition: "reconciled_after_unknown_outcome",
@@ -629,7 +1283,16 @@ export async function synchronizeVariables({
         });
       }
 
-      const settledSnapshot = await remote.snapshot();
+      const settledSnapshotAdmission = admitRemoteSnapshot(await remote.snapshot());
+      if (!settledSnapshotAdmission.accepted) {
+        return remoteProtocolInvalidResult({
+          runId,
+          batchIndex,
+          source: "settled_snapshot",
+          admission: settledSnapshotAdmission,
+        });
+      }
+      const settledSnapshot = settledSnapshotAdmission.value;
       if (settledSnapshot.revision !== settled.remoteRevision) {
         return statusResult("conflict", {
           code: "remote_drift_after_settlement",
@@ -643,11 +1306,45 @@ export async function synchronizeVariables({
         });
       }
 
+      const identityTransfer = verifyCreatedIdentityTransfer({
+        checkpoint,
+        operations: resolvedOperations,
+        results: settled.results,
+        snapshot: settledSnapshot,
+      });
+      if (!identityTransfer.accepted) {
+        return remoteProtocolInvalidResult({
+          runId,
+          batchIndex,
+          source: "created_identity_transfer",
+          admission: identityTransfer,
+        });
+      }
+
+      if (!settlementContinuesEarlierRun) {
+        const transition = verifyBatchTransition({
+          priorSnapshot: lastObservedSnapshot,
+          operations: resolvedOperations,
+          results: settled.results,
+          snapshot: settledSnapshot,
+        });
+        if (!transition.accepted) {
+          return remoteProtocolInvalidResult({
+            runId,
+            batchIndex,
+            source: "settled_state_transition",
+            admission: transition,
+          });
+        }
+      }
+
       for (const result of settled.results) {
         if (result.tempId) {
           recordTemporaryIdentity(checkpoint.tempIdToRealId, result.tempId, result.targetId);
         }
       }
+      extendRemoteIdentityLedger(checkpoint, settledSnapshot, settled.results);
+      lastObservedSnapshot = settledSnapshot;
       checkpoint.nextBatchIndex = batchIndex + 1;
       checkpoint.expectedRemoteRevision = settled.remoteRevision;
       checkpoint.expectedRemoteStateDigest = digest(settledSnapshot);
@@ -669,10 +1366,27 @@ export async function synchronizeVariables({
         remoteRevision: settled.remoteRevision,
         operationCount: settled.results.length,
       });
-      checkpoint = await checkpointStore.save(runId, checkpoint);
+      const persisted = await persistCurrentCheckpoint({
+        checkpoint,
+        restartAt: `persist:settlement:batch:${batchIndex}`,
+        leaseFailureRestartAt: `reconcile:batch:${batchIndex}`,
+        batchIndex,
+      });
+      if (!persisted.accepted) return persisted.result;
+      checkpoint = persisted.value;
     }
 
-    const finalSnapshot = await remote.snapshot();
+    const finalSnapshotAdmission = admitRemoteSnapshot(await remote.snapshot());
+    if (!finalSnapshotAdmission.accepted) {
+      return remoteProtocolInvalidResult({
+        runId,
+        batchIndex: checkpoint.nextBatchIndex,
+        source: "final_snapshot",
+        admission: finalSnapshotAdmission,
+        restartAt: "reconcile:final",
+      });
+    }
+    const finalSnapshot = finalSnapshotAdmission.value;
     const finalStateDigest = digest(finalSnapshot);
     if (
       finalSnapshot.revision !== checkpoint.expectedRemoteRevision ||
@@ -719,7 +1433,7 @@ export async function synchronizeVariables({
     let releaseError;
     try {
       const released = await leaseStore.release({ owner, generation: lease.generation });
-      if (released !== true) {
+      if (released !== true && !leaseAuthorityLost) {
         releaseError = new LeaseError(
           "lease_release_unconfirmed",
           "The writer lease release needs inspection before another synchronization begins.",
@@ -727,11 +1441,16 @@ export async function synchronizeVariables({
         );
       }
     } catch (error) {
-      releaseError = new LeaseError(
-        "lease_release_failed",
-        "The current synchronization path completed and the writer lease release needs inspection.",
-        { owner, generation: lease.generation, restartAt: "inspect_writer_lease" },
-      );
+      // A successor generation already owns recovery after authority loss. A
+      // failed release from the expired generation therefore cannot replace
+      // the typed lease-loss result or become the next operator action.
+      if (!leaseAuthorityLost) {
+        releaseError = new LeaseError(
+          "lease_release_failed",
+          "The current synchronization path completed and the writer lease release needs inspection.",
+          { owner, generation: lease.generation, restartAt: "inspect_writer_lease" },
+        );
+      }
     }
 
     if (releaseError && !executionFailed) {

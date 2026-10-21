@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFile, writeFile, mkdtemp, readdir } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rename, symlink, truncate, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,6 +67,21 @@ test("compiles responsive derivatives, an accessible gallery, and a semantic com
     assert.equal(metadata.icc, undefined);
     assert.equal(metadata.xmp, undefined);
   }
+});
+
+test("source admission rejects a symbolic-link coordinate before rendering", async () => {
+  const root = await temporaryDirectory("source-symlink");
+  const contractLink = path.join(root, "pattern-contract-link.json");
+  await symlink(sourcePaths.contractPath, contractLink);
+
+  await assert.rejects(
+    compileArtifactFamily({
+      ...sourcePaths,
+      contractPath: contractLink,
+      outputDir: path.join(root, "candidate"),
+    }),
+    error => error instanceof VisualArtifactError && error.code === "invalid_source_file",
+  );
 });
 
 test("repeats exact bytes at one declared runtime coordinate", async () => {
@@ -241,6 +256,360 @@ test("enforces source, semantic-state, width, pixel, and output ceilings before 
   );
 });
 
+test("accounts for each encoded derivative before persisting it", async () => {
+  const baselineRoot = await temporaryDirectory("encoded-output-baseline");
+  const baseline = await compileArtifactFamily({
+    ...sourcePaths,
+    outputDir: path.join(baselineRoot, "candidate"),
+  });
+  const outputByRole = new Map(baseline.manifest.outputs.map(output => [output.path, output]));
+  const sourceBytes = outputByRole.get("source.svg").bytes;
+  const semanticBytes = outputByRole.get("semantic-companion.json").bytes;
+  const galleryBytes = outputByRole.get("gallery.html").bytes;
+  const firstDerivative = outputByRole.get("source-to-decision-route-640.webp");
+  const beforeFirstDerivative = sourceBytes + semanticBytes;
+  const firstDerivativeBoundary = beforeFirstDerivative + firstDerivative.bytes;
+  assert.ok(firstDerivativeBoundary > sourceBytes + semanticBytes + galleryBytes);
+
+  const rejectedRoot = await temporaryDirectory("encoded-output-over-boundary");
+  const rejectedOutput = path.join(rejectedRoot, "candidate");
+  await assert.rejects(
+    compileArtifactFamily({
+      ...sourcePaths,
+      outputDir: rejectedOutput,
+      limits: { outputBytes: firstDerivativeBoundary - 1 },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "resource_limit_exceeded"
+      && error.details.resource === "outputBytes",
+  );
+  assert.equal(
+    (await readdir(rejectedOutput)).some(name => name.endsWith(".webp")),
+    false,
+  );
+
+  const exactRoot = await temporaryDirectory("encoded-output-exact-boundary");
+  const exactOutput = path.join(exactRoot, "candidate");
+  await assert.rejects(
+    compileArtifactFamily({
+      ...sourcePaths,
+      outputDir: exactOutput,
+      limits: { outputBytes: firstDerivativeBoundary },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "resource_limit_exceeded"
+      && error.details.resource === "outputBytes",
+  );
+  assert.equal(
+    (await readdir(exactOutput)).includes("source-to-decision-route-640.webp"),
+    true,
+  );
+  assert.equal(
+    (await readdir(exactOutput)).includes("source-to-decision-route-1280.webp"),
+    false,
+  );
+});
+
+test("accepts the exact aggregate output-byte boundary and rejects the prior byte", async () => {
+  const baselineRoot = await temporaryDirectory("aggregate-output-baseline");
+  const baseline = await compileArtifactFamily({
+    ...sourcePaths,
+    outputDir: path.join(baselineRoot, "candidate"),
+  });
+  let boundary = baseline.measurement.outputBytes;
+  let exactResult;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const root = await temporaryDirectory(`aggregate-output-converge-${attempt}`);
+    try {
+      const result = await compileArtifactFamily({
+        ...sourcePaths,
+        outputDir: path.join(root, "candidate"),
+        limits: { outputBytes: boundary },
+      });
+      if (result.measurement.outputBytes === boundary) {
+        exactResult = result;
+        break;
+      }
+      boundary = result.measurement.outputBytes;
+    } catch (error) {
+      assert.ok(error instanceof VisualArtifactError);
+      assert.equal(error.code, "resource_limit_exceeded");
+      boundary = error.details.observed;
+    }
+  }
+  assert.ok(exactResult, "aggregate byte boundary converges");
+  assert.equal(exactResult.measurement.outputBytes, boundary);
+
+  const rejectedRoot = await temporaryDirectory("aggregate-output-prior-byte");
+  await assert.rejects(
+    compileArtifactFamily({
+      ...sourcePaths,
+      outputDir: path.join(rejectedRoot, "candidate"),
+      limits: { outputBytes: boundary - 1 },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "resource_limit_exceeded"
+      && error.details.resource === "outputBytes",
+  );
+});
+
+test("publication rejects symlinked root and owned directory coordinates before compiling", async () => {
+  for (const boundary of ["root", ".candidates", "accepted"]) {
+    const container = await temporaryDirectory(`publication-boundary-${boundary.replace(".", "")}`);
+    const actualRoot = path.join(container, "actual-root");
+    const outside = path.join(container, "outside");
+    await mkdir(actualRoot);
+    await mkdir(outside);
+    let publicationRoot = actualRoot;
+    if (boundary === "root") {
+      publicationRoot = path.join(container, "publication");
+      await symlink(actualRoot, publicationRoot);
+    } else {
+      await symlink(outside, path.join(publicationRoot, boundary));
+    }
+
+    await assert.rejects(
+      publishArtifactFamily({ ...sourcePaths, publicationRoot }),
+      error => error instanceof VisualArtifactError
+        && error.code === "publication_boundary_invalid"
+        && error.details.boundary === boundary,
+    );
+    assert.deepEqual(await readdir(outside), []);
+  }
+});
+
+for (const swapBoundary of [".candidates", "accepted"]) {
+  test(`publication rejects ${swapBoundary} replacement before promotion`, async () => {
+    const container = await temporaryDirectory(`publication-swap-${swapBoundary.slice(1)}`);
+    const publicationRoot = path.join(container, "publication");
+    const outside = path.join(container, "outside");
+    await mkdir(outside);
+    await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+    const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+    const pointerBefore = await readFile(pointerPath);
+
+    await assert.rejects(
+      publishArtifactFamily({
+        ...sourcePaths,
+        publicationRoot,
+        faultInjector: async ({ checkpoint }) => {
+          if (checkpoint !== "before_candidate_rename") return;
+          const ownedPath = path.join(publicationRoot, swapBoundary);
+          await rename(ownedPath, `${ownedPath}-held`);
+          await symlink(outside, ownedPath);
+        },
+      }),
+      error => error instanceof VisualArtifactError
+        && error.code === "publication_boundary_invalid"
+        && error.details.boundary === swapBoundary,
+    );
+    assert.deepEqual(await readdir(outside), []);
+    assert.deepEqual(await readFile(pointerPath), pointerBefore);
+  });
+}
+
+test("publication stops before another output when its private candidate coordinate changes", async () => {
+  const container = await temporaryDirectory("candidate-write-swap");
+  const publicationRoot = path.join(container, "publication");
+  const heldCandidate = path.join(container, "candidate-held");
+  const outside = path.join(container, "outside");
+  await mkdir(outside);
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, outputDir, relativePath }) => {
+        if (checkpoint !== "candidate_output_written" || relativePath !== "source.svg") return;
+        await rename(outputDir, heldCandidate);
+        await symlink(outside, outputDir);
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_boundary_invalid"
+      && error.details.boundary === "candidate_output",
+  );
+  assert.deepEqual(await readdir(outside), []);
+  assert.deepEqual(await readdir(heldCandidate), ["source.svg"]);
+});
+
+test("publication stops before another output when an admitted candidate leaf changes", async () => {
+  const container = await temporaryDirectory("candidate-leaf-swap");
+  const publicationRoot = path.join(container, "publication");
+  let candidateDir;
+  let heldSource;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, outputDir, relativePath }) => {
+        if (checkpoint !== "candidate_output_written" || relativePath !== "source.svg") return;
+        candidateDir = outputDir;
+        const sourcePath = path.join(outputDir, "source.svg");
+        heldSource = path.join(outputDir, "source-owned-by-first-writer.svg");
+        await rename(sourcePath, heldSource);
+        await writeFile(sourcePath, "replacement owned by another writer\n");
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_boundary_invalid"
+      && error.details.boundary === "candidate_output.source.svg",
+  );
+  assert.equal(
+    await readFile(path.join(candidateDir, "source.svg"), "utf8"),
+    "replacement owned by another writer\n",
+  );
+  assert.ok((await lstat(heldSource)).isFile());
+  assert.deepEqual(
+    (await readdir(candidateDir)).sort(),
+    ["source-owned-by-first-writer.svg", "source.svg"],
+  );
+});
+
+test("publication rejects root replacement before pointer promotion", async () => {
+  const container = await temporaryDirectory("publication-root-swap");
+  const publicationRoot = path.join(container, "publication");
+  const heldRoot = path.join(container, "publication-held");
+  const outside = path.join(container, "outside");
+  await mkdir(outside);
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerBefore = await readFile(path.join(publicationRoot, "accepted-pointer.json"));
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      publicationRoot,
+      faultInjector: async ({ checkpoint }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        await rename(publicationRoot, heldRoot);
+        await symlink(outside, publicationRoot);
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_boundary_invalid"
+      && error.details.boundary === "root",
+  );
+  assert.deepEqual(await readdir(outside), []);
+  assert.deepEqual(await readFile(path.join(heldRoot, "accepted-pointer.json")), pointerBefore);
+});
+
+test("pointer promotion revalidates accepted leaf bytes after the first complete verification", async () => {
+  const root = await temporaryDirectory("accepted-leaf-swap");
+  const publicationRoot = path.join(root, "publication");
+  const first = await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const acceptedLeaf = path.join(
+    publicationRoot,
+    "accepted",
+    first.manifestDigest,
+    "semantic-companion.json",
+  );
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      publicationRoot,
+      faultInjector: async ({ checkpoint }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        const original = await readFile(acceptedLeaf);
+        await writeFile(acceptedLeaf, Buffer.alloc(original.byteLength, 0x20));
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "accepted_integrity_mismatch",
+  );
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("pointer promotion preserves a replaced temporary coordinate for inspection", async () => {
+  const root = await temporaryDirectory("pointer-temp-swap");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  let replacementPath;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, pointerTempPath }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        await rename(pointerTempPath, `${pointerTempPath}.held`);
+        replacementPath = pointerTempPath;
+        await writeFile(pointerTempPath, "replacement owned by another publisher\n");
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_boundary_invalid"
+      && error.details.boundary === "temporary_pointer",
+  );
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+  assert.equal(await readFile(replacementPath, "utf8"), "replacement owned by another publisher\n");
+});
+
+test("pointer promotion rejects same-inode temporary byte drift", async () => {
+  const root = await temporaryDirectory("pointer-temp-byte-drift");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, pointerTempPath }) => {
+        if (checkpoint !== "before_pointer_rename") return;
+        const pointerBytes = await readFile(pointerTempPath);
+        await writeFile(pointerTempPath, Buffer.alloc(pointerBytes.byteLength, 0x20));
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "publication_boundary_invalid"
+      && error.details.boundary === "temporary_pointer"
+      && error.details.reason === "file_bytes_changed",
+  );
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("an existing empty digest coordinate remains owned by its creator", async () => {
+  const root = await temporaryDirectory("accepted-empty-collision");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises no-replace promotion ownership.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  let collidingDirectory;
+  let collisionIdentity;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint, acceptedDir }) => {
+        if (checkpoint !== "before_candidate_rename") return;
+        collidingDirectory = acceptedDir;
+        await mkdir(collidingDirectory);
+        collisionIdentity = await lstat(collidingDirectory);
+      },
+    }),
+    error => error instanceof VisualArtifactError
+      && error.code === "accepted_integrity_mismatch",
+  );
+  const retainedIdentity = await lstat(collidingDirectory);
+  assert.equal(retainedIdentity.dev, collisionIdentity.dev);
+  assert.equal(retainedIdentity.ino, collisionIdentity.ino);
+  assert.deepEqual(await readdir(collidingDirectory), []);
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
 test("publication clears a partial render and reports its durable checkpoint", async () => {
   const root = await temporaryDirectory("render-interruption");
   const publicationRoot = path.join(root, "publication");
@@ -352,4 +721,50 @@ test("rejects a corrupted preexisting accepted directory and preserves the point
   );
   assert.equal(await readFile(pointerPath, "utf8"), firstPointer);
   assert.equal(await readFile(corruptedPath, "utf8"), "{\"corrupted\":true}\n");
+});
+
+test("rejects an oversized accepted output before allocating its body", async () => {
+  const root = await temporaryDirectory("oversized-accepted");
+  const publicationRoot = path.join(root, "publication");
+  const first = await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const firstPointer = await readFile(pointerPath, "utf8");
+  const acceptedOutput = path.join(
+    publicationRoot,
+    "accepted",
+    first.manifestDigest,
+    "semantic-companion.json",
+  );
+  await truncate(acceptedOutput, DEFAULT_RESOURCE_LIMITS.outputBytes + 1);
+
+  await assert.rejects(
+    publishArtifactFamily({ ...sourcePaths, publicationRoot }),
+    error => error instanceof VisualArtifactError
+      && error.code === "accepted_integrity_mismatch"
+      && error.details.relativePath === "semantic-companion.json",
+  );
+  assert.equal(await readFile(pointerPath, "utf8"), firstPointer);
+});
+
+test("bounds accepted inventory depth and entry count to the declared artifact family", async () => {
+  const root = await temporaryDirectory("accepted-inventory-envelope");
+  const publicationRoot = path.join(root, "publication");
+  const first = await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const firstPointer = await readFile(pointerPath, "utf8");
+  const unexpected = path.join(
+    publicationRoot,
+    "accepted",
+    first.manifestDigest,
+    "unexpected",
+    "nested",
+  );
+  await mkdir(unexpected, { recursive: true });
+  await writeFile(path.join(unexpected, "extra.txt"), "extra\n");
+
+  await assert.rejects(
+    publishArtifactFamily({ ...sourcePaths, publicationRoot }),
+    error => error instanceof VisualArtifactError && error.code === "accepted_integrity_mismatch",
+  );
+  assert.equal(await readFile(pointerPath, "utf8"), firstPointer);
 });

@@ -47,9 +47,54 @@ function validateBoundedString(value, field, { min = 1, max = 256 } = {}) {
   }
 }
 
+function isPlainRecord(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function validateDataRecord(value, field, code, message) {
+  if (!isPlainRecord(value)) {
+    throw new PlanError(code, message, { field });
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  for (const key of Reflect.ownKeys(descriptors)) {
+    const descriptor = descriptors[key];
+    if (
+      typeof key !== "string"
+      || !descriptor.enumerable
+      || !("value" in descriptor)
+    ) {
+      throw new PlanError(code, message, { field });
+    }
+  }
+}
+
+function dataArrayValues(value, field, code = "non_json_value", message = `${field} requires a dense JSON array.`) {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) {
+    throw new PlanError(code, message, { field });
+  }
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const keys = Reflect.ownKeys(descriptors).filter(key => key !== "length");
+  if (
+    keys.length !== value.length
+    || keys.some((key, index) => {
+      const descriptor = descriptors[key];
+      return typeof key !== "string"
+        || key !== String(index)
+        || !descriptor.enumerable
+        || !("value" in descriptor);
+    })
+  ) {
+    throw new PlanError(code, message, { field });
+  }
+  return keys.map(key => descriptors[key].value);
+}
+
 function validateJsonValue(value, field) {
   let nodes = 0;
   let stringBytes = 0;
+  const active = new WeakSet();
   const countString = (candidate) => {
     const bytes = Buffer.byteLength(candidate, "utf8");
     if (bytes > PLANNER_RESOURCE_LIMITS.valueStringBytes) {
@@ -86,22 +131,50 @@ function validateJsonValue(value, field) {
       return;
     }
     if (typeof child === "number") {
-      if (!Number.isFinite(child)) {
-        throw new PlanError("invalid_number", `${field} contains a non-finite number.`, { field });
+      if (!Number.isFinite(child) || Object.is(child, -0)) {
+        throw new PlanError("invalid_number", `${field} contains a number without an unambiguous JSON encoding.`, { field });
       }
       return;
     }
     if (Array.isArray(child)) {
-      child.forEach((item) => visit(item, depth + 1));
+      const values = dataArrayValues(
+        child,
+        field,
+        "non_json_value",
+        `${field} contains an array outside the admitted dense data shape.`,
+      );
+      if (active.has(child)) {
+        throw new PlanError("non_json_value", `${field} contains a cyclic value.`, { field });
+      }
+      active.add(child);
+      try {
+        values.forEach((item) => visit(item, depth + 1));
+      } finally {
+        active.delete(child);
+      }
       return;
     }
     if (child && typeof child === "object") {
-      for (const [key, item] of Object.entries(child)) {
-        if (reservedKeys.has(key)) {
-          throw new PlanError("reserved_key", `${field} contains a reserved key.`, { field, key });
+      validateDataRecord(
+        child,
+        field,
+        "non_json_value",
+        `${field} contains an object outside the admitted JSON record shape.`,
+      );
+      if (active.has(child)) {
+        throw new PlanError("non_json_value", `${field} contains a cyclic value.`, { field });
+      }
+      active.add(child);
+      try {
+        for (const [key, item] of Object.entries(child)) {
+          if (reservedKeys.has(key)) {
+            throw new PlanError("reserved_key", `${field} contains a reserved key.`, { field, key });
+          }
+          countString(key);
+          visit(item, depth + 1);
         }
-        countString(key);
-        visit(item, depth + 1);
+      } finally {
+        active.delete(child);
       }
       return;
     }
@@ -113,9 +186,12 @@ function validateJsonValue(value, field) {
 }
 
 function validateOperation(operation) {
-  if (!operation || typeof operation !== "object" || Array.isArray(operation)) {
-    throw new PlanError("invalid_operation", "Each operation must be an object.");
-  }
+  validateDataRecord(
+    operation,
+    "operation",
+    "invalid_operation",
+    "Each operation must be a plain data object.",
+  );
   for (const key of Object.keys(operation)) {
     if (!operationKeys.has(key) || reservedKeys.has(key)) {
       throw new PlanError(
@@ -133,8 +209,15 @@ function validateOperation(operation) {
       { operationId: operation.id, operationType: operation.type },
     );
   }
-  const dependencies = operation.dependsOn ?? [];
-  if (!Array.isArray(dependencies) || dependencies.some((item) => typeof item !== "string")) {
+  const dependencies = Object.hasOwn(operation, "dependsOn")
+    ? dataArrayValues(
+        operation.dependsOn,
+        `operation.${operation.id}.dependsOn`,
+        "invalid_dependencies",
+        `Operation ${operation.id} needs a dense string dependency list.`,
+      )
+    : [];
+  if (dependencies.some((item) => typeof item !== "string")) {
     throw new PlanError(
       "invalid_dependencies",
       `Operation ${operation.id} needs a string dependency list.`,
@@ -156,49 +239,52 @@ function validateOperation(operation) {
   dependencies.forEach((dependency) =>
     validateBoundedString(dependency, `operation.${operation.id}.dependsOn`, { max: 128 }),
   );
-  if (operation.type === "create_variable" && typeof operation.tempId !== "string") {
+  const hasTempId = Object.hasOwn(operation, "tempId");
+  if (operation.type === "create_variable" && !hasTempId) {
     throw new PlanError(
       "missing_temp_id",
       `Create operation ${operation.id} needs a temporary id.`,
       { operationId: operation.id },
     );
   }
-  if (operation.type !== "create_variable" && operation.tempId !== undefined) {
+  if (operation.type !== "create_variable" && hasTempId) {
     throw new PlanError(
       "operation_field_outside_contract",
       `Operation ${operation.id} carries a temporary id outside the create contract.`,
       { operationId: operation.id, field: "tempId" },
     );
   }
-  if (operation.tempId !== undefined) {
+  if (hasTempId) {
     validateBoundedString(operation.tempId, `operation.${operation.id}.tempId`, { max: 128 });
   }
-  if (operation.type !== "create_variable" && typeof operation.targetId !== "string") {
+  const hasTargetId = Object.hasOwn(operation, "targetId");
+  if (operation.type !== "create_variable" && !hasTargetId) {
     throw new PlanError(
       "missing_target_id",
       `Operation ${operation.id} needs a target id.`,
       { operationId: operation.id },
     );
   }
-  if (operation.type === "create_variable" && operation.targetId !== undefined) {
+  if (operation.type === "create_variable" && hasTargetId) {
     throw new PlanError(
       "operation_field_outside_contract",
       `Create operation ${operation.id} carries a target id outside its contract.`,
       { operationId: operation.id, field: "targetId" },
     );
   }
-  if (operation.targetId !== undefined) {
+  if (hasTargetId) {
     validateBoundedString(operation.targetId, `operation.${operation.id}.targetId`, { max: 128 });
   }
+  const hasExpectedVersion = Object.hasOwn(operation, "expectedVersion");
   if (
-    operation.expectedVersion !== undefined &&
+    hasExpectedVersion &&
     (!Number.isSafeInteger(operation.expectedVersion) || operation.expectedVersion < 1)
   ) {
     throw new PlanError("invalid_expected_version", `Operation ${operation.id} has an invalid expected version.`, {
       operationId: operation.id,
     });
   }
-  if (operation.type === "create_variable" && operation.expectedVersion !== undefined) {
+  if (operation.type === "create_variable" && hasExpectedVersion) {
     throw new PlanError(
       "operation_field_outside_contract",
       `Create operation ${operation.id} carries an expected version outside its contract.`,
@@ -206,12 +292,13 @@ function validateOperation(operation) {
     );
   }
 
-  const payload = operation.payload ?? {};
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    throw new PlanError("invalid_payload", `Operation ${operation.id} needs an object payload.`, {
-      operationId: operation.id,
-    });
-  }
+  const payload = Object.hasOwn(operation, "payload") ? operation.payload : {};
+  validateDataRecord(
+    payload,
+    `operation.${operation.id}.payload`,
+    "invalid_payload",
+    `Operation ${operation.id} needs a plain data-object payload.`,
+  );
   const admittedKeys = payloadKeysByType.get(operation.type);
   for (const key of Object.keys(payload)) {
     if (!admittedKeys.has(key) || reservedKeys.has(key)) {
@@ -222,13 +309,13 @@ function validateOperation(operation) {
       );
     }
   }
-  if (payload.name !== undefined) {
+  if (Object.hasOwn(payload, "name")) {
     validateBoundedString(payload.name, `operation.${operation.id}.payload.name`, { max: 256 });
   }
-  if (payload.resolvedType !== undefined) {
+  if (Object.hasOwn(payload, "resolvedType")) {
     validateBoundedString(payload.resolvedType, `operation.${operation.id}.payload.resolvedType`, { max: 64 });
   }
-  if (payload.referenceTo !== undefined) {
+  if (Object.hasOwn(payload, "referenceTo")) {
     validateBoundedString(payload.referenceTo, `operation.${operation.id}.payload.referenceTo`, { max: 128 });
   }
   if (Object.hasOwn(payload, "value")) {
@@ -236,7 +323,7 @@ function validateOperation(operation) {
   }
   if (
     operation.type === "create_variable" &&
-    (payload.name === undefined || payload.resolvedType === undefined || !Object.hasOwn(payload, "value"))
+    (!Object.hasOwn(payload, "name") || !Object.hasOwn(payload, "resolvedType") || !Object.hasOwn(payload, "value"))
   ) {
     throw new PlanError(
       "incomplete_create_payload",
@@ -244,7 +331,7 @@ function validateOperation(operation) {
       { operationId: operation.id },
     );
   }
-  if (operation.type === "rewire_reference" && payload.referenceTo === undefined) {
+  if (operation.type === "rewire_reference" && !Object.hasOwn(payload, "referenceTo")) {
     throw new PlanError(
       "missing_reference_target",
       `Rewire operation ${operation.id} needs a reference target.`,
@@ -253,11 +340,36 @@ function validateOperation(operation) {
   }
 }
 
+function requireTemporaryReferenceDependencies(operations, createTempIds) {
+  for (const operation of operations) {
+    const references = [
+      ["targetId", operation.targetId],
+      ["payload.referenceTo", operation.payload?.referenceTo],
+    ];
+    for (const [field, coordinate] of references) {
+      const creatorOperationId = createTempIds.get(coordinate);
+      if (creatorOperationId && !(operation.dependsOn ?? []).includes(creatorOperationId)) {
+        throw new PlanError(
+          "temporary_reference_dependency_required",
+          `Operation ${operation.id} needs a direct dependency on ${creatorOperationId} for ${field}.`,
+          { operationId: operation.id, creatorOperationId, field },
+        );
+      }
+    }
+  }
+}
+
 export function orderOperations(operations) {
   if (!Array.isArray(operations) || operations.length === 0) {
     throw new PlanError("empty_plan", "A synchronization plan needs at least one operation.");
   }
-  if (operations.length > PLANNER_RESOURCE_LIMITS.operations) {
+  const operationValues = dataArrayValues(
+    operations,
+    "operations",
+    "invalid_operation_list",
+    "The synchronization plan requires a dense data array of operations.",
+  );
+  if (operationValues.length > PLANNER_RESOURCE_LIMITS.operations) {
     throw new PlanError(
       "operation_limit_exceeded",
       `The plan exceeds the ${PLANNER_RESOURCE_LIMITS.operations}-operation limit.`,
@@ -267,7 +379,7 @@ export function orderOperations(operations) {
   const byId = new Map();
   const createTempIds = new Map();
   let planBytes = 2;
-  for (const operation of operations) {
+  for (const operation of operationValues) {
     validateOperation(operation);
     const operationBytes = encodedOperationBytes(operation);
     if (operationBytes > PLANNER_RESOURCE_LIMITS.operationBytes) {
@@ -307,6 +419,10 @@ export function orderOperations(operations) {
     }
   }
 
+  // A declared temporary coordinate carries one explicit creator edge, so
+  // topological order remains authoritative when input order or batching changes.
+  requireTemporaryReferenceDependencies(byId.values(), createTempIds);
+
   const indegree = new Map([...byId.keys()].map((id) => [id, 0]));
   const dependents = new Map([...byId.keys()].map((id) => [id, []]));
 
@@ -339,7 +455,7 @@ export function orderOperations(operations) {
     }
   }
 
-  if (ordered.length !== operations.length) {
+  if (ordered.length !== operationValues.length) {
     const cycleMembers = [...indegree.entries()]
       .filter(([, count]) => count > 0)
       .map(([id]) => id)

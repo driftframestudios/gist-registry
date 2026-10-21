@@ -5,20 +5,20 @@
     "version": "0.1.0",
     "coordinate": {"brand": "acme", "mode": "light"},
     "manifestKind": "generated_output_manifest",
-    "manifestSha256": "6d93df6cd3c1b80076e3d4b0e162899381cfb4d82b1c28ff9c8a2a64d30a6e68",
+    "manifestSha256": "cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79",
     "standing": "candidate"
   },
   "receiver": {
     "semanticId": "react-aria-visual-contract-receiver",
     "version": "0.1.0",
     "manifestKind": "production_build_manifest",
-    "manifestSha256": "0ab2fc6e413287a139519e898886037b66a8bb2f545c4745a67585167b9d192f",
+    "manifestSha256": "4194c2ee7dac24c2560a8a87c268257ff22f55cb649d4f4eb99dd2e58aeb29d5",
     "standing": "candidate"
   },
   "observationFixture": {
     "kind": "synthetic_receiver_fixture",
     "path": "source/receiver.html",
-    "sha256": "d48c633d3b91cc48d3c56f8ae79935b275fc31fc1c0862d81297d50c3334c982"
+    "sha256": "23937db40f1195b149ea8173b2267c13de73a47f196c5be2bf808bc16f3a3d8b"
   },
   "bindingRule": "The token source binds the Issue #61 generated-output manifest and its acme/light coordinate. The receiver binds the Issue #62 deterministic production-build manifest, which the browser lane rebuilds, rehashes, and directly smokes. Fault-oracle receipts separately carry the exact synthetic receiver fixture bytes they actually loaded. Refresh dependency standing and digests from accepted manifests before adapting this harness to a receiver release."
 }

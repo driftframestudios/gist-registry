@@ -104,7 +104,7 @@ the coordinate in evaluation and names the source owner who can complete it.
 | Mode | Fitting use | Local responsibility |
 | --- | --- | --- |
 | Reference | The artifact teaches a mechanism while local code owns implementation | Record the exact source route and the decisions adopted locally |
-| Vendored coordinate | Review requires source continuity or repository-contained execution | Preserve license, version, source digest, and update route |
+| Vendored coordinate | Review requires source continuity or repository-contained execution | Preserve license, version, typed digest identity and closure, and update route |
 | Dependency | A published package supplies the runtime behavior directly | Pin the coordinate, retain the lock, and observe the installed graph |
 
 Select the smallest mode that preserves the needed behavior and review path.
@@ -156,7 +156,7 @@ Produce a compact receipt:
 
 ```text
 Receiver: repository, application, or package role
-Registry coordinate: semantic ID, version, source digest
+Registry coordinate: semantic ID, version, typed digest algorithm, subject, value, and closure
 Delivery mode: reference | vendored | dependency
 Local adapter: owning path or component
 Signal: decision and observation used

@@ -99,7 +99,7 @@
       "The resolved lock and package tests passed in Node.js 26.11.0 on macOS; development-only transitive engine ranges require a current Node 22, 24, or 26 maintenance release.",
       "The component suite uses jsdom and the build produces browser-loadable assets. Cross-browser and assistive-technology observations remain a receiving-release activity.",
       "The reviewed build baseline in expected/build-budget-contract.json records exact deterministic measurements for authored source, the dependency graph, runtime assets, source maps, and the complete build. Gzip size records its Node, zlib, platform, architecture, format, and level coordinate. Every dimension carries an explicit review threshold.",
-      "source/token-coordinate.json binds the Issue 61 acme/light candidate generated-output manifest digest 6d93df6cd3c1b80076e3d4b0e162899381cfb4d82b1c28ff9c8a2a64d30a6e68 and acme-light/tokens.css digest 7a5d1503f28c80f671fc27a6fbe879fbc532a55879d0f82db1c871158f29a632; receiver-css-token-projection-v1 records and tests the bounded adaptation; human source acceptance advances its standing."
+      "source/token-coordinate.json binds the Issue 61 acme/light candidate generated-output manifest digest cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79 and acme-light/tokens.css digest 7a5d1503f28c80f671fc27a6fbe879fbc532a55879d0f82db1c871158f29a632; receiver-css-token-projection-v1 records and tests the bounded adaptation; human source acceptance advances its standing."
     ]
   },
   "practice": {

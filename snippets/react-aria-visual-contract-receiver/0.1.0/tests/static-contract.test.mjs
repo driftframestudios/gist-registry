@@ -47,7 +47,7 @@ test("the bounded fixture digest and Issue 61 coordinate stay inspectable", asyn
   assert.equal(coordinate.acceptedCoordinate.manifestKind, "generated_output_manifest");
   assert.equal(
     coordinate.acceptedCoordinate.manifestSha256,
-    "6d93df6cd3c1b80076e3d4b0e162899381cfb4d82b1c28ff9c8a2a64d30a6e68"
+    "cbf95d97e2ecf981dfb195d013b5f3412e93513d49568086af348aa1e6a03b79"
   );
   assert.equal(coordinate.acceptedCoordinate.manifestStanding, "candidate_source_coordinate");
   assert.deepEqual(coordinate.acceptedCoordinate.generatedArtifact, {
@@ -84,6 +84,8 @@ test("semantic documents retain labels, status, disclosure, and reading order", 
   assert.match(index, /class="semantic-companion"/);
   assert.match(index, /<noscript>/);
   assert.match(nativeRoute, /<label for="standalone-specimen">Specimen state<\/label>/);
+  assert.match(nativeRoute, /<a href="\.\.\/receiver-entry\.html">Open the interactive preview route<\/a>/);
+  assert.doesNotMatch(nativeRoute, /<button/u);
   assert.match(nativeRoute, /role="status"/);
   assert.match(nativeRoute, /<details>/);
   assert.match(semanticReading, /<th scope="row">Draft<\/th>/);
@@ -108,6 +110,13 @@ test("each measured build dimension carries an explicit review threshold", async
 
   assert.equal(budgets.coordinate, "react-aria-visual-contract-receiver@0.1.0");
   assert.equal(expected.coordinate, budgets.coordinate);
+  assert.deepEqual(budgets.resourceLimits, {
+    configurationBytes: 100000,
+    authoredSourceFileBytes: 60000,
+    buildEntryCount: 64,
+    buildDirectoryDepth: 4,
+    buildFileBytes: 2300000
+  });
   assert.match(expected.deterministicManifestSha256, /^[a-f0-9]{64}$/u);
   const profiledMeasurements = Object.fromEntries(
     Object.entries(expected.profiledMeasurements).map(([name, entry]) => [name, entry.observed])

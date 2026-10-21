@@ -10,7 +10,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "verify:build": "node tools/verify-build.mjs",
-    "test:model": "node --test tests/model.test.mjs tests/static-contract.test.mjs",
+    "test:model": "node --test tests/model.test.mjs tests/static-contract.test.mjs tests/build-boundaries.test.mjs",
     "test:dom": "vitest run tests/receiver.test.jsx",
     "test": "npm run test:model && npm run test:dom && npm run verify:build"
   },

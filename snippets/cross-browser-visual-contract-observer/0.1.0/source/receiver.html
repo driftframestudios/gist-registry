@@ -46,10 +46,24 @@
     output { display: block; min-block-size: 3rem; margin-block-start: 1rem; padding: .75rem; border-inline-start: .4rem solid var(--contract-action); background: white; }
     .semantic-companion { border-collapse: collapse; table-layout: fixed; inline-size: 100%; margin-block-start: 1.5rem; }
     .semantic-companion th, .semantic-companion td { border: 1px solid currentColor; padding: .5rem; text-align: start; }
-    .fault-geometry .workflow { inline-size: 36rem; }
+    .fault-semantic-visible #family-label { display: block; inline-size: 0; block-size: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .fault-geometry-select-collapse #family { inline-size: 1px; min-inline-size: 0; max-inline-size: 1px; padding-inline: 0; overflow: hidden; }
+    .fault-geometry-card-clipped .card { block-size: 3rem; overflow: hidden; }
     .fault-computed { --contract-action: #777777; }
     .fault-bitmap .workflow svg { z-index: 3; }
-    @media (max-width: 34rem) { .workflow { grid-template-columns: 1fr; gap: 1rem; } }
+    .connector-narrow { display: none; }
+    @media (max-width: 34rem) {
+      .workflow { grid-template-columns: 1fr; gap: 0; }
+      .workflow svg { position: relative; grid-row: 2; block-size: 2rem; }
+      #candidate { grid-row: 1; }
+      #accepted { grid-row: 3; }
+      .connector-wide { display: none; }
+      .connector-narrow { display: inline; }
+      .fault-geometry-card-reversed #candidate { grid-row: 3; }
+      .fault-geometry-card-reversed #accepted { grid-row: 1; }
+      .fault-geometry-card-overlap #candidate,
+      .fault-geometry-card-overlap #accepted { grid-row: 1; grid-column: 1; }
+    }
     @media (prefers-reduced-motion: no-preference) { output { transition: border-color 120ms linear; } }
     @media (forced-colors: active) { button { forced-color-adjust: auto; } .card { background: Canvas; } }
     @media print { .actions { display: none; } main { inline-size: 100%; } }
@@ -65,7 +79,7 @@
       <figcaption>The candidate remains distinct from the accepted state until review completes.</figcaption>
     </figure>
     <div class="field" id="family-field">
-      <label for="family">Specimen family</label>
+      <label id="family-label" for="family">Specimen family</label>
       <select id="family" aria-describedby="family-help">
         <option value="solid">Solid tumor</option>
         <option value="liquid">Liquid biopsy</option>
@@ -86,7 +100,8 @@
     <section class="workflow" aria-label="Candidate and accepted state relationship">
       <svg aria-hidden="true" viewBox="0 0 720 160" preserveAspectRatio="none">
         <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="currentColor"/></marker></defs>
-        <path id="connector" d="M300 80 H420" stroke="currentColor" stroke-width="4" marker-end="url(#arrow)"/>
+        <path id="connector" class="connector-wide" d="M300 80 H420" stroke="currentColor" stroke-width="4" marker-end="url(#arrow)"/>
+        <path class="connector-narrow" d="M360 0 V160" stroke="currentColor" stroke-width="4" marker-end="url(#arrow)"/>
       </svg>
       <article class="card" id="candidate"><h2>Candidate</h2><p>Draft intent remains local until acceptance.</p></article>
       <article class="card" id="accepted"><h2>Accepted</h2><p data-accepted>Solid tumor · accepted</p></article>

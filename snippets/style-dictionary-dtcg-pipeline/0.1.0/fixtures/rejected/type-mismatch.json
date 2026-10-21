@@ -1,4 +1,4 @@
 {
-  "color": { "$type": "color", "$value": "#2546f5" },
+  "color": { "$type": "color", "$value": { "colorSpace": "srgb", "components": [0.1450980392, 0.2745098039, 0.9607843137], "alpha": 1, "hex": "#2546f5" } },
   "space": { "$type": "dimension", "$value": "{color}" }
 }

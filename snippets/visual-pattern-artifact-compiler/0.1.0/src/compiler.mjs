@@ -1,5 +1,6 @@
-import { createHash } from "node:crypto";
-import { lstat, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { constants as fsConstants } from "node:fs";
+import { lstat, mkdir, open, opendir, rename, rm, rmdir } from "node:fs/promises";
 import { release as osRelease } from "node:os";
 import path from "node:path";
 
@@ -176,18 +177,102 @@ function assertWithinResourceLimit(resource, observed, limit, restartAt) {
   }
 }
 
-async function readBoundedFile(filePath, resource, limit) {
-  const file = await lstat(filePath);
-  if (!file.isFile() || file.isSymbolicLink()) {
-    throw new VisualArtifactError("invalid_source_file", "Each source coordinate must resolve to a regular file.", {
+async function readBoundedFile(filePath, resource, limit, {
+  expectedBytes = null,
+  owner = "source coordinate",
+  restartAt = "reduce_source_bytes",
+} = {}) {
+  let pathEntry;
+  try {
+    pathEntry = await lstat(filePath);
+  } catch (error) {
+    throw new VisualArtifactError("invalid_source_file", `The ${owner} requires a readable regular file.`, {
+      resource,
+      filePath,
+      cause: error.message,
+    });
+  }
+  if (!pathEntry.isFile() || pathEntry.isSymbolicLink()) {
+    throw new VisualArtifactError("invalid_source_file", `The ${owner} must resolve directly to a regular file.`, {
       resource,
       filePath,
     });
   }
-  assertWithinResourceLimit(resource, file.size, limit, "reduce_source_bytes");
-  const bytes = await readFile(filePath);
-  assertWithinResourceLimit(resource, bytes.length, limit, "reduce_source_bytes");
-  return bytes;
+  assertWithinResourceLimit(resource, pathEntry.size, limit, restartAt);
+  if (expectedBytes !== null && pathEntry.size !== expectedBytes) {
+    throw new VisualArtifactError("source_size_mismatch", `The ${owner} byte count differs from its declared coordinate.`, {
+      resource,
+      expectedBytes,
+      observedBytes: pathEntry.size,
+    });
+  }
+
+  let handle;
+  try {
+    const flags = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0);
+    handle = await open(filePath, flags);
+  } catch (error) {
+    throw new VisualArtifactError("invalid_source_file", `The ${owner} changed or became unreadable before capture.`, {
+      resource,
+      filePath,
+      cause: error.message,
+    });
+  }
+  let primaryError = null;
+  try {
+    const openedEntry = await handle.stat();
+    if (!openedEntry.isFile() || openedEntry.dev !== pathEntry.dev || openedEntry.ino !== pathEntry.ino) {
+      throw new VisualArtifactError("source_file_changed", `The ${owner} changed before capture completed.`, {
+        resource,
+        filePath,
+      });
+    }
+    assertWithinResourceLimit(resource, openedEntry.size, limit, restartAt);
+    if (expectedBytes !== null && openedEntry.size !== expectedBytes) {
+      throw new VisualArtifactError("source_size_mismatch", `The opened ${owner} byte count differs from its declared coordinate.`, {
+        resource,
+        expectedBytes,
+        observedBytes: openedEntry.size,
+      });
+    }
+    const bytes = Buffer.allocUnsafe(openedEntry.size);
+    let offset = 0;
+    while (offset < bytes.byteLength) {
+      const { bytesRead } = await handle.read(bytes, offset, bytes.byteLength - offset, offset);
+      if (bytesRead === 0) break;
+      offset += bytesRead;
+    }
+    const overflow = Buffer.allocUnsafe(1);
+    const overflowRead = await handle.read(overflow, 0, 1, openedEntry.size);
+    const settledEntry = await handle.stat();
+    if (
+      offset !== openedEntry.size
+      || overflowRead.bytesRead > 0
+      || settledEntry.size !== openedEntry.size
+      || settledEntry.mtimeMs !== openedEntry.mtimeMs
+    ) {
+      throw new VisualArtifactError("source_file_changed", `The ${owner} changed during bounded capture.`, {
+        resource,
+        filePath,
+      });
+    }
+    return bytes;
+  } catch (error) {
+    primaryError = error;
+    throw error;
+  } finally {
+    try {
+      await handle.close();
+    } catch (error) {
+      if (primaryError === null) {
+        throw new VisualArtifactError("source_file_close_failed", `The ${owner} descriptor requires operator recovery.`, {
+          resource,
+          filePath,
+          cause: error.message,
+        });
+      }
+    }
+  }
 }
 
 function firstAttributeValue(match) {
@@ -557,26 +642,59 @@ function renderGallery(shell, contract) {
   return html.endsWith("\n") ? html : `${html}\n`;
 }
 
-async function describeFile(root, relativePath, role, mediaType, extra = {}) {
-  const bytes = await readFile(path.join(root, relativePath));
+async function describeFile(root, relativePath, role, mediaType, extra = {}, maxBytes = DEFAULT_RESOURCE_LIMITS.outputBytes) {
+  const bytes = await readBoundedFile(
+    path.join(root, relativePath),
+    "outputBytes",
+    maxBytes,
+    { owner: `generated output ${relativePath}`, restartAt: "reduce_output_family" },
+  );
   return { role, path: relativePath, declaredMediaType: mediaType, bytes: bytes.length, sha256: sha256(bytes), ...extra };
 }
 
-async function requireNewDirectory(directory) {
-  await mkdir(path.dirname(directory), { recursive: true });
+async function requireNewDirectory(directory, expectedParent = null) {
+  const parentPath = path.dirname(directory);
+  const parentIdentity = expectedParent ?? await requirePublicationDirectory(
+    parentPath,
+    "output_parent",
+    { create: true, recursive: true },
+  );
+  if (path.resolve(parentIdentity.directory) !== path.resolve(parentPath)) {
+    throw publicationBoundaryError("output_parent", "unexpected_parent_coordinate");
+  }
+  await assertPublicationDirectory(parentIdentity);
   try {
     // The non-recursive leaf creation is the ownership transition. A separate
     // existence check would let two compilers both accept the same candidate.
-    await mkdir(directory);
+    await mkdir(directory, { mode: 0o700 });
   } catch (error) {
     if (error.code === "EEXIST") {
       throw new VisualArtifactError("output_exists", "The output directory must be a fresh candidate boundary.", { directory });
     }
     throw error;
   }
+  await assertPublicationDirectory(parentIdentity);
+  const identity = await requirePublicationDirectory(directory, "candidate_output");
+  return { identity, parentIdentity };
 }
 
-export async function compileArtifactFamily({ contractPath, svgPath, galleryShellPath, outputDir, faultAt, limits: limitOverrides }) {
+async function compileArtifactFamilyInternal({
+  contractPath,
+  svgPath,
+  galleryShellPath,
+  outputDir,
+  faultAt,
+  limits: limitOverrides,
+  faultInjector,
+  outputParentIdentity = null,
+}, ownershipJournal = null) {
+  if (faultInjector !== undefined && typeof faultInjector !== "function") {
+    throw new VisualArtifactError(
+      "invalid_fault_injector",
+      "The output fault injector requires an async-compatible function.",
+      { checkpoint: "compiler_input" },
+    );
+  }
   const startedAt = performance.now();
   const limits = normalizeResourceLimits(limitOverrides);
   const [contractBytes, svgBytes, shellBytes] = await Promise.all([
@@ -622,14 +740,49 @@ export async function compileArtifactFamily({ contractPath, svgPath, galleryShel
     "reduce_output_family",
   );
 
-  await requireNewDirectory(outputDir);
+  const { identity: outputIdentity, parentIdentity: outputParent } = await requireNewDirectory(
+    outputDir,
+    outputParentIdentity,
+  );
+  if (ownershipJournal) {
+    ownershipJournal.directoryIdentity = outputIdentity;
+    ownershipJournal.parentIdentity = outputParent;
+  }
+  await faultInjector?.(Object.freeze({
+    checkpoint: "candidate_created",
+    outputDir,
+  }));
   let emittedOutputBytes = 0;
+  const outputIdentities = [];
   const writeBoundedOutput = async (relativePath, bytes) => {
     const payload = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
     const nextTotal = emittedOutputBytes + payload.length;
     assertWithinResourceLimit("outputBytes", nextTotal, limits.outputBytes, "reduce_output_family");
-    await writeFile(path.join(outputDir, relativePath), payload);
+    await assertPublicationDirectory(outputParent);
+    await assertPublicationDirectory(outputIdentity);
+    // Every write re-establishes the identity of the files already admitted to
+    // this private candidate. A replaced leaf therefore stops the next write
+    // instead of letting the compiler continue inside a mixed-owner boundary.
+    for (const identity of outputIdentities) await assertPublicationFile(identity);
+    const outputPath = path.join(outputDir, relativePath);
+    const outputFileIdentity = await writeOwnedPublicationFile(
+      outputPath,
+      payload,
+      `candidate_output.${relativePath}`,
+      { cleanupRoot: outputIdentity },
+    );
+    await assertPublicationDirectory(outputParent);
+    await assertPublicationDirectory(outputIdentity);
+    for (const identity of outputIdentities) await assertPublicationFile(identity);
+    await assertPublicationFile(outputFileIdentity);
+    outputIdentities.push(outputFileIdentity);
+    if (ownershipJournal) ownershipJournal.fileIdentities = outputIdentities;
     emittedOutputBytes = nextTotal;
+    await faultInjector?.(Object.freeze({
+      checkpoint: "candidate_output_written",
+      outputDir,
+      relativePath,
+    }));
   };
   await writeBoundedOutput("source.svg", svgBytes);
   await writeBoundedOutput("semantic-companion.json", semanticBytes);
@@ -637,12 +790,11 @@ export async function compileArtifactFamily({ contractPath, svgPath, galleryShel
   const derivativeRecords = [];
   for (const width of contract.widths) {
     const relativePath = `${contract.outputBaseName}-${width}.webp`;
-    const absolutePath = path.join(outputDir, relativePath);
-    await sharp(svgBytes)
+    const derivativeBytes = await sharp(svgBytes)
       .resize({ width, fit: "contain", withoutEnlargement: false })
       .webp({ quality: 88, effort: 6, smartSubsample: true })
-      .toFile(absolutePath);
-    const metadata = await sharp(absolutePath).metadata();
+      .toBuffer();
+    const metadata = await sharp(derivativeBytes).metadata();
     if (metadata.format !== "webp" || metadata.width !== width) {
       throw new VisualArtifactError("derivative_shape", "Generated derivative must match its declared media type and width.", { relativePath, metadata });
     }
@@ -654,12 +806,18 @@ export async function compileArtifactFamily({ contractPath, svgPath, galleryShel
     if (metadataFields.length > 0) {
       throw new VisualArtifactError("embedded_metadata", "Generated derivatives must carry the declared clean metadata standing.", { relativePath, metadataFields });
     }
-    derivativeRecords.push(await describeFile(outputDir, relativePath, "responsive_derivative", "image/webp", {
+    // Encode inside the admitted pixel envelope, then account for the encoded
+    // bytes before the candidate filesystem receives them.
+    await writeBoundedOutput(relativePath, derivativeBytes);
+    derivativeRecords.push({
+      role: "responsive_derivative",
+      path: relativePath,
+      declaredMediaType: "image/webp",
+      bytes: derivativeBytes.byteLength,
+      sha256: sha256(derivativeBytes),
       width: metadata.width,
       height: metadata.height,
-    }));
-    emittedOutputBytes += derivativeRecords.at(-1).bytes;
-    assertWithinResourceLimit("outputBytes", emittedOutputBytes, limits.outputBytes, "reduce_output_family");
+    });
     if (faultAt === "after_first_derivative" && derivativeRecords.length === 1) {
       throw new VisualArtifactError("injected_fault", "The injected fault stopped after the first derivative.", {
         checkpoint: "first_derivative_written",
@@ -669,9 +827,9 @@ export async function compileArtifactFamily({ contractPath, svgPath, galleryShel
 
   await writeBoundedOutput("gallery.html", galleryBytes);
   const records = [
-    await describeFile(outputDir, "source.svg", "source_vector", "image/svg+xml", { svgInspection }),
-    await describeFile(outputDir, "semantic-companion.json", "semantic_companion", "application/json"),
-    await describeFile(outputDir, "gallery.html", "accessible_gallery", "text/html"),
+    await describeFile(outputDir, "source.svg", "source_vector", "image/svg+xml", { svgInspection }, limits.outputBytes),
+    await describeFile(outputDir, "semantic-companion.json", "semantic_companion", "application/json", {}, limits.outputBytes),
+    await describeFile(outputDir, "gallery.html", "accessible_gallery", "text/html", {}, limits.outputBytes),
     ...derivativeRecords,
   ];
   const source = {
@@ -707,6 +865,9 @@ export async function compileArtifactFamily({ contractPath, svgPath, galleryShel
   };
   const manifestBytes = Buffer.from(stableJson(manifest));
   await writeBoundedOutput("manifest.json", manifestBytes);
+  await assertPublicationDirectory(outputParent);
+  await assertPublicationDirectory(outputIdentity);
+  for (const identity of outputIdentities) await assertPublicationFile(identity);
   const measurement = Object.freeze({
     inputBytes,
     outputBytes: emittedOutputBytes,
@@ -718,11 +879,230 @@ export async function compileArtifactFamily({ contractPath, svgPath, galleryShel
   return Object.freeze({ contract, manifest, manifestDigest: sha256(manifestBytes), measurement, outputDir });
 }
 
+export async function compileArtifactFamily(options) {
+  return compileArtifactFamilyInternal(options);
+}
+
 function acceptedIntegrityMismatch(message, details = {}) {
   return new VisualArtifactError("accepted_integrity_mismatch", message, {
     checkpoint: "existing_accepted_verified",
     ...details,
   });
+}
+
+function publicationBoundaryError(boundary, reason) {
+  return new VisualArtifactError(
+    "publication_boundary_invalid",
+    "Artifact publication requires stable, directly addressed regular directories.",
+    { checkpoint: "publication_root", boundary, reason },
+  );
+}
+
+async function requirePublicationDirectory(directory, boundary, { create = false, recursive = false } = {}) {
+  if (create) {
+    try {
+      await mkdir(directory, { recursive });
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+  }
+  let entry;
+  try {
+    entry = await lstat(directory);
+  } catch (error) {
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+  }
+  if (!entry.isDirectory() || entry.isSymbolicLink()) {
+    throw publicationBoundaryError(boundary, "regular_directory_required");
+  }
+  return { directory, boundary, dev: entry.dev, ino: entry.ino };
+}
+
+async function assertPublicationDirectory(identity) {
+  let entry;
+  try {
+    entry = await lstat(identity.directory);
+  } catch (error) {
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+  }
+  if (
+    !entry.isDirectory()
+    || entry.isSymbolicLink()
+    || entry.dev !== identity.dev
+    || entry.ino !== identity.ino
+  ) {
+    throw publicationBoundaryError(identity.boundary, "directory_identity_changed");
+  }
+}
+
+async function writeOwnedPublicationFile(filePath, bytes, boundary, { cleanupRoot = null } = {}) {
+  const flags = fsConstants.O_WRONLY
+    | fsConstants.O_CREAT
+    | fsConstants.O_EXCL
+    | (fsConstants.O_NOFOLLOW ?? 0);
+  let handle;
+  let openedIdentity = null;
+  let primaryError = null;
+  try {
+    handle = await open(filePath, flags, 0o600);
+    const opened = await handle.stat();
+    if (!opened.isFile()) throw publicationBoundaryError(boundary, "regular_file_required");
+    openedIdentity = {
+      path: filePath,
+      boundary,
+      dev: opened.dev,
+      ino: opened.ino,
+      size: null,
+    };
+    await handle.writeFile(bytes);
+    await handle.sync();
+    const settled = await handle.stat();
+    if (
+      !settled.isFile()
+      || settled.dev !== opened.dev
+      || settled.ino !== opened.ino
+      || settled.size !== bytes.byteLength
+    ) {
+      throw publicationBoundaryError(boundary, "file_identity_changed");
+    }
+    return {
+      path: filePath,
+      boundary,
+      dev: settled.dev,
+      ino: settled.ino,
+      size: settled.size,
+    };
+  } catch (error) {
+    primaryError = error;
+    throw error;
+  } finally {
+    try {
+      await handle?.close();
+    } catch (error) {
+      if (!primaryError) throw error;
+    }
+    if (primaryError && cleanupRoot) {
+      await removeOwnedPublicationFile(openedIdentity, cleanupRoot);
+    }
+  }
+}
+
+async function requirePublicationFileIdentity(filePath, boundary) {
+  let entry;
+  try {
+    entry = await lstat(filePath);
+  } catch (error) {
+    throw publicationBoundaryError(boundary, error.code ?? "unreadable");
+  }
+  if (!entry.isFile() || entry.isSymbolicLink()) {
+    throw publicationBoundaryError(boundary, "regular_file_required");
+  }
+  return { path: filePath, boundary, dev: entry.dev, ino: entry.ino, size: entry.size };
+}
+
+async function assertPublicationFile(identity) {
+  let entry;
+  try {
+    entry = await lstat(identity.path);
+  } catch (error) {
+    throw publicationBoundaryError(identity.boundary, error.code ?? "unreadable");
+  }
+  if (
+    !entry.isFile()
+    || entry.isSymbolicLink()
+    || entry.dev !== identity.dev
+    || entry.ino !== identity.ino
+    || (identity.size !== null && entry.size !== identity.size)
+  ) {
+    throw publicationBoundaryError(identity.boundary, "file_identity_changed");
+  }
+}
+
+async function assertPublicationFileBytes(identity, expectedBytes) {
+  await assertPublicationFile(identity);
+  const observedBytes = await readBoundedFile(
+    identity.path,
+    "publicationBytes",
+    expectedBytes.byteLength,
+    {
+      expectedBytes: expectedBytes.byteLength,
+      owner: identity.boundary,
+      restartAt: "rebuild_publication_coordinate",
+    },
+  );
+  if (!observedBytes.equals(expectedBytes)) {
+    throw publicationBoundaryError(identity.boundary, "file_bytes_changed");
+  }
+  await assertPublicationFile(identity);
+}
+
+async function removeOwnedPublicationFile(identity, root) {
+  if (!identity) return;
+  try {
+    await assertPublicationDirectory(root);
+    await assertPublicationFile(identity);
+    await rm(identity.path);
+  } catch {
+    // A changed file stays in place for operator inspection; path cleanup would
+    // otherwise risk removing a coordinate this invocation never created.
+  }
+}
+
+async function acquirePublicationReservation(parent, reservationPath) {
+  await assertPublicationDirectory(parent);
+  try {
+    await mkdir(reservationPath, { mode: 0o700 });
+  } catch (error) {
+    if (error.code === "EEXIST") {
+      throw new VisualArtifactError(
+        "publication_busy",
+        "Another publisher owns the accepted-coordinate reservation.",
+        { checkpoint: "candidate_promotion", restartAt: "retry_publication" },
+      );
+    }
+    throw error;
+  }
+  await assertPublicationDirectory(parent);
+  return requirePublicationDirectory(reservationPath, "accepted_reservation");
+}
+
+async function releasePublicationReservation(identity, parent, root) {
+  if (!identity) return;
+  await removeOwnedEmptyDirectory(identity, parent, root);
+}
+
+async function removeOwnedEmptyDirectory(identity, parent, root) {
+  if (!identity) return;
+  try {
+    await assertPublicationDirectory(root);
+    await assertPublicationDirectory(parent);
+    await assertPublicationDirectory(identity);
+    await rmdir(identity.directory);
+  } catch {
+    // A changed owner boundary turns path-based cleanup into an unsafe write.
+    // The stable publication root remains the recovery coordinate.
+  }
+}
+
+async function removeOwnedCandidate(ownership, root) {
+  if (!ownership?.directoryIdentity || !ownership.parentIdentity) return;
+  for (const identity of [...ownership.fileIdentities].reverse()) {
+    try {
+      await assertPublicationDirectory(root);
+      await assertPublicationDirectory(ownership.parentIdentity);
+      await assertPublicationDirectory(ownership.directoryIdentity);
+      await assertPublicationFile(identity);
+      await rm(identity.path);
+    } catch {
+      // Preserve a changed leaf and its candidate boundary for inspection.
+      // Recursive path cleanup could cross into a replacement coordinate.
+    }
+  }
+  await removeOwnedEmptyDirectory(
+    ownership.directoryIdentity,
+    ownership.parentIdentity,
+    root,
+  );
 }
 
 function containedAcceptedPath(root, relativePath) {
@@ -734,37 +1114,89 @@ function containedAcceptedPath(root, relativePath) {
   return resolvedPath;
 }
 
-async function acceptedFileInventory(root, directory = root) {
-  const inventory = [];
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const absolutePath = containedAcceptedPath(root, path.relative(root, path.join(directory, entry.name)));
-    const relativePath = path.relative(root, absolutePath).split(path.sep).join("/");
-    if (entry.isSymbolicLink()) {
-      throw acceptedIntegrityMismatch("The existing accepted artifact inventory requires regular files and directories.", {
-        relativePath,
-      });
+function acceptedInventoryEnvelope(paths) {
+  const directories = new Set();
+  let maxDepth = 0;
+  for (const outputPath of paths) {
+    const segments = outputPath.split("/");
+    maxDepth = Math.max(maxDepth, segments.length - 1);
+    for (let index = 1; index < segments.length; index += 1) {
+      directories.add(segments.slice(0, index).join("/"));
     }
-    if (entry.isDirectory()) inventory.push(...await acceptedFileInventory(root, absolutePath));
-    else if (entry.isFile()) inventory.push(relativePath);
-    else {
-      throw acceptedIntegrityMismatch("The existing accepted artifact inventory requires regular files and directories.", {
-        relativePath,
+  }
+  return { maxDepth, maxEntries: paths.length + directories.size };
+}
+
+async function acceptedFileInventory(root, { maxDepth, maxEntries }) {
+  const inventory = [];
+  const rootEntry = await lstat(root).catch(() => null);
+  if (!rootEntry?.isDirectory() || rootEntry.isSymbolicLink()) {
+    throw acceptedIntegrityMismatch("The existing accepted artifact requires one regular directory.");
+  }
+  const pending = [{ directory: root, depth: 0 }];
+  let observedEntries = 0;
+  while (pending.length > 0) {
+    const { directory, depth } = pending.pop();
+    const handle = await opendir(directory);
+    try {
+      for await (const entry of handle) {
+        observedEntries += 1;
+        if (observedEntries > maxEntries) {
+          throw acceptedIntegrityMismatch("The existing accepted artifact inventory exceeds its declared finite envelope.", { maxEntries });
+        }
+        const absolutePath = containedAcceptedPath(root, path.relative(root, path.join(directory, entry.name)));
+        const relativePath = path.relative(root, absolutePath).split(path.sep).join("/");
+        const pathEntry = await lstat(absolutePath);
+        if (pathEntry.isSymbolicLink()) {
+          throw acceptedIntegrityMismatch("The existing accepted artifact inventory requires regular files and directories.", {
+            relativePath,
+          });
+        }
+        if (pathEntry.isDirectory()) {
+          const nextDepth = depth + 1;
+          if (nextDepth > maxDepth) {
+            throw acceptedIntegrityMismatch("The existing accepted artifact inventory exceeds its declared directory depth.", {
+              relativePath,
+              maxDepth,
+            });
+          }
+          pending.push({ directory: absolutePath, depth: nextDepth });
+        } else if (pathEntry.isFile()) inventory.push(relativePath);
+        else {
+          throw acceptedIntegrityMismatch("The existing accepted artifact inventory requires regular files and directories.", {
+            relativePath,
+          });
+        }
+      }
+    } finally {
+      await handle.close().catch(error => {
+        if (error.code !== "ERR_DIR_CLOSED") throw error;
       });
     }
   }
   return inventory.sort();
 }
 
-async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifestDigest }) {
-  const manifestPath = containedAcceptedPath(acceptedDir, "manifest.json");
-  const manifestEntry = await lstat(manifestPath).catch(() => null);
-  if (!manifestEntry?.isFile() || manifestEntry.isSymbolicLink()) {
-    throw acceptedIntegrityMismatch("The existing accepted artifact requires a regular manifest.json file.", {
-      relativePath: "manifest.json",
+async function readAcceptedFile(acceptedDir, relativePath, expectedBytes) {
+  const outputPath = containedAcceptedPath(acceptedDir, relativePath);
+  try {
+    return await readBoundedFile(outputPath, "acceptedOutputBytes", expectedBytes, {
+      expectedBytes,
+      owner: `accepted output ${relativePath}`,
+      restartAt: "rebuild_candidate",
+    });
+  } catch (error) {
+    throw acceptedIntegrityMismatch("The existing accepted output bytes differ from the verified manifest.", {
+      relativePath,
+      causeCode: error.code,
+      cause: error.message,
     });
   }
+}
 
-  const manifestBytes = await readFile(manifestPath);
+async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifestDigest }) {
+  const expectedManifestBytes = Buffer.from(stableJson(manifest));
+  const manifestBytes = await readAcceptedFile(acceptedDir, "manifest.json", expectedManifestBytes.byteLength);
   if (sha256(manifestBytes) !== manifestDigest) {
     throw acceptedIntegrityMismatch("The existing accepted manifest bytes differ from the content-addressed digest.", {
       relativePath: "manifest.json",
@@ -786,7 +1218,10 @@ async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifest
   }
 
   const expectedInventory = ["manifest.json", ...manifest.outputs.map((output) => output.path)].sort();
-  const observedInventory = await acceptedFileInventory(acceptedDir);
+  const observedInventory = await acceptedFileInventory(
+    acceptedDir,
+    acceptedInventoryEnvelope(expectedInventory),
+  );
   if (stableJson(observedInventory) !== stableJson(expectedInventory)) {
     throw acceptedIntegrityMismatch("The existing accepted artifact inventory differs from the verified manifest.", {
       expectedInventory,
@@ -795,20 +1230,29 @@ async function verifyExistingAcceptedDirectory({ acceptedDir, manifest, manifest
   }
 
   for (const output of manifest.outputs) {
-    const outputPath = containedAcceptedPath(acceptedDir, output.path);
-    const outputEntry = await lstat(outputPath).catch(() => null);
-    if (!outputEntry?.isFile() || outputEntry.isSymbolicLink()) {
-      throw acceptedIntegrityMismatch("The existing accepted artifact requires every declared output as a regular file.", {
-        relativePath: output.path,
-      });
-    }
-    const outputBytes = await readFile(outputPath);
+    const outputBytes = await readAcceptedFile(acceptedDir, output.path, output.bytes);
     if (outputBytes.byteLength !== output.bytes || sha256(outputBytes) !== output.sha256) {
       throw acceptedIntegrityMismatch("The existing accepted output bytes differ from the verified manifest.", {
         relativePath: output.path,
       });
     }
   }
+}
+
+async function captureAcceptedFileIdentities({ acceptedDir, manifest }) {
+  const relativePaths = ["manifest.json", ...manifest.outputs.map((output) => output.path)];
+  const identities = [];
+  for (const relativePath of relativePaths) {
+    identities.push(await requirePublicationFileIdentity(
+      containedAcceptedPath(acceptedDir, relativePath),
+      `accepted_file.${relativePath}`,
+    ));
+  }
+  return identities;
+}
+
+async function assertAcceptedFileIdentities(identities) {
+  for (const identity of identities) await assertPublicationFile(identity);
 }
 
 export async function publishArtifactFamily({
@@ -819,6 +1263,7 @@ export async function publishArtifactFamily({
   faultAt,
   limits,
   checkpointObserver,
+  faultInjector,
 }) {
   if (checkpointObserver !== undefined && typeof checkpointObserver !== "function") {
     throw new VisualArtifactError(
@@ -827,37 +1272,111 @@ export async function publishArtifactFamily({
       { checkpoint: "publication_input" },
     );
   }
-  await mkdir(path.join(publicationRoot, ".candidates"), { recursive: true });
-  await mkdir(path.join(publicationRoot, "accepted"), { recursive: true });
-  const nonce = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  const candidateDir = path.join(publicationRoot, ".candidates", nonce);
+  if (faultInjector !== undefined && typeof faultInjector !== "function") {
+    throw new VisualArtifactError(
+      "invalid_fault_injector",
+      "The publication fault injector requires an async-compatible function.",
+      { checkpoint: "publication_input" },
+    );
+  }
+  const absolutePublicationRoot = path.resolve(publicationRoot);
+  const candidateParentPath = path.join(absolutePublicationRoot, ".candidates");
+  const acceptedParentPath = path.join(absolutePublicationRoot, "accepted");
+  const rootIdentity = await requirePublicationDirectory(
+    absolutePublicationRoot,
+    "root",
+    { create: true, recursive: true },
+  );
+  const candidateParent = await requirePublicationDirectory(
+    candidateParentPath,
+    ".candidates",
+    { create: true },
+  );
+  const acceptedParent = await requirePublicationDirectory(
+    acceptedParentPath,
+    "accepted",
+    { create: true },
+  );
+  await assertPublicationDirectory(rootIdentity);
+  const nonce = `${process.pid}-${randomUUID()}`;
+  const candidateDir = path.join(candidateParentPath, nonce);
+  let candidateIdentity;
   let acceptedDir;
-  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
-  const pointerTempPath = path.join(publicationRoot, `.accepted-pointer-${nonce}.tmp`);
+  let pointerTempIdentity;
+  let reservationIdentity;
+  const pointerPath = path.join(absolutePublicationRoot, "accepted-pointer.json");
+  const pointerTempPath = path.join(absolutePublicationRoot, `.accepted-pointer-${nonce}.tmp`);
+  const candidateOwnership = {
+    directoryIdentity: null,
+    parentIdentity: candidateParent,
+    fileIdentities: [],
+  };
   try {
-    const compiled = await compileArtifactFamily({
+    const compiled = await compileArtifactFamilyInternal({
       contractPath,
       svgPath,
       galleryShellPath,
       outputDir: candidateDir,
       faultAt,
       limits,
+      faultInjector,
+      outputParentIdentity: candidateParent,
+    }, candidateOwnership);
+    candidateIdentity = candidateOwnership.directoryIdentity;
+    await verifyExistingAcceptedDirectory({
+      acceptedDir: candidateDir,
+      manifest: compiled.manifest,
+      manifestDigest: compiled.manifestDigest,
     });
     if (faultAt === "after_candidate_verification") {
       throw new VisualArtifactError("injected_fault", "The injected fault stopped after candidate verification.", { checkpoint: "candidate_verified" });
     }
-    acceptedDir = path.join(publicationRoot, "accepted", compiled.manifestDigest);
+    acceptedDir = path.join(acceptedParentPath, compiled.manifestDigest);
+    await faultInjector?.(Object.freeze({
+      checkpoint: "before_candidate_rename",
+      root: absolutePublicationRoot,
+      candidateParent: candidateParentPath,
+      candidateDir,
+      acceptedParent: acceptedParentPath,
+      acceptedDir,
+    }));
+    await assertPublicationDirectory(rootIdentity);
+    await assertPublicationDirectory(candidateParent);
+    await assertPublicationDirectory(acceptedParent);
+    await assertPublicationDirectory(candidateIdentity);
+    const reservationPath = path.join(acceptedParentPath, `.${compiled.manifestDigest}.reservation`);
+    reservationIdentity = await acquirePublicationReservation(acceptedParent, reservationPath);
     try {
-      await rename(candidateDir, acceptedDir);
-    } catch (error) {
-      if (!["EEXIST", "EISDIR", "ENOTDIR", "ENOTEMPTY"].includes(error.code)) throw error;
-      await rm(candidateDir, { recursive: true, force: true });
-      await verifyExistingAcceptedDirectory({
-        acceptedDir,
-        manifest: compiled.manifest,
-        manifestDigest: compiled.manifestDigest,
+      await assertPublicationDirectory(rootIdentity);
+      await assertPublicationDirectory(candidateParent);
+      await assertPublicationDirectory(acceptedParent);
+      await assertPublicationDirectory(candidateIdentity);
+      const existingDestination = await lstat(acceptedDir).catch((error) => {
+        if (error.code === "ENOENT") return null;
+        throw error;
       });
+      if (existingDestination === null) {
+        await rename(candidateDir, acceptedDir);
+      } else {
+        await removeOwnedCandidate(candidateOwnership, rootIdentity);
+      }
+      candidateIdentity = null;
+      candidateOwnership.directoryIdentity = null;
+    } finally {
+      await releasePublicationReservation(reservationIdentity, acceptedParent, rootIdentity);
+      reservationIdentity = null;
     }
+    const acceptedIdentity = await requirePublicationDirectory(acceptedDir, "accepted_destination");
+    await assertPublicationDirectory(acceptedParent);
+    await verifyExistingAcceptedDirectory({
+      acceptedDir,
+      manifest: compiled.manifest,
+      manifestDigest: compiled.manifestDigest,
+    });
+    const acceptedFileIdentities = await captureAcceptedFileIdentities({
+      acceptedDir,
+      manifest: compiled.manifest,
+    });
     await checkpointObserver?.(Object.freeze({
       checkpoint: "accepted_bytes_verified",
       manifestDigest: compiled.manifestDigest,
@@ -872,12 +1391,42 @@ export async function publishArtifactFamily({
       manifestDigest: compiled.manifestDigest,
       relativePath: path.posix.join("accepted", compiled.manifestDigest),
     };
-    await writeFile(pointerTempPath, stableJson(pointer));
+    const pointerBytes = Buffer.from(stableJson(pointer));
+    pointerTempIdentity = await writeOwnedPublicationFile(
+      pointerTempPath,
+      pointerBytes,
+      "temporary_pointer",
+      { cleanupRoot: rootIdentity },
+    );
+    await faultInjector?.(Object.freeze({
+      checkpoint: "before_pointer_rename",
+      root: absolutePublicationRoot,
+      acceptedParent: acceptedParentPath,
+      acceptedDir,
+      pointerPath,
+      pointerTempPath,
+    }));
+    await assertPublicationDirectory(rootIdentity);
+    await assertPublicationDirectory(acceptedParent);
+    await assertPublicationDirectory(acceptedIdentity);
+    await assertAcceptedFileIdentities(acceptedFileIdentities);
+    await verifyExistingAcceptedDirectory({
+      acceptedDir,
+      manifest: compiled.manifest,
+      manifestDigest: compiled.manifestDigest,
+    });
+    await assertPublicationDirectory(rootIdentity);
+    await assertPublicationDirectory(acceptedParent);
+    await assertPublicationDirectory(acceptedIdentity);
+    await assertAcceptedFileIdentities(acceptedFileIdentities);
+    await assertPublicationFileBytes(pointerTempIdentity, pointerBytes);
     await rename(pointerTempPath, pointerPath);
+    pointerTempIdentity = null;
     return Object.freeze({ ...compiled, pointer });
   } catch (error) {
-    await rm(pointerTempPath, { force: true });
-    await rm(candidateDir, { recursive: true, force: true });
+    await removeOwnedPublicationFile(pointerTempIdentity, rootIdentity);
+    await releasePublicationReservation(reservationIdentity, acceptedParent, rootIdentity);
+    await removeOwnedCandidate(candidateOwnership, rootIdentity);
     // A digest directory becomes shared immutable state as soon as its atomic
     // rename succeeds. A later invocation may verify and publish that exact
     // directory, so this invocation owns cleanup only for its candidate and

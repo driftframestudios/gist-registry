@@ -10,7 +10,7 @@
           "name": "Action/Background",
           "description": "Authorization: Bearer synthetic-secret-shaped-value",
           "resolvedType": "COLOR",
-          "valuesByMode": { "mode.light": "#173a8f" }
+          "valuesByMode": { "mode.light": { "r": 0.0901960784, "g": 0.2274509804, "b": 0.5607843137, "a": 1 } }
         }
       ]
     }

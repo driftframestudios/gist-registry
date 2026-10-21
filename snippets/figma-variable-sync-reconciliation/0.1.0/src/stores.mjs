@@ -47,13 +47,50 @@ export class InMemoryLeaseStore {
 
 export class InMemoryCheckpointStore {
   #records = new Map();
+  #fencingTokens = new Map();
+
+  claimFence(runId, fencingToken) {
+    if (
+      typeof runId !== "string"
+      || runId.length === 0
+      || !Number.isSafeInteger(fencingToken)
+      || fencingToken < 1
+    ) {
+      throw new LeaseError(
+        "invalid_checkpoint_fence",
+        "Checkpoint fencing needs a run coordinate and positive lease generation.",
+      );
+    }
+    const current = this.#fencingTokens.get(runId) ?? 0;
+    if (fencingToken < current) {
+      throw new LeaseError(
+        "checkpoint_fence_rejected",
+        "A newer writer generation owns checkpoint persistence for this run.",
+        { fencingToken, currentFencingToken: current },
+      );
+    }
+    this.#fencingTokens.set(runId, fencingToken);
+    return fencingToken;
+  }
 
   load(runId) {
     return this.#records.has(runId) ? structuredClone(this.#records.get(runId)) : null;
   }
 
-  save(runId, checkpoint) {
+  save(runId, checkpoint, { fencingToken } = {}) {
+    const current = this.#fencingTokens.get(runId);
+    if (current === undefined || fencingToken !== current) {
+      throw new LeaseError(
+        "checkpoint_fence_rejected",
+        "Checkpoint persistence requires the current writer generation.",
+        { fencingToken, currentFencingToken: current ?? null },
+      );
+    }
     this.#records.set(runId, structuredClone(checkpoint));
     return this.load(runId);
+  }
+
+  inspectFence(runId) {
+    return this.#fencingTokens.get(runId) ?? null;
   }
 }

@@ -12,7 +12,7 @@ runtime, and date; vendor documentation can advance independently.
 | Style Dictionary | 5.7.0, ESM, Node.js 22+ | Await build APIs; use exact compiler/runtime/lock coordinates |
 | React Aria Components | 1.22.1 observed | High-level unstyled behavior and accessible composition |
 | React Stately | 3.51.0 observed | Reusable state and collection ownership |
-| Spectrum 2 | 1.8.2 package observed | Distinct generation and provider/styling contract |
+| Spectrum 2 | 1.8.1 package observed | Distinct generation and provider/styling contract |
 | React Spectrum v3 | 3.47.7 observed | Distinct package family and provider/theming contract |
 | Figma Variables REST | Documentation observed 2026-10-21 | Enterprise access, request-scoped atomicity, separately owned cross-request reconciliation |
 

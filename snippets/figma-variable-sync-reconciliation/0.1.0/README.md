@@ -51,7 +51,7 @@ reviewed local contract
 | Approved local meaning | Receiving token system | The variable identity and value intended for synchronization |
 | Operation plan | `planner.mjs` | Stable intent IDs, dependency edges, batch envelope, and plan digest |
 | Writer authority | `InMemoryLeaseStore` | One active writer generation and expiry |
-| Resume point | `InMemoryCheckpointStore` | Next batch, expected revision and state digest, temporary-ID map, resolved-byte high-water mark, and observations |
+| Resume point | `InMemoryCheckpointStore` | Current writer fence plus next batch, expected revision and state digest, temporary-ID map, monotonic remote-ID ledger, resolved-byte high-water mark, and observations |
 | Remote truth | `FakeVariableRemote` | Current variables, revision, and applied intent results |
 | Final result | Coordinator receipt | Accepted state digest, revisions, counts, and recovery history |
 
@@ -68,17 +68,30 @@ checkpoint systems with its own atomicity and availability evidence.
   preflight check completes before the coordinator consults a clock, snapshot,
   checkpoint, lease, or remote mutation route.
 - Topological admission reports unresolved dependencies and cycles before
-  remote work begins.
+  remote work begins. Every target or reference that names a declared
+  temporary ID carries a direct dependency on the operation that creates it,
+  so input order and later batch boundaries cannot change ownership.
 - Batch planning enforces an explicit byte envelope. The coordinator measures
   each batch again after temporary IDs become service-issued IDs and returns
   the exact planned, resolved, and allowed byte counts when representation
   growth calls for replanning.
-- Payload admission accepts bounded JSON data and the named fields assigned to
-  each operation type.
+- Payload admission accepts dense arrays and plain or null-prototype JSON data
+  records with enumerable data properties. Maps, sets, dates, typed arrays,
+  accessors, sparse arrays, cycles, ambiguous numbers, and custom prototypes
+  return typed plan friction before a digest or side effect exists.
+- Every initial, post-settlement, and final remote snapshot passes an exact,
+  bounded contract before hashing or checkpoint advancement. Variable identity,
+  type, version, reference, JSON value, uniqueness, and aggregate envelopes
+  therefore share one admitted state model.
 - A lease carries owner, generation, and expiry; a later writer can acquire a
   new generation after expiry. The coordinator acquires that authority before
   it creates the first durable checkpoint, so a lease-held caller leaves both
   checkpoint and remote state unchanged.
+- The checkpoint store claims the lease generation as a monotonic fencing
+  token. Every checkpoint save renews the lease before and after its awaited
+  write, and the store compares the token atomically at commit. A successor
+  generation therefore keeps an expired writer from publishing older progress
+  after a slow remote or storage call.
 - The coordinator awaits remote, lease, checkpoint, clock, delay, and fault
   collaborators. Promise rejections enter the same retry, reconciliation,
   conflict, and interruption paths as synchronous throws.
@@ -91,10 +104,22 @@ checkpoint systems with its own atomicity and availability evidence.
 - A lost success response triggers an intent read. The coordinator classifies
   the batch as already applied, safe to retry, or requiring a human decision.
 - A post-apply interruption leaves the earlier checkpoint intact. Resume
-  reaches the same accepted state through idempotent replay when the observed
-  revision advances by the one expected batch transition.
-- Concurrent drift returns expected and observed revisions for reconciliation,
-  including drift between interrupted application and resume.
+  reaches the same accepted state through an exact intent read when the
+  observed revision advances by the one expected batch transition.
+- Before another resumed write, the coordinator compares the live revision and
+  state digest with the durable checkpoint. An exact applied intent set can
+  explain one pending batch transition; other drift returns both coordinates
+  for reconciliation.
+- Apply and intent-read responses advance progress after their complete,
+  one-to-one operation result sets pass structural and semantic admission.
+  Create results also pass an identity-transfer check against every previously
+  observed or issued remote ID and the settled snapshot. The monotonic ledger
+  retains an issued ID after deletion, so a later batch cannot silently reuse
+  it for a different temporary identity.
+- After direct application, the coordinator projects every operation over the
+  earlier admitted snapshot and compares the complete result with the settled
+  snapshot. This catches unreported changes to unrelated variables, version
+  drift, create collisions, and dangling references before progress advances.
 - Every durable batch checkpoint carries the reconciled state digest. Final
   acceptance requires the remote revision and state digest to match that
   checkpoint, so drift after a completed run receives a typed conflict.
@@ -103,6 +128,11 @@ checkpoint systems with its own atomicity and availability evidence.
   resource envelope before a resumed run can accept or advance it. The
   coordinator also caps accumulated retry, reconciliation, and settlement
   observations before the next remote mutation.
+- Every checkpoint save returns through the same structural and semantic
+  admission path. The coordinator compares the store-returned record with the
+  record submitted for persistence before that durable state can drive another
+  batch. Version `0.1.0` is the first published checkpoint shape for this
+  exemplar and includes the remote-ID ledger as a required field.
 - A changed plan receives a successor run ID and checkpoint lineage.
 - Receipts carry identifiers, counts, revisions, classifications, and digests;
   credential-shaped fields receive a dedicated finding.
@@ -111,14 +141,16 @@ checkpoint systems with its own atomicity and availability evidence.
 
 | Injected condition | Observation | Recovery |
 | --- | --- | --- |
-| `retry_after` | Bounded delay and attempt appear in the checkpoint | Retry inside the declared attempt and delay budget |
+| `retry_after` | A safe non-negative integer delay and attempt appear in the checkpoint | Wait for the admitted interval and retry inside the declared attempt and delay budget |
 | active writer lease | The current owner and expiry return as typed friction | Preserve checkpoint and remote state, then retry after authority becomes available |
 | lease release rejected or unconfirmed | The caller receives `lease_release_failed` or `lease_release_unconfirmed` with the writer generation | Inspect the writer lease and resume from the durable checkpoint after authority is current |
+| writer expires around checkpoint persistence | Lease renewal or the atomic checkpoint fence returns typed friction and the earlier durable coordinate remains authoritative | Read remote intent results and reconcile the exact batch before a successor writer advances |
 | `timeout_before_apply` | Intent read returns an absent batch at the expected revision | Retry the same stable intents |
 | `response_lost` | Intent read returns every operation as applied | Advance the checkpoint using reconciled results |
 | `interrupt_after_apply` | Remote truth advances while the durable checkpoint remains earlier | Resume the same batch and accept idempotent replay |
 | `concurrent_drift` | Remote revision advances outside the prepared plan | Return both revisions to a reconciliation owner |
-| drift before interrupted-run resume | Idempotent intent results arrive at a later revision than the single expected transition | Return `remote_revision_changed_after_settlement` and the batch reconciliation coordinate |
+| drift before interrupted-run resume | Live revision or state differs from the checkpoint and an exact pending intent set does not explain one transition | Return `checkpoint_remote_drift` at `reconcile:resume` before another remote mutation |
+| incomplete or mismatched remote results | Apply or intent-read results fail the exact operation-set contract | Return `remote_protocol_invalid`, preserve the durable checkpoint, and inspect the remote adapter at the batch reconciliation coordinate |
 | drift after completion | Final revision or state digest differs from the durable accepted checkpoint | Return `final_remote_drift` with both expected and observed coordinates |
 | incomplete checkpoint transcript | Batch progress and settlement records disagree | Return `checkpoint_invalid` and inspect the durable checkpoint before resume |
 | service-issued ID expands a batch | Resolved bytes exceed the admitted request envelope | Return `resolved_batch_exceeds_limit` before remote dispatch and replan that batch |
@@ -158,6 +190,9 @@ digesting a complete plan:
 | One JSON string or object key | 64 KiB UTF-8 |
 | One encoded operation / batch | 256 KiB / 256 KiB |
 | Aggregate encoded plan | 4 MiB |
+| Remote snapshot variables / JSON nodes / depth | 10,000 / 100,000 / 20 |
+| Remote snapshot strings / encoded snapshot | 4 MiB / 8 MiB |
+| Historical remote variable identities | 20,000 |
 | Checkpoint observations | 50,000 |
 
 Receiving adapters may select tighter limits inside this envelope. A successor
@@ -220,13 +255,17 @@ meaning before deciding whether replay remains safe.
 ## Evidence boundary
 
 The focused tests establish side-effect-free preflight rejection, typed
-operation envelopes, UTF-8 string and aggregate-plan ceilings, exact and
-resolved batch boundaries, capped checkpoint observations, the local planner,
-fake-remote atomicity, lease/checkpoint behavior, typed fault classifications,
-idempotent replay, read-and-reconcile handling across asynchronous adapter
-rejections, awaited lease release, revision and state-digest drift reporting,
-chain and fan-out graph behavior, and the deterministic receipt in the
-resolved Node.js environment. Live Figma API compatibility, durable
+operation envelopes, descriptor-first array and record admission, UTF-8 string
+and aggregate-plan ceilings, exact and resolved batch boundaries, capped
+checkpoint observations, store-returned checkpoint verification, monotonic
+remote-identity ownership, same-batch temporary-target reconciliation,
+complete projected batch-state verification, generation-fenced checkpoint
+persistence across writer takeover, the local planner, fake-remote atomicity,
+lease/checkpoint behavior, typed fault
+classifications, idempotent replay, read-and-reconcile handling across
+asynchronous adapter rejections, awaited lease release, revision and
+state-digest drift reporting, chain and fan-out graph behavior, and the
+deterministic receipt in the resolved Node.js environment. Live Figma API compatibility, durable
 persistence, authenticated authority, multi-process coordination, production
 scale, and organizational release acceptance belong to their receiving
 implementations.

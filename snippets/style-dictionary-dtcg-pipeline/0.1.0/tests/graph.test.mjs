@@ -20,6 +20,10 @@ async function fixture(path) {
   return JSON.parse(await readFile(resolve(packageRoot, path), "utf8"));
 }
 
+function srgb(hex, components, alpha = 1) {
+  return { colorSpace: "srgb", components, alpha, hex };
+}
+
 test("all brand and mode coordinates share the complete admitted graph", async () => {
   const observed = [];
   for (const coordinate of BUILD_MATRIX) {
@@ -41,8 +45,135 @@ test("Figma-shaped input adapts through a bounded source map", async () => {
   const snapshot = await fixture("fixtures/accepted/figma-snapshot.json");
   const result = adaptFigmaSnapshot(snapshot);
   assert.equal(result.sourceMap.length, 2);
-  assert.equal(validateTokenGraph(result.document).metrics.tokenCount, 2);
+  const validation = validateTokenGraph(result.document);
+  assert.equal(validation.metrics.tokenCount, 2);
+  assert.deepEqual(
+    validation.tokens.get("action.background").value,
+    srgb("#2546f5", [0.1450980392, 0.2745098039, 0.9607843137]),
+  );
   assert.deepEqual(result.sourceMap.map(entry => entry.tokenPath), ["action.background", "action.focus-ring"]);
+});
+
+test("Figma-shaped colors require bounded RGBA channels before DTCG adaptation", () => {
+  const snapshot = {
+    collections: [{
+      id: "collection-1",
+      name: "Synthetic collection",
+      modes: [{ id: "mode-1", name: "Light" }],
+      variables: [{
+        id: "variable-1",
+        name: "action/background",
+        resolvedType: "COLOR",
+        valuesByMode: { "mode-1": "#2546f5" },
+      }],
+    }],
+  };
+  assert.throws(
+    () => adaptFigmaSnapshot(snapshot),
+    error => error instanceof PipelineError
+      && error.code === "FIGMA_VALUE_INVALID"
+      && error.details.reason === "rgba_object_required",
+  );
+});
+
+test("the declared DTCG subset admits each direct value shape and inferred alias type", () => {
+  const directValues = {
+    boolean: true,
+    color: srgb("#2546f5", [0.1450980392, 0.2745098039, 0.9607843137]),
+    dimension: { value: -0.5, unit: "rem" },
+    duration: { value: 1.5, unit: "s" },
+    number: -2.25,
+    string: "Synthetic label",
+  };
+  const document = {};
+  for (const [type, value] of Object.entries(directValues)) {
+    document[type] = {
+      base: { $type: type, $value: value },
+      alias: { $value: `{${type}.base}` },
+    };
+  }
+  const validation = validateTokenGraph(document);
+  assert.equal(validation.metrics.tokenCount, 12);
+  assert.equal(validation.metrics.referenceCount, 6);
+  for (const type of Object.keys(directValues)) {
+    assert.equal(validation.tokens.get(`${type}.alias`).type, type);
+  }
+});
+
+for (const [label, color] of [
+  ["hsl none", { colorSpace: "hsl", components: ["none", 0, 100], hex: "#ffffff" }],
+  ["lab", { colorSpace: "lab", components: [60.17, 93.54, -60.5], alpha: 1 }],
+  ["lch", { colorSpace: "lch", components: [60.17, 111.4, 327.11] }],
+  ["oklab", { colorSpace: "oklab", components: [0.7, -0.1, 0.2] }],
+  ["oklch", { colorSpace: "oklch", components: [0.7, 0.32, 328.363] }],
+  ["xyz", { colorSpace: "xyz-d65", components: [0.59, 0.28, 0.97] }],
+]) {
+  test(`structured color admission accepts ${label}`, () => {
+    assert.equal(validateTokenGraph({ sample: { $type: "color", $value: color } }).metrics.tokenCount, 1);
+  });
+}
+
+for (const [label, type, value, reason] of [
+  ["boolean text", "boolean", "true", "boolean_required"],
+  ["number text", "number", "1", "finite_json_number_required"],
+  ["string number", "string", 1, "string_required"],
+  ["dimension scalar", "dimension", 4, "object_required"],
+  ["dimension missing unit", "dimension", { value: 4 }, "unexpected_value_shape"],
+  ["dimension extra member", "dimension", { value: 4, unit: "px", fallback: 4 }, "unexpected_value_shape"],
+  ["dimension unsupported unit", "dimension", { value: 4, unit: "pt" }, "unsupported_unit"],
+  ["duration unsupported unit", "duration", { value: 120, unit: "frames" }, "unsupported_unit"],
+  ["legacy hex color", "color", "#2546f5", "structured_color_required"],
+  ["unknown color space", "color", { colorSpace: "synthetic", components: [0, 0, 0] }, "unsupported_color_space"],
+  ["short color components", "color", { colorSpace: "srgb", components: [0, 0] }, "three_components_required"],
+  ["sRGB component range", "color", { colorSpace: "srgb", components: [1.1, 0, 0] }, "component_0_out_of_range"],
+  ["hue upper boundary", "color", { colorSpace: "hsl", components: [360, 50, 50] }, "component_0_out_of_range"],
+  ["negative chroma", "color", { colorSpace: "oklch", components: [0.7, -0.1, 30] }, "component_1_out_of_range"],
+  ["alpha range", "color", { colorSpace: "srgb", components: [0, 0, 0], alpha: 2 }, "alpha_out_of_range"],
+  ["short hex fallback", "color", { colorSpace: "srgb", components: [0, 0, 0], hex: "#000" }, "six_digit_hex_required"],
+  ["color extra member", "color", { colorSpace: "srgb", components: [0, 0, 0], fallback: "#000000" }, "unexpected_value_shape"],
+]) {
+  test(`DTCG value admission rejects ${label}`, () => {
+    assert.throws(
+      () => validateTokenGraph({ sample: { $type: type, $value: value } }),
+      error => error instanceof PipelineError
+        && error.code === "INVALID_DTCG_VALUE"
+        && error.details.expectedType === type
+        && error.details.reason === reason,
+    );
+  });
+}
+
+test("direct-call admission rejects non-finite and non-JSON values", () => {
+  const customPrototype = Object.create({ inherited: true });
+  customPrototype.value = "synthetic";
+  const sparse = [];
+  sparse.length = 2;
+  sparse[1] = "synthetic";
+  const cyclic = {};
+  cyclic.self = cyclic;
+  const accessor = {};
+  Object.defineProperty(accessor, "value", { enumerable: true, get: () => "synthetic" });
+  for (const value of [NaN, Infinity, undefined, 1n, new Date(0), new Map(), customPrototype, sparse, cyclic, accessor]) {
+    assert.throws(
+      () => validateTokenGraph({ sample: { $type: "string", $value: value } }),
+      error => error instanceof PipelineError && error.code === "INVALID_JSON_VALUE",
+    );
+  }
+});
+
+test("a token and child group at one path return the structural conflict", () => {
+  assert.throws(
+    () => validateTokenGraph({
+      action: {
+        $type: "number",
+        $value: 1,
+        pressed: { $value: 2 },
+      },
+    }),
+    error => error instanceof PipelineError
+      && error.code === "TOKEN_GROUP_CONFLICT"
+      && error.details.childProperty === "pressed",
+  );
 });
 
 test("Figma-shaped input rejects reserved paths before object assignment", () => {
@@ -122,6 +253,36 @@ test("semantic diff leads with receiver-relevant changes", async () => {
     changedAliasTargets: ["action.background", "action.background-pressed", "action.focus-ring"],
     changedValues: ["component.action-button.background", "component.action-button.background-pressed", "component.action-button.focus-ring", "component.select.focus-ring"],
   });
+});
+
+function aliasTopologyDocument(selectedValue, { base = 1, alternate = 1 } = {}) {
+  return {
+    base: { $type: "number", $value: base },
+    alternate: { $type: "number", $value: alternate },
+    selected: { $type: "number", $value: selectedValue },
+  };
+}
+
+for (const [label, accepted, candidate] of [
+  ["literal to alias", aliasTopologyDocument(1), aliasTopologyDocument("{base}")],
+  ["alias to literal", aliasTopologyDocument("{base}"), aliasTopologyDocument(1)],
+  ["equal alias target change", aliasTopologyDocument("{base}"), aliasTopologyDocument("{alternate}")],
+  ["unequal alias target change", aliasTopologyDocument("{base}", { alternate: 2 }), aliasTopologyDocument("{alternate}", { alternate: 2 })],
+]) {
+  test(`semantic diff classifies ${label} once as topology`, () => {
+    const diff = semanticDiff(accepted, candidate);
+    assert.deepEqual(diff.changedAliasTargets, ["selected"]);
+    assert.deepEqual(diff.changedValues, []);
+  });
+}
+
+test("semantic diff reports resolved value changes when alias topology stays stable", () => {
+  const diff = semanticDiff(
+    aliasTopologyDocument("{base}", { base: 1 }),
+    aliasTopologyDocument("{base}", { base: 2 }),
+  );
+  assert.deepEqual(diff.changedAliasTargets, []);
+  assert.deepEqual(diff.changedValues, ["base", "selected"]);
 });
 
 test("independent source layers keep one owner per token path", async () => {

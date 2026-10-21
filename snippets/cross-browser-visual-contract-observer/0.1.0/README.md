@@ -11,11 +11,11 @@ to five fitting evidence classes:
 
 | Decision | Primary signal | Controlled fault |
 | --- | --- | --- |
-| Identify the specimen-family input | Accessible name and label geometry | Break the label/control association |
+| Identify the specimen-family input | Accessible name, visible label bounds, and label geometry | Break the label/control association |
 | Preserve accepted state during a late preview | Keyboard focus, generation, and live status | Apply the late response and move focus |
-| Read the workflow at narrow width and enlarged text | Viewport, scroll, and hit-target geometry | Give the workflow a fixed wide inline size |
+| Read the workflow at narrow width and enlarged text | Viewport, card order and containment, content fit, and every select/button hit target | Overlap the accepted card with the candidate |
 | Apply the reviewed Acme-light action token | Computed semantic custom property (`#2546f5`) | Substitute a local gray value |
-| Keep the flow connector behind both cards | Bounded workflow bitmap plus layer reading | Paint the connector above the cards |
+| Keep the flow connector behind both cards | Changed pixels in a bounded workflow bitmap | Paint the connector above the cards |
 
 The visible labels sit above their controls, retain programmatic association,
 and remain visible through narrow and enlarged-text observations. The native
@@ -75,11 +75,13 @@ Each target in [`inventory/decisions.json`](inventory/decisions.json) names:
 8. the source boundary that receives repair.
 
 Semantic and interaction assertions answer names, relationships, state, focus,
-and settlement directly. Focused geometry answers clipping, overflow, and hit
-targets. Computed style answers accepted token application. A workflow-only
-bitmap accompanies the connector painter-order assertion because that visual
-relationship exceeds the semantic tree; the layer reading keeps diagnosis
-specific.
+and settlement directly. Focused geometry answers clipping, overflow, and both
+dimensions of each hit target. Computed style answers accepted token
+application. The connector painter-order oracle compares the visible workflow
+crop with the same crop while the connector is hidden. At least one changed
+pixel establishes that the connector is visible; zero changed pixels inside
+the card regions establishes that the cards paint above it. The controlled
+fault moves the connector above the cards and must produce changed card pixels.
 
 ## Finite matrix and tier choice
 
@@ -144,18 +146,20 @@ before body capture.
 
 ## Focused evidence
 
-The package-local model lane establishes 38 behaviors, including exact direct
+The package-local model lane establishes the declared behaviors, including exact direct
 dependency and lock coordinates, plus distinct
 source-manifest, receiver-build, and observed-fixture coordinates, five matched
 fault-oracle pairs, closed and bounded inventory/matrix admission, executable
 case planning, bounded JSON and artifact-source admission, typed recovery from
 descriptor-read failure, unique contained
 artifacts, exact artifact-byte totals, concurrent candidate isolation, replay
-integrity, and two promotion interruptions. The browser lane exercises 177 checks across
+integrity, and two promotion interruptions. The browser lane exercises the complete declared matrix across
 Chromium, Firefox, and WebKit: a digest-bound smoke of the actual Issue #62
 production build, exact browser coordinates, every applicable target/scenario
 case, every controlled fault, applied matrix rendering/input state, and
-script-independent reading.
+script-independent reading. Bitmap receipts retain the visible and
+connector-hidden digests plus the total, changed, card-region, and changed-card
+pixel counts that determine the verdict.
 
 Playwright WebKit is an upstream WebKit build with Playwright patches. Branded
 Safari receives its own observation coordinate. Browser and bitmap claims
@@ -164,8 +168,11 @@ coordinate. Playwright
 `1.64.0`/`1.64.1` Linux WebKit revision `2370` also has a documented
 `backdrop-filter` performance fault on constrained two-CPU runners. A receiving
 harness that uses that CSS feature should classify the matching timeout as an
-environment-coordinate exception and move to a validated released coordinate
-that contains the later WebKit roll.
+environment-coordinate exception. WebKit r2373 and later restore the reported
+non-overlapping case, while overlapping elements still compound paint time in
+r2376. Exercise the receiver's exact overlap composition and retain Playwright
+1.63 or another independently validated stable coordinate until a released
+successor passes that case.
 
 ## Adaptation route
 

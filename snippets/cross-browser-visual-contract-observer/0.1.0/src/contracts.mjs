@@ -18,6 +18,7 @@ const CLASSIFICATIONS = new Set(["contract_change", "deterministic_implementatio
 const SOURCE_MANIFEST_KIND = "generated_output_manifest";
 const RECEIVER_MANIFEST_KIND = "production_build_manifest";
 const IDENTIFIER_PATTERN = /^[a-z0-9][a-z0-9._-]*$/u;
+const ARTIFACT_PATH_PATTERN = /^artifacts\/(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9._-]*$/iu;
 const SOURCE_FILE_SYSTEM = Object.freeze({ lstat, open });
 
 export const OBSERVER_RESOURCE_LIMITS = Object.freeze({
@@ -31,6 +32,12 @@ export const OBSERVER_RESOURCE_LIMITS = Object.freeze({
   artifactPathBytes: 1024,
   viewportWidth: 8192,
   viewportHeight: 8192,
+  viewportPixels: 4 * 1024 * 1024,
+  bitmapCropWidth: 4096,
+  bitmapCropHeight: 8192,
+  bitmapPixels: 4 * 1024 * 1024,
+  bitmapCardRegions: 16,
+  bitmapScreenshotBytes: 8 * 1024 * 1024,
   artifactBytes: 16 * 1024 * 1024,
   aggregateArtifactBytes: 64 * 1024 * 1024,
   normalizedDepth: 24,
@@ -57,14 +64,12 @@ export function sha256(value) {
 }
 
 export function stableStringify(value) {
-  const order = input => {
-    if (Array.isArray(input)) return input.map(order);
-    if (input && typeof input === "object") {
-      return Object.fromEntries(Object.keys(input).sort().map(key => [key, order(input[key])]));
-    }
-    return input;
-  };
-  return `${JSON.stringify(order(value), null, 2)}\n`;
+  const admitted = clonePlainData(value, {
+    boundary: "stable_serialization",
+    restartFrom: "source",
+    sortKeys: true,
+  });
+  return `${JSON.stringify(admitted, null, 2)}\n`;
 }
 
 // One bounded file descriptor owns inspection and reading. This keeps source
@@ -219,18 +224,186 @@ function resourceLimitExceeded(boundary, limit, observed, restartFrom) {
   });
 }
 
-function requireKeys(record, keys, boundary, optionalKeys = []) {
-  const restartFrom = boundary.startsWith("receipt")
-    ? "receipt"
-    : boundary.startsWith("matrix") || boundary.startsWith("observation_matrix")
-      ? "matrix"
-      : boundary.startsWith("decision")
-        ? "inventory"
-        : "source";
+function restartCoordinateForBoundary(boundary) {
+  if (boundary.startsWith("receipt")) return "receipt";
+  if (boundary.startsWith("matrix") || boundary.startsWith("observation_matrix")) return "matrix";
+  if (boundary.startsWith("decision")) return "inventory";
+  if (boundary.startsWith("tier_selection")) return "selection";
+  if (boundary.startsWith("bitmap_capture")) return "receiver_bitmap_boundary";
+  return "source";
+}
+
+function invalidPlainData(boundary, reason, restartFrom, details = {}) {
+  throw new ObserverError(
+    "INVALID_CONTRACT",
+    `${boundary} must use enumerable own data properties with string keys.`,
+    { boundary, reason, restartFrom, ...details },
+  );
+}
+
+// Inspect descriptors before reading caller-controlled values. This admits the
+// same plain-data topology JSON carries while keeping getters outside the
+// observation and publication boundaries.
+function requirePlainRecordDescriptors(record, boundary, restartFrom) {
   if (!record || typeof record !== "object" || Array.isArray(record)) {
     throw new ObserverError("INVALID_CONTRACT", `${boundary} must be an object.`, { boundary, restartFrom });
   }
-  const missing = keys.filter(key => !Object.hasOwn(record, key));
+  let prototype;
+  let names;
+  let symbols;
+  try {
+    prototype = Object.getPrototypeOf(record);
+    names = Object.getOwnPropertyNames(record);
+    symbols = Object.getOwnPropertySymbols(record);
+  } catch {
+    invalidPlainData(boundary, "descriptor_inspection_failed", restartFrom);
+  }
+  if (prototype !== Object.prototype && prototype !== null) {
+    invalidPlainData(boundary, "plain_object_required", restartFrom);
+  }
+  if (symbols.length > 0) {
+    invalidPlainData(boundary, "symbol_fields_present", restartFrom, { symbolCount: symbols.length });
+  }
+  const descriptors = new Map();
+  for (const name of names) {
+    let descriptor;
+    try {
+      descriptor = Object.getOwnPropertyDescriptor(record, name);
+    } catch {
+      invalidPlainData(boundary, "descriptor_inspection_failed", restartFrom);
+    }
+    if (!descriptor || descriptor.enumerable !== true) {
+      invalidPlainData(boundary, "hidden_fields_present", restartFrom, { fields: [name] });
+    }
+    if (!Object.hasOwn(descriptor, "value")) {
+      invalidPlainData(boundary, "accessor_fields_present", restartFrom, { fields: [name] });
+    }
+    descriptors.set(name, descriptor);
+  }
+  return { descriptors, prototype };
+}
+
+function requireDenseArrayDescriptors(value, { boundary, minimum = 0, maximum, restartFrom }) {
+  if (!Array.isArray(value)) {
+    throw new ObserverError("INVALID_CONTRACT", `${boundary} must be an array.`, { boundary, restartFrom });
+  }
+  let prototype;
+  let lengthDescriptor;
+  try {
+    prototype = Object.getPrototypeOf(value);
+    lengthDescriptor = Object.getOwnPropertyDescriptor(value, "length");
+  } catch {
+    invalidPlainData(boundary, "descriptor_inspection_failed", restartFrom);
+  }
+  if (prototype !== Array.prototype) {
+    invalidPlainData(boundary, "plain_array_required", restartFrom);
+  }
+  const length = lengthDescriptor?.value;
+  if (!lengthDescriptor || !Object.hasOwn(lengthDescriptor, "value") || !Number.isSafeInteger(length) || length < minimum) {
+    throw new ObserverError("INVALID_CONTRACT", `${boundary} requires at least ${minimum} item${minimum === 1 ? "" : "s"}.`, { boundary, restartFrom });
+  }
+  if (length > maximum) resourceLimitExceeded(boundary, maximum, length, restartFrom);
+
+  let symbols;
+  let names;
+  try {
+    symbols = Object.getOwnPropertySymbols(value);
+    names = Object.getOwnPropertyNames(value);
+  } catch {
+    invalidPlainData(boundary, "descriptor_inspection_failed", restartFrom);
+  }
+  if (symbols.length > 0) {
+    invalidPlainData(boundary, "symbol_fields_present", restartFrom, { symbolCount: symbols.length });
+  }
+  const descriptors = new Map();
+  let indexCount = 0;
+  for (const name of names) {
+    if (name === "length") continue;
+    const index = Number(name);
+    if (!Number.isSafeInteger(index) || index < 0 || index >= length || String(index) !== name) {
+      invalidPlainData(boundary, "array_fields_outside_dense_indices", restartFrom, { fields: [name] });
+    }
+    let descriptor;
+    try {
+      descriptor = Object.getOwnPropertyDescriptor(value, name);
+    } catch {
+      invalidPlainData(boundary, "descriptor_inspection_failed", restartFrom);
+    }
+    if (!descriptor || descriptor.enumerable !== true) {
+      invalidPlainData(boundary, "hidden_fields_present", restartFrom, { fields: [name] });
+    }
+    if (!Object.hasOwn(descriptor, "value")) {
+      invalidPlainData(boundary, "accessor_fields_present", restartFrom, { fields: [name] });
+    }
+    descriptors.set(name, descriptor);
+    indexCount += 1;
+  }
+  if (indexCount !== length) {
+    invalidPlainData(boundary, "dense_array_required", restartFrom, { expectedItems: length, observedItems: indexCount });
+  }
+  return { descriptors, length };
+}
+
+export function clonePlainData(value, {
+  boundary = "plain_data",
+  restartFrom = "source",
+  sortKeys = false,
+} = {}) {
+  const active = new WeakSet();
+  const maximumDepth = OBSERVER_RESOURCE_LIMITS.normalizedDepth + 8;
+  const maximumNodes = OBSERVER_RESOURCE_LIMITS.normalizedNodes + 512;
+  let nodes = 0;
+
+  const clone = (input, depth, currentBoundary) => {
+    nodes += 1;
+    if (nodes > maximumNodes) resourceLimitExceeded(`${boundary}.nodes`, maximumNodes, nodes, restartFrom);
+    if (depth > maximumDepth) resourceLimitExceeded(`${boundary}.depth`, maximumDepth, depth, restartFrom);
+    if (input === null || typeof input === "string" || typeof input === "boolean") return input;
+    if (typeof input === "number" && Number.isFinite(input)) return input;
+    if (!input || typeof input !== "object") {
+      invalidPlainData(currentBoundary, "json_scalar_required", restartFrom);
+    }
+    if (active.has(input)) invalidPlainData(currentBoundary, "acyclic_tree_required", restartFrom);
+    active.add(input);
+    try {
+      if (Array.isArray(input)) {
+        const admitted = requireDenseArrayDescriptors(input, {
+          boundary: currentBoundary,
+          minimum: 0,
+          maximum: maximumNodes,
+          restartFrom,
+        });
+        const output = new Array(admitted.length);
+        for (let index = 0; index < admitted.length; index += 1) {
+          output[index] = clone(admitted.descriptors.get(String(index)).value, depth + 1, `${currentBoundary}[${index}]`);
+        }
+        return output;
+      }
+      const admitted = requirePlainRecordDescriptors(input, currentBoundary, restartFrom);
+      const keys = [...admitted.descriptors.keys()];
+      if (sortKeys) keys.sort();
+      const output = Object.create(admitted.prototype === null ? null : Object.prototype);
+      for (const key of keys) {
+        Object.defineProperty(output, key, {
+          value: clone(admitted.descriptors.get(key).value, depth + 1, `${currentBoundary}.${key}`),
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
+      }
+      return output;
+    } finally {
+      active.delete(input);
+    }
+  };
+
+  return clone(value, 0, boundary);
+}
+
+function requireKeys(record, keys, boundary, optionalKeys = []) {
+  const restartFrom = restartCoordinateForBoundary(boundary);
+  const { descriptors } = requirePlainRecordDescriptors(record, boundary, restartFrom);
+  const missing = keys.filter(key => !descriptors.has(key));
   if (missing.length > 0) {
     throw new ObserverError("INVALID_CONTRACT", `${boundary} is missing required fields.`, {
       boundary,
@@ -239,7 +412,7 @@ function requireKeys(record, keys, boundary, optionalKeys = []) {
     });
   }
   const admitted = new Set([...keys, ...optionalKeys]);
-  const unknown = Object.keys(record).filter(key => !admitted.has(key));
+  const unknown = [...descriptors.keys()].filter(key => !admitted.has(key));
   if (unknown.length > 0) {
     throw new ObserverError("INVALID_CONTRACT", `${boundary} contains fields outside its declared contract.`, {
       boundary,
@@ -262,10 +435,7 @@ function requireBoundedString(value, { boundary, field, maxBytes, pattern = null
 }
 
 function requireBoundedArray(value, { boundary, minimum = 1, maximum, restartFrom }) {
-  if (!Array.isArray(value) || value.length < minimum) {
-    throw new ObserverError("INVALID_CONTRACT", `${boundary} requires at least ${minimum} item${minimum === 1 ? "" : "s"}.`, { boundary, restartFrom });
-  }
-  if (value.length > maximum) resourceLimitExceeded(boundary, maximum, value.length, restartFrom);
+  requireDenseArrayDescriptors(value, { boundary, minimum, maximum, restartFrom });
   return value;
 }
 
@@ -277,7 +447,7 @@ function requireEnum(value, values, boundary, restartFrom) {
 
 function validateNormalizedEnvelope(value) {
   const seen = new WeakSet();
-  const stack = [{ value, depth: 0 }];
+  const stack = [{ value, depth: 0, boundary: "receipt.result.normalized" }];
   let nodes = 0;
   let aggregateStringBytes = 0;
   while (stack.length > 0) {
@@ -309,10 +479,15 @@ function validateNormalizedEnvelope(value) {
       throw new ObserverError("INVALID_CONTRACT", "receipt.result.normalized must be acyclic.", { restartFrom: "receipt" });
     }
     seen.add(current.value);
-    if (!Array.isArray(current.value) && Object.getPrototypeOf(current.value) !== Object.prototype && Object.getPrototypeOf(current.value) !== null) {
-      throw new ObserverError("INVALID_CONTRACT", "receipt.result.normalized must contain JSON objects and arrays.", { restartFrom: "receipt" });
-    }
-    for (const [key, child] of Object.entries(current.value)) {
+    const descriptors = Array.isArray(current.value)
+      ? requireDenseArrayDescriptors(current.value, {
+        boundary: current.boundary,
+        minimum: 0,
+        maximum: OBSERVER_RESOURCE_LIMITS.normalizedNodes,
+        restartFrom: "receipt",
+      }).descriptors
+      : requirePlainRecordDescriptors(current.value, current.boundary, "receipt").descriptors;
+    for (const [key, descriptor] of descriptors) {
       const keyBytes = Buffer.byteLength(key, "utf8");
       if (keyBytes > OBSERVER_RESOURCE_LIMITS.identifierBytes) {
         resourceLimitExceeded("receipt.result.normalized.key", OBSERVER_RESOURCE_LIMITS.identifierBytes, keyBytes, "receipt");
@@ -321,12 +496,12 @@ function validateNormalizedEnvelope(value) {
       if (aggregateStringBytes > OBSERVER_RESOURCE_LIMITS.normalizedAggregateStringBytes) {
         resourceLimitExceeded("receipt.result.normalized.stringBytes", OBSERVER_RESOURCE_LIMITS.normalizedAggregateStringBytes, aggregateStringBytes, "receipt");
       }
-      stack.push({ value: child, depth: current.depth + 1 });
+      stack.push({ value: descriptor.value, depth: current.depth + 1, boundary: `${current.boundary}.${key}` });
     }
   }
 }
 
-export function validateInventory(inventory) {
+function validateAdmittedInventory(inventory) {
   requireKeys(inventory, ["schemaVersion", "targets"], "decision_inventory");
   if (inventory.schemaVersion !== "0.1.0") {
     throw new ObserverError("INVALID_INVENTORY", "The decision inventory requires version 0.1.0 and at least one target.", { restartFrom: "inventory" });
@@ -362,7 +537,19 @@ export function validateInventory(inventory) {
   return { targetCount: ids.size, evidenceClasses: [...new Set(inventory.targets.map(target => target.oracle))].sort() };
 }
 
-export function validateMatrix(matrix) {
+function admitInventory(inputInventory) {
+  const inventory = clonePlainData(inputInventory, {
+    boundary: "decision_inventory",
+    restartFrom: "inventory",
+  });
+  return { inventory, summary: validateAdmittedInventory(inventory) };
+}
+
+export function validateInventory(inputInventory) {
+  return admitInventory(inputInventory).summary;
+}
+
+function validateAdmittedMatrix(matrix) {
   requireKeys(matrix, ["schemaVersion", "scenarios"], "observation_matrix");
   if (matrix.schemaVersion !== "0.1.0") {
     throw new ObserverError("INVALID_MATRIX", "The observation matrix requires version 0.1.0 and at least one scenario.", { restartFrom: "matrix" });
@@ -384,6 +571,15 @@ export function validateMatrix(matrix) {
       scenario.viewport.height < 1 ||
       scenario.viewport.height > OBSERVER_RESOURCE_LIMITS.viewportHeight
     ) throw new ObserverError("VIEWPORT_INVALID", `Scenario ${scenario.id} requires a viewport inside the declared finite envelope.`, { scenarioId: scenario.id, maximum: { width: OBSERVER_RESOURCE_LIMITS.viewportWidth, height: OBSERVER_RESOURCE_LIMITS.viewportHeight }, restartFrom: "matrix" });
+    const viewportPixels = scenario.viewport.width * scenario.viewport.height;
+    if (!Number.isSafeInteger(viewportPixels) || viewportPixels > OBSERVER_RESOURCE_LIMITS.viewportPixels) {
+      resourceLimitExceeded(
+        `matrix_scenario.${scenario.id}.viewportPixels`,
+        OBSERVER_RESOURCE_LIMITS.viewportPixels,
+        viewportPixels,
+        "matrix",
+      );
+    }
     if (![1, 2, 4].includes(scenario.textScale)) throw new ObserverError("INVALID_CONTRACT", `Scenario ${scenario.id} names an unsupported text scale.`, { scenarioId: scenario.id, restartFrom: "matrix" });
     requireEnum(scenario.direction, DIRECTIONS, `matrix_scenario.${scenario.id}.direction`, "matrix");
     requireEnum(scenario.media, MEDIA, `matrix_scenario.${scenario.id}.media`, "matrix");
@@ -408,23 +604,282 @@ export function validateMatrix(matrix) {
   return { scenarioCount: ids.size, textScales, directions, media, states };
 }
 
-export function selectTier({ tier, changedTargetIds = [] }, inventory, matrix) {
-  if (!TIERS.has(tier)) throw new ObserverError("TIER_UNSUPPORTED", `Tier ${tier} is outside the finite observation policy.`, { tier, restartFrom: "selection" });
-  validateInventory(inventory);
-  validateMatrix(matrix);
-  if (!Array.isArray(changedTargetIds) || changedTargetIds.length > OBSERVER_RESOURCE_LIMITS.targets) {
-    throw new ObserverError("INVALID_CONTRACT", "Changed-boundary selection requires a bounded target-id array.", { maximum: OBSERVER_RESOURCE_LIMITS.targets, restartFrom: "selection" });
+function admitMatrix(inputMatrix) {
+  const matrix = clonePlainData(inputMatrix, {
+    boundary: "observation_matrix",
+    restartFrom: "matrix",
+  });
+  return { matrix, summary: validateAdmittedMatrix(matrix) };
+}
+
+export function validateMatrix(inputMatrix) {
+  return admitMatrix(inputMatrix).summary;
+}
+
+export function validateBitmapCaptureEnvelope(inputEnvelope) {
+  const envelope = clonePlainData(inputEnvelope, {
+    boundary: "bitmap_capture",
+    restartFrom: "receiver_bitmap_boundary",
+  });
+  requireKeys(
+    envelope,
+    ["cropWidth", "cropHeight", "pixelWidth", "pixelHeight", "cardCount"],
+    "bitmap_capture",
+  );
+  const { cropWidth, cropHeight, pixelWidth, pixelHeight, cardCount } = envelope;
+  const integerCoordinates = [cropWidth, cropHeight, pixelWidth, pixelHeight, cardCount];
+  if (!integerCoordinates.every(Number.isSafeInteger) || integerCoordinates.some(value => value < 1)) {
+    throw new ObserverError("BITMAP_ENVELOPE_INVALID", "Bitmap capture requires positive integer dimensions and card count.", {
+      restartFrom: "receiver_bitmap_boundary",
+    });
   }
+  if (cropWidth > OBSERVER_RESOURCE_LIMITS.bitmapCropWidth) {
+    resourceLimitExceeded("bitmap.cropWidth", OBSERVER_RESOURCE_LIMITS.bitmapCropWidth, cropWidth, "receiver_bitmap_boundary");
+  }
+  if (cropHeight > OBSERVER_RESOURCE_LIMITS.bitmapCropHeight) {
+    resourceLimitExceeded("bitmap.cropHeight", OBSERVER_RESOURCE_LIMITS.bitmapCropHeight, cropHeight, "receiver_bitmap_boundary");
+  }
+  if (cardCount > OBSERVER_RESOURCE_LIMITS.bitmapCardRegions) {
+    resourceLimitExceeded("bitmap.cardRegions", OBSERVER_RESOURCE_LIMITS.bitmapCardRegions, cardCount, "receiver_bitmap_boundary");
+  }
+  const pixels = pixelWidth * pixelHeight;
+  if (!Number.isSafeInteger(pixels) || pixels > OBSERVER_RESOURCE_LIMITS.bitmapPixels) {
+    resourceLimitExceeded("bitmap.pixels", OBSERVER_RESOURCE_LIMITS.bitmapPixels, pixels, "receiver_bitmap_boundary");
+  }
+  return { cropWidth, cropHeight, pixelWidth, pixelHeight, cardCount, pixels };
+}
+
+export function validateBitmapScreenshotBytes(bytes, boundary) {
+  if (!Number.isSafeInteger(bytes) || bytes < 1) {
+    throw new ObserverError("BITMAP_ENVELOPE_INVALID", "Bitmap capture requires a positive encoded byte count.", {
+      boundary,
+      restartFrom: "receiver_bitmap_boundary",
+    });
+  }
+  if (bytes > OBSERVER_RESOURCE_LIMITS.bitmapScreenshotBytes) {
+    resourceLimitExceeded(
+      boundary,
+      OBSERVER_RESOURCE_LIMITS.bitmapScreenshotBytes,
+      bytes,
+      "receiver_bitmap_boundary",
+    );
+  }
+  return bytes;
+}
+
+export function inspectPngScreenshot(bytes, boundary) {
+  let prototype;
+  try {
+    prototype = ArrayBuffer.isView(bytes) ? Object.getPrototypeOf(bytes) : null;
+  } catch {
+    prototype = null;
+  }
+  if (prototype !== Buffer.prototype && prototype !== Uint8Array.prototype) {
+    throw new ObserverError("BITMAP_INPUT_INVALID", "Bitmap comparison requires directly addressed Buffer or Uint8Array bytes.", {
+      boundary,
+      restartFrom: "receiver_bitmap_boundary",
+    });
+  }
+
+  // Typed-array intrinsic accessors bypass caller-defined properties. Copying
+  // the admitted view gives the parser one stable byte snapshot.
+  const typedArrayPrototype = Object.getPrototypeOf(Uint8Array.prototype);
+  const bufferGetter = Object.getOwnPropertyDescriptor(typedArrayPrototype, "buffer").get;
+  const byteOffsetGetter = Object.getOwnPropertyDescriptor(typedArrayPrototype, "byteOffset").get;
+  const byteLengthGetter = Object.getOwnPropertyDescriptor(typedArrayPrototype, "byteLength").get;
+  let backingBuffer;
+  let byteOffset;
+  let byteLength;
+  try {
+    backingBuffer = bufferGetter.call(bytes);
+    byteOffset = byteOffsetGetter.call(bytes);
+    byteLength = byteLengthGetter.call(bytes);
+  } catch {
+    throw new ObserverError("BITMAP_INPUT_INVALID", "Bitmap comparison requires directly addressed Buffer or Uint8Array bytes.", {
+      boundary,
+      restartFrom: "receiver_bitmap_boundary",
+    });
+  }
+  validateBitmapScreenshotBytes(byteLength, boundary);
+  const view = Buffer.from(Buffer.from(backingBuffer, byteOffset, byteLength));
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const validHeader = (
+    view.byteLength >= 24
+    && view.subarray(0, signature.byteLength).equals(signature)
+    && view.readUInt32BE(8) === 13
+    && view.toString("ascii", 12, 16) === "IHDR"
+  );
+  if (!validHeader) {
+    throw new ObserverError("BITMAP_INPUT_INVALID", "Bitmap comparison requires a bounded PNG with an IHDR size coordinate.", {
+      boundary,
+      restartFrom: "receiver_bitmap_boundary",
+    });
+  }
+  const pixelWidth = view.readUInt32BE(16);
+  const pixelHeight = view.readUInt32BE(20);
+  if (pixelWidth < 1 || pixelHeight < 1) {
+    throw new ObserverError("BITMAP_INPUT_INVALID", "Bitmap comparison requires positive PNG dimensions.", {
+      boundary,
+      pixelWidth,
+      pixelHeight,
+      restartFrom: "receiver_bitmap_boundary",
+    });
+  }
+  return { pixelWidth, pixelHeight };
+}
+
+const expectedGeometryControlIds = ["family", "state", "preview", "accept"];
+const expectedGeometryCardIds = ["candidate", "accepted"];
+
+function exactIdentities(items, expected) {
+  if (!Array.isArray(items) || items.length !== expected.length) return false;
+  const ids = new Set(items.map(item => item?.id));
+  return ids.size === expected.length && expected.every(id => ids.has(id));
+}
+
+function exactOrderedIdentities(items, expected) {
+  return exactIdentities(items, expected) && items.every((item, index) => item.id === expected[index]);
+}
+
+function finiteRectangle(item) {
+  if (!item || typeof item !== "object") return false;
+  const values = [item.width, item.height, item.left, item.right, item.top, item.bottom];
+  return (
+    values.every(Number.isFinite)
+    && item.width > 0
+    && item.height > 0
+    && Math.abs(item.right - item.left - item.width) <= 0.01
+    && Math.abs(item.bottom - item.top - item.height) <= 0.01
+  );
+}
+
+function contentFits(item) {
+  return (
+    Number.isFinite(item.clientWidth)
+    && Number.isFinite(item.clientHeight)
+    && Number.isFinite(item.scrollWidth)
+    && Number.isFinite(item.scrollHeight)
+    && item.scrollWidth <= item.clientWidth + 1
+    && item.scrollHeight <= item.clientHeight + 1
+  );
+}
+
+function cardsKeepReadingOrder(cards, direction) {
+  const byId = new Map(cards.map(card => [card.id, card]));
+  const candidate = byId.get("candidate");
+  const accepted = byId.get("accepted");
+  if (!candidate || !accepted) return false;
+  const stacked = candidate.bottom <= accepted.top + 0.5;
+  const inline = direction === "rtl"
+    ? accepted.right <= candidate.left + 0.5
+    : candidate.right <= accepted.left + 0.5;
+  return stacked || inline;
+}
+
+function evaluateSemanticObservation(observed) {
+  const label = observed?.label;
+  const control = observed?.control;
+  return (
+    observed?.accessibleName === "Specimen family"
+    && observed?.labelPosition === "above"
+    && observed?.labelVisible === true
+    && finiteRectangle(label)
+    && finiteRectangle(control)
+    && label.left >= -0.5
+    && label.right <= observed.viewportWidth + 0.5
+    && label.top >= -0.5
+    && label.bottom <= observed.viewportHeight + 0.5
+    && label.bottom <= control.top + 0.5
+  );
+}
+
+function evaluateGeometryObservation(observed) {
+  const controls = observed?.controls;
+  const cards = observed?.cards;
+  const workflow = observed?.workflow;
+  const finiteViewport = (
+    Number.isFinite(observed?.viewportWidth)
+    && observed.viewportWidth > 0
+    && Number.isFinite(observed?.scrollWidth)
+    && observed.scrollWidth <= observed.viewportWidth
+    && ["ltr", "rtl"].includes(observed?.direction)
+  );
+  if (
+    !finiteViewport
+    || !finiteRectangle(workflow)
+    || !contentFits(workflow)
+    || !exactIdentities(controls, expectedGeometryControlIds)
+    || !exactOrderedIdentities(cards, expectedGeometryCardIds)
+  ) return false;
+  const withinViewport = item => item.left >= -0.5 && item.right <= observed.viewportWidth + 0.5;
+  const usableControls = controls.every(control => (
+    finiteRectangle(control)
+    && contentFits(control)
+    && control.width >= 44
+    && control.height >= 44
+    && withinViewport(control)
+  ));
+  const readableCards = cards.every(card => (
+    finiteRectangle(card)
+    && contentFits(card)
+    && withinViewport(card)
+    && card.left >= workflow.left - 0.5
+    && card.right <= workflow.right + 0.5
+    && card.top >= workflow.top - 0.5
+    && card.bottom <= workflow.bottom + 0.5
+  ));
+  return usableControls && readableCards && cardsKeepReadingOrder(cards, observed.direction);
+}
+
+function targetsForTier(tier, targets, changedTargets) {
+  switch (tier) {
+    case "changed_boundary":
+      return targets.filter(target => changedTargets.has(target.id));
+    case "smoke":
+      return targets.filter(target => ["semantic", "interaction"].includes(target.oracle));
+    case "full":
+      return targets;
+    default:
+      throw new ObserverError("TIER_UNSUPPORTED", `Tier ${tier} is outside the finite observation policy.`, { tier, restartFrom: "selection" });
+  }
+}
+
+function reasonForTier(tier) {
+  switch (tier) {
+    case "smoke":
+      return "Fast semantic and interaction confidence";
+    case "changed_boundary":
+      return "Named receiver boundary changed";
+    case "full":
+      return "Release acceptance across the declared matrix";
+    default:
+      throw new ObserverError("TIER_UNSUPPORTED", `Tier ${tier} is outside the finite observation policy.`, { tier, restartFrom: "selection" });
+  }
+}
+
+export function selectTier(inputSelection, inputInventory, inputMatrix) {
+  const selection = clonePlainData(inputSelection, {
+    boundary: "tier_selection",
+    restartFrom: "selection",
+  });
+  requireKeys(selection, ["tier"], "tier_selection", ["changedTargetIds"]);
+  const { tier } = selection;
+  const changedTargetIds = Object.hasOwn(selection, "changedTargetIds") ? selection.changedTargetIds : [];
+  if (!TIERS.has(tier)) throw new ObserverError("TIER_UNSUPPORTED", `Tier ${tier} is outside the finite observation policy.`, { tier, restartFrom: "selection" });
+  const { inventory } = admitInventory(inputInventory);
+  const { matrix } = admitMatrix(inputMatrix);
+  requireBoundedArray(changedTargetIds, {
+    boundary: "tier_selection.changedTargetIds",
+    minimum: 0,
+    maximum: OBSERVER_RESOURCE_LIMITS.targets,
+    restartFrom: "selection",
+  });
   for (const id of changedTargetIds) requireBoundedString(id, { boundary: "changed_target", field: "id", maxBytes: OBSERVER_RESOURCE_LIMITS.identifierBytes, pattern: IDENTIFIER_PATTERN, restartFrom: "selection" });
   const targetIds = new Set(inventory.targets.map(target => target.id));
   const unknown = changedTargetIds.filter(id => !targetIds.has(id));
   if (unknown.length > 0) throw new ObserverError("TARGET_UNKNOWN", "Changed-boundary selection includes an unknown target.", { unknown, restartFrom: "selection" });
   const changedTargets = new Set(changedTargetIds);
-  const targets = tier === "changed_boundary"
-    ? inventory.targets.filter(target => changedTargets.has(target.id))
-    : tier === "smoke"
-      ? inventory.targets.filter(target => ["semantic", "interaction"].includes(target.oracle))
-      : inventory.targets;
+  const targets = targetsForTier(tier, inventory.targets, changedTargets);
   if (tier === "changed_boundary" && targets.length === 0) {
     throw new ObserverError("CHANGED_BOUNDARY_REQUIRED", "Changed-boundary coverage requires at least one named target.", { restartFrom: "selection" });
   }
@@ -453,7 +908,7 @@ export function selectTier({ tier, changedTargetIds = [] }, inventory, matrix) {
   }
   return {
     tier,
-    reason: tier === "smoke" ? "Fast semantic and interaction confidence" : tier === "changed_boundary" ? "Named receiver boundary changed" : "Release acceptance across the declared matrix",
+    reason: reasonForTier(tier),
     targets: targets.map(target => target.id),
     scenarios: scenarios.map(scenario => scenario.id),
     cases,
@@ -466,24 +921,61 @@ export function selectTier({ tier, changedTargetIds = [] }, inventory, matrix) {
   };
 }
 
-export function evaluateControlledObservation(target, observed) {
+export function evaluateControlledObservation(inputTarget, inputObserved) {
+  const target = clonePlainData(inputTarget, {
+    boundary: "controlled_observation.target",
+    restartFrom: "inventory",
+  });
+  const observed = clonePlainData(inputObserved, {
+    boundary: "controlled_observation.observed",
+    restartFrom: "receiver_observation",
+  });
   switch (target.oracle) {
     case "semantic":
-      return { status: observed.accessibleName === "Specimen family" && observed.labelPosition === "above" ? "pass" : "fail", normalized: observed };
+      return { status: evaluateSemanticObservation(observed) ? "pass" : "fail", normalized: observed };
     case "interaction":
       return { status: observed.focusOwner === "preview" && observed.acceptedGeneration === 0 && observed.settlement === "stale" ? "pass" : "fail", normalized: observed };
-    case "geometry":
-      return { status: observed.scrollWidth <= observed.viewportWidth && observed.minimumHitTarget >= 44 ? "pass" : "fail", normalized: observed };
+    case "geometry": {
+      return { status: evaluateGeometryObservation(observed) ? "pass" : "fail", normalized: observed };
+    }
     case "computed_style":
       return { status: observed.customProperty === "--contract-action" && observed.resolvedValue === "rgb(37, 70, 245)" ? "pass" : "fail", normalized: observed };
-    case "bitmap_crop":
-      return { status: observed.crop === "workflow" && observed.connectorLayer < observed.cardLayer ? "pass" : "fail", normalized: observed };
+    case "bitmap_crop": {
+      const metric = observed.metric;
+      const counts = metric
+        ? [metric.pixelWidth, metric.pixelHeight, metric.totalPixels, metric.changedPixels, metric.cardPixels, metric.cardChangedPixels]
+        : [];
+      const pass = (
+        observed.crop === "workflow" &&
+        /^[a-f0-9]{64}$/u.test(observed.screenshotSha256 ?? "") &&
+        /^[a-f0-9]{64}$/u.test(observed.referenceSha256 ?? "") &&
+        observed.screenshotSha256 !== observed.referenceSha256 &&
+        Number.isSafeInteger(observed.screenshotBytes) &&
+        observed.screenshotBytes > 0 &&
+        Number.isSafeInteger(observed.referenceBytes) &&
+        observed.referenceBytes > 0 &&
+        metric?.kind === "connector_visibility_pixel_difference" &&
+        metric?.reference === "connector_hidden" &&
+        counts.every(value => Number.isSafeInteger(value) && value >= 0) &&
+        metric.pixelWidth > 0 &&
+        metric.pixelHeight > 0 &&
+        metric.totalPixels === metric.pixelWidth * metric.pixelHeight &&
+        metric.changedPixels > 0 &&
+        metric.changedPixels <= metric.totalPixels &&
+        metric.cardPixels > 0 &&
+        metric.cardPixels <= metric.totalPixels &&
+        metric.cardChangedPixels <= metric.changedPixels &&
+        metric.cardChangedPixels <= metric.cardPixels &&
+        metric.cardChangedPixels === 0
+      );
+      return { status: pass ? "pass" : "fail", normalized: observed };
+    }
     default:
       throw new ObserverError("ORACLE_UNSUPPORTED", `Oracle ${target.oracle} requires a registered evaluator.`, { targetId: target.id, restartFrom: "inventory" });
   }
 }
 
-export function validateReceipt(receipt) {
+function validateAdmittedReceipt(receipt) {
   requireKeys(receipt, ["schemaVersion", "receiptId", "caseId", "targetId", "decisionBoundary", "source", "receiver", "subject", "environment", "viewportMedia", "observation", "result", "artifacts", "measurements", "standing", "classification", "restartFrom"], "receipt");
   if (receipt.schemaVersion !== "0.1.0") throw new ObserverError("RECEIPT_VERSION_UNSUPPORTED", "Receipt schemaVersion must equal 0.1.0.", { restartFrom: "receipt" });
   requireBoundedString(receipt.receiptId, { boundary: "receipt", field: "receiptId", maxBytes: OBSERVER_RESOURCE_LIMITS.identifierBytes, pattern: IDENTIFIER_PATTERN, restartFrom: "receipt" });
@@ -516,7 +1008,7 @@ export function validateReceipt(receipt) {
     throw new ObserverError("MANIFEST_KIND_MISMATCH", "Source and receiver coordinates require their declared generated-output and production-build manifest kinds.", { sourceKind: receipt.source.manifestKind, receiverKind: receipt.receiver.manifestKind, restartFrom: "coordinate" });
   }
   requireKeys(receipt.subject, ["kind", "path", "sha256", "bytes"], "receipt.subject");
-  requireBoundedString(receipt.subject.path, { boundary: "receipt.subject", field: "path", maxBytes: OBSERVER_RESOURCE_LIMITS.artifactPathBytes, restartFrom: "receipt" });
+  requireBoundedString(receipt.subject.path, { boundary: "receipt.subject", field: "path", maxBytes: OBSERVER_RESOURCE_LIMITS.artifactPathBytes, pattern: ARTIFACT_PATH_PATTERN, restartFrom: "receipt" });
   if (!Number.isInteger(receipt.subject.bytes) || receipt.subject.bytes < 1 || receipt.subject.bytes > OBSERVER_RESOURCE_LIMITS.artifactBytes) resourceLimitExceeded("receipt.subject.bytes", OBSERVER_RESOURCE_LIMITS.artifactBytes, receipt.subject.bytes, "receipt");
   requireKeys(receipt.viewportMedia, ["scenarioId", "width", "height", "textScale", "direction", "media", "colorMode", "motion", "image", "font", "input", "state", "javaScript"], "receipt.viewportMedia");
   requireBoundedString(receipt.viewportMedia.scenarioId, { boundary: "receipt.viewportMedia", field: "scenarioId", maxBytes: OBSERVER_RESOURCE_LIMITS.identifierBytes, pattern: IDENTIFIER_PATTERN, restartFrom: "receipt" });
@@ -544,12 +1036,9 @@ export function validateReceipt(receipt) {
       throw new ObserverError("ARTIFACT_BOUNDARY_INVALID", "Receipt artifacts require normalized contained paths, positive byte counts, and SHA-256 digests.", { artifact, restartFrom: "receipt" });
     }
     requireKeys(artifact, ["path", "sha256", "bytes"], "receipt.artifact");
-    const pathSegments = typeof artifact.path === "string" ? artifact.path.split("/") : [];
     if (
-      pathSegments[0] !== "artifacts" ||
-      pathSegments.length < 2 ||
-      pathSegments.slice(1).some(segment => !segment || segment === "." || segment === "..") ||
-      artifact.path.includes("\\") ||
+      typeof artifact.path !== "string" ||
+      !ARTIFACT_PATH_PATTERN.test(artifact.path) ||
       !/^[a-f0-9]{64}$/u.test(artifact.sha256 ?? "") ||
       !Number.isInteger(artifact.bytes) ||
       artifact.bytes < 1 ||
@@ -583,4 +1072,9 @@ export function validateReceipt(receipt) {
     throw new ObserverError("MEASUREMENT_INVALID", "Receipt measurements require a positive assertion count and the exact total emitted artifact bytes.", { expectedEmittedBytes: emittedBytes, restartFrom: "receipt" });
   }
   return receipt;
+}
+
+export function validateReceipt(inputReceipt) {
+  const receipt = clonePlainData(inputReceipt, { boundary: "receipt", restartFrom: "receipt" });
+  return validateAdmittedReceipt(receipt);
 }

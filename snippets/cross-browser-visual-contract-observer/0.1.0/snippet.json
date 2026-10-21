@@ -35,7 +35,7 @@
   },
   "technicalVeracity": {
     "status": "verified",
-    "basis": "Thirty-eight package-local checks establish exact direct dependency and lock coordinates, the published receipt-schema identity, distinct generated-output, production-build, and observed-fixture coordinates, closed and bounded inventory and matrix admission, tier selection, matched fault-oracle behavior, bounded JSON, receipt, and regular artifact-source admission, typed sparse-file, symbolic-link, and descriptor-read recovery, unique path containment, concurrent candidate isolation, accepted-destination replay integrity, and pointer recovery. One hundred seventy-seven browser checks pass across the lock-resolved Chromium, Firefox, and WebKit coordinates in the exercised macOS ARM64 environment, including a rebuild, manifest rehash, focused interactive smoke of the bound Issue #62 production build, applicable target/scenario observations, controlled faults, and scenario-contract checks in each engine."
+    "basis": "Focused package-local checks establish exact direct dependency and lock coordinates, the published receipt-schema identity, distinct generated-output, production-build, and observed-fixture coordinates, closed and bounded inventory and matrix admission, tier selection, matched fault-oracle behavior, bounded JSON, receipt, and regular artifact-source admission, typed sparse-file, symbolic-link, and descriptor-read recovery, unique path containment, concurrent candidate isolation, accepted-destination replay integrity, and pointer recovery. The complete declared browser matrix passes across the lock-resolved Chromium, Firefox, and WebKit coordinates in the exercised macOS ARM64 environment, including a rebuild, manifest rehash, focused interactive smoke of the bound Issue #62 production build, applicable target/scenario observations, controlled faults, and scenario-contract checks in each engine."
   },
   "license": "Apache-2.0",
   "canonicalPath": "snippets/cross-browser-visual-contract-observer/0.1.0",
@@ -65,7 +65,7 @@
     {"role":"fixture","path":"fixtures/accepted/observations.json","declaredMediaType":"application/json"},
     {"role":"controlled_fault","path":"fixtures/rejected/semantic.json","declaredMediaType":"application/json"},
     {"role":"controlled_fault","path":"fixtures/rejected/interaction.json","declaredMediaType":"application/json"},
-    {"role":"controlled_fault","path":"fixtures/rejected/geometry.json","declaredMediaType":"application/json"},
+    {"role":"controlled_fault","path":"fixtures/rejected/geometry-card-overlap.json","declaredMediaType":"application/json"},
     {"role":"controlled_fault","path":"fixtures/rejected/computed-style.json","declaredMediaType":"application/json"},
     {"role":"controlled_fault","path":"fixtures/rejected/bitmap.json","declaredMediaType":"application/json"},
     {"role":"receipt_orientation","path":"receipts/accepted/README.md","declaredMediaType":"text/markdown"},
@@ -99,7 +99,7 @@
       "fixtures/accepted/observations.json",
       "fixtures/rejected/semantic.json",
       "fixtures/rejected/interaction.json",
-      "fixtures/rejected/geometry.json",
+      "fixtures/rejected/geometry-card-overlap.json",
       "fixtures/rejected/computed-style.json",
       "fixtures/rejected/bitmap.json"
     ],
@@ -136,7 +136,7 @@
       }
     ],
     "codeExemplarGranularity": "One independently faultable synthetic HTML receiver, one digest-bound smoke of the sibling Issue #62 production build, five evidence classes, five matched fault fixtures, a ten-scenario matrix, an exact three-browser Playwright lane, a typed receipt, and recoverable pointer publication.",
-    "complexityAndAllocation": "The selector materializes an explicit applicability join. For T targets, S selected scenarios, C emitted observation/fault/scenario-contract cases, and B browsers, C is at most T × S + T + S and executed work is O(C × B). expectedWork equals C. Admission caps T and S at 64 before browser contexts open. Inventory, receipt, and tier admission use linear passes and indexed identity outside the bounded join. A receipt carries at most 32 artifacts, 16 MiB each, and 64 MiB in aggregate; normalized observation data receives finite depth, node, and UTF-8 string-byte bounds. Bitmap allocation remains bounded to one workflow crop at a time."
+    "complexityAndAllocation": "The selector materializes an explicit applicability join. For T targets, S selected scenarios, C emitted observation/fault/scenario-contract cases, and B browsers, C is at most T × S + T + S and executed work is O(C × B). expectedWork equals C. Admission caps T and S at 64 before browser contexts open. Inventory, receipt, and tier admission use linear passes and indexed identity outside the bounded join. A receipt carries at most 32 artifacts, 16 MiB each, and 64 MiB in aggregate; normalized observation data receives finite depth, node, and UTF-8 string-byte bounds. Bitmap comparison holds one visible workflow crop and one connector-hidden reference, then performs one O(P × R) pixel pass for P crop pixels and two bounded card regions R."
   },
   "boundaries": {
     "evidence": "The model and browser checks establish the declared signals, faults, applied matrix dimensions, typed dependency and subject identities, receipt integrity, and recovery behavior for the included synthetic receiver, plus the bound production-manifest digest and focused interactive behavior of the actual Issue #62 build, under Playwright 1.64.1, lock-resolved browser revisions, and the exercised macOS ARM64 coordinate.",

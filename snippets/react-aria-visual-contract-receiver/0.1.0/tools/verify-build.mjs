@@ -1,16 +1,23 @@
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
-import {mkdir, mkdtemp, readFile, readdir, rm, writeFile} from "node:fs/promises";
+import {mkdir, mkdtemp, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import {dirname, extname, join, relative, resolve} from "node:path";
+import {dirname, extname, join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {gzipSync} from "node:zlib";
 import {build} from "vite";
-import {SPECIMENS} from "../src/model.mjs";
+import {RECEIVER_TRANSITIONS, SPECIMENS} from "../src/model.mjs";
+import {
+  hashBoundedRegularFile,
+  inventoryRegularFiles,
+  readBoundedJson,
+  readBoundedRegularFile
+} from "./bounded-files.mjs";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryRoot = resolve(packageRoot, "../../..");
 const artifactsRoot = resolve(repositoryRoot, ".artifacts/react-aria-visual-contract-receiver");
+const bootstrapConfigurationBytes = 100_000;
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -20,18 +27,8 @@ function canonicalJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-async function readJson(path) {
-  return JSON.parse(await readFile(path, "utf8"));
-}
-
-async function walkFiles(root, directory = root) {
-  const paths = [];
-  for (const entry of await readdir(directory, {withFileTypes: true})) {
-    const path = resolve(directory, entry.name);
-    if (entry.isDirectory()) paths.push(...await walkFiles(root, path));
-    else if (entry.isFile()) paths.push(relative(root, path).replaceAll("\\", "/"));
-  }
-  return paths.sort();
+async function readJson(path, maxBytes, label) {
+  return readBoundedJson(path, {maxBytes, label});
 }
 
 function mediaType(path) {
@@ -43,7 +40,7 @@ function mediaType(path) {
   })[extname(path)] ?? "application/octet-stream";
 }
 
-async function compile(outDir) {
+async function compile(outDir, resourceLimits, completeBuildBytes) {
   await build({
     root: packageRoot,
     configFile: resolve(packageRoot, "vite.config.mjs"),
@@ -51,46 +48,100 @@ async function compile(outDir) {
     build: {outDir, emptyOutDir: true}
   });
 
+  const inventory = await inventoryRegularFiles(outDir, {
+    maxEntries: resourceLimits.buildEntryCount,
+    maxDepth: resourceLimits.buildDirectoryDepth
+  });
   const files = [];
-  for (const path of await walkFiles(outDir)) {
-    const bytes = await readFile(resolve(outDir, path));
-    files.push({path, mediaType: mediaType(path), bytes: bytes.length, sha256: sha256(bytes)});
+  let observedBuildBytes = 0;
+  for (const path of inventory.files) {
+    const remainingBuildBytes = completeBuildBytes - observedBuildBytes;
+    const file = await hashBoundedRegularFile(resolve(outDir, path), {
+      maxBytes: Math.min(resourceLimits.buildFileBytes, Math.max(remainingBuildBytes, 0)),
+      label: `build artifact ${path}`
+    });
+    observedBuildBytes += file.bytes;
+    files.push({path, mediaType: mediaType(path), ...file});
   }
   return {schemaVersion: "0.1.0", files};
 }
 
-async function authoredSourceBytes(paths) {
+async function authoredSourceBytes(paths, resourceLimits, maxTotalBytes) {
   let total = 0;
-  for (const path of paths) total += (await readFile(resolve(packageRoot, path))).length;
+  for (const path of paths) {
+    const source = await hashBoundedRegularFile(resolve(packageRoot, path), {
+      maxBytes: Math.min(
+        resourceLimits.authoredSourceFileBytes,
+        Math.max(maxTotalBytes - total, 0)
+      ),
+      label: `authored source ${path}`
+    });
+    total += source.bytes;
+  }
   return total;
 }
 
-async function measurements(manifest, budgets) {
-  const packageJson = await readJson(resolve(packageRoot, "package.json"));
-  const packageLock = await readJson(resolve(packageRoot, "package-lock.json"));
-  const model = await readFile(resolve(packageRoot, "src/model.mjs"), "utf8");
+async function measurements(manifest, budgets, buildDirectory) {
+  const packageJson = await readJson(
+    resolve(packageRoot, "package.json"),
+    budgets.resourceLimits.configurationBytes,
+    "package manifest"
+  );
+  const packageLock = await readJson(
+    resolve(packageRoot, "package-lock.json"),
+    budgets.resourceLimits.configurationBytes,
+    "package lock"
+  );
   const javascript = manifest.files.filter(file => extname(file.path) === ".js");
   const runtime = manifest.files.filter(file => extname(file.path) !== ".map");
   const sourceMaps = manifest.files.filter(file => extname(file.path) === ".map");
   assert.equal(javascript.length, 1, "the receiver build must emit one JavaScript entry asset");
-  const javascriptBytes = await readFile(resolve(budgets.firstBuildDirectory, javascript[0].path));
+  const javascriptBytes = await readBoundedRegularFile(
+    resolve(buildDirectory, javascript[0].path),
+    {
+      maxBytes: Math.min(
+        budgets.resourceLimits.buildFileBytes,
+        budgets.thresholds.runtimeJavaScriptBytes
+      ),
+      label: `runtime JavaScript ${javascript[0].path}`
+    }
+  );
 
   return {
-    authoredSourceBytes: await authoredSourceBytes(budgets.authoredSourcePaths),
+    authoredSourceBytes: await authoredSourceBytes(
+      budgets.authoredSourcePaths,
+      budgets.resourceLimits,
+      budgets.thresholds.authoredSourceBytes
+    ),
     directDependencyCount:
       Object.keys(packageJson.dependencies ?? {}).length +
       Object.keys(packageJson.devDependencies ?? {}).length,
     resolvedPackageCount: Object.keys(packageLock.packages ?? {}).length,
     specimenCount: SPECIMENS.length,
-    transitionOperationCount: [...model.matchAll(
-      /export function (?:chooseDraft|beginPreview|settlePreview|releaseAccepted)\b/gu
-    )].length,
+    transitionOperationCount: Object.keys(RECEIVER_TRANSITIONS).length,
     runtimeJavaScriptBytes: javascript.reduce((sum, file) => sum + file.bytes, 0),
     runtimeJavaScriptGzipBytes: gzipSync(javascriptBytes, {level: 9}).length,
     runtimeAssetBytes: runtime.reduce((sum, file) => sum + file.bytes, 0),
     sourceMapBytes: sourceMaps.reduce((sum, file) => sum + file.bytes, 0),
     completeBuildBytes: manifest.files.reduce((sum, file) => sum + file.bytes, 0)
   };
+}
+
+function checkResourceLimits(resourceLimits) {
+  const names = [
+    "authoredSourceFileBytes",
+    "buildDirectoryDepth",
+    "buildEntryCount",
+    "buildFileBytes",
+    "configurationBytes"
+  ];
+  assert.deepEqual(Object.keys(resourceLimits).sort(), names);
+  for (const name of names) {
+    assert.ok(
+      Number.isSafeInteger(resourceLimits[name]) && resourceLimits[name] > 0,
+      `${name} must carry a positive safe-integer envelope`
+    );
+  }
 }
 
 function checkRouteInventory(manifest) {
@@ -157,21 +208,38 @@ function checkExpectedMeasurements(observed, expected, thresholds) {
   }
 }
 
-const budgets = await readJson(resolve(packageRoot, "config/build-budgets.json"));
-const expected = await readJson(resolve(packageRoot, "expected/build-budget-contract.json"));
+const budgets = await readJson(
+  resolve(packageRoot, "config/build-budgets.json"),
+  bootstrapConfigurationBytes,
+  "build budget contract"
+);
+const expected = await readJson(
+  resolve(packageRoot, "expected/build-budget-contract.json"),
+  bootstrapConfigurationBytes,
+  "expected build contract"
+);
 const temporaryRoot = await mkdtemp(join(tmpdir(), "visual-contract-receiver-"));
 const firstBuildDirectory = resolve(temporaryRoot, "first");
 const secondBuildDirectory = resolve(temporaryRoot, "second");
 const startedAt = process.hrtime.bigint();
 
 try {
-  const first = await compile(firstBuildDirectory);
-  const second = await compile(secondBuildDirectory);
+  checkResourceLimits(budgets.resourceLimits);
+  const first = await compile(
+    firstBuildDirectory,
+    budgets.resourceLimits,
+    budgets.thresholds.completeBuildBytes
+  );
+  const second = await compile(
+    secondBuildDirectory,
+    budgets.resourceLimits,
+    budgets.thresholds.completeBuildBytes
+  );
   assert.deepEqual(second, first, "two clean builds must produce byte-identical manifests");
   checkRouteInventory(first);
 
   const deterministicManifestSha256 = sha256(canonicalJson(first));
-  const observed = await measurements(first, {...budgets, firstBuildDirectory});
+  const observed = await measurements(first, budgets, firstBuildDirectory);
   checkThresholds(observed, budgets.thresholds);
   assert.equal(expected.coordinate, budgets.coordinate);
   assert.equal(expected.deterministicManifestSha256, deterministicManifestSha256);

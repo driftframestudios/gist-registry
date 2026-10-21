@@ -111,6 +111,30 @@ export function settlePreview(state, ticket, outcome = "accepted") {
     throw new TypeError(`Unsupported preview outcome: ${String(outcome)}`);
   }
 
+  if (state.request.status !== "pending") {
+    const settledOutcome = state.request.status;
+    if (settledOutcome === outcome) {
+      return {
+        state,
+        result: Object.freeze({
+          kind: "settlement_replayed",
+          generation: ticket.generation,
+          outcome
+        })
+      };
+    }
+
+    return {
+      state,
+      result: Object.freeze({
+        kind: "settlement_conflict",
+        generation: ticket.generation,
+        attemptedOutcome: outcome,
+        settledOutcome
+      })
+    };
+  }
+
   if (outcome === "rejected") {
     const nextState = freezeState({
       ...state,
@@ -195,3 +219,11 @@ export function labelFor(specimenId) {
   assertSpecimenId(specimenId);
   return specimensById.get(specimenId).label;
 }
+
+/** The controller routes every state-changing domain operation through this inventory. */
+export const RECEIVER_TRANSITIONS = Object.freeze({
+  chooseDraft,
+  beginPreview,
+  settlePreview,
+  releaseAccepted
+});
