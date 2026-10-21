@@ -1,5 +1,11 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { assertSanitizedReceipt, compareOrdinal, digest } from "./canonical.mjs";
+import { types as utilTypes } from "node:util";
+import {
+  assertSanitizedReceipt,
+  canonicalize,
+  compareOrdinal,
+  digest,
+} from "./canonical.mjs";
 import {
   ExecutionInterruptedError,
   LeaseError,
@@ -22,6 +28,13 @@ import {
 
 const coordinatePattern = /^[a-z0-9][a-z0-9._-]*$/iu;
 const digestPattern = /^[a-f0-9]{64}$/u;
+const typedErrorDetailLimits = Object.freeze({
+  depth: 8,
+  nodes: 256,
+  stringCodeUnits: 1_024,
+  stringBytes: 4_096,
+  aggregateStringBytes: 16_384,
+});
 export const MAX_CHECKPOINT_OBSERVATIONS = 50_000;
 export const MAX_CHECKPOINT_OBSERVATION_WINDOW = 128;
 export const MAX_CHECKPOINT_REMOTE_VARIABLE_IDS =
@@ -93,7 +106,12 @@ function checkpointAdmissionError(reason, details = {}) {
 }
 
 function isRecord(value) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  if (
+    value === null
+    || typeof value !== "object"
+    || utilTypes.isProxy(value)
+    || Array.isArray(value)
+  ) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }
@@ -130,7 +148,8 @@ function requireExactKeys(record, admitted, owner) {
 
 function requireDataArray(value, owner, maximum) {
   if (
-    !Array.isArray(value)
+    utilTypes.isProxy(value)
+    || !Array.isArray(value)
     || Object.getPrototypeOf(value) !== Array.prototype
     || value.length > maximum
   ) {
@@ -279,6 +298,12 @@ function settlementTranscriptDigest(
   planIndex,
   completedBatchCount,
 ) {
+  if (initialRemoteRevision > Number.MAX_SAFE_INTEGER - completedBatchCount) {
+    throw checkpointAdmissionError("revision_capacity_exhausted", {
+      initialRemoteRevision,
+      completedBatchCount,
+    });
+  }
   return digest({
     schemaVersion: "0.1.0",
     owner: "checkpoint_settlement_coordinate",
@@ -345,6 +370,12 @@ function validateCheckpoint(checkpoint, { runId, planIndex, maxBatchBytes }) {
   });
   requireCheckpointInteger(checkpoint.initialRemoteRevision, "initialRemoteRevision");
   requireCheckpointInteger(checkpoint.expectedRemoteRevision, "expectedRemoteRevision");
+  if (checkpoint.initialRemoteRevision > Number.MAX_SAFE_INTEGER - checkpoint.nextBatchIndex) {
+    throw checkpointAdmissionError("revision_capacity_exhausted", {
+      initialRemoteRevision: checkpoint.initialRemoteRevision,
+      completedBatchCount: checkpoint.nextBatchIndex,
+    });
+  }
   const expectedRevision = checkpoint.initialRemoteRevision + checkpoint.nextBatchIndex;
   if (checkpoint.expectedRemoteRevision !== expectedRevision) {
     throw checkpointAdmissionError("revision_progress", {
@@ -543,7 +574,7 @@ function validateCheckpoint(checkpoint, { runId, planIndex, maxBatchBytes }) {
 }
 
 async function persistCheckpoint({
-  checkpointStore,
+  checkpointSave,
   runId,
   checkpoint,
   planIndex,
@@ -554,57 +585,94 @@ async function persistCheckpoint({
   renewLease,
   leaseFailureRestartAt,
 }) {
-  let saved;
+  let admittedSaved = null;
   let saveSettled = false;
   try {
+    // Retain an admitted, caller-independent comparison coordinate before any
+    // awaited collaborator receives a value. A store may mutate the object it
+    // receives. The retained snapshot keeps durability comparison authority
+    // fixed and preserves the coordinator's working checkpoint.
+    const expectedCheckpoint = admitCheckpointShape(checkpoint);
+    validateCheckpoint(expectedCheckpoint, { runId, planIndex, maxBatchBytes });
+    const expectedCheckpointDigest = digest(expectedCheckpoint);
     // Renewal proves live ownership around the awaited store write. The store's
     // atomic fencing token closes the expiry/takeover race between these checks.
     await renewLease();
-    saved = await checkpointStore.save(runId, checkpoint, { fencingToken });
+    const pendingSave = checkpointSave(
+      runId,
+      structuredClone(expectedCheckpoint),
+      { fencingToken },
+    );
+    const saved = utilTypes.isProxy(pendingSave) ? pendingSave : await pendingSave;
     saveSettled = true;
+    admittedSaved = admitCheckpointShape(saved);
+    validateCheckpoint(admittedSaved, { runId, planIndex, maxBatchBytes });
+    if (digest(admittedSaved) !== expectedCheckpointDigest) {
+      throw checkpointAdmissionError("persistence_mismatch");
+    }
     await renewLease();
   } catch (error) {
-    if (error instanceof LeaseError) {
+    const admittedLeaseError = admitTypedError(error, LeaseError);
+    if (admittedLeaseError !== null) {
       return {
         accepted: false,
-        leaseAuthorityLost: true,
+        leaseAuthorityLost: leaseFailureTransfersAuthority(admittedLeaseError.code),
         result: statusResult("friction", {
-          code: error.code,
+          code: admittedLeaseError.code,
           runId,
           ...(batchIndex === null ? {} : { batchIndex }),
           details: {
-            ...error.details,
+            ...admittedLeaseError.details,
             checkpointPersistence: saveSettled
               ? "store_returned_record_requires_authority_reconciliation"
               : "earlier_checkpoint_retained",
           },
+          ...(admittedSaved === null
+            ? {}
+            : { durableCheckpoint: structuredClone(admittedSaved) }),
           restartAt: leaseFailureRestartAt,
         }),
+        durableCheckpoint: admittedSaved,
       };
     }
-    throw error;
-  }
-  try {
-    const admitted = admitCheckpointShape(saved);
-    validateCheckpoint(admitted, { runId, planIndex, maxBatchBytes });
-    if (digest(admitted) !== digest(checkpoint)) {
-      throw checkpointAdmissionError("persistence_mismatch");
+    const admittedClockError = admitTypedError(error, PlanError);
+    if (admittedClockError?.code === "clock_observation_invalid") {
+      return {
+        accepted: false,
+        clockObservationInvalid: true,
+        result: statusResult("friction", {
+          code: admittedClockError.code,
+          runId,
+          ...(batchIndex === null ? {} : { batchIndex }),
+          details: {
+            ...admittedClockError.details,
+            checkpointPersistence: saveSettled
+              ? "store_returned_record_requires_clock_reconciliation"
+              : "earlier_checkpoint_retained",
+          },
+          ...(admittedSaved === null
+            ? {}
+            : { durableCheckpoint: structuredClone(admittedSaved) }),
+          restartAt: "inspect_clock",
+        }),
+        durableCheckpoint: admittedSaved,
+      };
     }
-    return { accepted: true, value: admitted };
-  } catch (error) {
-    if (error instanceof PlanError && error.code === "checkpoint_invalid") {
+    const admittedPlanError = admitTypedError(error, PlanError);
+    if (admittedPlanError?.code === "checkpoint_invalid") {
       return {
         accepted: false,
         result: statusResult("friction", {
           code: "checkpoint_persistence_invalid",
           runId,
-          details: error.details,
+          details: admittedPlanError.details,
           restartAt,
         }),
       };
     }
     throw error;
   }
+  return { accepted: true, value: admittedSaved };
 }
 
 function validateCoordinate(value, field) {
@@ -623,7 +691,12 @@ function validateCoordinate(value, field) {
 }
 
 function admitLeaseAuthority(value, { owner, expectedGeneration = null, nowMs }) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+  if (
+    value === null
+    || typeof value !== "object"
+    || utilTypes.isProxy(value)
+    || Array.isArray(value)
+  ) {
     throw new LeaseError("lease_authority_invalid", "The lease store returned an invalid authority record.");
   }
   const prototype = Object.getPrototypeOf(value);
@@ -664,6 +737,232 @@ function admitLeaseAuthority(value, { owner, expectedGeneration = null, nowMs })
   return admitted;
 }
 
+function ownDataValue(value, key) {
+  if (
+    value === null
+    || (typeof value !== "object" && typeof value !== "function")
+    || utilTypes.isProxy(value)
+  ) return undefined;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && Object.hasOwn(descriptor, "value") ? descriptor.value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function admitBoundedJsonRecord(record) {
+  if (!isRecord(record)) return null;
+  const pending = [{ value: record, depth: 0 }];
+  const seen = new WeakSet();
+  let nodes = 0;
+  let aggregateStringBytes = 0;
+  const admitString = (value) => {
+    // Code-unit admission is O(1) and prevents byte measurement from scanning
+    // a caller-provided string beyond the declared per-string envelope.
+    if (value.length > typedErrorDetailLimits.stringCodeUnits) return false;
+    const bytes = Buffer.byteLength(value, "utf8");
+    if (bytes > typedErrorDetailLimits.stringBytes) return false;
+    aggregateStringBytes += bytes;
+    return aggregateStringBytes <= typedErrorDetailLimits.aggregateStringBytes;
+  };
+
+  while (pending.length > 0) {
+    const current = pending.pop();
+    nodes += 1;
+    if (nodes > typedErrorDetailLimits.nodes || current.depth > typedErrorDetailLimits.depth) {
+      return null;
+    }
+    if (typeof current.value === "string") {
+      if (!admitString(current.value)) return null;
+      continue;
+    }
+    if (current.value === null || typeof current.value === "boolean") continue;
+    if (typeof current.value === "number") {
+      if (!Number.isFinite(current.value) || Object.is(current.value, -0)) return null;
+      continue;
+    }
+    if (typeof current.value !== "object" || utilTypes.isProxy(current.value)) return null;
+    if (seen.has(current.value)) return null;
+    seen.add(current.value);
+
+    if (Array.isArray(current.value)) {
+      if (
+        Object.getPrototypeOf(current.value) !== Array.prototype
+        || current.value.length > typedErrorDetailLimits.nodes - nodes
+      ) return null;
+      const descriptors = Object.getOwnPropertyDescriptors(current.value);
+      const keys = Reflect.ownKeys(descriptors).filter((key) => key !== "length");
+      if (
+        keys.length !== current.value.length
+        || keys.some((key, index) => {
+          const descriptor = descriptors[key];
+          return key !== String(index)
+            || !descriptor.enumerable
+            || !Object.hasOwn(descriptor, "value");
+        })
+      ) return null;
+      for (let index = keys.length - 1; index >= 0; index -= 1) {
+        pending.push({ value: descriptors[keys[index]].value, depth: current.depth + 1 });
+      }
+      continue;
+    }
+
+    if (!isRecord(current.value)) return null;
+    const descriptors = Object.getOwnPropertyDescriptors(current.value);
+    const keys = Reflect.ownKeys(descriptors);
+    if (keys.length > typedErrorDetailLimits.nodes - nodes) return null;
+    for (let index = keys.length - 1; index >= 0; index -= 1) {
+      const key = keys[index];
+      const descriptor = descriptors[key];
+      if (
+        typeof key !== "string"
+        || !descriptor.enumerable
+        || !Object.hasOwn(descriptor, "value")
+        || !admitString(key)
+      ) return null;
+      pending.push({ value: descriptor.value, depth: current.depth + 1 });
+    }
+  }
+
+  try {
+    const admitted = canonicalize(record);
+    assertSanitizedReceipt(admitted);
+    return admitted;
+  } catch {
+    return null;
+  }
+}
+
+function admitTypedError(error, ErrorType) {
+  if (
+    error === null
+    || (typeof error !== "object" && typeof error !== "function")
+    || utilTypes.isProxy(error)
+  ) return null;
+  try {
+    if (Object.getPrototypeOf(error) !== ErrorType.prototype) return null;
+  } catch {
+    return null;
+  }
+  const code = ownDataValue(error, "code");
+  const details = ownDataValue(error, "details");
+  if (typeof code !== "string" || code.length < 1 || code.length > 128) {
+    return null;
+  }
+  const admittedDetails = admitBoundedJsonRecord(details);
+  if (admittedDetails === null) return null;
+  return Object.freeze({ code, details: admittedDetails });
+}
+
+function admitRetryAfterError(error) {
+  const admitted = admitTypedError(error, RetryAfterError);
+  if (admitted === null) return null;
+  const retryAfterMs = ownDataValue(error, "retryAfterMs");
+  if (!Number.isSafeInteger(retryAfterMs) || retryAfterMs < 0) {
+    return Object.freeze({ ...admitted, retryAfterMs: null });
+  }
+  return Object.freeze({ ...admitted, retryAfterMs });
+}
+
+function isExactTypeError(error) {
+  if (
+    error === null
+    || (typeof error !== "object" && typeof error !== "function")
+    || utilTypes.isProxy(error)
+  ) return false;
+  try {
+    return Object.getPrototypeOf(error) === TypeError.prototype;
+  } catch {
+    return false;
+  }
+}
+
+function requireCollaboratorMethod(receiver, methodName, owner) {
+  if (
+    receiver === null
+    || (typeof receiver !== "object" && typeof receiver !== "function")
+    || utilTypes.isProxy(receiver)
+  ) {
+    throw new PlanError(
+      "invalid_collaborator",
+      `${owner} requires a directly addressed collaborator object.`,
+      { owner, methodName },
+    );
+  }
+  const ownDescriptor = Object.getOwnPropertyDescriptor(receiver, methodName);
+  const prototype = ownDescriptor === undefined ? Object.getPrototypeOf(receiver) : null;
+  if (prototype !== null && utilTypes.isProxy(prototype)) {
+    throw new PlanError(
+      "invalid_collaborator",
+      `${owner} requires an inert immediate prototype.`,
+      { owner, methodName },
+    );
+  }
+  const descriptor = ownDescriptor ?? (
+    prototype === null ? undefined : Object.getOwnPropertyDescriptor(prototype, methodName)
+  );
+  if (
+    descriptor === undefined
+    || !Object.hasOwn(descriptor, "value")
+    || typeof descriptor.value !== "function"
+    || utilTypes.isProxy(descriptor.value)
+  ) {
+    throw new PlanError(
+      "invalid_collaborator",
+      `${owner}.${methodName} requires an own or immediate-prototype data-property function.`,
+      { owner, methodName },
+    );
+  }
+  return Reflect.apply(Function.prototype.bind, descriptor.value, [receiver]);
+}
+
+function requireCollaboratorFunction(value, owner) {
+  if (typeof value !== "function" || utilTypes.isProxy(value)) {
+    throw new PlanError(
+      "invalid_collaborator",
+      `${owner} requires a directly addressed function.`,
+      { owner },
+    );
+  }
+  return value;
+}
+
+function formClockReader(clock, leaseTtlMs) {
+  const readNow = requireCollaboratorMethod(clock, "now", "clock");
+  let previous = null;
+  return async ({ owner, reservesLeaseTtl = false }) => {
+    const pendingValue = readNow();
+    const value = utilTypes.isProxy(pendingValue) ? pendingValue : await pendingValue;
+    const maximum = reservesLeaseTtl
+      ? Number.MAX_SAFE_INTEGER - leaseTtlMs
+      : Number.MAX_SAFE_INTEGER;
+    if (!Number.isSafeInteger(value)) {
+      throw new PlanError(
+        "clock_observation_invalid",
+        "The execution clock requires a safe-integer observation.",
+        { phase: owner, reason: "shape", maximum },
+      );
+    }
+    if (value < 0 || value > maximum) {
+      throw new PlanError(
+        "clock_observation_invalid",
+        "The execution clock observation falls outside the active lease envelope.",
+        { phase: owner, reason: "range", observed: value, minimum: 0, maximum },
+      );
+    }
+    if (previous !== null && value < previous) {
+      throw new PlanError(
+        "clock_observation_invalid",
+        "The execution clock moved behind its previous admitted sample.",
+        { phase: owner, reason: "regression", previous, observed: value },
+      );
+    }
+    previous = value;
+    return value;
+  };
+}
+
 function validateIntegerOption(value, field, { min, max }) {
   if (!Number.isSafeInteger(value) || value < min || value > max) {
     throw new PlanError(
@@ -678,7 +977,7 @@ function assertCredentialSafe(value, field) {
   try {
     assertSanitizedReceipt(value);
   } catch (error) {
-    if (error instanceof TypeError) {
+    if (isExactTypeError(error)) {
       throw new PlanError(
         "credential_shaped_input",
         "The synchronization request contains credential-shaped material.",
@@ -726,10 +1025,15 @@ function boundedLeaseReleaseFailure(releaseError, owner, generation) {
   });
 }
 
+function leaseFailureTransfersAuthority(code) {
+  return code === "lease_lost" || code === "checkpoint_fence_rejected";
+}
+
 function retainSecondaryReleaseFailure(primaryError, secondaryFailure) {
   if (
     primaryError === null
     || (typeof primaryError !== "object" && typeof primaryError !== "function")
+    || utilTypes.isProxy(primaryError)
   ) return;
   try {
     // Descriptor inspection preserves an existing cause accessor without
@@ -746,6 +1050,87 @@ function retainSecondaryReleaseFailure(primaryError, secondaryFailure) {
     // The primary failure remains authoritative when its object rejects a
     // bounded secondary observation.
   }
+}
+
+function clockInspectionResult({ runId, details, durableCheckpoint = null, batchIndex = null }) {
+  return statusResult("friction", {
+    code: "clock_observation_invalid",
+    runId,
+    ...(batchIndex === null ? {} : { batchIndex }),
+    details,
+    ...(durableCheckpoint === null ? {} : { durableCheckpoint }),
+    restartAt: "inspect_clock",
+  });
+}
+
+function successorCapacityResult({ runId, code, details = {}, batchIndex = null }) {
+  return statusResult("friction", {
+    code,
+    runId,
+    ...(batchIndex === null ? {} : { batchIndex }),
+    details,
+    restartAt: "rebase_or_upgrade_representation",
+  });
+}
+
+function inspectPlanSuccessorCapacity(snapshot, plan, startBatchIndex = 0) {
+  const remainingBatches = plan.batches.slice(startBatchIndex);
+  const remainingBatchCount = remainingBatches.length;
+  if (snapshot.revision > Number.MAX_SAFE_INTEGER - remainingBatchCount) {
+    return {
+      accepted: false,
+      code: "revision_capacity_exhausted",
+      details: { currentRevision: snapshot.revision, requiredSuccessors: remainingBatchCount },
+    };
+  }
+
+  const requiredGeneratedIds = remainingBatches.reduce(
+    (count, batch) => count + batch.operations.filter(
+      (operation) => operation.type === "create_variable",
+    ).length,
+    0,
+  );
+  if (snapshot.remainingGeneratedIds < requiredGeneratedIds) {
+    return {
+      accepted: false,
+      code: "generated_id_capacity_exhausted",
+      details: {
+        remainingGeneratedIds: snapshot.remainingGeneratedIds,
+        requiredGeneratedIds,
+      },
+    };
+  }
+
+  const remoteVersions = new Map(
+    snapshot.variables.map((variable) => [variable.id, variable.version]),
+  );
+  const temporaryVersions = new Map();
+  for (const batch of remainingBatches) {
+    for (const operation of batch.operations) {
+      if (operation.type === "create_variable") {
+        temporaryVersions.set(operation.tempId, 1);
+        continue;
+      }
+      const targetVersions = temporaryVersions.has(operation.targetId)
+        ? temporaryVersions
+        : remoteVersions;
+      const currentVersion = targetVersions.get(operation.targetId);
+      if (currentVersion === undefined) continue;
+      if (operation.type === "delete_variable") {
+        targetVersions.delete(operation.targetId);
+        continue;
+      }
+      if (currentVersion === Number.MAX_SAFE_INTEGER) {
+        return {
+          accepted: false,
+          code: "version_capacity_exhausted",
+          details: { operationId: operation.id, targetId: operation.targetId, currentVersion },
+        };
+      }
+      targetVersions.set(operation.targetId, currentVersion + 1);
+    }
+  }
+  return { accepted: true };
 }
 
 function remoteProtocolInvalidResult({
@@ -832,6 +1217,20 @@ function resolveBatchOperations(operations, tempIdToRealId) {
   });
 }
 
+function immutableTransportSnapshot(value) {
+  const owned = structuredClone(value);
+  const pending = [owned];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === null || typeof current !== "object") continue;
+    for (const child of Object.values(current)) {
+      if (child !== null && typeof child === "object") pending.push(child);
+    }
+    Object.freeze(current);
+  }
+  return owned;
+}
+
 function recordTemporaryIdentity(tempIdToRealId, tempId, targetId) {
   // defineProperty treats names such as "__proto__" as ordinary own data keys
   // and preserves an enumerable shape for JSON checkpoints and receipts.
@@ -856,6 +1255,9 @@ function semanticIdentityKey(identity) {
 }
 
 function projectSemanticBatchTransition({ priorSnapshot, operations, remoteRevision }) {
+  if (!Number.isSafeInteger(remoteRevision) || remoteRevision < 0) {
+    return { accepted: false, reason: "revision_capacity_exhausted" };
+  }
   const createdTempIds = new Set(
     operations
       .filter((operation) => operation.type === "create_variable")
@@ -921,6 +1323,15 @@ function projectSemanticBatchTransition({ priorSnapshot, operations, remoteRevis
     if (operation.type === "delete_variable") {
       variables.delete(key);
       continue;
+    }
+    if (current.version === Number.MAX_SAFE_INTEGER) {
+      return {
+        accepted: false,
+        reason: "version_capacity_exhausted",
+        operationId: operation.id,
+        targetId: operation.targetId,
+        currentVersion: current.version,
+      };
     }
     const next = structuredClone(current);
     if (operation.type === "update_variable") {
@@ -1136,24 +1547,99 @@ export async function synchronizeVariables({
     leaseTtlMs,
   });
   const planIndex = formCheckpointPlanIndex(plan);
-  const startedAtMs = await clock.now();
+  // Capture admitted collaborator methods once. Awaited work can then resume
+  // without re-reading caller-controlled properties or changing authority.
+  const remoteSnapshot = requireCollaboratorMethod(remote, "snapshot", "remote");
+  const remoteApplyBatch = requireCollaboratorMethod(remote, "applyBatch", "remote");
+  const remoteReadIntentResults = requireCollaboratorMethod(
+    remote,
+    "readIntentResults",
+    "remote",
+  );
+  const leaseAcquire = requireCollaboratorMethod(leaseStore, "acquire", "leaseStore");
+  const leaseRenew = requireCollaboratorMethod(leaseStore, "renew", "leaseStore");
+  const leaseRelease = requireCollaboratorMethod(leaseStore, "release", "leaseStore");
+  const checkpointClaimFence = requireCollaboratorMethod(
+    checkpointStore,
+    "claimFence",
+    "checkpointStore",
+  );
+  const checkpointLoad = requireCollaboratorMethod(checkpointStore, "load", "checkpointStore");
+  const checkpointSave = requireCollaboratorMethod(checkpointStore, "save", "checkpointStore");
+  const sleepFor = requireCollaboratorFunction(sleep, "sleep");
+  const faultForBatch = requireCollaboratorFunction(faultFor, "faultFor");
+  const readClock = formClockReader(clock, leaseTtlMs);
+  const startedAtMs = await readClock({ owner: "execution_start" });
   let lease;
   try {
-    const acquiredAtMs = await clock.now();
-    const acquired = await leaseStore.acquire({
+    const acquiredAtMs = await readClock({
+      owner: "lease_acquire_request",
+      reservesLeaseTtl: true,
+    });
+    const pendingAcquire = leaseAcquire({
       owner,
       nowMs: acquiredAtMs,
       ttlMs: leaseTtlMs,
     });
+    const acquired = utilTypes.isProxy(pendingAcquire) ? pendingAcquire : await pendingAcquire;
+    // Admit enough authority to release a lease if the awaited acquisition
+    // consumed its freshness window before control returned.
     lease = admitLeaseAuthority(acquired, { owner, nowMs: acquiredAtMs });
+    const acquiredSettledAtMs = await readClock({ owner: "lease_acquire_settled" });
+    lease = admitLeaseAuthority(acquired, { owner, nowMs: acquiredSettledAtMs });
   } catch (error) {
-    if (error instanceof LeaseError) {
-      return statusResult("friction", {
-        code: error.code,
+    const admittedLeaseError = admitTypedError(error, LeaseError);
+    const admittedClockError = admitTypedError(error, PlanError);
+    let result = null;
+    if (admittedLeaseError !== null) {
+      result = statusResult("friction", {
+        code: admittedLeaseError.code,
         runId,
-        details: error.details,
+        details: admittedLeaseError.details,
         restartAt: "acquire_writer_lease",
       });
+    } else if (admittedClockError?.code === "clock_observation_invalid") {
+      result = clockInspectionResult({ runId, details: admittedClockError.details });
+    }
+
+    let releaseError;
+    if (lease !== undefined) {
+      try {
+        const pendingRelease = leaseRelease({ owner, generation: lease.generation });
+        const released = utilTypes.isProxy(pendingRelease)
+          ? pendingRelease
+          : await pendingRelease;
+        if (released !== true) {
+          releaseError = new LeaseError(
+            "lease_release_unconfirmed",
+            "The acquired writer lease needs inspection before another synchronization begins.",
+            { owner, generation: lease.generation },
+          );
+        }
+      } catch {
+        releaseError = new LeaseError(
+          "lease_release_failed",
+          "The acquired writer lease needs inspection before another synchronization begins.",
+          { owner, generation: lease.generation },
+        );
+      }
+    }
+    if (result !== null) {
+      if (releaseError !== undefined) {
+        result.secondaryFailure = boundedLeaseReleaseFailure(
+          releaseError,
+          owner,
+          lease.generation,
+        );
+        assertSanitizedReceipt(result);
+      }
+      return result;
+    }
+    if (releaseError !== undefined) {
+      retainSecondaryReleaseFailure(
+        error,
+        boundedLeaseReleaseFailure(releaseError, owner, lease.generation),
+      );
     }
     throw error;
   }
@@ -1165,13 +1651,18 @@ export async function synchronizeVariables({
   const executeWithLease = async () => {
     let claimedFencingToken;
     try {
-      claimedFencingToken = await checkpointStore.claimFence(runId, lease.generation);
+      const pendingFence = checkpointClaimFence(runId, lease.generation);
+      claimedFencingToken = utilTypes.isProxy(pendingFence) ? pendingFence : await pendingFence;
     } catch (error) {
-      if (error instanceof LeaseError) {
+      const admittedLeaseError = admitTypedError(error, LeaseError);
+      if (admittedLeaseError !== null) {
+        if (leaseFailureTransfersAuthority(admittedLeaseError.code)) {
+          leaseAuthorityLost = true;
+        }
         return statusResult("friction", {
-          code: error.code,
+          code: admittedLeaseError.code,
           runId,
-          details: error.details,
+          details: admittedLeaseError.details,
           restartAt: "acquire_writer_lease",
         });
       }
@@ -1185,19 +1676,31 @@ export async function synchronizeVariables({
         restartAt: "acquire_writer_lease",
       });
     }
+    let durableCheckpoint = null;
     const renewWriterLease = async () => {
-      const renewedAtMs = await clock.now();
-      const renewed = await leaseStore.renew({
+      const renewedAtMs = await readClock({
+        owner: "lease_renew_request",
+        reservesLeaseTtl: true,
+      });
+      const pendingRenewal = leaseRenew({
         owner,
         generation: lease.generation,
         nowMs: renewedAtMs,
         ttlMs: leaseTtlMs,
       });
-      return admitLeaseAuthority(renewed, {
+      const renewed = utilTypes.isProxy(pendingRenewal) ? pendingRenewal : await pendingRenewal;
+      const provisionalLease = admitLeaseAuthority(renewed, {
         owner,
         expectedGeneration: lease.generation,
         nowMs: renewedAtMs,
       });
+      const renewedSettledAtMs = await readClock({ owner: "lease_renew_settled" });
+      lease = admitLeaseAuthority(renewed, {
+        owner,
+        expectedGeneration: provisionalLease.generation,
+        nowMs: renewedSettledAtMs,
+      });
+      return lease;
     };
     const persistCurrentCheckpoint = async ({
       checkpoint,
@@ -1206,7 +1709,7 @@ export async function synchronizeVariables({
       batchIndex = null,
     }) => {
       const persisted = await persistCheckpoint({
-        checkpointStore,
+        checkpointSave,
         runId,
         checkpoint,
         planIndex,
@@ -1218,19 +1721,35 @@ export async function synchronizeVariables({
         leaseFailureRestartAt,
       });
       if (persisted.leaseAuthorityLost) leaseAuthorityLost = true;
+      if (persisted.durableCheckpoint !== null && persisted.durableCheckpoint !== undefined) {
+        durableCheckpoint = structuredClone(persisted.durableCheckpoint);
+      }
+      if (persisted.clockObservationInvalid) {
+        persisted.result = clockInspectionResult({
+          runId,
+          batchIndex,
+          details: persisted.result.details,
+          durableCheckpoint,
+        });
+      }
+      if (persisted.accepted) durableCheckpoint = structuredClone(persisted.value);
       return persisted;
     };
-    const storedCheckpoint = await checkpointStore.load(runId);
+    const pendingCheckpoint = checkpointLoad(runId);
+    const storedCheckpoint = utilTypes.isProxy(pendingCheckpoint)
+      ? pendingCheckpoint
+      : await pendingCheckpoint;
     let existing = null;
     if (storedCheckpoint !== null) {
       try {
         existing = admitCheckpointShape(storedCheckpoint);
       } catch (error) {
-        if (error instanceof PlanError && error.code === "checkpoint_invalid") {
+        const admittedPlanError = admitTypedError(error, PlanError);
+        if (admittedPlanError?.code === "checkpoint_invalid") {
           return statusResult("friction", {
-            code: error.code,
+            code: admittedPlanError.code,
             runId,
-            details: error.details,
+            details: admittedPlanError.details,
             restartAt: "inspect_checkpoint",
           });
         }
@@ -1256,18 +1775,25 @@ export async function synchronizeVariables({
       try {
         validateCheckpoint(existing, { runId, planIndex, maxBatchBytes });
       } catch (error) {
-        if (error instanceof PlanError && error.code === "checkpoint_invalid") {
+        const admittedPlanError = admitTypedError(error, PlanError);
+        if (admittedPlanError?.code === "checkpoint_invalid") {
           return statusResult("friction", {
-            code: error.code,
+            code: admittedPlanError.code,
             runId,
-            details: error.details,
+            details: admittedPlanError.details,
             restartAt: "inspect_checkpoint",
           });
         }
         throw error;
       }
+      durableCheckpoint = structuredClone(existing);
     }
-    const observedStartAdmission = admitRemoteSnapshot(await remote.snapshot());
+    const pendingStartSnapshot = remoteSnapshot();
+    const observedStartAdmission = admitRemoteSnapshot(
+      utilTypes.isProxy(pendingStartSnapshot)
+        ? pendingStartSnapshot
+        : await pendingStartSnapshot,
+    );
     if (!observedStartAdmission.accepted) {
       return remoteProtocolInvalidResult({
         runId,
@@ -1300,9 +1826,15 @@ export async function synchronizeVariables({
         existing.tempIdToRealId,
       );
       const onePendingBatchAdvanced =
-        observedStart.revision === existing.expectedRemoteRevision + 1;
+        existing.expectedRemoteRevision < Number.MAX_SAFE_INTEGER
+        && observedStart.revision === existing.expectedRemoteRevision + 1;
       if (onePendingBatchAdvanced) {
-        const response = await remote.readIntentResults(pendingBatch.operationIds);
+        const pendingResponse = remoteReadIntentResults(
+          immutableTransportSnapshot(pendingBatch.operationIds),
+        );
+        const response = utilTypes.isProxy(pendingResponse)
+          ? pendingResponse
+          : await pendingResponse;
         const admission = admitRemoteIntentObservation(response, resolvedOperations);
         if (!admission.accepted) {
           return remoteProtocolInvalidResult({
@@ -1357,6 +1889,24 @@ export async function synchronizeVariables({
           observedStateDigest,
         });
       }
+    }
+    const successorCapacityStartBatch = existing === null
+      ? 0
+      : existing.nextBatchIndex + (resumeSettlement === null ? 0 : 1);
+    const successorCapacity = inspectPlanSuccessorCapacity(
+      observedStart,
+      plan,
+      successorCapacityStartBatch,
+    );
+    if (!successorCapacity.accepted) {
+      return successorCapacityResult({
+        runId,
+        code: successorCapacity.code,
+        details: successorCapacity.details,
+        batchIndex: successorCapacityStartBatch < plan.batches.length
+          ? successorCapacityStartBatch
+          : null,
+      });
     }
     let checkpoint = existing;
     if (checkpoint === null) {
@@ -1423,12 +1973,32 @@ export async function synchronizeVariables({
       let attempt = 0;
       const settlementContinuesEarlierRun = resumeSettlement?.batchIndex === batchIndex;
       if (!settlementContinuesEarlierRun) {
+        if (checkpoint.expectedRemoteRevision === Number.MAX_SAFE_INTEGER) {
+          return successorCapacityResult({
+            runId,
+            code: "revision_capacity_exhausted",
+            details: { currentRevision: checkpoint.expectedRemoteRevision, requiredSuccessors: 1 },
+            batchIndex,
+          });
+        }
         const projectedTransition = projectSemanticBatchTransition({
           priorSnapshot: lastObservedSnapshot,
           operations: resolvedOperations,
           remoteRevision: checkpoint.expectedRemoteRevision + 1,
         });
         if (!projectedTransition.accepted) {
+          if (
+            projectedTransition.reason === "revision_capacity_exhausted"
+            || projectedTransition.reason === "version_capacity_exhausted"
+          ) {
+            const { accepted: _accepted, reason, ...details } = projectedTransition;
+            return successorCapacityResult({
+              runId,
+              code: reason,
+              details,
+              batchIndex,
+            });
+          }
           return remoteProtocolInvalidResult({
             runId,
             batchIndex,
@@ -1475,27 +2045,65 @@ export async function synchronizeVariables({
             restartAt: `batch:${batchIndex}`,
           });
         }
+        const pendingFault = faultForBatch(immutableTransportSnapshot({
+          batchIndex,
+          attempt,
+          batch,
+        }));
+        if (utilTypes.isProxy(pendingFault)) {
+          throw new PlanError(
+            "invalid_collaborator_result",
+            "faultFor requires an inert result before the next remote effect.",
+            { owner: "faultFor" },
+          );
+        }
+        const observedFault = await pendingFault;
+        const fault = observedFault === null
+          ? null
+          : admitBoundedJsonRecord(observedFault);
+        if (observedFault !== null && fault === null) {
+          throw new PlanError(
+            "invalid_collaborator_result",
+            "faultFor requires a bounded plain-data fault record.",
+            { owner: "faultFor" },
+          );
+        }
         try {
           await renewWriterLease();
         } catch (error) {
-          if (error instanceof LeaseError) {
-            leaseAuthorityLost = true;
+          const admittedLeaseError = admitTypedError(error, LeaseError);
+          if (admittedLeaseError !== null) {
+            leaseAuthorityLost = leaseFailureTransfersAuthority(admittedLeaseError.code);
             return statusResult("friction", {
-              code: error.code,
+              code: admittedLeaseError.code,
               runId,
               batchIndex,
-              details: error.details,
+              details: admittedLeaseError.details,
               restartAt: "acquire_writer_lease",
+            });
+          }
+          const admittedClockError = admitTypedError(error, PlanError);
+          if (admittedClockError?.code === "clock_observation_invalid") {
+            return clockInspectionResult({
+              runId,
+              batchIndex,
+              details: admittedClockError.details,
+              durableCheckpoint,
             });
           }
           throw error;
         }
-        const fault = await faultFor({ batchIndex, attempt, batch });
         try {
-          const response = await remote.applyBatch(resolvedOperations, {
-            expectedRevision: checkpoint.expectedRemoteRevision,
-            fault,
-          });
+          const pendingResponse = remoteApplyBatch(
+            immutableTransportSnapshot(resolvedOperations),
+            immutableTransportSnapshot({
+              expectedRevision: checkpoint.expectedRemoteRevision,
+              fault,
+            }),
+          );
+          const response = utilTypes.isProxy(pendingResponse)
+            ? pendingResponse
+            : await pendingResponse;
           const admission = admitRemoteSettlement(response, resolvedOperations);
           if (!admission.accepted) {
             return remoteProtocolInvalidResult({
@@ -1507,8 +2115,9 @@ export async function synchronizeVariables({
           }
           settled = admission.value;
         } catch (error) {
-          if (error instanceof RetryAfterError) {
-            if (!Number.isSafeInteger(error.retryAfterMs) || error.retryAfterMs < 0) {
+          const admittedRetryAfter = admitRetryAfterError(error);
+          if (admittedRetryAfter !== null) {
+            if (admittedRetryAfter.retryAfterMs === null) {
               return remoteProtocolInvalidResult({
                 runId,
                 batchIndex,
@@ -1516,13 +2125,13 @@ export async function synchronizeVariables({
                 admission: { accepted: false, reason: "retry_after_ms" },
               });
             }
-            if (attempt >= maxRetries || error.retryAfterMs > maxRetryAfterMs) {
+            if (attempt >= maxRetries || admittedRetryAfter.retryAfterMs > maxRetryAfterMs) {
               return statusResult("friction", {
                 code: "retry_budget_exhausted",
                 runId,
                 batchIndex,
                 attempt,
-                retryAfterMs: error.retryAfterMs,
+                retryAfterMs: admittedRetryAfter.retryAfterMs,
                 restartAt: `batch:${batchIndex}`,
               });
             }
@@ -1530,7 +2139,7 @@ export async function synchronizeVariables({
               batchIndex,
               attempt,
               classification: "bounded_retry",
-              retryAfterMs: error.retryAfterMs,
+              retryAfterMs: admittedRetryAfter.retryAfterMs,
             }, planIndex);
             const persisted = await persistCurrentCheckpoint({
               checkpoint,
@@ -1540,13 +2149,27 @@ export async function synchronizeVariables({
             });
             if (!persisted.accepted) return persisted.result;
             checkpoint = persisted.value;
-            await sleep(error.retryAfterMs);
+            const pendingSleep = sleepFor(admittedRetryAfter.retryAfterMs);
+            if (utilTypes.isProxy(pendingSleep)) {
+              throw new PlanError(
+                "invalid_collaborator_result",
+                "sleep requires an inert completion result.",
+                { owner: "sleep" },
+              );
+            }
+            await pendingSleep;
             attempt += 1;
             continue;
           }
 
-          if (error instanceof OutcomeUnknownError) {
-            const response = await remote.readIntentResults(batch.operationIds);
+          const admittedOutcomeUnknown = admitTypedError(error, OutcomeUnknownError);
+          if (admittedOutcomeUnknown !== null) {
+            const pendingResponse = remoteReadIntentResults(
+              immutableTransportSnapshot(batch.operationIds),
+            );
+            const response = utilTypes.isProxy(pendingResponse)
+              ? pendingResponse
+              : await pendingResponse;
             const admission = admitRemoteIntentObservation(response, resolvedOperations);
             if (!admission.accepted) {
               return remoteProtocolInvalidResult({
@@ -1621,9 +2244,10 @@ export async function synchronizeVariables({
             });
           }
 
-          if (error instanceof ExecutionInterruptedError) {
+          const admittedInterruption = admitTypedError(error, ExecutionInterruptedError);
+          if (admittedInterruption !== null) {
             return statusResult("interrupted", {
-              code: error.code,
+              code: admittedInterruption.code,
               runId,
               batchIndex,
               durableCheckpoint: checkpoint,
@@ -1631,12 +2255,25 @@ export async function synchronizeVariables({
             });
           }
 
-          if (error instanceof RemoteConflictError) {
+          const admittedRemoteConflict = admitTypedError(error, RemoteConflictError);
+          if (admittedRemoteConflict !== null) {
+            if (
+              admittedRemoteConflict.code === "revision_capacity_exhausted"
+              || admittedRemoteConflict.code === "version_capacity_exhausted"
+              || admittedRemoteConflict.code === "generated_id_capacity_exhausted"
+            ) {
+              return successorCapacityResult({
+                runId,
+                code: admittedRemoteConflict.code,
+                details: admittedRemoteConflict.details,
+                batchIndex,
+              });
+            }
             return statusResult("conflict", {
-              code: error.code,
+              code: admittedRemoteConflict.code,
               runId,
               batchIndex,
-              details: error.details,
+              details: admittedRemoteConflict.details,
               restartAt: `reconcile:batch:${batchIndex}`,
             });
           }
@@ -1658,7 +2295,12 @@ export async function synchronizeVariables({
         });
       }
 
-      const settledSnapshotAdmission = admitRemoteSnapshot(await remote.snapshot());
+      const pendingSettledSnapshot = remoteSnapshot();
+      const settledSnapshotAdmission = admitRemoteSnapshot(
+        utilTypes.isProxy(pendingSettledSnapshot)
+          ? pendingSettledSnapshot
+          : await pendingSettledSnapshot,
+      );
       if (!settledSnapshotAdmission.accepted) {
         return remoteProtocolInvalidResult({
           runId,
@@ -1756,7 +2398,12 @@ export async function synchronizeVariables({
       checkpoint = persisted.value;
     }
 
-    const finalSnapshotAdmission = admitRemoteSnapshot(await remote.snapshot());
+    const pendingFinalSnapshot = remoteSnapshot();
+    const finalSnapshotAdmission = admitRemoteSnapshot(
+      utilTypes.isProxy(pendingFinalSnapshot)
+        ? pendingFinalSnapshot
+        : await pendingFinalSnapshot,
+    );
     if (!finalSnapshotAdmission.accepted) {
       return remoteProtocolInvalidResult({
         runId,
@@ -1783,6 +2430,20 @@ export async function synchronizeVariables({
         },
         restartAt: "reconcile:final",
       });
+    }
+    let completedAtMs;
+    try {
+      completedAtMs = await readClock({ owner: "execution_complete" });
+    } catch (error) {
+      const admittedClockError = admitTypedError(error, PlanError);
+      if (admittedClockError?.code === "clock_observation_invalid") {
+        return clockInspectionResult({
+          runId,
+          details: admittedClockError.details,
+          durableCheckpoint,
+        });
+      }
+      throw error;
     }
     const receipt = {
       schemaVersion: "0.1.0",
@@ -1812,7 +2473,7 @@ export async function synchronizeVariables({
         releasedCount: checkpoint.settlementBaseCount,
         digest: checkpoint.settlementDigest,
       },
-      elapsedMs: (await clock.now()) - startedAtMs,
+      elapsedMs: completedAtMs - startedAtMs,
     };
     assertSanitizedReceipt(receipt);
     return receipt;
@@ -1826,20 +2487,20 @@ export async function synchronizeVariables({
     throw error;
   } finally {
     let releaseError;
-    try {
-      const released = await leaseStore.release({ owner, generation: lease.generation });
-      if (released !== true && !leaseAuthorityLost) {
-        releaseError = new LeaseError(
-          "lease_release_unconfirmed",
-          "The writer lease release needs inspection before another synchronization begins.",
-          { owner, generation: lease.generation, restartAt: "inspect_writer_lease" },
-        );
-      }
-    } catch (error) {
-      // A successor generation already owns recovery after authority loss. A
-      // failed release from the expired generation therefore cannot replace
-      // the typed lease-loss result or become the next operator action.
-      if (!leaseAuthorityLost) {
+    if (!leaseAuthorityLost) {
+      try {
+        const pendingRelease = leaseRelease({ owner, generation: lease.generation });
+        const released = utilTypes.isProxy(pendingRelease)
+          ? pendingRelease
+          : await pendingRelease;
+        if (released !== true) {
+          releaseError = new LeaseError(
+            "lease_release_unconfirmed",
+            "The writer lease release needs inspection before another synchronization begins.",
+            { owner, generation: lease.generation, restartAt: "inspect_writer_lease" },
+          );
+        }
+      } catch (error) {
         releaseError = new LeaseError(
           "lease_release_failed",
           "The current synchronization path completed and the writer lease release needs inspection.",

@@ -12,7 +12,7 @@
     "semanticId": "react-aria-visual-contract-receiver",
     "version": "0.1.0",
     "manifestKind": "production_build_manifest",
-    "manifestSha256": "4194c2ee7dac24c2560a8a87c268257ff22f55cb649d4f4eb99dd2e58aeb29d5",
+    "manifestSha256": "4a3a1dc6534a17288dd6ae09c416009415e52c2bdb400dfca39b4f9916bb95c8",
     "standing": "candidate"
   },
   "observationFixture": {

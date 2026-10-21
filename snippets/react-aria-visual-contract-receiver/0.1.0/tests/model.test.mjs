@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {createReceiverController} from "../src/controller.mjs";
+import {
+  createReceiverController,
+  ReceiverNotificationError
+} from "../src/controller.mjs";
 import {
   beginPreview,
   chooseDraft,
@@ -134,4 +137,68 @@ test("typed admission reports unknown specimen identities and outcomes", () => {
     () => settlePreview(started.state, started.ticket, "eventually"),
     /Unsupported preview outcome/
   );
+});
+
+test("subscriber failures preserve the committed state and deliver the full listener snapshot", () => {
+  const controller = createReceiverController("participant-intake");
+  const deliveries = [];
+  controller.subscribe(() => {
+    deliveries.push("first");
+    throw new Error("caller-owned failure detail");
+  });
+  controller.subscribe(() => deliveries.push("second"));
+
+  let failure;
+  try {
+    controller.chooseDraft("review-routing");
+  } catch (error) {
+    failure = error;
+  }
+
+  const committedState = controller.getSnapshot();
+  assert.ok(failure instanceof ReceiverNotificationError);
+  assert.equal(failure.code, "receiver_notification_failed");
+  assert.deepEqual(failure.details, {
+    committed: true,
+    generation: 0,
+    statusKind: "draft_changed",
+    listenerFailureCount: 1
+  });
+  assert.equal(failure.committedState, committedState);
+  assert.equal(committedState.draft.specimenId, "review-routing");
+  assert.deepEqual(deliveries, ["first", "second"]);
+  assert.equal(failure.errors.length, 1);
+  assert.equal(failure.errors[0].code, "receiver_listener_notification_failed");
+  assert.equal(failure.errors[0].listenerIndex, 0);
+  assert.equal(Object.isFrozen(failure), true);
+  assert.equal(Object.isFrozen(failure.errors), true);
+  assert.equal(String(failure).includes("caller-owned failure detail"), false);
+});
+
+test("unsubscribe during emission takes effect after the current listener snapshot", () => {
+  const controller = createReceiverController("participant-intake");
+  const deliveries = [];
+  let unsubscribeSecond;
+  controller.subscribe(() => {
+    deliveries.push("first");
+    unsubscribeSecond();
+  });
+  unsubscribeSecond = controller.subscribe(() => deliveries.push("second"));
+
+  controller.chooseDraft("review-routing");
+  assert.deepEqual(deliveries, ["first", "second"]);
+
+  controller.chooseDraft("release-receipt");
+  assert.deepEqual(deliveries, ["first", "second", "first"]);
+});
+
+test("subscription admits listener functions before a transition can commit", () => {
+  const controller = createReceiverController("participant-intake");
+
+  assert.throws(
+    () => controller.subscribe({handle: "change"}),
+    /listener function/
+  );
+  controller.chooseDraft("review-routing");
+  assert.equal(controller.getSnapshot().draft.specimenId, "review-routing");
 });

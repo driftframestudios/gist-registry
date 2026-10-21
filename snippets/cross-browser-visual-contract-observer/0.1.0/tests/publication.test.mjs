@@ -7,6 +7,20 @@ import { OBSERVER_RESOURCE_LIMITS, ObserverError } from "../src/contracts.mjs";
 import { humanReceipt, publishReceipt } from "../src/publication.mjs";
 import { artifactSources, makeReceipt, subjectSourcePath } from "./helpers.mjs";
 
+function assertReferenceUnreachable(root, target) {
+  const pending = [root];
+  const visited = new WeakSet();
+  while (pending.length > 0) {
+    const value = pending.pop();
+    assert.notStrictEqual(value, target);
+    if ((typeof value !== "object" && typeof value !== "function") || value === null || visited.has(value)) continue;
+    visited.add(value);
+    for (const descriptor of Object.values(Object.getOwnPropertyDescriptors(value))) {
+      if (Object.hasOwn(descriptor, "value")) pending.push(descriptor.value);
+    }
+  }
+}
+
 test("candidate promotion moves one accepted pointer after verification", async () => {
   const root = await mkdtemp(join(tmpdir(), "visual-receipt-"));
   const pointer = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
@@ -582,6 +596,7 @@ test("cleanup reporting admits a hostile primary error without invoking proxy tr
       },
     },
   );
+  let observed;
 
   await assert.rejects(
     publishReceipt(root, successor, {
@@ -594,12 +609,16 @@ test("cleanup reporting admits a hostile primary error without invoking proxy tr
         throw hostilePrimary;
       },
     }),
-    error => error instanceof ObserverError
-      && error.code === "PUBLICATION_FAILED"
-      && error.cause === hostilePrimary
-      && error.details.primaryFailure.code === "PUBLICATION_FAILED"
-      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
+    error => {
+      observed = error;
+      return error instanceof ObserverError
+        && error.code === "PUBLICATION_FAILED"
+        && !Object.hasOwn(error, "cause")
+        && error.details.primaryFailure.code === "PUBLICATION_FAILED"
+        && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED";
+    },
   );
+  assertReferenceUnreachable(observed, hostilePrimary);
   assert.equal(trapCalls, 0);
   assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
   assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
@@ -636,7 +655,7 @@ test("cleanup reporting inspects primary accessors as descriptors and leaves the
     }),
     error => error instanceof ObserverError
       && error.code === "PUBLICATION_FAILED"
-      && error.cause === hostilePrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.primaryFailure.code === "PUBLICATION_FAILED"
       && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
   );
@@ -679,11 +698,56 @@ test("successful cleanup still normalizes a hostile primary without invoking pro
     }),
     error => error instanceof ObserverError
       && error.code === "PUBLICATION_FAILED"
-      && error.cause === hostilePrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.causeCode === "PUBLICATION_FAILED"
       && error.details.restartFrom === "pointer",
   );
   assert.equal(trapCalls, 0);
+  assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
+  assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
+});
+
+test("successful cleanup reconstructs an admitted typed caller failure", async () => {
+  const root = await mkdtemp(join(tmpdir(), "visual-receipt-owned-typed-primary-"));
+  const accepted = await publishReceipt(root, makeReceipt(), { artifactSources: artifactSources() });
+  const pointerBefore = await readFile(join(root, "accepted-pointer.json"));
+  const successor = makeReceipt();
+  successor.receiptId = "owned-typed-primary-successor";
+  const callerFailure = new ObserverError(
+    "INJECTED_TYPED_PRIMARY",
+    "A caller-supplied typed failure stopped publication.",
+    { checkpoint: "before_reservation_release", restartFrom: "pointer" },
+  );
+  let getterCalls = 0;
+  Object.defineProperty(callerFailure, "toJSON", {
+    configurable: true,
+    get() {
+      getterCalls += 1;
+      throw new Error("caller toJSON getter must remain idle");
+    },
+  });
+  let observed;
+
+  await assert.rejects(
+    publishReceipt(root, successor, {
+      artifactSources: artifactSources(),
+      injectFault: async ({ checkpoint }) => {
+        if (checkpoint === "before_reservation_release") throw callerFailure;
+      },
+    }),
+    error => {
+      observed = error;
+      return error instanceof ObserverError
+        && error.code === "INJECTED_TYPED_PRIMARY"
+        && error.message === "A caller-supplied typed failure stopped publication."
+        && error.details.checkpoint === "before_reservation_release"
+        && error.details.restartFrom === "pointer"
+        && !Object.hasOwn(error, "cause");
+    },
+  );
+  assert.notEqual(observed, callerFailure);
+  assertReferenceUnreachable(observed, callerFailure);
+  assert.equal(getterCalls, 0);
   assert.deepEqual(await readFile(join(root, "accepted-pointer.json")), pointerBefore);
   assert.deepEqual(JSON.parse(pointerBefore.toString("utf8")), accepted);
 });
@@ -715,7 +779,7 @@ test("successful cleanup reads caller errors through own data descriptors", asyn
     }),
     error => error instanceof ObserverError
       && error.code === "PUBLICATION_FAILED"
-      && error.cause === hostilePrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.causeCode === "PUBLICATION_FAILED"
       && error.details.reason === "A caller-controlled accessor primary failure."
       && error.details.restartFrom === "pointer",
@@ -742,7 +806,7 @@ test("successful cleanup bounds oversized caller error strings before UTF-8 meas
     }),
     error => error instanceof ObserverError
       && error.code === "PUBLICATION_FAILED"
-      && error.cause === oversizedPrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.causeCode === "PUBLICATION_FAILED"
       && error.details.reason === "Publication failed at the selected coordinate."
       && error.details.restartFrom === "pointer",

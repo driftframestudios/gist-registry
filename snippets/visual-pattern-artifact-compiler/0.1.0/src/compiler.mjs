@@ -90,6 +90,7 @@ const SRCSET_ATTRIBUTE = /\bsrcset\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/
 const CSS_URL = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^\s)'"`]+))\s*\)/giu;
 const PRIVATE_LOCATOR = /(?:\b(?:file|private-local)\s*:|\/(?:Users|home|private\/var)\/|[A-Za-z]:\\(?:Users|Documents|Desktop)\\|\\\\[^\s"'<>]+\\|\b(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?\b|\b10(?:\.\d{1,3}){3}\b|\b192\.168(?:\.\d{1,3}){2}\b|\b172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}\b)/iu;
 const EXTERNAL_LOCATOR = /(?:\b(?:https?|ftp|wss?|data|blob|file)\s*:|(?<!:)\/\/)/iu;
+const SOURCE_FILE_SYSTEM = Object.freeze({ lstat, open });
 const pointerReservationWaitMilliseconds = 10_000;
 const pointerReservationPollMilliseconds = 10;
 const admittedFailureDetailFields = Object.freeze([
@@ -190,19 +191,20 @@ function assertWithinResourceLimit(resource, observed, limit, restartAt) {
   }
 }
 
-async function readBoundedFile(filePath, resource, limit, {
+export async function readBoundedFile(filePath, resource, limit, {
   expectedBytes = null,
   owner = "source coordinate",
   restartAt = "reduce_source_bytes",
+  fileSystem = SOURCE_FILE_SYSTEM,
 } = {}) {
   let pathEntry;
   try {
-    pathEntry = await lstat(filePath);
+    pathEntry = await fileSystem.lstat(filePath);
   } catch (error) {
     throw new VisualArtifactError("invalid_source_file", `The ${owner} requires a readable regular file.`, {
       resource,
       filePath,
-      cause: error.message,
+      cause: boundedOwnString(error, "message", "source_path_unreadable", 1_024),
     });
   }
   if (!pathEntry.isFile() || pathEntry.isSymbolicLink()) {
@@ -223,12 +225,12 @@ async function readBoundedFile(filePath, resource, limit, {
   let handle;
   try {
     const flags = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0);
-    handle = await open(filePath, flags);
+    handle = await fileSystem.open(filePath, flags);
   } catch (error) {
     throw new VisualArtifactError("invalid_source_file", `The ${owner} changed or became unreadable before capture.`, {
       resource,
       filePath,
-      cause: error.message,
+      cause: boundedOwnString(error, "message", "source_open_failed", 1_024),
     });
   }
   let primaryError = null;
@@ -261,18 +263,60 @@ async function readBoundedFile(filePath, resource, limit, {
     if (
       offset !== openedEntry.size
       || overflowRead.bytesRead > 0
+      || settledEntry.dev !== openedEntry.dev
+      || settledEntry.ino !== openedEntry.ino
       || settledEntry.size !== openedEntry.size
       || settledEntry.mtimeMs !== openedEntry.mtimeMs
+      || settledEntry.ctimeMs !== openedEntry.ctimeMs
     ) {
       throw new VisualArtifactError("source_file_changed", `The ${owner} changed during bounded capture.`, {
         resource,
         filePath,
       });
     }
+    // Descriptor stability proves the captured bytes; the final path check
+    // proves that the named compiler coordinate still addresses them.
+    let settledPathEntry;
+    try {
+      settledPathEntry = await fileSystem.lstat(filePath);
+    } catch {
+      throw new VisualArtifactError("source_file_changed", `The ${owner} changed its addressed path during bounded capture.`, {
+        resource,
+        filePath,
+        reason: "path_unavailable_after_capture",
+      });
+    }
+    if (
+      !settledPathEntry.isFile()
+      || settledPathEntry.isSymbolicLink()
+      || settledPathEntry.dev !== openedEntry.dev
+      || settledPathEntry.ino !== openedEntry.ino
+      || settledPathEntry.size !== openedEntry.size
+      || settledPathEntry.mtimeMs !== openedEntry.mtimeMs
+      || settledPathEntry.ctimeMs !== openedEntry.ctimeMs
+    ) {
+      throw new VisualArtifactError("source_file_changed", `The ${owner} changed its addressed path during bounded capture.`, {
+        resource,
+        filePath,
+        reason: "path_identity_changed",
+      });
+    }
     return bytes;
   } catch (error) {
-    primaryError = error;
-    throw error;
+    const admitted = admittedVisualArtifactError(error);
+    primaryError = admitted
+      ? new VisualArtifactError(admitted.code, admitted.message, {
+        resource,
+        filePath,
+        ...admittedSourceFailureDetails(error),
+        ...admitted.details,
+      })
+      : new VisualArtifactError("source_capture_failed", `The ${owner} could not complete its bounded capture.`, {
+        resource,
+        filePath,
+        cause: boundedOwnString(error, "message", "source_capture_failed", 1_024),
+      });
+    throw primaryError;
   } finally {
     try {
       await handle.close();
@@ -281,7 +325,7 @@ async function readBoundedFile(filePath, resource, limit, {
         throw new VisualArtifactError("source_file_close_failed", `The ${owner} descriptor requires operator recovery.`, {
           resource,
           filePath,
-          cause: error.message,
+          cause: boundedOwnString(error, "message", "source_close_failed", 1_024),
         });
       }
     }
@@ -947,6 +991,106 @@ function admittedFailureDetails(error) {
   return Object.freeze(admitted);
 }
 
+function boundedPlainDataSnapshot(value, {
+  maximumDepth = 16,
+  maximumNodes = 512,
+  maximumStringBytes = 32_768,
+} = {}) {
+  const active = new WeakSet();
+  let nodes = 0;
+  let stringBytes = 0;
+  const admitString = input => {
+    stringBytes += Buffer.byteLength(input, "utf8");
+    if (stringBytes > maximumStringBytes) throw new Error("string envelope exceeded");
+  };
+  const clone = (input, depth) => {
+    nodes += 1;
+    if (nodes > maximumNodes || depth > maximumDepth) throw new Error("plain-data envelope exceeded");
+    if (input === null || typeof input === "boolean") return input;
+    if (typeof input === "string") {
+      admitString(input);
+      return input;
+    }
+    if (typeof input === "number" && Number.isFinite(input)) return input;
+    if (!input || typeof input !== "object" || utilTypes.isProxy(input)) {
+      throw new Error("plain JSON data required");
+    }
+    if (active.has(input)) throw new Error("acyclic plain data required");
+    active.add(input);
+    try {
+      if (Array.isArray(input)) {
+        if (Object.getPrototypeOf(input) !== Array.prototype) throw new Error("plain array required");
+        if (Object.getOwnPropertySymbols(input).length > 0) throw new Error("string keys required");
+        const names = Object.getOwnPropertyNames(input).filter(name => name !== "length");
+        if (names.length !== input.length) throw new Error("dense array required");
+        const output = new Array(input.length);
+        for (let index = 0; index < input.length; index += 1) {
+          const descriptor = Object.getOwnPropertyDescriptor(input, String(index));
+          if (!descriptor || descriptor.enumerable !== true || !Object.hasOwn(descriptor, "value")) {
+            throw new Error("array data properties required");
+          }
+          output[index] = clone(descriptor.value, depth + 1);
+        }
+        return output;
+      }
+      const prototype = Object.getPrototypeOf(input);
+      if (prototype !== Object.prototype && prototype !== null) throw new Error("plain object required");
+      if (Object.getOwnPropertySymbols(input).length > 0) throw new Error("string keys required");
+      const output = Object.create(prototype === null ? null : Object.prototype);
+      for (const key of Object.getOwnPropertyNames(input)) {
+        const descriptor = Object.getOwnPropertyDescriptor(input, key);
+        if (!descriptor || descriptor.enumerable !== true || !Object.hasOwn(descriptor, "value")) {
+          throw new Error("object data properties required");
+        }
+        admitString(key);
+        Object.defineProperty(output, key, {
+          value: clone(descriptor.value, depth + 1),
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
+      }
+      return output;
+    } finally {
+      active.delete(input);
+    }
+  };
+  try {
+    return clone(value, 0);
+  } catch {
+    return null;
+  }
+}
+
+function admittedVisualArtifactErrorDetails(error) {
+  const snapshot = boundedPlainDataSnapshot(ownDataValue(error, "details"));
+  return snapshot !== null && typeof snapshot === "object" && !Array.isArray(snapshot)
+    ? snapshot
+    : null;
+}
+
+function admittedSourceFailureDetails(error) {
+  const details = ownDataValue(error, "details");
+  if (details === null || typeof details !== "object" || utilTypes.isProxy(details)) {
+    return Object.freeze({});
+  }
+  try {
+    if (![Object.prototype, null].includes(Object.getPrototypeOf(details))) return Object.freeze({});
+  } catch {
+    return Object.freeze({});
+  }
+  const admitted = {};
+  for (const key of ["resource", "filePath", "cause", "reason", "restartAt"]) {
+    const value = boundedOwnString(details, key, null, 4_096);
+    if (value !== null) admitted[key] = value;
+  }
+  for (const key of ["expectedBytes", "observedBytes", "observed", "limit"]) {
+    const value = ownDataValue(details, key);
+    if (Number.isSafeInteger(value) && value >= 0) admitted[key] = value;
+  }
+  return Object.freeze(admitted);
+}
+
 function admittedVisualArtifactError(error) {
   if (
     error === null
@@ -960,8 +1104,9 @@ function admittedVisualArtifactError(error) {
   }
   const code = boundedOwnString(error, "code", null);
   const message = boundedOwnString(error, "message", null, 4_096);
-  if (code === null || message === null) return null;
-  return Object.freeze({ code, message, details: admittedFailureDetails(error) });
+  const details = admittedVisualArtifactErrorDetails(error);
+  if (code === null || message === null || details === null) return null;
+  return Object.freeze({ code, message, details });
 }
 
 function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
@@ -992,7 +1137,6 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
       acceptedCoordinate,
       cleanupFailure,
     });
-    retained.cause = primaryError;
     return retained;
   }
   const retained = new VisualArtifactError(
@@ -1007,7 +1151,6 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
       cleanupFailure,
     },
   );
-  retained.cause = primaryError;
   return retained;
 }
 
@@ -1805,6 +1948,24 @@ export async function publishArtifactFamily({
     // rename succeeds. A later invocation may verify and publish that exact
     // directory, so this invocation owns cleanup only for its candidate and
     // temporary pointer. Unreferenced digest collection is a separate policy.
-    throw failure;
+    const admittedFailure = admittedVisualArtifactError(failure);
+    if (admittedFailure) {
+      throw new VisualArtifactError(
+        admittedFailure.code,
+        admittedFailure.message,
+        admittedFailure.details,
+      );
+    }
+    throw new VisualArtifactError(
+      "publication_failed",
+      boundedOwnString(failure, "message", "Artifact publication stopped at a recoverable coordinate.", 4_096),
+      {
+        causeCode: boundedOwnString(failure, "code", "publication_failed"),
+        reason: boundedOwnString(failure, "message", "Artifact publication stopped at a recoverable coordinate.", 4_096),
+        restartFrom: acceptedCoordinate === null || candidateOwnership.directoryIdentity
+          ? "candidate"
+          : "pointer",
+      },
+    );
   }
 }

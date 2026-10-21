@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
+import { types as utilTypes } from "node:util";
 
 export const DEFAULT_LIMITS = Object.freeze({
   sourceBytes: 512_000,
@@ -46,6 +47,64 @@ export class PipelineError extends Error {
 
   toJSON() {
     return { code: this.code, message: this.message, details: this.details };
+  }
+}
+
+function ownDataDescriptor(value, key) {
+  if (
+    value === null
+    || (typeof value !== "object" && typeof value !== "function")
+    || utilTypes.isProxy(value)
+  ) return null;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && Object.hasOwn(descriptor, "value") ? descriptor : null;
+  } catch {
+    return null;
+  }
+}
+
+function boundedOwnString(value, key, fallback, maxBytes = 1_024) {
+  const candidate = ownDataDescriptor(value, key)?.value;
+  return typeof candidate === "string"
+    && candidate.length > 0
+    && candidate.length <= maxBytes
+    && Buffer.byteLength(candidate, "utf8") <= maxBytes
+    ? candidate
+    : fallback;
+}
+
+function boundedErrorMessage(error, fallback) {
+  return boundedOwnString(error, "message", fallback);
+}
+
+function admittedPipelineError(error) {
+  if (
+    error === null
+    || (typeof error !== "object" && typeof error !== "function")
+    || utilTypes.isProxy(error)
+  ) return null;
+  try {
+    // Exact prototype identity inspects only the ordinary object's own
+    // [[Prototype]] slot. It avoids walking a caller-controlled Proxy chain as
+    // `instanceof` would.
+    if (Object.getPrototypeOf(error) !== PipelineError.prototype) return null;
+  } catch {
+    return null;
+  }
+  const code = boundedOwnString(error, "code", null, 512);
+  const message = boundedOwnString(error, "message", null, 4_096);
+  const detailsDescriptor = ownDataDescriptor(error, "details");
+  if (code === null || message === null || detailsDescriptor === null) return null;
+  try {
+    const details = snapshotJsonTree(detailsDescriptor.value, {
+      limits: { ...DEFAULT_LIMITS, depth: 16, sourceBytes: 32_768, sourceNodes: 512 },
+      path: "error.details",
+    }).snapshot;
+    if (!isRecord(details)) return null;
+    return Object.freeze({ code, message, details });
+  } catch {
+    return null;
   }
 }
 
@@ -101,7 +160,7 @@ export async function readBoundedFile(
   } catch (error) {
     throw new PipelineError("SOURCE_FILE_UNREADABLE", `${label} requires a readable file.`, {
       stage,
-      reason: error.message,
+      reason: boundedErrorMessage(error, "source_path_unreadable"),
       restartFrom,
     });
   }
@@ -128,7 +187,7 @@ export async function readBoundedFile(
   } catch (error) {
     throw new PipelineError("SOURCE_FILE_UNREADABLE", `${label} changed or became unreadable before capture.`, {
       stage,
-      reason: error.message,
+      reason: boundedErrorMessage(error, "source_open_failed"),
       restartFrom,
     });
   }
@@ -181,16 +240,57 @@ export async function readBoundedFile(
       chunks.push(chunk.subarray(0, bytesRead));
     }
     const settledEntry = await handle.stat();
-    if (observed !== entry.size || settledEntry.size !== entry.size || settledEntry.mtimeMs !== entry.mtimeMs) {
+    if (
+      observed !== entry.size
+      || settledEntry.dev !== entry.dev
+      || settledEntry.ino !== entry.ino
+      || settledEntry.size !== entry.size
+      || settledEntry.mtimeMs !== entry.mtimeMs
+      || settledEntry.ctimeMs !== entry.ctimeMs
+    ) {
       throw new PipelineError("SOURCE_FILE_CHANGED", `${label} changed during bounded capture.`, {
         stage,
         restartFrom,
       });
     }
+    // Descriptor stability proves the captured bytes; the final path check
+    // proves that the named source coordinate still addresses those bytes.
+    let settledPathEntry;
+    try {
+      settledPathEntry = await fileSystem.lstat(path);
+    } catch {
+      throw new PipelineError("SOURCE_FILE_CHANGED", `${label} changed its addressed path during bounded capture.`, {
+        stage,
+        reason: "path_unavailable_after_capture",
+        restartFrom,
+      });
+    }
+    if (
+      !settledPathEntry.isFile()
+      || settledPathEntry.isSymbolicLink()
+      || settledPathEntry.dev !== entry.dev
+      || settledPathEntry.ino !== entry.ino
+      || settledPathEntry.size !== entry.size
+      || settledPathEntry.mtimeMs !== entry.mtimeMs
+      || settledPathEntry.ctimeMs !== entry.ctimeMs
+    ) {
+      throw new PipelineError("SOURCE_FILE_CHANGED", `${label} changed its addressed path during bounded capture.`, {
+        stage,
+        reason: "path_identity_changed",
+        restartFrom,
+      });
+    }
     return Buffer.concat(chunks, observed);
   } catch (error) {
-    primaryError = error;
-    throw error;
+    const admitted = admittedPipelineError(error);
+    primaryError = admitted
+      ? new PipelineError(admitted.code, admitted.message, admitted.details)
+      : new PipelineError("SOURCE_CAPTURE_FAILED", `${label} could not complete its bounded capture.`, {
+        stage,
+        reason: boundedErrorMessage(error, "source_capture_failed"),
+        restartFrom,
+      });
+    throw primaryError;
   } finally {
     try {
       await handle.close();
@@ -198,7 +298,7 @@ export async function readBoundedFile(
       if (primaryError === null) {
         throw new PipelineError("SOURCE_FILE_CLOSE_FAILED", `${label} requires operator recovery after capture.`, {
           stage,
-          reason: error.message,
+          reason: boundedErrorMessage(error, "source_close_failed"),
           restartFrom,
         });
       }
@@ -213,14 +313,14 @@ export async function readJson(path, { maxBytes = DEFAULT_LIMITS.sourceBytes } =
   } catch (error) {
     throw new PipelineError("INVALID_JSON", "Token source must contain valid JSON.", {
       stage: "parse",
-      reason: error.message,
+      reason: boundedErrorMessage(error, "invalid_json"),
       restartFrom: "source",
     });
   }
 }
 
 function isRecord(value) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  if (value === null || typeof value !== "object" || utilTypes.isProxy(value) || Array.isArray(value)) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }
@@ -303,6 +403,17 @@ function assertDepth(value, depth, limits, path) {
         restartFrom: "source",
       });
     }
+    // A Proxy is executable caller behavior rather than JSON-owned data.
+    // Detect it before any array, prototype, key, or descriptor reflection so
+    // admission returns a typed result without invoking caller traps.
+    if (utilTypes.isProxy(current.value)) {
+      throw new PipelineError("INVALID_JSON_VALUE", "Token source values require an owned JSON data snapshot.", {
+        stage: "admission",
+        tokenPath: current.path || "$",
+        reason: "proxy_value",
+        restartFrom: "source",
+      });
+    }
     if (active.has(current.value)) {
       throw new PipelineError("INVALID_JSON_VALUE", "Token source values must form an acyclic JSON tree.", {
         stage: "admission",
@@ -379,7 +490,17 @@ function assertDepth(value, depth, limits, path) {
       });
     }
   }
-  return { sourceNodes, sourceStringBytes };
+  return {
+    sourceNodes,
+    sourceStringBytes,
+    // Downstream graph work reads this owned snapshot rather than returning to
+    // caller-controlled object identities after admission.
+    snapshot: structuredClone(value),
+  };
+}
+
+export function snapshotJsonTree(value, { limits = DEFAULT_LIMITS, path = "" } = {}) {
+  return assertDepth(value, 0, { ...DEFAULT_LIMITS, ...limits }, path);
 }
 
 export function normalizeCssName(path) {
@@ -569,7 +690,7 @@ function assertTokenOrGroupName(name, path) {
 
 export function collectTokens(document, { limits = DEFAULT_LIMITS } = {}) {
   limits = { ...DEFAULT_LIMITS, ...limits };
-  assertDepth(document, 0, limits, "");
+  document = assertDepth(document, 0, limits, "").snapshot;
   if (!isRecord(document)) {
     throw new PipelineError("INVALID_DTCG_STRUCTURE", "A token document requires a root JSON object.", {
       stage: "admission",
@@ -862,8 +983,10 @@ export function resolveTokens(validation) {
 export function deepMerge(...documents) {
   let aggregateNodes = 0;
   let aggregateStringBytes = 0;
+  const admittedDocuments = [];
   for (const document of documents) {
     const observed = assertDepth(document, 0, DEFAULT_LIMITS, "");
+    admittedDocuments.push(observed.snapshot);
     aggregateNodes += observed.sourceNodes;
     aggregateStringBytes += observed.sourceStringBytes;
     if (aggregateNodes > DEFAULT_LIMITS.sourceNodes || aggregateStringBytes > DEFAULT_LIMITS.sourceBytes) {
@@ -888,7 +1011,7 @@ export function deepMerge(...documents) {
     }
     return output;
   };
-  return documents.reduce((current, document) => merge(current, document), {});
+  return admittedDocuments.reduce((current, document) => merge(current, document), {});
 }
 
 function tokenPaths(document) {
@@ -908,10 +1031,23 @@ function tokenPaths(document) {
 }
 
 export function mergeTokenLayers(layers) {
+  const admittedLayers = assertDepth(
+    layers,
+    0,
+    { ...DEFAULT_LIMITS, depth: DEFAULT_LIMITS.depth + 2 },
+    "layers",
+  ).snapshot;
+  if (!Array.isArray(admittedLayers)) {
+    throw new PipelineError("INVALID_JSON_VALUE", "Token layers require a dense JSON array.", {
+      stage: "source_merge",
+      tokenPath: "layers",
+      reason: "array_required",
+      restartFrom: "source",
+    });
+  }
   const owners = new Map();
   let document = {};
-  for (const layer of layers) {
-    assertDepth(layer.document, 0, DEFAULT_LIMITS, "");
+  for (const layer of admittedLayers) {
     const paths = tokenPaths(layer.document);
     for (const path of paths) {
       const previous = owners.get(path);
@@ -976,6 +1112,13 @@ export function semanticDiff(accepted, candidate) {
 }
 
 export function sanitizeDiagnostic(error) {
-  if (error instanceof PipelineError) return error.toJSON();
+  const admitted = admittedPipelineError(error);
+  if (admitted) {
+    return {
+      code: admitted.code,
+      message: admitted.message,
+      details: admitted.details,
+    };
+  }
   return { code: "UNEXPECTED_PIPELINE_FAILURE", message: "Pipeline execution returned an unexpected failure.", details: {} };
 }

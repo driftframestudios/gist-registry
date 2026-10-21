@@ -83,6 +83,14 @@ complete before the candidate directory is created; cumulative output-byte
 checks continue as each encoded derivative joins the family.
 The manifest records the applied admission standing and complete resource
 envelope so a receiving reviewer can reproduce the same boundary.
+Each bounded source capture binds descriptor device, inode, size, modification
+time, and change time. A final pathname check confirms that the addressed path
+still names the captured regular file with the same bounded metadata before its
+bytes enter compilation.
+Descriptor failures cross that boundary as newly constructed
+`VisualArtifactError` values. Exact-prototype and own-data inspection keeps
+Proxy prototype traps and replaced accessors idle while preserving bounded
+source diagnostics.
 
 The admitted stylesheet subset accepts layout, typography, color, media
 queries, and `url(#semantic-id)` references. A CSS `image-set()` declaration
@@ -141,6 +149,10 @@ coordinate before another candidate can reuse its digest. Reservation release
 is part of successful promotion: a replaced or nonempty reservation stops
 pointer movement, while a primary promotion error retains one bounded
 `cleanupFailure` record for the same recovery state.
+The exported publisher reconstructs admitted typed failures from bounded owned
+plain data. Both cleanup-failure and successful-cleanup paths return fresh
+`VisualArtifactError` values and bounded diagnostics while caller-controlled
+identity and extra properties remain outside the result.
 
 The portable publisher assumes one trusted writer domain honors its
 digest-scoped and pointer-wide reservations. The pointer commit compares the
@@ -165,12 +177,15 @@ time, peak resident memory, source-family count, and derivative-width count.
 
 ## Complexity and allocation
 
-For `F` source families and `W` widths, derivative work is `O(F × W)` plus one
-SVG admission pass and one gallery/semantic-companion pass per family. The
-compiler holds each source document and one encoded derivative in memory at a
-time. The example observation records input/output bytes, elapsed time, and
-peak resident memory. A receiving performance exercise adds explicit
-thresholds for its deployment coordinate.
+For `F` source families and `W` widths, the compiler performs `O(F × W)`
+derivative renders and writes plus one SVG admission pass and one
+gallery/semantic-companion pass per family. The bounded output-identity ledger
+verifies every earlier path around each write, adding `O(F × W²)` identity
+checks across `F` independently compiled families in the current implementation.
+The compiler holds each source document and one encoded derivative in memory at
+a time. The example observation records input/output bytes, elapsed time, and
+peak resident memory. A receiving performance exercise adds explicit thresholds
+for its deployment coordinate.
 Failure admission rejects over-limit strings by code-unit length before UTF-8
 measurement, keeping cleanup and recovery diagnostics inside a fixed envelope.
 

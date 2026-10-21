@@ -1,21 +1,21 @@
 {
   "schemaVersion": "0.1.0",
   "coordinate": "react-aria-visual-contract-receiver@0.1.0",
-  "deterministicManifestSha256": "4194c2ee7dac24c2560a8a87c268257ff22f55cb649d4f4eb99dd2e58aeb29d5",
+  "deterministicManifestSha256": "4a3a1dc6534a17288dd6ae09c416009415e52c2bdb400dfca39b4f9916bb95c8",
   "deterministicMeasurements": {
-    "authoredSourceBytes": 67445,
+    "authoredSourceBytes": 69425,
     "directDependencyCount": 9,
     "resolvedPackageCount": 128,
     "specimenCount": 3,
     "transitionOperationCount": 4,
-    "runtimeJavaScriptBytes": 406902,
-    "runtimeAssetBytes": 423337,
-    "sourceMapBytes": 2213002,
-    "completeBuildBytes": 2636339
+    "runtimeJavaScriptBytes": 407769,
+    "runtimeAssetBytes": 424204,
+    "sourceMapBytes": 2215942,
+    "completeBuildBytes": 2640146
   },
   "profiledMeasurements": {
     "runtimeJavaScriptGzipBytes": {
-      "observed": 125835,
+      "observed": 126142,
       "coordinate": {
         "node": "26.11.0",
         "zlib": "1.2.12",

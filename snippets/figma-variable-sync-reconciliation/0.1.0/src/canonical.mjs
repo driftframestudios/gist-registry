@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { types as utilTypes } from "node:util";
 
 export function compareOrdinal(left, right) {
   return left < right ? -1 : left > right ? 1 : 0;
@@ -11,6 +12,9 @@ function canonicalTypeError(code, path) {
 }
 
 function recordEntries(value, path) {
+  if (utilTypes.isProxy(value)) {
+    throw canonicalTypeError("plain_record", path);
+  }
   const prototype = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== null) {
     throw canonicalTypeError("plain_record", path);
@@ -30,6 +34,9 @@ function recordEntries(value, path) {
 }
 
 function arrayValues(value, path) {
+  if (utilTypes.isProxy(value)) {
+    throw canonicalTypeError("plain_array", path);
+  }
   if (Object.getPrototypeOf(value) !== Array.prototype) {
     throw canonicalTypeError("plain_array", path);
   }
@@ -97,6 +104,13 @@ const secretKeyPattern = /(?:api[_-]?key|authorization|password|secret|token)/iu
 const secretValuePattern = /(?:bearer\s+[a-z0-9._-]+|sk-[a-z0-9_-]{12,})/iu;
 
 export function assertSanitizedReceipt(value, path = "$") {
+  if (
+    value !== null
+    && (typeof value === "object" || typeof value === "function")
+    && utilTypes.isProxy(value)
+  ) {
+    throw new TypeError(`Receipt value ${path} requires inert plain data.`);
+  }
   if (Array.isArray(value)) {
     value.forEach((child, index) => assertSanitizedReceipt(child, `${path}[${index}]`));
     return;

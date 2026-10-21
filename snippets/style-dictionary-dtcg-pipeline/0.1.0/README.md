@@ -74,7 +74,15 @@ Module and the `none` component keyword. Token and group objects receive
 separate structural validation. A token that also carries a child token or
 group returns a typed conflict at the source path. Direct callers receive the
 same JSON-tree admission as file-backed callers, including finite-number,
-plain-object, dense-array, data-property, and cycle checks.
+plain-object, dense-array, data-property, and cycle checks. Admission creates
+one owned data snapshot for graph work. A Proxy value returns typed
+`INVALID_JSON_VALUE` friction before its traps run; callers can materialize
+reviewed JSON data and resubmit that snapshot.
+Diagnostic formatting applies the same ownership boundary. It admits an exact
+`PipelineError` prototype through own data descriptors, copies bounded details
+into a new JSON snapshot, and returns a fresh plain record. Proxy wrappers,
+Proxy prototype chains, and accessor replacements resolve to the generic
+pipeline diagnostic while caller behavior remains idle.
 
 ## Build matrix and receiver meaning
 
@@ -129,8 +137,8 @@ restart point:
 
 The Figma-shaped adapter is a pure, synthetic boundary example. It converts
 bounded RGBA channels into structured sRGB token values and returns a DTCG
-candidate plus source map after checking supported types, required modes,
-normalized identities, and approved public text. Live Figma credentials,
+candidate plus source map after admitting one owned JSON data snapshot and
+checking supported types, required modes, normalized identities, and approved public text. Live Figma credentials,
 file keys, and service calls belong to a separately reviewed adapter.
 
 ## Complexity and resource envelope
@@ -143,8 +151,11 @@ and graph traversal return typed depth boundaries for deeply nested layers,
 reverse-ordered alias chains, and Figma-shaped snapshots while the bounded
 pipeline retains control. Source-node and aggregate UTF-8 string-byte ceilings
 are evaluated before token values are cloned. File size is admitted from stat
-metadata and rechecked through capped reads, so sparse and growing files stay
-inside the same allocation envelope. A map lookup replaces a repeated
+metadata and rechecked through capped reads. The bounded reader binds descriptor
+device, inode, size, modification time, and change time, then confirms the final
+addressed path still names that regular file with the same bounded metadata.
+Sparse, growing, and replaced files return typed source recovery inside the
+same allocation envelope. A map lookup replaces a repeated
 full-dictionary scan with linear graph work.
 
 The build observation records source bytes, coordinate and platform counts,
@@ -201,6 +212,10 @@ A changed or nonempty reservation stops pointer movement and returns
 `accepted_coordinate_recovery`; when release fails beside another promotion
 error, that primary outcome remains authoritative and carries one bounded
 `cleanupFailure` record.
+The exported promotion boundary reconstructs admitted typed failures from a
+bounded JSON snapshot. Cleanup-failure and successful-cleanup paths return
+owned `PipelineError` values plus bounded diagnostic fields, keeping the
+originating caller object outside the result.
 Failure admission rejects over-limit strings by code-unit length before UTF-8
 measurement, which keeps recovery reporting within its declared byte envelope.
 A repeated digest rechecks the stored manifest digest, exact file inventory,

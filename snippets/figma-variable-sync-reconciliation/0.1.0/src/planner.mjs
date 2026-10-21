@@ -1,3 +1,5 @@
+import { types as utilTypes } from "node:util";
+
 import { digest } from "./canonical.mjs";
 import { PlanError } from "./errors.mjs";
 
@@ -48,7 +50,12 @@ function validateBoundedString(value, field, { min = 1, max = 256 } = {}) {
 }
 
 function isPlainRecord(value) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  if (
+    value === null
+    || typeof value !== "object"
+    || utilTypes.isProxy(value)
+    || Array.isArray(value)
+  ) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }
@@ -71,7 +78,11 @@ function validateDataRecord(value, field, code, message) {
 }
 
 function dataArrayValues(value, field, code = "non_json_value", message = `${field} requires a dense JSON array.`) {
-  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) {
+  if (
+    utilTypes.isProxy(value)
+    || !Array.isArray(value)
+    || Object.getPrototypeOf(value) !== Array.prototype
+  ) {
     throw new PlanError(code, message, { field });
   }
   const descriptors = Object.getOwnPropertyDescriptors(value);
@@ -360,7 +371,13 @@ function requireTemporaryReferenceDependencies(operations, createTempIds) {
 }
 
 export function orderOperations(operations) {
-  if (!Array.isArray(operations) || operations.length === 0) {
+  if (utilTypes.isProxy(operations) || !Array.isArray(operations)) {
+    throw new PlanError(
+      "invalid_operation_list",
+      "The synchronization plan requires a dense data array of operations.",
+    );
+  }
+  if (operations.length === 0) {
     throw new PlanError("empty_plan", "A synchronization plan needs at least one operation.");
   }
   const operationValues = dataArrayValues(

@@ -9,6 +9,7 @@ import {
   PipelineError,
   readBoundedFile,
   readJson,
+  sanitizeDiagnostic,
   sha256,
   stableStringify,
 } from "../src/contract.mjs";
@@ -20,6 +21,20 @@ import { verifyGenerated } from "../tools/verify-generated.mjs";
 
 async function temporaryRoot(name) {
   return mkdtemp(join(tmpdir(), `${name}-`));
+}
+
+function assertReferenceUnreachable(root, target) {
+  const pending = [root];
+  const visited = new WeakSet();
+  while (pending.length > 0) {
+    const value = pending.pop();
+    assert.notStrictEqual(value, target);
+    if ((typeof value !== "object" && typeof value !== "function") || value === null || visited.has(value)) continue;
+    visited.add(value);
+    for (const descriptor of Object.values(Object.getOwnPropertyDescriptors(value))) {
+      if (Object.hasOwn(descriptor, "value")) pending.push(descriptor.value);
+    }
+  }
 }
 
 function alternateManifest(manifest, suffix) {
@@ -167,6 +182,194 @@ test("bounded source capture rejects a path replaced before descriptor ownership
     error => error instanceof PipelineError && error.code === "SOURCE_FILE_CHANGED",
   );
   assert.equal(closed, true);
+});
+
+test("bounded source capture binds descriptor metadata and the final addressed path", async () => {
+  const bytes = Buffer.from("bounded");
+  const openedEntry = {
+    dev: 1,
+    ino: 10,
+    size: bytes.length,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  for (const fixture of [
+    {
+      label: "descriptor ctime drift",
+      settledEntry: { ...openedEntry, ctimeMs: 201 },
+      settledPathEntry: openedEntry,
+    },
+    {
+      label: "same-size pathname replacement",
+      settledEntry: openedEntry,
+      settledPathEntry: { ...openedEntry, ino: 11 },
+    },
+    {
+      label: "same-inode final-path metadata drift",
+      settledEntry: openedEntry,
+      settledPathEntry: { ...openedEntry, ctimeMs: 201 },
+    },
+  ]) {
+    let statCalls = 0;
+    let pathCalls = 0;
+    let closed = false;
+    const fileSystem = {
+      lstat: async () => (pathCalls++ === 0 ? openedEntry : fixture.settledPathEntry),
+      open: async () => ({
+        stat: async () => (statCalls++ === 0 ? openedEntry : fixture.settledEntry),
+        read: async (buffer, offset, length, position) => {
+          const count = Math.max(0, Math.min(length, bytes.length - position));
+          if (count > 0) bytes.copy(buffer, offset, position, position + count);
+          return { bytesRead: count };
+        },
+        close: async () => { closed = true; },
+      }),
+    };
+
+    await assert.rejects(
+      readBoundedFile("synthetic-source.json", { maxBytes: bytes.length, fileSystem }),
+      error => error instanceof PipelineError && error.code === "SOURCE_FILE_CHANGED",
+      fixture.label,
+    );
+    assert.equal(closed, true, fixture.label);
+  }
+});
+
+test("bounded source capture owns hostile descriptor failures without invoking traps", async () => {
+  const entry = {
+    dev: 1,
+    ino: 10,
+    size: 1,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  let trapCalls = 0;
+  let closed = false;
+  const failTrap = () => {
+    trapCalls += 1;
+    throw new Error("hostile failure trap escaped bounded capture");
+  };
+  const hostileFailure = new Proxy(new Error("private descriptor failure"), {
+    get: failTrap,
+    getOwnPropertyDescriptor: failTrap,
+    getPrototypeOf: failTrap,
+    ownKeys: failTrap,
+  });
+  const fileSystem = {
+    lstat: async () => entry,
+    open: async () => ({
+      stat: async () => entry,
+      read: async () => { throw hostileFailure; },
+      close: async () => { closed = true; },
+    }),
+  };
+
+  await assert.rejects(
+    readBoundedFile("synthetic-source.json", { maxBytes: 1, fileSystem }),
+    error => error instanceof PipelineError
+      && error.code === "SOURCE_CAPTURE_FAILED"
+      && error.details.reason === "source_capture_failed",
+  );
+  assert.equal(trapCalls, 0);
+  assert.equal(closed, true);
+});
+
+test("bounded source capture owns prototype-hostile and mutated typed failures", async () => {
+  const entry = {
+    dev: 1,
+    ino: 10,
+    size: 1,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  const exercise = async failure => {
+    let closed = false;
+    let observed;
+    const fileSystem = {
+      lstat: async () => entry,
+      open: async () => ({
+        stat: async () => entry,
+        read: async () => { throw failure; },
+        close: async () => { closed = true; },
+      }),
+    };
+    await assert.rejects(
+      readBoundedFile("synthetic-source.json", { maxBytes: 1, fileSystem }),
+      error => {
+        observed = error;
+        return error instanceof PipelineError && error.code === "SOURCE_CAPTURE_FAILED";
+      },
+    );
+    assert.equal(closed, true);
+    assert.notEqual(observed, failure);
+  };
+
+  let prototypeTrapCalls = 0;
+  const hostilePrototype = new Proxy({}, {
+    getPrototypeOf() {
+      prototypeTrapCalls += 1;
+      throw new Error("prototype trap must remain idle");
+    },
+  });
+  await exercise(Object.create(hostilePrototype));
+  assert.equal(prototypeTrapCalls, 0);
+
+  let getterCalls = 0;
+  const mutatedTypedFailure = new PipelineError("CALLER_TYPED_FAILURE", "Caller failure.", { stage: "caller" });
+  Object.defineProperty(mutatedTypedFailure, "details", {
+    configurable: true,
+    get() {
+      getterCalls += 1;
+      throw new Error("details getter must remain idle");
+    },
+  });
+  await exercise(mutatedTypedFailure);
+  assert.equal(getterCalls, 0);
+});
+
+test("diagnostic sanitization returns owned data and keeps hostile behavior idle", () => {
+  const source = new PipelineError("SYNTHETIC", "Synthetic diagnostic.", { stage: "test" });
+  const diagnostic = sanitizeDiagnostic(source);
+  assert.deepEqual(diagnostic, {
+    code: "SYNTHETIC",
+    message: "Synthetic diagnostic.",
+    details: { stage: "test" },
+  });
+  assert.notEqual(diagnostic.details, source.details);
+
+  let prototypeTrapCalls = 0;
+  const hostilePrototype = new Proxy({}, {
+    getPrototypeOf() {
+      prototypeTrapCalls += 1;
+      throw new Error("prototype trap must remain idle");
+    },
+  });
+  assert.equal(sanitizeDiagnostic(Object.create(hostilePrototype)).code, "UNEXPECTED_PIPELINE_FAILURE");
+  assert.equal(prototypeTrapCalls, 0);
+
+  for (const field of ["code", "message", "details", "toJSON"]) {
+    let getterCalls = 0;
+    const mutated = new PipelineError("SYNTHETIC", "Synthetic diagnostic.", { stage: "test" });
+    Object.defineProperty(mutated, field, {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error(`${field} getter must remain idle`);
+      },
+    });
+    assert.equal(
+      sanitizeDiagnostic(mutated).code,
+      field === "toJSON" ? "SYNTHETIC" : "UNEXPECTED_PIPELINE_FAILURE",
+      field,
+    );
+    assert.equal(getterCalls, 0, field);
+  }
 });
 
 test("the stable manifest coordinate binds both downstream receivers", async t => {
@@ -780,6 +983,7 @@ test("cleanup reporting admits a hostile primary error without invoking proxy tr
       },
     },
   );
+  let observed;
 
   await assert.rejects(
     promoteCandidate({
@@ -794,13 +998,66 @@ test("cleanup reporting admits a hostile primary error without invoking proxy tr
         throw hostilePrimary;
       },
     }),
-    error => error instanceof PipelineError
-      && error.code === "PUBLICATION_FAILED"
-      && error.cause === hostilePrimary
-      && error.details.primaryFailure.code === "PUBLICATION_FAILED"
-      && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
+    error => {
+      observed = error;
+      return error instanceof PipelineError
+        && error.code === "PUBLICATION_FAILED"
+        && !Object.hasOwn(error, "cause")
+        && error.details.primaryFailure.code === "PUBLICATION_FAILED"
+        && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED";
+    },
   );
+  assertReferenceUnreachable(observed, hostilePrimary);
   assert.equal(trapCalls, 0);
+  assert.deepEqual(await readAcceptedPointer(accepted), pointer);
+});
+
+test("successful cleanup reconstructs an admitted typed promotion failure", async t => {
+  const root = await temporaryRoot("dtcg-owned-typed-primary");
+  const candidate = resolve(root, "candidate");
+  const accepted = resolve(root, "accepted");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await buildCandidates({ outputRoot: candidate });
+  const manifest = await createManifest({ outputRoot: candidate });
+  const pointer = await promoteCandidate({ candidateRoot: candidate, acceptedRoot: accepted, manifest });
+  const alternate = alternateManifest(manifest, "owned typed primary");
+  const callerFailure = new PipelineError(
+    "INJECTED_TYPED_PRIMARY",
+    "A caller-supplied typed failure stopped promotion.",
+    { stage: "promotion", checkpoint: "before_reservation_release", restartFrom: "pointer" },
+  );
+  let getterCalls = 0;
+  Object.defineProperty(callerFailure, "toJSON", {
+    configurable: true,
+    get() {
+      getterCalls += 1;
+      throw new Error("caller toJSON getter must remain idle");
+    },
+  });
+  let observed;
+
+  await assert.rejects(
+    promoteCandidate({
+      candidateRoot: candidate,
+      acceptedRoot: accepted,
+      manifest: alternate,
+      injectFault: async ({ checkpoint }) => {
+        if (checkpoint === "before_reservation_release") throw callerFailure;
+      },
+    }),
+    error => {
+      observed = error;
+      return error instanceof PipelineError
+        && error.code === "INJECTED_TYPED_PRIMARY"
+        && error.message === "A caller-supplied typed failure stopped promotion."
+        && error.details.checkpoint === "before_reservation_release"
+        && error.details.restartFrom === "pointer"
+        && !Object.hasOwn(error, "cause");
+    },
+  );
+  assert.notEqual(observed, callerFailure);
+  assertReferenceUnreachable(observed, callerFailure);
+  assert.equal(getterCalls, 0);
   assert.deepEqual(await readAcceptedPointer(accepted), pointer);
 });
 
@@ -840,7 +1097,7 @@ test("cleanup reporting inspects primary accessors as descriptors and leaves the
     }),
     error => error instanceof PipelineError
       && error.code === "PUBLICATION_FAILED"
-      && error.cause === hostilePrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.primaryFailure.code === "PUBLICATION_FAILED"
       && error.details.cleanupFailure.code === "PUBLICATION_RESERVATION_RELEASE_FAILED",
   );
@@ -874,7 +1131,7 @@ test("cleanup reporting bounds oversized primary strings before UTF-8 measuremen
     }),
     error => error instanceof PipelineError
       && error.code === "PUBLICATION_FAILED"
-      && error.cause === oversizedPrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.restartFrom === "accepted_coordinate_recovery"
       && error.details.action === "inspect_or_quarantine"
       && error.details.acceptedCoordinate === alternate.manifestDigest

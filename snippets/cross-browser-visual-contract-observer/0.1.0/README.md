@@ -113,6 +113,12 @@ fields at 16 KiB, and viewport dimensions at 8192 CSS pixels per axis. The
 receipt records the exact case ID, assertion count, elapsed milliseconds,
 emitted bytes, and peak resident memory so another receiver can set its own
 budget.
+Every exported inventory, matrix, selection, observation, and receipt boundary
+copies enumerable own JSON data before decision logic runs. A Proxy value
+returns typed `INVALID_CONTRACT` friction before prototype, key, or descriptor
+reflection, keeping its traps outside observation. Typed descriptor failures
+cross the capture boundary as newly constructed `ObserverError` values whose
+code, message, and details came from admitted own data.
 
 ## Receipts and recovery
 
@@ -143,6 +149,10 @@ Reservation release participates in that acceptance boundary. A replaced or
 nonempty reservation stops pointer movement and returns the accepted digest for
 inspection. When release fails beside another publication error, the primary
 outcome retains authority and carries one bounded `cleanupFailure` record.
+The exported publication boundary reconstructs each admitted typed failure from
+bounded own plain data. The returned `ObserverError` owns its code, message,
+and recovery details; bounded fields summarize the originating failure for
+diagnostic inspection.
 The caller either provisions the directly addressed publication root or passes
 the stable `ownerRoot` from which the publisher creates and captures every
 descendant directory. Each publication recheck includes that full identity
@@ -173,9 +183,11 @@ in aggregate. A bounded iterative walk checks normalized observation depth,
 node count, and UTF-8 string bytes before publication clones or digests the
 receipt. JSON inputs carry a 2 MiB ceiling. Artifact publication opens each
 directly addressed regular source through one descriptor, confirms its file
-identity and actual byte count, and reads within the declared envelope. Sparse
-oversize files and symbolic-link sources return to the candidate boundary
-before body capture.
+identity and actual byte count, and reads within the declared envelope. Capture
+rechecks descriptor device, inode, size, modification time, and change time,
+then confirms the final addressed path still names that regular file with the
+same bounded metadata. Sparse, oversize, replaced, and symbolic-link sources
+return to the candidate boundary before artifact publication.
 Failure admission rejects over-limit strings by code-unit length before UTF-8
 measurement, so recovery reporting stays within the same bounded-work posture.
 

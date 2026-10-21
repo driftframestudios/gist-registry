@@ -8,6 +8,7 @@ import { BUILD_MATRIX, coordinateId } from "../config/build-matrix.mjs";
 import {
   DEFAULT_LIMITS,
   PipelineError,
+  deepMerge,
   mergeTokenLayers,
   semanticDiff,
   stableStringify,
@@ -158,6 +159,64 @@ test("direct-call admission rejects non-finite and non-JSON values", () => {
       () => validateTokenGraph({ sample: { $type: "string", $value: value } }),
       error => error instanceof PipelineError && error.code === "INVALID_JSON_VALUE",
     );
+  }
+});
+
+test("direct-call admission returns typed Proxy friction without invoking traps", () => {
+  const cases = [
+    {
+      label: "token graph",
+      code: "INVALID_JSON_VALUE",
+      run: value => validateTokenGraph(value),
+      target: { sample: { $type: "string", $value: "synthetic" } },
+    },
+    {
+      label: "nested token value",
+      code: "INVALID_JSON_VALUE",
+      run: value => validateTokenGraph({ sample: { $type: "string", $value: value } }),
+      target: { source: "synthetic" },
+    },
+    {
+      label: "source merge",
+      code: "INVALID_JSON_VALUE",
+      run: value => deepMerge(value),
+      target: { sample: { $type: "string", $value: "synthetic" } },
+    },
+    {
+      label: "layer merge",
+      code: "INVALID_JSON_VALUE",
+      run: value => mergeTokenLayers([{ name: "synthetic", role: "source", document: value }]),
+      target: { sample: { $type: "string", $value: "synthetic" } },
+    },
+    {
+      label: "Figma snapshot",
+      code: "SOURCE_BOUNDARY_REJECTED",
+      run: value => adaptFigmaSnapshot(value),
+      target: { collections: [] },
+    },
+  ];
+
+  for (const fixture of cases) {
+    let trapCalls = 0;
+    const failTrap = () => {
+      trapCalls += 1;
+      throw new Error(`caller trap escaped ${fixture.label} admission`);
+    };
+    const value = new Proxy(fixture.target, {
+      get: failTrap,
+      getOwnPropertyDescriptor: failTrap,
+      getPrototypeOf: failTrap,
+      has: failTrap,
+      ownKeys: failTrap,
+    });
+    assert.throws(
+      () => fixture.run(value),
+      error => error instanceof PipelineError
+        && error.code === fixture.code
+        && error.details.reason === "proxy_value",
+      fixture.label,
+    );
+    assert.equal(trapCalls, 0, fixture.label);
   }
 });
 

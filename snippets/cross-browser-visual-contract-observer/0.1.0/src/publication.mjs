@@ -6,6 +6,7 @@ import { types as utilTypes } from "node:util";
 import {
   OBSERVER_RESOURCE_LIMITS,
   ObserverError,
+  clonePlainData,
   readBoundedRegularFile,
   sha256,
   stableStringify,
@@ -120,6 +121,40 @@ function admittedFailureDetails(error) {
   return Object.freeze(admitted);
 }
 
+function admittedObserverErrorDetails(error) {
+  const details = ownDataValue(error, "details");
+  let snapshot;
+  try {
+    snapshot = clonePlainData(details, {
+      boundary: "publication_failure.details",
+      restartFrom: "caller_boundary",
+    });
+  } catch {
+    return null;
+  }
+  if (snapshot === null || typeof snapshot !== "object" || Array.isArray(snapshot)) return null;
+
+  // clonePlainData already owns topology, depth, and node count. Bound the
+  // remaining string allocation before the snapshot crosses publication.
+  const pending = [snapshot];
+  let stringBytes = 0;
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (typeof current === "string") {
+      stringBytes += Buffer.byteLength(current, "utf8");
+    } else if (Array.isArray(current)) {
+      pending.push(...current);
+    } else if (current && typeof current === "object") {
+      for (const [key, value] of Object.entries(current)) {
+        stringBytes += Buffer.byteLength(key, "utf8");
+        pending.push(value);
+      }
+    }
+    if (stringBytes > OBSERVER_RESOURCE_LIMITS.proseBytes * 2) return null;
+  }
+  return snapshot;
+}
+
 function admittedObserverError(error) {
   if (
     error === null
@@ -133,8 +168,9 @@ function admittedObserverError(error) {
   }
   const code = boundedOwnString(error, "code", null);
   const message = boundedOwnString(error, "message", null, 4_096);
-  if (code === null || message === null) return null;
-  return Object.freeze({ code, message, details: admittedFailureDetails(error) });
+  const details = admittedObserverErrorDetails(error);
+  if (code === null || message === null || details === null) return null;
+  return Object.freeze({ code, message, details });
 }
 
 function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
@@ -165,7 +201,6 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
       acceptedCoordinate,
       cleanupFailure,
     });
-    retained.cause = primaryError;
     return retained;
   }
   const retained = new ObserverError(
@@ -180,7 +215,6 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
       cleanupFailure,
     },
   );
-  retained.cause = primaryError;
   return retained;
 }
 
@@ -1255,10 +1289,18 @@ export async function publishReceipt(root, inputReceipt, {
       );
     }
     const admittedFailure = admittedObserverError(failure);
-    // Admission reads only bounded own data descriptors. Once admitted, the
-    // original typed failure remains authoritative, including structured
-    // recovery context created by this publisher.
-    if (admittedFailure) throw failure;
+    // Admission reads only bounded own data descriptors. Reconstruct the
+    // exported failure so caller-controlled identity and extra properties stay
+    // outside the publication result. Bounded details carry the diagnostic
+    // context across this boundary.
+    if (admittedFailure) {
+      const retained = new ObserverError(
+        admittedFailure.code,
+        admittedFailure.message,
+        admittedFailure.details,
+      );
+      throw retained;
+    }
     const retained = new ObserverError(
       "PUBLICATION_FAILED",
       "Receipt publication stopped at a recoverable coordinate.",
@@ -1268,7 +1310,6 @@ export async function publishReceipt(root, inputReceipt, {
         restartFrom: candidatePromoted ? "pointer" : "candidate",
       },
     );
-    retained.cause = failure;
     throw retained;
   }
 }

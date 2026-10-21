@@ -1,4 +1,10 @@
-import { DEFAULT_LIMITS, PipelineError, compareOrdinal, normalizeCssName } from "../src/contract.mjs";
+import {
+  DEFAULT_LIMITS,
+  PipelineError,
+  compareOrdinal,
+  normalizeCssName,
+  snapshotJsonTree,
+} from "../src/contract.mjs";
 
 const typeMap = Object.freeze({
   BOOLEAN: "boolean",
@@ -120,67 +126,48 @@ function assignToken(root, segments, token) {
 }
 
 function inspectPublicBoundary(value, path = "snapshot") {
-  const pending = [{ value, path, depth: 0 }];
-  let nodes = 0;
-  let admittedNodes = 1;
-  let stringBytes = 0;
-  const admitNode = node => {
-    admittedNodes += 1;
-    if (admittedNodes > DEFAULT_LIMITS.sourceNodes || node.depth > 64) {
+  let snapshot;
+  try {
+    snapshot = snapshotJsonTree(value, {
+      limits: { ...DEFAULT_LIMITS, depth: 64 },
+      path,
+    }).snapshot;
+  } catch (error) {
+    if (error instanceof PipelineError && error.code === "RESOURCE_ENVELOPE_EXCEEDED") {
       throw new PipelineError(
         "SOURCE_BOUNDARY_LIMIT_EXCEEDED",
         "The source snapshot exceeds the bounded inspection envelope.",
         {
           stage: "figma_adapter",
-          dimension: admittedNodes > DEFAULT_LIMITS.sourceNodes ? "source_nodes" : "depth",
-          sourcePath: node.path,
-          observedDepth: node.depth,
-          observedNodes: admittedNodes,
+          dimension: error.details.dimension,
+          sourcePath: error.details.tokenPath ?? path,
+          observed: error.details.observed,
+          limit: error.details.limit,
           depthLimit: 64,
           nodeLimit: DEFAULT_LIMITS.sourceNodes,
           restartFrom: "source_snapshot",
         },
       );
     }
-    pending.push(node);
-  };
-  const admitString = (input, sourcePath) => {
-    stringBytes += Buffer.byteLength(input, "utf8");
-    if (stringBytes > DEFAULT_LIMITS.sourceBytes) {
+    if (error instanceof PipelineError && ["INVALID_JSON_VALUE", "RESERVED_KEY"].includes(error.code)) {
       throw new PipelineError(
-        "SOURCE_BOUNDARY_LIMIT_EXCEEDED",
-        "The source snapshot exceeds the bounded string-byte envelope.",
+        "SOURCE_BOUNDARY_REJECTED",
+        "The source snapshot requires an owned JSON data tree.",
         {
           stage: "figma_adapter",
-          dimension: "source_string_bytes",
-          sourcePath,
-          observed: stringBytes,
-          limit: DEFAULT_LIMITS.sourceBytes,
+          sourcePath: error.details.tokenPath ?? path,
+          reason: error.details.reason ?? "invalid_json_shape",
           restartFrom: "source_snapshot",
         },
       );
     }
-  };
+    throw error;
+  }
+
+  const pending = [{ value: snapshot, path }];
   while (pending.length > 0) {
     const current = pending.pop();
-    nodes += 1;
-    if (nodes > DEFAULT_LIMITS.sourceNodes || current.depth > 64) {
-      throw new PipelineError(
-        "SOURCE_BOUNDARY_LIMIT_EXCEEDED",
-        "The source snapshot exceeds the bounded inspection envelope.",
-        {
-          stage: "figma_adapter",
-          sourcePath: current.path,
-          observedDepth: current.depth,
-          observedNodes: nodes,
-          depthLimit: 64,
-          nodeLimit: DEFAULT_LIMITS.sourceNodes,
-          restartFrom: "source_snapshot",
-        },
-      );
-    }
     if (typeof current.value === "string") {
-      admitString(current.value, current.path);
       if (sensitiveText.test(current.value) || privateLocator.test(current.value)) {
         throw new PipelineError("SOURCE_BOUNDARY_REJECTED", "The source snapshot contains a private or secret-shaped string.", {
           stage: "figma_adapter",
@@ -192,30 +179,27 @@ function inspectPublicBoundary(value, path = "snapshot") {
     }
     if (Array.isArray(current.value)) {
       for (let index = current.value.length - 1; index >= 0; index -= 1) {
-        admitNode({
+        pending.push({
           value: current.value[index],
           path: `${current.path}[${index}]`,
-          depth: current.depth + 1,
         });
       }
       continue;
     }
     if (current.value && typeof current.value === "object") {
-      for (const key in current.value) {
-        if (!Object.hasOwn(current.value, key)) continue;
-        admitString(key, `${current.path}.${key}`);
-        admitNode({
-          value: current.value[key],
+      for (const [key, child] of Object.entries(current.value)) {
+        pending.push({
+          value: child,
           path: `${current.path}.${key}`,
-          depth: current.depth + 1,
         });
       }
     }
   }
+  return snapshot;
 }
 
 export function adaptFigmaSnapshot(snapshot, { modeName = "Light" } = {}) {
-  inspectPublicBoundary(snapshot);
+  snapshot = inspectPublicBoundary(snapshot);
   if (!snapshot || !Array.isArray(snapshot.collections)) {
     throw new PipelineError("FIGMA_COLLECTIONS_REQUIRED", "The source snapshot requires a collections array.", {
       stage: "figma_adapter",

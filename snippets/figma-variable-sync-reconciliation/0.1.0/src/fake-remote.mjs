@@ -27,6 +27,7 @@ export class FakeVariableRemote {
   #intentResults = new Map();
   #revision = 0;
   #nextId = 1;
+  #generatedIdCapacityExhausted = false;
   #issuedIdPrefix = "var_";
 
   constructor({ variables = [], revision = 0, issuedIdPrefix = "var_" } = {}) {
@@ -36,9 +37,21 @@ export class FakeVariableRemote {
     this.#issuedIdPrefix = issuedIdPrefix;
     for (const variable of variables) {
       this.#variables.set(variable.id, cloneVariable(variable));
-      const numericSuffix = Number.parseInt(variable.id.match(/\d+$/u)?.[0] ?? "", 10);
+      const numericCoordinate = variable.id.startsWith(this.#issuedIdPrefix)
+        ? variable.id.slice(this.#issuedIdPrefix.length)
+        : "";
+      // Generated coordinates use zero padding for compact values, so every
+      // decimal-only suffix inside this remote's exact prefix shares the same
+      // numeric namespace. IDs owned by other prefixes stay independent.
+      const numericSuffix = /^\d+$/u.test(numericCoordinate)
+        ? Number(numericCoordinate)
+        : Number.NaN;
       if (Number.isSafeInteger(numericSuffix)) {
-        this.#nextId = Math.max(this.#nextId, numericSuffix + 1);
+        if (numericSuffix === Number.MAX_SAFE_INTEGER) {
+          this.#generatedIdCapacityExhausted = true;
+        } else {
+          this.#nextId = Math.max(this.#nextId, numericSuffix + 1);
+        }
       }
     }
     this.#revision = revision;
@@ -47,6 +60,12 @@ export class FakeVariableRemote {
   snapshot() {
     return {
       revision: this.#revision,
+      remainingGeneratedIds: this.#generatedIdCapacityExhausted
+        ? 0
+        // Keep one representable successor cursor after every issued ID.
+        // The coordinator and the mutating path therefore share the same
+        // capacity meaning at the final safe-integer boundary.
+        : Number.MAX_SAFE_INTEGER - this.#nextId,
       variables: [...this.#variables.values()]
         .map(cloneVariable)
         .sort((left, right) => compareOrdinal(left.id, right.id)),
@@ -70,6 +89,20 @@ export class FakeVariableRemote {
       throw new RemoteConflictError("drift_target_missing", "The drift target is absent.", {
         targetId,
       });
+    }
+    if (current.version === Number.MAX_SAFE_INTEGER) {
+      throw new RemoteConflictError(
+        "version_capacity_exhausted",
+        "The target needs a wider version representation before another transition.",
+        { targetId, recoveryOwner: "rebase_or_upgrade_representation" },
+      );
+    }
+    if (this.#revision === Number.MAX_SAFE_INTEGER) {
+      throw new RemoteConflictError(
+        "revision_capacity_exhausted",
+        "The remote needs a wider revision representation before another transition.",
+        { recoveryOwner: "rebase_or_upgrade_representation" },
+      );
     }
     this.#variables.set(targetId, {
       ...current,
@@ -95,6 +128,31 @@ export class FakeVariableRemote {
         "partial_prior_application",
         "The remote contains a partial intent set that needs reconciliation.",
         { operationIds: operations.map((operation) => operation.id) },
+      );
+    }
+
+    if (this.#revision === Number.MAX_SAFE_INTEGER) {
+      throw new RemoteConflictError(
+        "revision_capacity_exhausted",
+        "The remote needs a wider revision representation before another batch.",
+        { recoveryOwner: "rebase_or_upgrade_representation" },
+      );
+    }
+    const createCount = operations.filter(
+      (operation) => operation.type === "create_variable",
+    ).length;
+    if (
+      createCount > 0
+      && (
+        this.#generatedIdCapacityExhausted
+        || !Number.isSafeInteger(this.#nextId)
+        || this.#nextId > Number.MAX_SAFE_INTEGER - createCount
+      )
+    ) {
+      throw new RemoteConflictError(
+        "generated_id_capacity_exhausted",
+        "The remote needs a wider generated-id representation before another create.",
+        { createCount, recoveryOwner: "rebase_or_upgrade_representation" },
       );
     }
 
@@ -189,6 +247,17 @@ export class FakeVariableRemote {
           candidateVariables.delete(targetId);
           result = { operationId: operation.id, type: operation.type, targetId };
         } else {
+          if (current.version === Number.MAX_SAFE_INTEGER) {
+            throw new RemoteConflictError(
+              "version_capacity_exhausted",
+              "The target needs a wider version representation before another transition.",
+              {
+                operationId: operation.id,
+                targetId,
+                recoveryOwner: "rebase_or_upgrade_representation",
+              },
+            );
+          }
           const next = cloneVariable(current);
           if (operation.type === "update_variable") {
             if (operation.payload?.name !== undefined) {

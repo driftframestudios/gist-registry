@@ -9,6 +9,7 @@ import {
   PipelineError,
   readBoundedFile,
   sha256,
+  snapshotJsonTree,
   stableStringify,
   validateTokenGraph,
 } from "./contract.mjs";
@@ -294,6 +295,26 @@ function admittedFailureDetails(error) {
   return Object.freeze(admitted);
 }
 
+function admittedPipelineErrorDetails(error) {
+  const details = ownDataValue(error, "details");
+  try {
+    const snapshot = snapshotJsonTree(details, {
+      limits: {
+        ...DEFAULT_LIMITS,
+        depth: 16,
+        sourceBytes: 32_768,
+        sourceNodes: 512,
+      },
+      path: "promotion_failure.details",
+    }).snapshot;
+    return snapshot !== null && typeof snapshot === "object" && !Array.isArray(snapshot)
+      ? snapshot
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function admittedPipelineError(error) {
   if (
     error === null
@@ -307,8 +328,9 @@ function admittedPipelineError(error) {
   }
   const code = boundedOwnString(error, "code", null);
   const message = boundedOwnString(error, "message", null, 4_096);
-  if (code === null || message === null) return null;
-  return Object.freeze({ code, message, details: admittedFailureDetails(error) });
+  const details = admittedPipelineErrorDetails(error);
+  if (code === null || message === null || details === null) return null;
+  return Object.freeze({ code, message, details });
 }
 
 function boundedFailureContext(error, fallbackCode, fallbackBoundary) {
@@ -337,7 +359,6 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
       ...acceptedRecoveryDetails(acceptedCoordinate),
       cleanupFailure,
     });
-    retained.cause = primaryError;
     return retained;
   }
   const retained = new PipelineError(
@@ -351,7 +372,6 @@ function retainReservationCleanupFailure(primaryError, cleanupError, acceptedCoo
       cleanupFailure,
     },
   );
-  retained.cause = primaryError;
   return retained;
 }
 
@@ -1292,7 +1312,24 @@ export async function promoteCandidate({ candidateRoot, acceptedRoot, manifest, 
         stagingFiles,
       );
     }
-    throw failure;
+    const admittedFailure = admittedPipelineError(failure);
+    if (admittedFailure) {
+      throw new PipelineError(
+        admittedFailure.code,
+        admittedFailure.message,
+        admittedFailure.details,
+      );
+    }
+    throw new PipelineError(
+      "PUBLICATION_FAILED",
+      boundedOwnString(failure, "message", "Promotion stopped at a recoverable coordinate.", 4_096),
+      {
+        stage: "promotion",
+        causeCode: boundedOwnString(failure, "code", "PUBLICATION_FAILED"),
+        reason: boundedOwnString(failure, "message", "Promotion stopped at a recoverable coordinate.", 4_096),
+        restartFrom: stagingPromoted ? "pointer" : "candidate",
+      },
+    );
   }
 }
 

@@ -14,6 +14,7 @@ import {
   compareOrdinalText,
   compileArtifactFamily,
   publishArtifactFamily,
+  readBoundedFile,
   validateContract,
   validateGalleryShell,
   validateSvg,
@@ -28,6 +29,20 @@ const sourcePaths = {
 
 async function temporaryDirectory(name) {
   return mkdtemp(path.join(os.tmpdir(), `visual-pattern-${name}-`));
+}
+
+function assertReferenceUnreachable(root, target) {
+  const pending = [root];
+  const visited = new WeakSet();
+  while (pending.length > 0) {
+    const value = pending.pop();
+    assert.notStrictEqual(value, target);
+    if ((typeof value !== "object" && typeof value !== "function") || value === null || visited.has(value)) continue;
+    visited.add(value);
+    for (const descriptor of Object.values(Object.getOwnPropertyDescriptors(value))) {
+      if (Object.hasOwn(descriptor, "value")) pending.push(descriptor.value);
+    }
+  }
 }
 
 test("compiles responsive derivatives, an accessible gallery, and a semantic companion", async () => {
@@ -82,6 +97,160 @@ test("source admission rejects a symbolic-link coordinate before rendering", asy
     }),
     error => error instanceof VisualArtifactError && error.code === "invalid_source_file",
   );
+});
+
+test("bounded source capture binds descriptor metadata and the final addressed path", async () => {
+  const bytes = Buffer.from("bounded");
+  const openedEntry = {
+    dev: 1,
+    ino: 10,
+    size: bytes.length,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  for (const fixture of [
+    {
+      label: "descriptor ctime drift",
+      settledEntry: { ...openedEntry, ctimeMs: 201 },
+      settledPathEntry: openedEntry,
+    },
+    {
+      label: "same-size pathname replacement",
+      settledEntry: openedEntry,
+      settledPathEntry: { ...openedEntry, ino: 11 },
+    },
+    {
+      label: "same-inode final-path metadata drift",
+      settledEntry: openedEntry,
+      settledPathEntry: { ...openedEntry, ctimeMs: 201 },
+    },
+  ]) {
+    let statCalls = 0;
+    let pathCalls = 0;
+    let closed = false;
+    const fileSystem = {
+      lstat: async () => (pathCalls++ === 0 ? openedEntry : fixture.settledPathEntry),
+      open: async () => ({
+        stat: async () => (statCalls++ === 0 ? openedEntry : fixture.settledEntry),
+        read: async (buffer, offset, length, position) => {
+          const count = Math.max(0, Math.min(length, bytes.length - position));
+          if (count > 0) bytes.copy(buffer, offset, position, position + count);
+          return { bytesRead: count };
+        },
+        close: async () => { closed = true; },
+      }),
+    };
+
+    await assert.rejects(
+      readBoundedFile("synthetic-source.svg", "svgBytes", bytes.length, { fileSystem }),
+      error => error instanceof VisualArtifactError && error.code === "source_file_changed",
+      fixture.label,
+    );
+    assert.equal(closed, true, fixture.label);
+  }
+});
+
+test("bounded source capture owns hostile descriptor failures without invoking traps", async () => {
+  const entry = {
+    dev: 1,
+    ino: 10,
+    size: 1,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  let trapCalls = 0;
+  let closed = false;
+  const failTrap = () => {
+    trapCalls += 1;
+    throw new Error("hostile failure trap escaped bounded capture");
+  };
+  const hostileFailure = new Proxy(new Error("private descriptor failure"), {
+    get: failTrap,
+    getOwnPropertyDescriptor: failTrap,
+    getPrototypeOf: failTrap,
+    ownKeys: failTrap,
+  });
+  const fileSystem = {
+    lstat: async () => entry,
+    open: async () => ({
+      stat: async () => entry,
+      read: async () => { throw hostileFailure; },
+      close: async () => { closed = true; },
+    }),
+  };
+
+  await assert.rejects(
+    readBoundedFile("synthetic-source.svg", "svgBytes", 1, { fileSystem }),
+    error => error instanceof VisualArtifactError
+      && error.code === "source_capture_failed"
+      && error.details.cause === "source_capture_failed",
+  );
+  assert.equal(trapCalls, 0);
+  assert.equal(closed, true);
+});
+
+test("bounded source capture owns prototype-hostile and mutated typed failures", async () => {
+  const entry = {
+    dev: 1,
+    ino: 10,
+    size: 1,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  const exercise = async (failure, expectedCode) => {
+    let closed = false;
+    let observed;
+    const fileSystem = {
+      lstat: async () => entry,
+      open: async () => ({
+        stat: async () => entry,
+        read: async () => { throw failure; },
+        close: async () => { closed = true; },
+      }),
+    };
+    await assert.rejects(
+      readBoundedFile("synthetic-source.svg", "svgBytes", 1, { fileSystem }),
+      error => {
+        observed = error;
+        return error instanceof VisualArtifactError && error.code === expectedCode;
+      },
+    );
+    assert.equal(closed, true);
+    assert.notEqual(observed, failure);
+  };
+
+  let prototypeTrapCalls = 0;
+  const hostilePrototype = new Proxy({}, {
+    getPrototypeOf() {
+      prototypeTrapCalls += 1;
+      throw new Error("prototype trap must remain idle");
+    },
+  });
+  await exercise(Object.create(hostilePrototype), "source_capture_failed");
+  assert.equal(prototypeTrapCalls, 0);
+
+  for (const field of ["code", "message", "details"]) {
+    let getterCalls = 0;
+    const mutatedTypedFailure = new VisualArtifactError("caller_typed_failure", "Caller failure.", { boundary: "caller" });
+    Object.defineProperty(mutatedTypedFailure, field, {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error(`${field} getter must remain idle`);
+      },
+    });
+    await exercise(
+      mutatedTypedFailure,
+      "source_capture_failed",
+    );
+    assert.equal(getterCalls, 0, field);
+  }
 });
 
 test("repeats exact bytes at one declared runtime coordinate", async () => {
@@ -790,6 +959,7 @@ test("cleanup reporting admits a hostile primary error without invoking proxy tr
       },
     },
   );
+  let observed;
 
   await assert.rejects(
     publishArtifactFamily({
@@ -802,13 +972,67 @@ test("cleanup reporting admits a hostile primary error without invoking proxy tr
         throw hostilePrimary;
       },
     }),
-    error => error instanceof VisualArtifactError
-      && error.code === "publication_failed"
-      && error.cause === hostilePrimary
-      && error.details.primaryFailure.code === "publication_failed"
-      && error.details.cleanupFailure.code === "publication_reservation_release_failed",
+    error => {
+      observed = error;
+      return error instanceof VisualArtifactError
+        && error.code === "publication_failed"
+        && !Object.hasOwn(error, "cause")
+        && error.details.primaryFailure.code === "publication_failed"
+        && error.details.cleanupFailure.code === "publication_reservation_release_failed";
+    },
   );
+  assertReferenceUnreachable(observed, hostilePrimary);
   assert.equal(trapCalls, 0);
+  assert.deepEqual(await readFile(pointerPath), pointerBefore);
+});
+
+test("successful cleanup reconstructs an admitted typed publication failure", async () => {
+  const root = await temporaryDirectory("owned-typed-primary");
+  const publicationRoot = path.join(root, "publication");
+  await publishArtifactFamily({ ...sourcePaths, publicationRoot });
+  const pointerPath = path.join(publicationRoot, "accepted-pointer.json");
+  const pointerBefore = await readFile(pointerPath);
+  const changedContract = JSON.parse(await readFile(sourcePaths.contractPath, "utf8"));
+  changedContract.caption = "A successor coordinate exercises owned typed error admission.";
+  const changedContractPath = path.join(root, "changed-contract.json");
+  await writeFile(changedContractPath, `${JSON.stringify(changedContract, null, 2)}\n`);
+  const callerFailure = new VisualArtifactError(
+    "injected_typed_primary",
+    "A caller-supplied typed failure stopped publication.",
+    { checkpoint: "before_reservation_release", restartFrom: "pointer" },
+  );
+  let getterCalls = 0;
+  Object.defineProperty(callerFailure, "privateDiagnostic", {
+    configurable: true,
+    get() {
+      getterCalls += 1;
+      throw new Error("caller diagnostic getter must remain idle");
+    },
+  });
+  let observed;
+
+  await assert.rejects(
+    publishArtifactFamily({
+      ...sourcePaths,
+      contractPath: changedContractPath,
+      publicationRoot,
+      faultInjector: async ({ checkpoint }) => {
+        if (checkpoint === "before_reservation_release") throw callerFailure;
+      },
+    }),
+    error => {
+      observed = error;
+      return error instanceof VisualArtifactError
+        && error.code === "injected_typed_primary"
+        && error.message === "A caller-supplied typed failure stopped publication."
+        && error.details.checkpoint === "before_reservation_release"
+        && error.details.restartFrom === "pointer"
+        && !Object.hasOwn(error, "cause");
+    },
+  );
+  assert.notEqual(observed, callerFailure);
+  assertReferenceUnreachable(observed, callerFailure);
+  assert.equal(getterCalls, 0);
   assert.deepEqual(await readFile(pointerPath), pointerBefore);
 });
 
@@ -847,7 +1071,7 @@ test("cleanup reporting inspects primary accessors as descriptors and leaves the
     }),
     error => error instanceof VisualArtifactError
       && error.code === "publication_failed"
-      && error.cause === hostilePrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.primaryFailure.code === "publication_failed"
       && error.details.cleanupFailure.code === "publication_reservation_release_failed",
   );
@@ -880,7 +1104,7 @@ test("cleanup reporting bounds oversized primary strings before UTF-8 measuremen
     }),
     error => error instanceof VisualArtifactError
       && error.code === "publication_failed"
-      && error.cause === oversizedPrimary
+      && !Object.hasOwn(error, "cause")
       && error.details.restartFrom === "accepted_coordinate_recovery"
       && error.details.action === "inspect_or_quarantine"
       && /^[a-f0-9]{64}$/u.test(error.details.acceptedCoordinate)

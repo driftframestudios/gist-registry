@@ -4,8 +4,22 @@ export class InMemoryLeaseStore {
   #lease = null;
   #generation = 0;
 
+  constructor({ generation = 0 } = {}) {
+    if (!Number.isSafeInteger(generation) || generation < 0) {
+      throw new TypeError("generation needs a non-negative safe integer.");
+    }
+    this.#generation = generation;
+  }
+
   acquire({ owner, nowMs, ttlMs }) {
-    if (!owner || !Number.isSafeInteger(nowMs) || !Number.isSafeInteger(ttlMs) || ttlMs < 1) {
+    if (
+      !owner
+      || !Number.isSafeInteger(nowMs)
+      || nowMs < 0
+      || !Number.isSafeInteger(ttlMs)
+      || ttlMs < 1
+      || nowMs > Number.MAX_SAFE_INTEGER - ttlMs
+    ) {
       throw new LeaseError("invalid_lease_request", "Lease acquisition needs owner, time, and positive ttl.");
     }
     if (this.#lease && this.#lease.expiresAtMs > nowMs) {
@@ -14,12 +28,31 @@ export class InMemoryLeaseStore {
         expiresAtMs: this.#lease.expiresAtMs,
       });
     }
+    if (this.#generation === Number.MAX_SAFE_INTEGER) {
+      throw new LeaseError(
+        "lease_generation_capacity_exhausted",
+        "The lease store needs a wider generation representation before another acquisition.",
+        { recoveryOwner: "upgrade_lease_generation_representation" },
+      );
+    }
     this.#generation += 1;
     this.#lease = { owner, generation: this.#generation, expiresAtMs: nowMs + ttlMs };
     return structuredClone(this.#lease);
   }
 
   renew({ owner, generation, nowMs, ttlMs }) {
+    if (
+      !Number.isSafeInteger(nowMs)
+      || nowMs < 0
+      || !Number.isSafeInteger(ttlMs)
+      || ttlMs < 1
+      || nowMs > Number.MAX_SAFE_INTEGER - ttlMs
+    ) {
+      throw new LeaseError(
+        "invalid_lease_request",
+        "Lease renewal needs time and positive ttl inside the safe-integer range.",
+      );
+    }
     if (
       !this.#lease ||
       this.#lease.owner !== owner ||
@@ -66,7 +99,7 @@ export class InMemoryCheckpointStore {
       throw new LeaseError(
         "checkpoint_fence_rejected",
         "A newer writer generation owns checkpoint persistence for this run.",
-        { fencingToken, currentFencingToken: current },
+        { requestedGeneration: fencingToken, currentGeneration: current },
       );
     }
     this.#fencingTokens.set(runId, fencingToken);
@@ -83,7 +116,7 @@ export class InMemoryCheckpointStore {
       throw new LeaseError(
         "checkpoint_fence_rejected",
         "Checkpoint persistence requires the current writer generation.",
-        { fencingToken, currentFencingToken: current ?? null },
+        { requestedGeneration: fencingToken, currentGeneration: current ?? null },
       );
     }
     this.#records.set(runId, structuredClone(checkpoint));

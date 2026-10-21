@@ -83,6 +83,16 @@ and any release receipt. A rejected current request keeps the earlier accepted
 coordinate available. Releasing the same accepted coordinate again returns the
 same receipt.
 
+The controller admits listener functions before subscription. A transition
+commits its frozen domain state, captures the current subscriber set, and gives
+every listener in that snapshot one delivery attempt. Subscription changes made
+inside a callback take effect on the next transition. When callbacks throw, the
+controller completes the snapshot and raises `ReceiverNotificationError`. Its
+owned aggregate records listener positions and the exact committed state while
+caller-thrown values stay at the caller boundary. Recovery can therefore read
+`error.committedState`, repair the subscriber, and render the state that already
+holds authority.
+
 ## Accepted token coordinate
 
 [`source/accepted-token-fixture.css`](source/accepted-token-fixture.css) is a
@@ -143,7 +153,7 @@ operating contract stays available to script-independent readers.
 
 | Command | Establishes |
 | --- | --- |
-| `npm run test:model` | Separate state ownership, generation gating, stale settlement, terminal replay and conflict authority, rejection preservation, idempotent release, bounded file admission, dependency pins, exact upstream artifact and projection mapping, fixture digest, static semantics, and CSS condition contracts |
+| `npm run test:model` | Separate state ownership, generation gating, stale settlement, terminal replay and conflict authority, rejection preservation, idempotent release, listener admission, notify-all snapshot delivery, committed-state notification recovery, bounded file admission, dependency pins, exact upstream artifact and projection mapping, fixture digest, static semantics, and CSS condition contracts |
 | `npm run test:dom` | Rendered labels, label-before-control order, native interaction, superseded-work and unmount cancellation, focus return, live status, accepted coordinate, and stable release receipt in jsdom |
 | `npm run build` | React, React Aria Components, React Stately, CSS imports, and source modules form a browser-loadable production bundle whose interactive, native, and semantic routes resolve together |
 | `npm run verify:build` | Two isolated builds produce the same bounded file inventory and digests; deterministic measurements match their baseline; profile-sensitive gzip measurement carries its Node/zlib/platform coordinate; every dimension stays within its review threshold |
@@ -161,7 +171,8 @@ subscribers, `E` the admitted build entries, and `B` the admitted build bytes.
 
 - collection indexing costs `O(S)` time and space once;
 - each state transition and specimen lookup costs expected `O(1)` time;
-- subscriber notification costs `O(L)` time;
+- subscriber notification costs `O(L)` time and snapshot space; an owned failure
+  aggregate retains `O(F)` summaries for the `F <= L` callbacks that threw;
 - rendering the closed select costs `O(1)` plus framework work; opening the
   listbox renders `O(S)` options; and
 - each accepted or released state retains bounded `O(1)` domain data;
@@ -196,19 +207,19 @@ observation.
 
 | Dimension | Measured | Review threshold |
 | --- | ---: | ---: |
-| Authored receiver source | 56,892 bytes | 60,000 bytes |
+| Authored receiver source | 69,425 bytes | 70,000 bytes |
 | Direct runtime and development dependencies | 9 | 12 |
 | Lock-resolved package entries | 128 | 150 |
 | Stable specimens | 3 | 25 |
 | Domain transition operations | 4 | 6 |
-| Runtime JavaScript | 406,902 bytes | 430,000 bytes |
-| Runtime JavaScript, gzip level 9 (reviewed profile) | 125,835 bytes | 135,000 bytes |
-| HTML, CSS, and JavaScript runtime assets | 423,337 bytes | 440,000 bytes |
-| Source map | 2,213,002 bytes | 2,300,000 bytes |
-| Complete production build | 2,636,339 bytes | 2,700,000 bytes |
+| Runtime JavaScript | 407,769 bytes | 430,000 bytes |
+| Runtime JavaScript, gzip level 9 (reviewed profile) | 126,142 bytes | 135,000 bytes |
+| HTML, CSS, and JavaScript runtime assets | 424,204 bytes | 440,000 bytes |
+| Source map | 2,215,942 bytes | 2,300,000 bytes |
+| Complete production build | 2,640,146 bytes | 2,700,000 bytes |
 
 The two-build manifest digest is
-`4194c2ee7dac24c2560a8a87c268257ff22f55cb649d4f4eb99dd2e58aeb29d5`.
+`4a3a1dc6534a17288dd6ae09c416009415e52c2bdb400dfca39b4f9916bb95c8`.
 The receipt records the active gzip coordinate, elapsed time, and peak resident
 memory as environment-bound observations beside the byte-exact build manifest.
 

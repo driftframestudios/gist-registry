@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
+import { types as utilTypes } from "node:util";
 
 const ORACLES = new Set(["semantic", "interaction", "geometry", "computed_style", "bitmap_crop"]);
 const TIERS = new Set(["smoke", "changed_boundary", "full"]);
@@ -59,6 +60,63 @@ export class ObserverError extends Error {
   }
 }
 
+function ownDataDescriptor(value, key) {
+  if (
+    value === null
+    || (typeof value !== "object" && typeof value !== "function")
+    || utilTypes.isProxy(value)
+  ) return null;
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && Object.hasOwn(descriptor, "value") ? descriptor : null;
+  } catch {
+    return null;
+  }
+}
+
+function boundedOwnString(value, key, fallback, maxBytes = 1_024) {
+  const candidate = ownDataDescriptor(value, key)?.value;
+  return typeof candidate === "string"
+    && candidate.length > 0
+    && candidate.length <= maxBytes
+    && Buffer.byteLength(candidate, "utf8") <= maxBytes
+    ? candidate
+    : fallback;
+}
+
+function boundedErrorMessage(error, fallback) {
+  return boundedOwnString(error, "message", fallback);
+}
+
+function admittedObserverError(error) {
+  if (
+    error === null
+    || (typeof error !== "object" && typeof error !== "function")
+    || utilTypes.isProxy(error)
+  ) return null;
+  try {
+    // Exact prototype identity avoids walking a caller-controlled Proxy
+    // prototype chain as `instanceof` would.
+    if (Object.getPrototypeOf(error) !== ObserverError.prototype) return null;
+  } catch {
+    return null;
+  }
+  const code = boundedOwnString(error, "code", null, 512);
+  const message = boundedOwnString(error, "message", null, 4_096);
+  const detailsDescriptor = ownDataDescriptor(error, "details");
+  if (code === null || message === null || detailsDescriptor === null) return null;
+  try {
+    const details = clonePlainData(detailsDescriptor.value, {
+      boundary: "error.details",
+      restartFrom: "caller_boundary",
+    });
+    if (details === null || typeof details !== "object" || Array.isArray(details)) return null;
+    return Object.freeze({ code, message, details });
+  } catch {
+    return null;
+  }
+}
+
 export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -87,7 +145,7 @@ export async function readBoundedRegularFile(filePath, {
   } catch (error) {
     throw new ObserverError("SOURCE_FILE_UNREADABLE", "The source coordinate requires a readable file.", {
       boundary,
-      reason: error.message,
+      reason: boundedErrorMessage(error, "source_path_unreadable"),
       restartFrom,
     });
   }
@@ -114,7 +172,7 @@ export async function readBoundedRegularFile(filePath, {
   } catch (error) {
     throw new ObserverError("SOURCE_FILE_UNREADABLE", "The source coordinate changed or became unreadable before capture.", {
       boundary,
-      reason: error.message,
+      reason: boundedErrorMessage(error, "source_open_failed"),
       restartFrom,
     });
   }
@@ -157,21 +215,52 @@ export async function readBoundedRegularFile(filePath, {
     if (
       offset !== openedEntry.size ||
       overflow.bytesRead > 0 ||
+      settledEntry.dev !== openedEntry.dev ||
+      settledEntry.ino !== openedEntry.ino ||
       settledEntry.size !== openedEntry.size ||
-      settledEntry.mtimeMs !== openedEntry.mtimeMs
+      settledEntry.mtimeMs !== openedEntry.mtimeMs ||
+      settledEntry.ctimeMs !== openedEntry.ctimeMs
     ) {
       throw new ObserverError("SOURCE_FILE_CHANGED", "The source bytes changed during bounded capture.", {
         boundary,
         restartFrom,
       });
     }
+    // Descriptor stability proves the captured bytes; the final path check
+    // proves that the named observation coordinate still addresses them.
+    let settledPathEntry;
+    try {
+      settledPathEntry = await fileSystem.lstat(filePath);
+    } catch {
+      throw new ObserverError("SOURCE_FILE_CHANGED", "The source coordinate changed its addressed path during bounded capture.", {
+        boundary,
+        reason: "path_unavailable_after_capture",
+        restartFrom,
+      });
+    }
+    if (
+      !settledPathEntry.isFile()
+      || settledPathEntry.isSymbolicLink()
+      || settledPathEntry.dev !== openedEntry.dev
+      || settledPathEntry.ino !== openedEntry.ino
+      || settledPathEntry.size !== openedEntry.size
+      || settledPathEntry.mtimeMs !== openedEntry.mtimeMs
+      || settledPathEntry.ctimeMs !== openedEntry.ctimeMs
+    ) {
+      throw new ObserverError("SOURCE_FILE_CHANGED", "The source coordinate changed its addressed path during bounded capture.", {
+        boundary,
+        reason: "path_identity_changed",
+        restartFrom,
+      });
+    }
     return bytes;
   } catch (error) {
-    primaryError = error instanceof ObserverError
-      ? error
+    const admitted = admittedObserverError(error);
+    primaryError = admitted
+      ? new ObserverError(admitted.code, admitted.message, admitted.details)
       : new ObserverError("SOURCE_CAPTURE_FAILED", "The source coordinate could not complete its bounded capture.", {
         boundary,
-        reason: error.message,
+        reason: boundedErrorMessage(error, "source_capture_failed"),
         restartFrom,
       });
     throw primaryError;
@@ -182,7 +271,7 @@ export async function readBoundedRegularFile(filePath, {
       if (primaryError === null) {
         throw new ObserverError("SOURCE_FILE_CLOSE_FAILED", "The source descriptor requires operator recovery after capture.", {
           boundary,
-          reason: error.message,
+          reason: boundedErrorMessage(error, "source_close_failed"),
           restartFrom,
         });
       }
@@ -199,9 +288,10 @@ export async function readJson(path) {
       restartFrom: "input",
     });
   } catch (error) {
-    if (error instanceof ObserverError) throw error;
+    const admitted = admittedObserverError(error);
+    if (admitted) throw new ObserverError(admitted.code, admitted.message, admitted.details);
     throw new ObserverError("INVALID_JSON", "The observer requires readable JSON input.", {
-      reason: error.message,
+      reason: boundedErrorMessage(error, "json_input_unreadable"),
       restartFrom: "input",
     });
   }
@@ -209,7 +299,7 @@ export async function readJson(path) {
     return JSON.parse(bytes.toString("utf8"));
   } catch (error) {
     throw new ObserverError("INVALID_JSON", "The observer requires readable JSON input.", {
-      reason: error.message,
+      reason: boundedErrorMessage(error, "invalid_json"),
       restartFrom: "input",
     });
   }
@@ -245,7 +335,13 @@ function invalidPlainData(boundary, reason, restartFrom, details = {}) {
 // same plain-data topology JSON carries while keeping getters outside the
 // observation and publication boundaries.
 function requirePlainRecordDescriptors(record, boundary, restartFrom) {
-  if (!record || typeof record !== "object" || Array.isArray(record)) {
+  if (!record || typeof record !== "object") {
+    throw new ObserverError("INVALID_CONTRACT", `${boundary} must be an object.`, { boundary, restartFrom });
+  }
+  // A Proxy is executable caller behavior. Detect it before array,
+  // prototype, key, or descriptor reflection so its traps remain idle.
+  if (utilTypes.isProxy(record)) invalidPlainData(boundary, "proxy_value", restartFrom);
+  if (Array.isArray(record)) {
     throw new ObserverError("INVALID_CONTRACT", `${boundary} must be an object.`, { boundary, restartFrom });
   }
   let prototype;
@@ -284,6 +380,7 @@ function requirePlainRecordDescriptors(record, boundary, restartFrom) {
 }
 
 function requireDenseArrayDescriptors(value, { boundary, minimum = 0, maximum, restartFrom }) {
+  if (utilTypes.isProxy(value)) invalidPlainData(boundary, "proxy_value", restartFrom);
   if (!Array.isArray(value)) {
     throw new ObserverError("INVALID_CONTRACT", `${boundary} must be an array.`, { boundary, restartFrom });
   }
@@ -363,6 +460,7 @@ export function clonePlainData(value, {
     if (!input || typeof input !== "object") {
       invalidPlainData(currentBoundary, "json_scalar_required", restartFrom);
     }
+    if (utilTypes.isProxy(input)) invalidPlainData(currentBoundary, "proxy_value", restartFrom);
     if (active.has(input)) invalidPlainData(currentBoundary, "acyclic_tree_required", restartFrom);
     active.add(input);
     try {

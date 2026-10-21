@@ -9,7 +9,12 @@ import {
   synchronizeVariables,
 } from "../src/coordinator.mjs";
 import { FakeVariableRemote } from "../src/fake-remote.mjs";
-import { ExecutionInterruptedError, LeaseError, PlanError } from "../src/errors.mjs";
+import {
+  ExecutionInterruptedError,
+  LeaseError,
+  PlanError,
+  RetryAfterError,
+} from "../src/errors.mjs";
 import {
   encodedBatchBytes,
   orderOperations,
@@ -443,7 +448,11 @@ test("remote snapshot admission is exact, bounded, unique, and JSON-shaped", () 
 
 test("invalid initial, settled, and final snapshots return typed friction at durable boundaries", async () => {
   const operation = structuredClone(fixture.operations[1]);
-  const invalidSnapshot = { revision: fixture.remote.revision, variables: {} };
+  const invalidSnapshot = {
+    revision: fixture.remote.revision,
+    remainingGeneratedIds: 1,
+    variables: {},
+  };
   const expectations = [
     { faultAt: 1, source: "initial_snapshot", restartAt: "reconcile:initial", nextBatchIndex: null },
     { faultAt: 2, source: "settled_snapshot", restartAt: "reconcile:batch:0", nextBatchIndex: 0 },
@@ -1201,6 +1210,50 @@ test("resume after post-apply interruption replays the intent set idempotently",
   assert.ok(resumed.observations.some((item) => item.classification === "idempotent_replay"));
 });
 
+test("remote and fault collaborators receive immutable transport snapshots", async () => {
+  const base = harness();
+  const remote = {
+    snapshot: base.remote.snapshot.bind(base.remote),
+    applyBatch(operations, options) {
+      assert.equal(Object.isFrozen(operations), true);
+      assert.equal(Object.isFrozen(operations[0]), true);
+      assert.equal(Object.isFrozen(options), true);
+      assert.equal(Object.isFrozen(options.fault), true);
+      assert.throws(() => {
+        operations[0].id = "mutated-intent";
+      }, TypeError);
+      return base.remote.applyBatch(operations, options);
+    },
+    readIntentResults(operationIds) {
+      assert.equal(Object.isFrozen(operationIds), true);
+      assert.throws(() => {
+        operationIds[0] = "mutated-intent";
+      }, TypeError);
+      return base.remote.readIntentResults(operationIds);
+    },
+  };
+  const interrupted = await runWith({ ...base, remote }, {
+    faultFor(context) {
+      assert.equal(Object.isFrozen(context), true);
+      assert.equal(Object.isFrozen(context.batch), true);
+      assert.equal(Object.isFrozen(context.batch.operations[0]), true);
+      assert.throws(() => {
+        context.batch.operationIds[0] = "mutated-intent";
+      }, TypeError);
+      return context.batchIndex === 0 && context.attempt === 0
+        ? { kind: "interrupt_after_apply" }
+        : null;
+    },
+  });
+  assert.equal(interrupted.status, "interrupted");
+
+  const resumed = await runWith({ ...base, remote });
+  assert.equal(resumed.status, "accepted");
+  assert.ok(resumed.observations.some(
+    ({ classification }) => classification === "idempotent_replay",
+  ));
+});
+
 test("resume verifies the complete projected transition before accepting recorded intents", async () => {
   const base = harness();
   const underlyingRemote = base.remote;
@@ -1549,6 +1602,12 @@ test("checkpoint admission rejects executable shapes before remote observation",
       },
       leaseStore,
       remote: {
+        applyBatch() {
+          throw new Error("apply should remain unreachable");
+        },
+        readIntentResults() {
+          throw new Error("intent read should remain unreachable");
+        },
         snapshot() {
           snapshotCalls += 1;
           return snapshot;
@@ -1592,6 +1651,42 @@ test("checkpoint persistence admits and confirms the store-returned record", asy
     assert.equal(applyCalls, 0);
     assert.equal(base.leaseStore.inspect(), null);
   }
+});
+
+test("checkpoint persistence compares against retained authority when a store mutates its input", async () => {
+  const base = harness();
+  const remoteBefore = base.remote.snapshot();
+  let storeInput = null;
+  let applyCalls = 0;
+  const result = await runWith({
+    ...base,
+    remote: {
+      snapshot: base.remote.snapshot.bind(base.remote),
+      readIntentResults: base.remote.readIntentResults.bind(base.remote),
+      applyBatch(...args) {
+        applyCalls += 1;
+        return base.remote.applyBatch(...args);
+      },
+    },
+    checkpointStore: {
+      claimFence: (_runId, fencingToken) => fencingToken,
+      load: () => null,
+      save: (_runId, checkpoint) => {
+        storeInput = checkpoint;
+        checkpoint.maxResolvedBatchBytes = 1;
+        return checkpoint;
+      },
+    },
+  });
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "checkpoint_persistence_invalid");
+  assert.equal(result.details.reason, "persistence_mismatch");
+  assert.equal(result.restartAt, "persist:initial_checkpoint");
+  assert.equal(storeInput.maxResolvedBatchBytes, 1);
+  assert.equal(applyCalls, 0);
+  assert.deepEqual(base.remote.snapshot(), remoteBefore);
+  assert.equal(base.leaseStore.inspect(), null);
 });
 
 test("remote diagnostics retain structural location without source vocabulary", async () => {
@@ -1754,6 +1849,12 @@ test("lease authority admission rejects executable and extended records without 
       ...base,
       leaseStore: {
         acquire: () => authority,
+        renew: () => {
+          throw new Error("renew should remain unreachable");
+        },
+        release: () => {
+          throw new Error("release should remain unreachable");
+        },
       },
     });
     assert.equal(result.status, "friction");
@@ -2229,4 +2330,650 @@ test("delete waits for every receiving reference to move", () => {
       ),
     (error) => error.code === "target_still_referenced" && error.details.referencingIds[0] === "var_0002",
   );
+});
+
+test("planner, remote, and collaborator admission reject proxies without invoking traps", async () => {
+  let trapCount = 0;
+  const trap = () => {
+    trapCount += 1;
+    throw new Error("proxy trap executed");
+  };
+  const handler = {
+    get: trap,
+    getOwnPropertyDescriptor: trap,
+    getPrototypeOf: trap,
+    has: trap,
+    ownKeys: trap,
+  };
+
+  const proxiedOperations = new Proxy([], handler);
+  assert.throws(
+    () => planOperations(proxiedOperations),
+    (error) => error instanceof PlanError && error.code === "invalid_operation_list",
+  );
+  assert.equal(trapCount, 0);
+
+  const proxiedOperation = new Proxy({}, handler);
+  assert.throws(
+    () => planOperations([proxiedOperation]),
+    (error) => error instanceof PlanError && error.code === "invalid_operation",
+  );
+  assert.equal(trapCount, 0);
+
+  const proxiedSnapshot = new Proxy({}, handler);
+  assert.equal(admitRemoteSnapshot(proxiedSnapshot).accepted, false);
+  assert.equal(trapCount, 0);
+
+  const proxiedVariables = new Proxy([], handler);
+  assert.equal(admitRemoteSnapshot({ revision: 0, variables: proxiedVariables }).accepted, false);
+  assert.equal(trapCount, 0);
+
+  const proxiedRemote = new Proxy({}, handler);
+  await assert.rejects(
+    runWith({ ...harness(), remote: proxiedRemote }),
+    (error) => error instanceof PlanError && error.code === "invalid_collaborator",
+  );
+  assert.equal(trapCount, 0);
+
+  const proxiedAuthority = new Proxy({}, handler);
+  const base = harness();
+  const result = await runWith({
+    ...base,
+    leaseStore: {
+      acquire: () => proxiedAuthority,
+      renew: () => {
+        throw new Error("renew should remain unreachable");
+      },
+      release: () => {
+        throw new Error("release should remain unreachable");
+      },
+    },
+  });
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "lease_authority_invalid");
+  assert.equal(trapCount, 0);
+});
+
+test("typed error classification preserves a proxy primary over release cleanup", async () => {
+  let trapCount = 0;
+  const trap = () => {
+    trapCount += 1;
+    throw new Error("proxy error trap executed");
+  };
+  const primary = new Proxy(new Error("caller-owned primary"), {
+    get: trap,
+    getOwnPropertyDescriptor: trap,
+    getPrototypeOf: trap,
+    ownKeys: trap,
+  });
+  const base = harness();
+  const remote = {
+    snapshot: base.remote.snapshot.bind(base.remote),
+    readIntentResults: base.remote.readIntentResults.bind(base.remote),
+    applyBatch() {
+      throw primary;
+    },
+  };
+  const leaseStore = {
+    acquire: base.leaseStore.acquire.bind(base.leaseStore),
+    renew: base.leaseStore.renew.bind(base.leaseStore),
+    release() {
+      throw new Error("secondary release failure");
+    },
+  };
+
+  let observedPrimary;
+  try {
+    await runWith({ ...base, remote, leaseStore });
+  } catch (error) {
+    observedPrimary = error;
+  }
+  assert.equal(observedPrimary, primary);
+  assert.equal(trapCount, 0);
+});
+
+test("typed error classification requires exact prototypes and own data fields", async () => {
+  let inheritedCodeReads = 0;
+  const impostorPrototype = Object.create(RetryAfterError.prototype);
+  Object.defineProperty(impostorPrototype, "code", {
+    get() {
+      inheritedCodeReads += 1;
+      return "retry_after";
+    },
+  });
+  const impostor = Object.create(impostorPrototype);
+  const base = harness();
+  const remote = {
+    snapshot: base.remote.snapshot.bind(base.remote),
+    readIntentResults: base.remote.readIntentResults.bind(base.remote),
+    applyBatch() {
+      throw impostor;
+    },
+  };
+
+  await assert.rejects(runWith({ ...base, remote }), (error) => error === impostor);
+  assert.equal(inheritedCodeReads, 0);
+});
+
+test("typed error detail admission preserves the original error across bounded-data failures", async () => {
+  let deeplyNested = "leaf";
+  for (let index = 0; index < 10; index += 1) {
+    deeplyNested = { branch: deeplyNested };
+  }
+  const cases = [
+    { label: "depth", details: deeplyNested },
+    { label: "string", details: { reason: "x".repeat(1_025) } },
+    { label: "credential", details: { api_token: "public-looking-but-sensitive" } },
+  ];
+
+  for (const scenario of cases) {
+    const primary = new RetryAfterError(1, { phase: "before_apply" });
+    primary.details = scenario.details;
+    const base = harness();
+    const remote = {
+      snapshot: base.remote.snapshot.bind(base.remote),
+      readIntentResults: base.remote.readIntentResults.bind(base.remote),
+      applyBatch() {
+        throw primary;
+      },
+    };
+
+    await assert.rejects(
+      runWith({ ...base, remote }),
+      (error) => error === primary,
+      scenario.label,
+    );
+    assert.equal(base.leaseStore.inspect(), null);
+  }
+});
+
+test("clock admission blocks invalid and decreasing samples before lease effects", async () => {
+  {
+    const base = harness();
+    let acquireCalls = 0;
+    const leaseStore = {
+      acquire(...args) {
+        acquireCalls += 1;
+        return base.leaseStore.acquire(...args);
+      },
+      renew: base.leaseStore.renew.bind(base.leaseStore),
+      release: base.leaseStore.release.bind(base.leaseStore),
+    };
+    await assert.rejects(
+      runWith({
+        ...base,
+        leaseStore,
+        clock: { now: () => -1 },
+      }),
+      (error) => error instanceof PlanError && error.code === "clock_observation_invalid",
+    );
+    assert.equal(acquireCalls, 0);
+    assert.equal(base.leaseStore.inspect(), null);
+    assert.equal(base.checkpointStore.load(fixture.runId), null);
+  }
+
+  for (const observations of [
+    [100, 99],
+    [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+  ]) {
+    const base = harness();
+    let acquireCalls = 0;
+    let observationIndex = 0;
+    const leaseStore = {
+      acquire(...args) {
+        acquireCalls += 1;
+        return base.leaseStore.acquire(...args);
+      },
+      renew: base.leaseStore.renew.bind(base.leaseStore),
+      release: base.leaseStore.release.bind(base.leaseStore),
+    };
+    const result = await runWith({
+      ...base,
+      leaseStore,
+      clock: {
+        now: () => observations[Math.min(observationIndex++, observations.length - 1)],
+      },
+    });
+    assert.equal(result.status, "friction");
+    assert.equal(result.code, "clock_observation_invalid");
+    assert.equal(result.restartAt, "inspect_clock");
+    assert.equal(acquireCalls, 0);
+    assert.equal(base.leaseStore.inspect(), null);
+    assert.equal(base.checkpointStore.load(fixture.runId), null);
+  }
+});
+
+test("lease-store arithmetic rejects overflow without retaining authority", () => {
+  const leaseStore = new InMemoryLeaseStore();
+  assert.throws(
+    () => leaseStore.acquire({
+      owner: "writer-a",
+      nowMs: Number.MAX_SAFE_INTEGER,
+      ttlMs: 1,
+    }),
+    (error) => error instanceof LeaseError && error.code === "invalid_lease_request",
+  );
+  assert.equal(leaseStore.inspect(), null);
+});
+
+test("post-await acquisition freshness releases stale authority before fencing", async () => {
+  const base = harness();
+  const remoteBefore = base.remote.snapshot();
+  let nowMs = 100;
+  let fenceCalls = 0;
+  const leaseStore = {
+    acquire(request) {
+      const authority = base.leaseStore.acquire(request);
+      nowMs = authority.expiresAtMs;
+      return authority;
+    },
+    renew: base.leaseStore.renew.bind(base.leaseStore),
+    release: base.leaseStore.release.bind(base.leaseStore),
+  };
+  const checkpointStore = {
+    claimFence(...args) {
+      fenceCalls += 1;
+      return base.checkpointStore.claimFence(...args);
+    },
+    load: base.checkpointStore.load.bind(base.checkpointStore),
+    save: base.checkpointStore.save.bind(base.checkpointStore),
+  };
+
+  const result = await runWith({
+    ...base,
+    leaseStore,
+    checkpointStore,
+    clock: { now: () => nowMs },
+  });
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "lease_authority_invalid");
+  assert.equal(fenceCalls, 0);
+  assert.equal(base.leaseStore.inspect(), null);
+  assert.equal(base.checkpointStore.load(fixture.runId), null);
+  assert.deepEqual(base.remote.snapshot(), remoteBefore);
+});
+
+test("post-await renewal freshness stops before checkpoint and remote effects", async () => {
+  const base = harness();
+  const remoteBefore = base.remote.snapshot();
+  let nowMs = 100;
+  let applyCalls = 0;
+  const leaseStore = {
+    acquire: base.leaseStore.acquire.bind(base.leaseStore),
+    renew(request) {
+      const authority = base.leaseStore.renew(request);
+      nowMs = authority.expiresAtMs;
+      return authority;
+    },
+    release: base.leaseStore.release.bind(base.leaseStore),
+  };
+  const remote = {
+    snapshot: base.remote.snapshot.bind(base.remote),
+    readIntentResults: base.remote.readIntentResults.bind(base.remote),
+    applyBatch(...args) {
+      applyCalls += 1;
+      return base.remote.applyBatch(...args);
+    },
+  };
+
+  const result = await runWith({
+    ...base,
+    leaseStore,
+    remote,
+    clock: { now: () => nowMs },
+  });
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "lease_authority_invalid");
+  assert.equal(applyCalls, 0);
+  assert.equal(base.leaseStore.inspect(), null);
+  assert.equal(base.checkpointStore.load(fixture.runId), null);
+  assert.deepEqual(base.remote.snapshot(), remoteBefore);
+});
+
+test("a decreasing renewal clock returns typed friction and releases the lease", async () => {
+  const base = harness();
+  const observations = [100, 100, 100, 99];
+  let observationIndex = 0;
+  const result = await runWith({
+    ...base,
+    clock: {
+      now: () => observations[Math.min(observationIndex++, observations.length - 1)],
+    },
+  });
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "clock_observation_invalid");
+  assert.equal(result.details.reason, "regression");
+  assert.equal(result.restartAt, "inspect_clock");
+  assert.equal(base.leaseStore.inspect(), null);
+  assert.equal(base.checkpointStore.load(fixture.runId), null);
+});
+
+test("an invalid final clock returns a typed checkpoint-bound reconciliation result", async () => {
+  const operation = structuredClone(fixture.operations[1]);
+  const base = harness();
+  let finalSnapshotObserved = false;
+  let snapshotCalls = 0;
+  const remote = {
+    applyBatch: base.remote.applyBatch.bind(base.remote),
+    readIntentResults: base.remote.readIntentResults.bind(base.remote),
+    snapshot() {
+      snapshotCalls += 1;
+      if (snapshotCalls === 3) finalSnapshotObserved = true;
+      return base.remote.snapshot();
+    },
+  };
+
+  const result = await runWith(
+    {
+      ...base,
+      remote,
+      clock: { now: () => finalSnapshotObserved ? Number.NaN : 100 },
+    },
+    { operations: [operation], maxBatchBytes: 4096 },
+  );
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "clock_observation_invalid");
+  assert.equal(result.details.phase, "execution_complete");
+  assert.equal(result.details.reason, "shape");
+  assert.equal(result.restartAt, "inspect_clock");
+  assert.equal(result.durableCheckpoint.nextBatchIndex, 1);
+  assert.deepEqual(result.durableCheckpoint, base.checkpointStore.load(fixture.runId));
+  assert.equal(base.leaseStore.inspect(), null);
+});
+
+test("post-save clock failure reports the checkpoint that the store committed", async () => {
+  const operation = structuredClone(fixture.operations[1]);
+  const base = harness();
+  let nowMs = 100;
+  const checkpointStore = {
+    claimFence: base.checkpointStore.claimFence.bind(base.checkpointStore),
+    load: base.checkpointStore.load.bind(base.checkpointStore),
+    save(...args) {
+      const saved = base.checkpointStore.save(...args);
+      nowMs = Number.NaN;
+      return saved;
+    },
+  };
+
+  const result = await runWith(
+    { ...base, checkpointStore, clock: { now: () => nowMs } },
+    { operations: [operation], maxBatchBytes: 4096 },
+  );
+  const committed = base.checkpointStore.load(fixture.runId);
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "clock_observation_invalid");
+  assert.equal(result.details.checkpointPersistence, "store_returned_record_requires_clock_reconciliation");
+  assert.deepEqual(result.durableCheckpoint, committed);
+  assert.equal(committed.nextBatchIndex, 0);
+  assert.equal(base.leaseStore.inspect(), null);
+});
+
+test("post-save lease loss preserves the committed checkpoint and successor authority", async () => {
+  const operation = structuredClone(fixture.operations[1]);
+  const base = harness();
+  let renewCalls = 0;
+  let releaseCalls = 0;
+  const leaseStore = {
+    acquire: base.leaseStore.acquire.bind(base.leaseStore),
+    renew(request) {
+      renewCalls += 1;
+      if (renewCalls === 2) {
+        throw new LeaseError(
+          "lease_lost",
+          "A successor writer owns recovery after the committed checkpoint.",
+        );
+      }
+      return base.leaseStore.renew(request);
+    },
+    release(...args) {
+      releaseCalls += 1;
+      return base.leaseStore.release(...args);
+    },
+  };
+
+  const result = await runWith(
+    { ...base, leaseStore, clock: { now: () => 100 } },
+    { operations: [operation], maxBatchBytes: 4096 },
+  );
+  const committed = base.checkpointStore.load(fixture.runId);
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "lease_lost");
+  assert.equal(result.details.checkpointPersistence, "store_returned_record_requires_authority_reconciliation");
+  assert.deepEqual(result.durableCheckpoint, committed);
+  assert.equal(releaseCalls, 0);
+  assert.equal(Object.hasOwn(result, "secondaryFailure"), false);
+});
+
+test("initial fence rejection leaves cleanup with the successor writer", async () => {
+  const operation = structuredClone(fixture.operations[1]);
+  const base = harness();
+  let releaseCalls = 0;
+  const leaseStore = {
+    acquire: base.leaseStore.acquire.bind(base.leaseStore),
+    renew: base.leaseStore.renew.bind(base.leaseStore),
+    release() {
+      releaseCalls += 1;
+      throw new Error("stale writer release should remain unreachable");
+    },
+  };
+  const checkpointStore = {
+    claimFence() {
+      throw new LeaseError(
+        "checkpoint_fence_rejected",
+        "A successor writer owns this checkpoint fence.",
+        { currentGeneration: 2, requestedGeneration: 1 },
+      );
+    },
+    load: base.checkpointStore.load.bind(base.checkpointStore),
+    save: base.checkpointStore.save.bind(base.checkpointStore),
+  };
+
+  const result = await runWith(
+    { ...base, leaseStore, checkpointStore, clock: { now: () => 100 } },
+    { operations: [operation], maxBatchBytes: 4096 },
+  );
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "checkpoint_fence_rejected");
+  assert.equal(result.restartAt, "acquire_writer_lease");
+  assert.equal(releaseCalls, 0);
+  assert.equal(Object.hasOwn(result, "secondaryFailure"), false);
+  assert.equal(base.checkpointStore.load(fixture.runId), null);
+});
+
+test("successor capacity stops before remote and checkpoint mutation", async () => {
+  const update = structuredClone(fixture.operations[1]);
+  const cases = [
+    {
+      code: "revision_capacity_exhausted",
+      remote: new FakeVariableRemote({
+        revision: Number.MAX_SAFE_INTEGER,
+        variables: fixture.remote.variables,
+      }),
+      operation: update,
+    },
+    {
+      code: "version_capacity_exhausted",
+      remote: new FakeVariableRemote({
+        revision: fixture.remote.revision,
+        variables: fixture.remote.variables.map((variable) => ({
+          ...variable,
+          version: variable.id === update.targetId ? Number.MAX_SAFE_INTEGER : variable.version,
+        })),
+      }),
+      operation: { ...update, expectedVersion: Number.MAX_SAFE_INTEGER },
+    },
+    {
+      code: "generated_id_capacity_exhausted",
+      remote: new FakeVariableRemote({
+        variables: [{
+          id: `var_${String(Number.MAX_SAFE_INTEGER)}`,
+          name: "capacity.sentinel",
+          resolvedType: "STRING",
+          value: "held",
+          version: 1,
+        }],
+      }),
+      operation: structuredClone(fixture.operations[0]),
+    },
+  ];
+
+  for (const scenario of cases) {
+    const checkpointStore = new InMemoryCheckpointStore();
+    const leaseStore = new InMemoryLeaseStore();
+    const remoteBefore = scenario.remote.snapshot();
+    const result = await runWith({
+      remote: scenario.remote,
+      checkpointStore,
+      leaseStore,
+      clock: { now: () => 100 },
+      sleep: async () => {},
+    }, {
+      operations: [scenario.operation],
+      maxBatchBytes: 4096,
+    });
+    assert.equal(result.status, "friction");
+    assert.equal(result.code, scenario.code);
+    assert.equal(result.restartAt, "rebase_or_upgrade_representation");
+    assert.deepEqual(scenario.remote.snapshot(), remoteBefore);
+    assert.equal(checkpointStore.load(fixture.runId), null);
+    assert.equal(leaseStore.inspect(), null);
+  }
+});
+
+test("fake remote capacity defenses preserve state at exact maxima", () => {
+  const update = structuredClone(fixture.operations[1]);
+  const versionRemote = new FakeVariableRemote({
+    revision: 7,
+    variables: fixture.remote.variables.map((variable) => ({
+      ...variable,
+      version: variable.id === update.targetId ? Number.MAX_SAFE_INTEGER : variable.version,
+    })),
+  });
+  const versionBefore = versionRemote.snapshot();
+  assert.throws(
+    () => versionRemote.applyBatch(
+      [{ ...update, expectedVersion: Number.MAX_SAFE_INTEGER }],
+      { expectedRevision: 7 },
+    ),
+    (error) => error.code === "version_capacity_exhausted",
+  );
+  assert.deepEqual(versionRemote.snapshot(), versionBefore);
+
+  const revisionRemote = new FakeVariableRemote({
+    revision: Number.MAX_SAFE_INTEGER,
+    variables: fixture.remote.variables,
+  });
+  const revisionBefore = revisionRemote.snapshot();
+  assert.throws(
+    () => revisionRemote.applyBatch([update], { expectedRevision: Number.MAX_SAFE_INTEGER }),
+    (error) => error.code === "revision_capacity_exhausted",
+  );
+  assert.deepEqual(revisionRemote.snapshot(), revisionBefore);
+
+  const maximumSuffix = String(Number.MAX_SAFE_INTEGER);
+  const generatedIdRemote = new FakeVariableRemote({
+    variables: [{
+      id: `var_${maximumSuffix}`,
+      name: "capacity.sentinel",
+      resolvedType: "STRING",
+      value: "held",
+      version: 1,
+    }],
+  });
+  const create = structuredClone(fixture.operations[0]);
+  const generatedIdBefore = generatedIdRemote.snapshot();
+  assert.throws(
+    () => generatedIdRemote.applyBatch([create], { expectedRevision: 0 }),
+    (error) => error.code === "generated_id_capacity_exhausted",
+  );
+  assert.deepEqual(generatedIdRemote.snapshot(), generatedIdBefore);
+});
+
+test("generated-id capacity reserves one representable successor cursor", async () => {
+  const penultimateSuffix = String(Number.MAX_SAFE_INTEGER - 1);
+  const remote = new FakeVariableRemote({
+    variables: [{
+      id: `var_${penultimateSuffix}`,
+      name: "capacity.penultimate",
+      resolvedType: "STRING",
+      value: "held",
+      version: 1,
+    }],
+  });
+  const checkpointStore = new InMemoryCheckpointStore();
+  const before = remote.snapshot();
+  assert.equal(before.remainingGeneratedIds, 0);
+
+  const result = await runWith({
+    remote,
+    checkpointStore,
+    leaseStore: new InMemoryLeaseStore(),
+    clock: { now: () => 100 },
+    sleep: async () => {},
+  }, {
+    operations: [structuredClone(fixture.operations[0])],
+    maxBatchBytes: 4096,
+  });
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "generated_id_capacity_exhausted");
+  assert.equal(result.restartAt, "rebase_or_upgrade_representation");
+  assert.deepEqual(remote.snapshot(), before);
+  assert.equal(checkpointStore.load(fixture.runId), null);
+});
+
+test("generated-id capacity follows the configured namespace", async () => {
+  const unrelatedMaximum = `external_${String(Number.MAX_SAFE_INTEGER)}`;
+  const remote = new FakeVariableRemote({
+    issuedIdPrefix: "managed:",
+    variables: [
+      {
+        id: unrelatedMaximum,
+        name: "external.maximum",
+        resolvedType: "STRING",
+        value: "outside-generator-namespace",
+        version: 1,
+      },
+      {
+        id: "managed:0007",
+        name: "managed.existing",
+        resolvedType: "STRING",
+        value: "held",
+        version: 1,
+      },
+    ],
+  });
+  const before = remote.snapshot();
+  assert.equal(before.remainingGeneratedIds, Number.MAX_SAFE_INTEGER - 8);
+
+  const result = await runWith({
+    remote,
+    checkpointStore: new InMemoryCheckpointStore(),
+    leaseStore: new InMemoryLeaseStore(),
+    clock: { now: () => 100 },
+    sleep: async () => {},
+  }, {
+    operations: [structuredClone(fixture.operations[0])],
+    maxBatchBytes: 4096,
+  });
+
+  assert.equal(result.status, "accepted");
+  assert.equal(result.tempIdToRealId[fixture.operations[0].tempId], "managed:0008");
+  assert.ok(remote.snapshot().variables.some(({ id }) => id === unrelatedMaximum));
+});
+
+test("lease generation capacity preserves prior store state", async () => {
+  const leaseStore = new InMemoryLeaseStore({ generation: Number.MAX_SAFE_INTEGER });
+  const base = harness({ leaseStore });
+  const result = await runWith(base);
+
+  assert.equal(result.status, "friction");
+  assert.equal(result.code, "lease_generation_capacity_exhausted");
+  assert.equal(result.restartAt, "acquire_writer_lease");
+  assert.equal(
+    result.details.recoveryOwner,
+    "upgrade_lease_generation_representation",
+  );
+  assert.equal(leaseStore.inspect(), null);
+  assert.equal(base.checkpointStore.load(fixture.runId), null);
 });

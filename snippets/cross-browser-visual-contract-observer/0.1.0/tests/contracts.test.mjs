@@ -52,18 +52,29 @@ test("JSON admission bounds bytes and requires a directly addressed regular file
   );
 });
 
-test("bounded capture preserves typed recovery when an opened source becomes unreadable", async () => {
+test("bounded capture owns hostile descriptor failures without invoking traps", async () => {
   const root = await mkdtemp(join(tmpdir(), "visual-observer-capture-"));
   const source = join(root, "source.bin");
   await writeFile(source, "bounded bytes");
   const entry = await lstat(source);
   let closed = false;
+  let trapCalls = 0;
+  const failTrap = () => {
+    trapCalls += 1;
+    throw new Error("hostile failure trap escaped bounded capture");
+  };
+  const hostileFailure = new Proxy(new Error("private descriptor read failure"), {
+    get: failTrap,
+    getOwnPropertyDescriptor: failTrap,
+    getPrototypeOf: failTrap,
+    ownKeys: failTrap,
+  });
   const fileSystem = {
     lstat: async () => entry,
     open: async () => ({
       stat: async () => entry,
       read: async () => {
-        throw new Error("injected descriptor read failure");
+        throw hostileFailure;
       },
       close: async () => {
         closed = true;
@@ -82,10 +93,132 @@ test("bounded capture preserves typed recovery when an opened source becomes unr
       error instanceof ObserverError &&
       error.code === "SOURCE_CAPTURE_FAILED" &&
       error.details.boundary === "artifact_source.fixture" &&
-      error.details.restartFrom === "candidate"
+      error.details.restartFrom === "candidate" &&
+      error.details.reason === "source_capture_failed"
     ),
   );
+  assert.equal(trapCalls, 0);
   assert.equal(closed, true);
+});
+
+test("bounded capture owns prototype-hostile and mutated typed failures", async () => {
+  const entry = {
+    dev: 1,
+    ino: 10,
+    size: 1,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  const exercise = async failure => {
+    let closed = false;
+    let observed;
+    const fileSystem = {
+      lstat: async () => entry,
+      open: async () => ({
+        stat: async () => entry,
+        read: async () => { throw failure; },
+        close: async () => { closed = true; },
+      }),
+    };
+    await assert.rejects(
+      readBoundedRegularFile("synthetic-source.bin", {
+        boundary: "artifact_source.fixture",
+        maxBytes: 1,
+        restartFrom: "candidate",
+        fileSystem,
+      }),
+      error => {
+        observed = error;
+        return error instanceof ObserverError && error.code === "SOURCE_CAPTURE_FAILED";
+      },
+    );
+    assert.equal(closed, true);
+    assert.notEqual(observed, failure);
+  };
+
+  let prototypeTrapCalls = 0;
+  const hostilePrototype = new Proxy({}, {
+    getPrototypeOf() {
+      prototypeTrapCalls += 1;
+      throw new Error("prototype trap must remain idle");
+    },
+  });
+  await exercise(Object.create(hostilePrototype));
+  assert.equal(prototypeTrapCalls, 0);
+
+  for (const field of ["code", "message", "details"]) {
+    let getterCalls = 0;
+    const mutatedTypedFailure = new ObserverError("CALLER_TYPED_FAILURE", "Caller failure.", { boundary: "caller" });
+    Object.defineProperty(mutatedTypedFailure, field, {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error(`${field} getter must remain idle`);
+      },
+    });
+    await exercise(mutatedTypedFailure);
+    assert.equal(getterCalls, 0, field);
+  }
+});
+
+test("bounded capture binds descriptor metadata and the final addressed path", async () => {
+  const bytes = Buffer.from("bounded");
+  const openedEntry = {
+    dev: 1,
+    ino: 10,
+    size: bytes.length,
+    mtimeMs: 100,
+    ctimeMs: 200,
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+  for (const fixture of [
+    {
+      label: "descriptor ctime drift",
+      settledEntry: { ...openedEntry, ctimeMs: 201 },
+      settledPathEntry: openedEntry,
+    },
+    {
+      label: "same-size pathname replacement",
+      settledEntry: openedEntry,
+      settledPathEntry: { ...openedEntry, ino: 11 },
+    },
+    {
+      label: "same-inode final-path metadata drift",
+      settledEntry: openedEntry,
+      settledPathEntry: { ...openedEntry, ctimeMs: 201 },
+    },
+  ]) {
+    let statCalls = 0;
+    let pathCalls = 0;
+    let closed = false;
+    const fileSystem = {
+      lstat: async () => (pathCalls++ === 0 ? openedEntry : fixture.settledPathEntry),
+      open: async () => ({
+        stat: async () => (statCalls++ === 0 ? openedEntry : fixture.settledEntry),
+        read: async (buffer, offset, length, position) => {
+          const count = Math.max(0, Math.min(length, bytes.length - position));
+          if (count > 0) bytes.copy(buffer, offset, position, position + count);
+          return { bytesRead: count };
+        },
+        close: async () => { closed = true; },
+      }),
+    };
+
+    await assert.rejects(
+      readBoundedRegularFile("synthetic-source.bin", {
+        boundary: "artifact_source.fixture",
+        maxBytes: bytes.length,
+        restartFrom: "candidate",
+        fileSystem,
+      }),
+      error => error instanceof ObserverError && error.code === "SOURCE_FILE_CHANGED",
+      fixture.label,
+    );
+    assert.equal(closed, true, fixture.label);
+  }
 });
 
 test("browser evidence replaces a regular leaf through an atomic owned-path write", async () => {
@@ -313,33 +446,65 @@ test("inventory, matrix, and tier selection admit descriptor values before busin
   assert.equal(selectionGetterCalls, 0);
 });
 
-test("admission accepts transparent proxies without reading through get traps", () => {
-  let getTrapCalls = 0;
-  const proxiedInventory = structuredClone(inventory);
-  proxiedInventory.targets = new Proxy(proxiedInventory.targets, {
-    get(target, key, receiver) {
-      getTrapCalls += 1;
-      return Reflect.get(target, key, receiver);
+test("admission rejects Proxy values before invoking their traps", () => {
+  const cases = [
+    {
+      label: "inventory root",
+      boundary: "decision_inventory",
+      run: value => validateInventory(value),
+      value: structuredClone(inventory),
     },
-  });
-  const proxiedMatrix = structuredClone(matrix);
-  proxiedMatrix.scenarios = new Proxy(proxiedMatrix.scenarios, {
-    get(target, key, receiver) {
-      getTrapCalls += 1;
-      return Reflect.get(target, key, receiver);
+    {
+      label: "inventory array",
+      boundary: "decision_inventory.targets",
+      run: value => {
+        const source = structuredClone(inventory);
+        source.targets = value;
+        return validateInventory(source);
+      },
+      value: structuredClone(inventory.targets),
     },
-  });
-  const selection = new Proxy({ tier: "smoke" }, {
-    get(target, key, receiver) {
-      getTrapCalls += 1;
-      return Reflect.get(target, key, receiver);
+    {
+      label: "matrix array",
+      boundary: "observation_matrix.scenarios",
+      run: value => {
+        const source = structuredClone(matrix);
+        source.scenarios = value;
+        return validateMatrix(source);
+      },
+      value: structuredClone(matrix.scenarios),
     },
-  });
+    {
+      label: "selection root",
+      boundary: "tier_selection",
+      run: value => selectTier(value, inventory, matrix),
+      value: { tier: "smoke" },
+    },
+  ];
 
-  assert.equal(validateInventory(proxiedInventory).targetCount, inventory.targets.length);
-  assert.equal(validateMatrix(proxiedMatrix).scenarioCount, matrix.scenarios.length);
-  assert.equal(selectTier(selection, proxiedInventory, proxiedMatrix).tier, "smoke");
-  assert.equal(getTrapCalls, 0);
+  for (const fixture of cases) {
+    let trapCalls = 0;
+    const failTrap = () => {
+      trapCalls += 1;
+      throw new Error(`${fixture.label} trap must remain idle`);
+    };
+    const proxied = new Proxy(fixture.value, {
+      get: failTrap,
+      getOwnPropertyDescriptor: failTrap,
+      getPrototypeOf: failTrap,
+      has: failTrap,
+      ownKeys: failTrap,
+    });
+    assert.throws(
+      () => fixture.run(proxied),
+      error => error instanceof ObserverError
+        && error.code === "INVALID_CONTRACT"
+        && error.details.boundary === fixture.boundary
+        && error.details.reason === "proxy_value",
+      fixture.label,
+    );
+    assert.equal(trapCalls, 0, fixture.label);
+  }
 });
 
 test("admission rejects Array subclasses before invoking inherited iteration", () => {
@@ -570,21 +735,30 @@ test("exported bitmap and observation evaluators snapshot plain data before read
   );
   assert.equal(targetGetterCalls, 0);
 
-  let observedGetCalls = 0;
+  let observedTrapCalls = 0;
+  const failObservedTrap = () => {
+    observedTrapCalls += 1;
+    throw new Error("observation trap must remain idle");
+  };
   const proxiedObservation = new Proxy(structuredClone(accepted["family-label"]), {
-    get(source, key, receiver) {
-      observedGetCalls += 1;
-      return Reflect.get(source, key, receiver);
-    },
+    get: failObservedTrap,
+    getOwnPropertyDescriptor: failObservedTrap,
+    getPrototypeOf: failObservedTrap,
+    has: failObservedTrap,
+    ownKeys: failObservedTrap,
   });
-  assert.equal(
-    evaluateControlledObservation(
+  assert.throws(
+    () => evaluateControlledObservation(
       inventory.targets.find(candidate => candidate.oracle === "semantic"),
       proxiedObservation,
-    ).status,
-    "pass",
+    ),
+    error => error instanceof ObserverError
+      && error.code === "INVALID_CONTRACT"
+      && error.details.boundary === "controlled_observation.observed"
+      && error.details.reason === "proxy_value"
+      && error.details.restartFrom === "receiver_observation",
   );
-  assert.equal(observedGetCalls, 0);
+  assert.equal(observedTrapCalls, 0);
 });
 
 test("tier selection builds the exact executable applicability plan", () => {

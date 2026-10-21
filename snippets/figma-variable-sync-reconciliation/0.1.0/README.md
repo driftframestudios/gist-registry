@@ -52,7 +52,7 @@ reviewed local contract
 | Operation plan | `planner.mjs` | Stable intent IDs, dependency edges, batch envelope, and plan digest |
 | Writer authority | `InMemoryLeaseStore` | One active writer generation and expiry |
 | Resume point | `InMemoryCheckpointStore` | Current writer fence plus next batch, expected revision and state digest, pending transition projection, temporary-ID map, monotonic remote-ID ledger, resolved-byte high-water mark, bounded observation transcript, and plan-bound completed-batch settlement coordinate |
-| Remote truth | `FakeVariableRemote` | Current variables, revision, and applied intent results |
+| Remote truth | `FakeVariableRemote` | Current variables, revision, remaining generated-ID capacity, and applied intent results |
 | Final result | Coordinator receipt | Accepted state digest, revisions, counts, and recovery history |
 
 The in-memory stores expose process-local interfaces and behavior. A receiving
@@ -81,20 +81,38 @@ checkpoint systems with its own atomicity and availability evidence.
   return typed plan friction before a digest or side effect exists.
 - Every initial, post-settlement, and final remote snapshot passes an exact,
   bounded contract before hashing or checkpoint advancement. Variable identity,
-  type, version, reference, JSON value, uniqueness, and aggregate envelopes
-  therefore share one admitted state model.
+  type, version, reference, JSON value, uniqueness, generated-ID headroom, and
+  aggregate envelopes therefore share one admitted state model.
 - A lease carries owner, generation, and expiry; a later writer can acquire a
   new generation after expiry. The coordinator acquires that authority before
   it creates the first durable checkpoint, so a lease-held caller leaves both
-  checkpoint and remote state unchanged.
+  checkpoint and remote state unchanged. The local store reserves safe-integer
+  successor headroom before generation mutation and returns a representation-
+  upgrade recovery owner when the coordinate reaches its current ceiling.
 - The checkpoint store claims the lease generation as a monotonic fencing
   token. Every checkpoint save renews the lease before and after its awaited
-  write, and the store compares the token atomically at commit. A successor
-  generation therefore keeps an expired writer from publishing older progress
-  after a slow remote or storage call.
+  write, and the store compares the token atomically at commit. The admitted
+  result of a committed write becomes the returned durable coordinate before
+  the post-write renewal. A successor generation therefore keeps an expired
+  writer from publishing older progress after a slow remote or storage call.
 - The coordinator awaits remote, lease, checkpoint, clock, delay, and fault
   collaborators. Promise rejections enter the same retry, reconciliation,
   conflict, and interruption paths as synchronous throws.
+- Collaborator admission captures own or immediate-prototype data-property
+  functions once before awaited coordination begins. Planner, checkpoint,
+  lease, remote, receipt, and typed-error admission recognize Proxy wrappers
+  before descriptor inspection, iteration, or error classification, so caller
+  code stays outside the trusted data path. Typed error details enter through
+  a bounded plain-JSON contract before they become receipt fields.
+- Fault hooks and remote adapters receive immutable owned transport snapshots.
+  The coordinator retains its admitted plan and resolved-operation authority
+  for settlement checks and interruption recovery while collaborators work
+  from separate copies.
+- Every clock sample is a non-negative safe integer in monotonic order.
+  Acquisition and renewal reserve TTL arithmetic headroom, then sample again
+  after the awaited lease operation. A stale authority returns typed recovery
+  before checkpoint fencing, persistence, or remote mutation; final clock
+  friction carries the last durable checkpoint at `inspect_clock`.
 - Lease release settles before the caller receives a result. A rejected or
   unconfirmed release returns a typed lease error with an inspection
   coordinate after accepted execution. A typed conflict, friction, or
@@ -131,6 +149,12 @@ checkpoint systems with its own atomicity and availability evidence.
 - Every durable batch checkpoint carries the reconciled state digest. Final
   acceptance requires the remote revision and state digest to match that
   checkpoint, so drift after a completed run receives a typed conflict.
+- Fresh and resumed runs prove revision, variable-version, and generated-ID
+  successor headroom before the next checkpoint. Every projected batch and the
+  fake remote repeat the applicable counter checks before mutation. Generated
+  IDs advance within the configured prefix namespace, so unrelated numeric
+  suffixes preserve their own identity space. Exhausted counters route to
+  `rebase_or_upgrade_representation` with remote and checkpoint state intact.
 - Checkpoint admission validates the exact field set, batch progress, pending
   transition, bounded transcript window and hash chain, temporary-ID progress,
   revision arithmetic, and resource envelope before a resumed run can accept
@@ -145,9 +169,11 @@ checkpoint systems with its own atomicity and availability evidence.
   next batch can run, while retained observations preserve the detailed recent
   history.
 - Every checkpoint save returns through the same structural and semantic
-  admission path. The coordinator compares the store-returned record with the
-  record submitted for persistence before that durable state can drive another
-  batch. Version `0.1.0` is the first published checkpoint shape for this
+  admission path. Before calling the store, the coordinator retains an admitted
+  checkpoint digest and sends a separate owned snapshot. The store-returned
+  record must match that retained coordinate before durable state can drive
+  another batch, including when a store mutates its input. Version `0.1.0` is
+  the first published checkpoint shape for this
   exemplar and includes the remote-ID ledger, pending transition, and bounded
   observation transcript as required fields.
 - A changed plan receives a successor run ID and checkpoint lineage.
@@ -160,6 +186,9 @@ checkpoint systems with its own atomicity and availability evidence.
 | --- | --- | --- |
 | `retry_after` | A safe non-negative integer delay and attempt appear in the checkpoint | Wait for the admitted interval and retry inside the declared attempt and delay budget |
 | active writer lease | The current owner and expiry return as typed friction | Preserve checkpoint and remote state, then retry after authority becomes available |
+| invalid, decreasing, or exhausted clock coordinate | `clock_observation_invalid` identifies the observation phase and shape, range, or regression | Inspect the clock, retain the durable checkpoint when one exists, and resume after monotonic safe-integer time is restored |
+| revision, version, or generated-ID successor exhausted | A typed capacity result identifies the counter before checkpoint or remote mutation | Rebase the coordinate or upgrade its representation, then begin from the unchanged source state |
+| lease-generation successor exhausted | `lease_generation_capacity_exhausted` preserves the prior store state and names the representation-upgrade owner | Upgrade the lease-generation representation, then acquire the next writer coordinate |
 | lease release rejected or unconfirmed | Accepted execution raises `lease_release_failed` or `lease_release_unconfirmed`; typed outcomes and extensible thrown failures retain their primary authority and add bounded `secondaryFailure` context | Follow the primary recovery coordinate, inspect the writer lease, and resume from the durable checkpoint after authority is current |
 | writer expires around checkpoint persistence | Lease renewal or the atomic checkpoint fence returns typed friction and the earlier durable coordinate remains authoritative | Read remote intent results and reconcile the exact batch before a successor writer advances |
 | `timeout_before_apply` | Intent read returns an absent batch at the expected revision | Retry the same stable intents |
@@ -183,6 +212,8 @@ observations, and `W` the retained observation window (`W <= 128`).
 - graph admission and ordering: `O(V + E)` time and `O(V + E)` space;
 - collision and intent indexes: expected `O(V)` time and space;
 - batch formation: `O(V)` plus JSON encoding cost;
+- immutable collaborator transport snapshots: `O(batch_size)` time and space
+  for each fault-hook, apply, or intent-read call;
 - immutable checkpoint-plan indexes: `O(V + B)` once, followed by `O(1)` batch
   and create-progress lookups;
 - one observation append: `O(1)` observation and settlement-coordinate digest
@@ -193,7 +224,9 @@ observations, and `W` the retained observation window (`W <= 128`).
   allocation. The coordinator sorts the newly created IDs and merges them with
   the admitted ordinal ledger; it carries the growing ledger through
   checkpoint persistence in that established ordinal form;
-- pending-transition projection: `O(R + batch_size)` time and space per batch;
+- pending-transition projection: `O(R log R + batch_size)` time and `O(R +
+  batch_size)` space per batch because the digest coordinate uses ordinal
+  variable order;
 - fake-remote atomic application: `O(R + batch_size)` allocation per batch
   because the simulator uses copy-on-write state;
 - admitted snapshot and semantic transition ordering: `O(R log R)` per
@@ -243,6 +276,8 @@ digesting a complete plan:
 | Historical remote variable identities | 20,000 |
 | Total checkpoint observations | 50,000 |
 | Retained checkpoint observation window | 128 |
+| Typed error detail nodes / depth | 256 / 8 |
+| Typed error string / aggregate strings | 4 KiB / 16 KiB UTF-8 |
 
 Receiving adapters may select tighter limits inside this envelope. A successor
 coordinate receives any broader limit together with representative scale and

@@ -1,3 +1,5 @@
+import { types as utilTypes } from "node:util";
+
 const settlementDispositions = new Set(["applied", "idempotent_replay"]);
 const settlementKeys = new Set(["disposition", "remoteRevision", "results"]);
 const observationKeys = new Set(["remoteRevision", "results"]);
@@ -5,7 +7,7 @@ const appliedObservationKeys = new Set(["status", "result"]);
 const absentObservationKeys = new Set(["status", "operationId"]);
 const createResultKeys = new Set(["operationId", "type", "targetId", "tempId"]);
 const mutationResultKeys = new Set(["operationId", "type", "targetId"]);
-const snapshotKeys = new Set(["revision", "variables"]);
+const snapshotKeys = new Set(["revision", "remainingGeneratedIds", "variables"]);
 const variableKeys = new Set([
   "id",
   "name",
@@ -25,7 +27,12 @@ export const REMOTE_CONTRACT_LIMITS = Object.freeze({
 });
 
 function isRecord(value) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  if (
+    value === null
+    || typeof value !== "object"
+    || utilTypes.isProxy(value)
+    || Array.isArray(value)
+  ) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }
@@ -44,7 +51,8 @@ function compareOrdinal(left, right) {
 
 function admitDataArray(value, owner, { maximum = Number.MAX_SAFE_INTEGER } = {}) {
   if (
-    !Array.isArray(value)
+    utilTypes.isProxy(value)
+    || !Array.isArray(value)
     || Object.getPrototypeOf(value) !== Array.prototype
     || value.length > maximum
   ) {
@@ -91,6 +99,7 @@ function admitSnapshotJsonValue(value, state, path, depth = 0) {
         });
   }
   if (typeof value !== "object") return violation("snapshot_value_type", { path });
+  if (utilTypes.isProxy(value)) return violation("snapshot_value_record", { path });
   if (state.active.has(value)) return violation("snapshot_value_cycle", { path });
 
   state.active.add(value);
@@ -303,6 +312,12 @@ export function admitRemoteSnapshot(response) {
   if (!Number.isSafeInteger(response.revision) || response.revision < 0) {
     return violation("remote_revision");
   }
+  if (
+    !Number.isSafeInteger(response.remainingGeneratedIds)
+    || response.remainingGeneratedIds < 0
+  ) {
+    return violation("remote_generated_id_capacity");
+  }
   const variableArray = admitDataArray(response.variables, "snapshot.variables", {
     maximum: REMOTE_CONTRACT_LIMITS.variables,
   });
@@ -358,7 +373,11 @@ export function admitRemoteSnapshot(response) {
     });
   }
   variables.sort((left, right) => compareOrdinal(left.id, right.id));
-  const admitted = { revision: response.revision, variables };
+  const admitted = {
+    revision: response.revision,
+    remainingGeneratedIds: response.remainingGeneratedIds,
+    variables,
+  };
   const snapshotBytes = Buffer.byteLength(JSON.stringify(admitted), "utf8");
   if (snapshotBytes > REMOTE_CONTRACT_LIMITS.snapshotBytes) {
     return violation("snapshot_bytes", {
