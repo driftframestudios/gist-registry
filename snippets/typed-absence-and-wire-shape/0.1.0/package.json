@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1 <27"
   },
   "scripts": {
+    "check:node-runtime": "node ../../../tools/check-node-runtime.mjs",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "npm run check:node-runtime",
     "test": "npm run build && node --test tests/*.test.mjs",
     "example": "npm run build && node run-example.mjs"
   },

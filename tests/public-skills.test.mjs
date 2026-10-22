@@ -112,7 +112,7 @@ test("registry checks run when skill sources or runbooks change", async () => {
   assert.match(workflow, /- "\.agents\/runbooks\/\*\*"/u);
 });
 
-test("visual-contract packages run across the declared Node.js maintenance lines", async () => {
+test("visual-contract packages run across the declared security-fixed Node.js coordinates", async () => {
   const visualContractFamilies = [
     "style-dictionary-dtcg-pipeline",
     "react-aria-visual-contract-receiver",
@@ -125,8 +125,11 @@ test("visual-contract packages run across the declared Node.js maintenance lines
     "utf8",
   );
   assert.match(workflow, /visual-contract-node-matrix:/u);
-  assert.match(workflow, /- name: Use Node\.js 22[\s\S]*?node-version: "22"[\s\S]*?run: npm test/u);
-  assert.match(workflow, /node-version: \[24, 26\]/u);
+  assert.match(
+    workflow,
+    /- name: Use Node\.js 22\.23\.4[\s\S]*?node-version: "22\.23\.4"[\s\S]*?run: npm run check:node-runtime[\s\S]*?run: npm test/u,
+  );
+  assert.match(workflow, /node-version: \["24\.22\.1", "26\.12\.1"\]/u);
   assert.match(workflow, /run: npm run test:visual-contracts/u);
   for (const family of visualContractFamilies)
     assert.match(
@@ -140,7 +143,10 @@ test("visual-contract packages run across the declared Node.js maintenance lines
   );
 
   const rootPackage = await json(resolve(repositoryRoot, "package.json"));
-  assert.equal(rootPackage.engines.node, "^22 || ^24 || ^26");
+  assert.equal(
+    rootPackage.engines.node,
+    ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1 <27",
+  );
   const documentedNodeCoordinate = "Node.js 22, 24, or 26";
   const continuousNodeRange = /Node\.js (?:>=22 <27|22 through 26|22–26)/u;
   for (const family of visualContractFamilies) {
