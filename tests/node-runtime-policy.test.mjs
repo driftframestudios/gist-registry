@@ -35,7 +35,9 @@ test("the runtime policy classifies neighboring majors and prereleases explicitl
   for (const version of ["v23.0.0", "v25.0.0", "v27.0.0"])
     assert.equal(assessNodeVersion(version).code, "NODE_MAJOR_OUTSIDE_POLICY", version);
   assert.equal(assessNodeVersion("v24.22.1-rc.1").code, "NODE_VERSION_FORMAT");
+  assert.equal(assessNodeVersion("v24.22.1+vendor.1").code, "NODE_RUNTIME_ACCEPTED");
   assert.deepEqual(parseNodeVersion("v24.22.1"), [24, 22, 1]);
+  assert.deepEqual(parseNodeVersion("v24.22.1+vendor.1"), [24, 22, 1]);
 });
 
 test("local and CI selectors name the reviewed first-fixed coordinates", async () => {

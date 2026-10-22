@@ -37,7 +37,8 @@ function compareTriples(left, right) {
 }
 
 export function parseNodeVersion(version) {
-  const match = /^v?(\d+)\.(\d+)\.(\d+)$/u.exec(version);
+  const match =
+    /^v?(\d+)\.(\d+)\.(\d+)(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u.exec(version);
   if (!match) return null;
   return match.slice(1).map(Number);
 }
