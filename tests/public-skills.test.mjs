@@ -155,6 +155,9 @@ test("the complete Node-owned graph runs across the declared security-fixed coor
     version: rootPackage.engines.node,
     onFail: "error",
   });
+  assert.match(rootPackage.scripts["test:node-owned"], /test:skill-exercises:node/u);
+  assert.doesNotMatch(rootPackage.scripts["test:node-owned"], /test:skill-exercises:python/u);
+  assert.match(rootPackage.scripts.test, /test:skill-exercises:python/u);
   const documentedNodeCoordinate = "Node.js 22, 24, or 26";
   const continuousNodeRange = /Node\.js (?:>=22 <27|22 through 26|22–26)/u;
   for (const family of visualContractFamilies) {

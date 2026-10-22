@@ -439,7 +439,9 @@ question.
 The path-filtered Registry checks workflow runs the complete repository suite
 on Node.js 22.23.4 in one cancellable fifteen-minute job. Two independent
 fifteen-minute matrix jobs repeat the complete Node-owned validation graph on
-Node.js 24.22.1 and 26.12.1. Each lane emits the runtime-admission receipt before
+Node.js 24.22.1 and 26.12.1. That graph includes the Node skill exercises;
+Python skill exercises remain in the complete repository suite beside their
+locked Python checks. Each lane emits the runtime-admission receipt before
 dependency installation. A
 twenty-minute browser job installs the matching Chromium, Firefox, and WebKit
 revisions and exercises browser receipts plus published-artifact semantics.
