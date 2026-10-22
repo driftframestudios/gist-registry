@@ -60,7 +60,7 @@ the active runtime before installing or exercising the graph:
 
 ```sh
 nvm use
-npm run check:node-runtime
+node tools/check-node-runtime.mjs
 npm ci
 npm run check:registry
 ```
@@ -69,6 +69,10 @@ The runtime receipt records `process.version`, the relevant
 `process.versions` values, and package-contract alignment. The registry check
 then establishes that every entry resolves to one exact manifest and that each
 declared representation, path, digest, and local schema relationship agrees.
+The shared `devEngines.runtime` contract admits every root and nested `npm run`,
+`npm install`, and `npm ci` boundary, including the locked nested installs that
+use `--ignore-scripts`. The explicit checker adds the structured receipt and
+upgrade route before accepted CI work begins.
 Package audit results describe dependency closure separately from this Node
 core receipt. Artifact runtime behavior, Pages delivery, optional Gist
 publication, and downstream suitability retain their focused observations.
@@ -270,7 +274,10 @@ npm test
 Use `nvm use 22.23.4`, `nvm use 24.22.1`, or `nvm use 26.12.1` to reproduce a
 specific CI lane. A later patch in the same supported major also satisfies the
 policy. The runtime checker supplies an actionable upgrade coordinate when a
-local selector precedes its accepted floor.
+local selector precedes its accepted floor. npm enforces the same contract at
+each package boundary through `devEngines`; an `EBADDEVENGINES` result directs
+the operator to select one of these coordinates before installation or script
+execution.
 
 The visual-contract packages carry artifact-local locks for Style Dictionary,
 React Aria and React Stately, Playwright, and Sharp/libvips. The default test
@@ -430,9 +437,9 @@ coordinates it actually examined; later hosted behavior remains a new evidence
 question.
 
 The path-filtered Registry checks workflow runs the complete repository suite
-on Node.js 22.23.4 in one cancellable fifteen-minute job, then exercises the
-visual-contract packages on Node.js 24.22.1 and 26.12.1 through two independent
-ten-minute matrix jobs. Each lane emits the runtime-admission receipt before
+on Node.js 22.23.4 in one cancellable fifteen-minute job. Two independent
+fifteen-minute matrix jobs repeat the complete Node-owned validation graph on
+Node.js 24.22.1 and 26.12.1. Each lane emits the runtime-admission receipt before
 dependency installation. A
 twenty-minute browser job installs the matching Chromium, Firefox, and WebKit
 revisions and exercises browser receipts plus published-artifact semantics.

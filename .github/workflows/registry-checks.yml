@@ -75,7 +75,7 @@ jobs:
           cache-local-path: ".artifacts/uv-cache"
 
       - name: Admit the Node.js runtime
-        run: npm run check:node-runtime
+        run: node tools/check-node-runtime.mjs
 
       - name: Install the locked Node toolchain
         run: npm ci --ignore-scripts
@@ -90,19 +90,20 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: git diff --check "$BASE_SHA...$HEAD_SHA"
 
-  visual-contract-node-matrix:
+  node-owned-graph-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        # The registry job runs the complete suite on the first-fixed Node 22
-        # coordinate. These lanes exercise the other first-fixed coordinates.
+        # The registry job runs the complete repository suite on Node 22.
+        # These lanes repeat the complete Node-owned graph on the other floors.
         node-version: ["24.22.1", "26.12.1"]
     steps:
       - name: Check out accepted source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Use Node.js ${{ matrix.node-version }}
@@ -112,6 +113,7 @@ jobs:
           cache: npm
           cache-dependency-path: |
             package-lock.json
+            snippets/typed-absence-and-wire-shape/0.1.0/package-lock.json
             snippets/style-dictionary-dtcg-pipeline/0.1.0/package-lock.json
             snippets/react-aria-visual-contract-receiver/0.1.0/package-lock.json
             snippets/cross-browser-visual-contract-observer/0.1.0/package-lock.json
@@ -119,13 +121,13 @@ jobs:
             snippets/figma-variable-sync-reconciliation/0.1.0/package-lock.json
 
       - name: Admit the Node.js runtime
-        run: npm run check:node-runtime
+        run: node tools/check-node-runtime.mjs
 
       - name: Install the locked root toolchain
         run: npm ci --ignore-scripts
 
-      - name: Exercise the visual-contract packages
-        run: npm run test:visual-contracts
+      - name: Exercise the complete Node-owned validation graph
+        run: npm run test:node-owned
 
   visual-contract-browser-matrix:
     runs-on: ubuntu-latest
@@ -147,7 +149,7 @@ jobs:
             snippets/visual-pattern-artifact-compiler/0.1.0/package-lock.json
 
       - name: Admit the Node.js runtime
-        run: npm run check:node-runtime
+        run: node tools/check-node-runtime.mjs
 
       - name: Install the locked browser-test toolchains
         run: npm run prepare:visual-contracts:browsers

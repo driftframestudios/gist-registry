@@ -112,7 +112,7 @@ test("registry checks run when skill sources or runbooks change", async () => {
   assert.match(workflow, /- "\.agents\/runbooks\/\*\*"/u);
 });
 
-test("visual-contract packages run across the declared security-fixed Node.js coordinates", async () => {
+test("the complete Node-owned graph runs across the declared security-fixed coordinates", async () => {
   const visualContractFamilies = [
     "style-dictionary-dtcg-pipeline",
     "react-aria-visual-contract-receiver",
@@ -124,13 +124,16 @@ test("visual-contract packages run across the declared security-fixed Node.js co
     resolve(repositoryRoot, ".github/workflows/registry-checks.yml"),
     "utf8",
   );
-  assert.match(workflow, /visual-contract-node-matrix:/u);
+  assert.match(workflow, /node-owned-graph-matrix:/u);
   assert.match(
     workflow,
-    /- name: Use Node\.js 22\.23\.4[\s\S]*?node-version: "22\.23\.4"[\s\S]*?run: npm run check:node-runtime[\s\S]*?run: npm test/u,
+    /- name: Use Node\.js 22\.23\.4[\s\S]*?node-version: "22\.23\.4"[\s\S]*?run: node tools\/check-node-runtime\.mjs[\s\S]*?run: npm test/u,
   );
   assert.match(workflow, /node-version: \["24\.22\.1", "26\.12\.1"\]/u);
-  assert.match(workflow, /run: npm run test:visual-contracts/u);
+  assert.match(
+    workflow,
+    /node-owned-graph-matrix:[\s\S]*?fetch-depth: 0[\s\S]*?run: npm run test:node-owned/u,
+  );
   for (const family of visualContractFamilies)
     assert.match(
       workflow,
@@ -147,6 +150,11 @@ test("visual-contract packages run across the declared security-fixed Node.js co
     rootPackage.engines.node,
     ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1 <27",
   );
+  assert.deepEqual(rootPackage.devEngines.runtime, {
+    name: "node",
+    version: rootPackage.engines.node,
+    onFail: "error",
+  });
   const documentedNodeCoordinate = "Node.js 22, 24, or 26";
   const continuousNodeRange = /Node\.js (?:>=22 <27|22 through 26|22–26)/u;
   for (const family of visualContractFamilies) {
@@ -157,6 +165,7 @@ test("visual-contract packages run across the declared security-fixed Node.js co
     const artifactManifest = JSON.parse(artifactManifestText);
     assert.equal(packageManifest.engines.node, rootPackage.engines.node);
     assert.equal(packageLock.packages[""].engines.node, rootPackage.engines.node);
+    assert.deepEqual(packageManifest.devEngines, rootPackage.devEngines);
     assert.match(artifactManifest.execution.runtime, new RegExp(documentedNodeCoordinate, "u"));
     assert.doesNotMatch(artifactManifestText, continuousNodeRange);
   }

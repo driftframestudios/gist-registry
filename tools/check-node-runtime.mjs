@@ -16,6 +16,12 @@ export const NODE_RUNTIME_POLICY = Object.freeze({
   ),
 });
 
+export const NODE_RUNTIME_DEV_ENGINE = Object.freeze({
+  name: "node",
+  version: NODE_RUNTIME_POLICY.engineRange,
+  onFail: "error",
+});
+
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ignoredDirectories = new Set([".artifacts", ".git", "node_modules"]);
 const receiptVersionKeys = [
@@ -36,21 +42,43 @@ function compareTriples(left, right) {
   return 0;
 }
 
+function matchesDevEngine(value) {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    Object.keys(value).length === 3 &&
+    value.name === NODE_RUNTIME_DEV_ENGINE.name &&
+    value.version === NODE_RUNTIME_DEV_ENGINE.version &&
+    value.onFail === NODE_RUNTIME_DEV_ENGINE.onFail
+  );
+}
+
 export function parseNodeVersion(version) {
+  const coordinate = parseNodeCoordinate(version);
+  if (!coordinate || coordinate.prerelease) return null;
+  return coordinate.version;
+}
+
+export function parseNodeCoordinate(version) {
   const match =
-    /^v?(\d+)\.(\d+)\.(\d+)(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u.exec(version);
+    /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/u.exec(
+      version,
+    );
   if (!match) return null;
-  return match.slice(1).map(Number);
+  return {
+    version: match.slice(1, 4).map(Number),
+    prerelease: match[4] ?? null,
+    build: match[5] ?? null,
+  };
 }
 
 export function assessNodeVersion(version) {
-  const parsed = parseNodeVersion(version);
-  const supportedMajors = [...NODE_RUNTIME_POLICY.floors.keys()];
+  const coordinate = parseNodeCoordinate(version);
   const remediation =
     "Select Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line; " +
     `the reviewed local default is ${NODE_RUNTIME_POLICY.localDefault} via .nvmrc.`;
 
-  if (!parsed) {
+  if (!coordinate) {
     return {
       accepted: false,
       code: "NODE_VERSION_FORMAT",
@@ -58,6 +86,17 @@ export function assessNodeVersion(version) {
       remediation,
     };
   }
+
+  if (coordinate.prerelease) {
+    return {
+      accepted: false,
+      code: "NODE_PRERELEASE_OUTSIDE_POLICY",
+      reason: `Node.js ${version} is a prerelease coordinate; production admission uses a stable release at or above the accepted floor.`,
+      remediation,
+    };
+  }
+
+  const parsed = coordinate.version;
 
   const floor = NODE_RUNTIME_POLICY.floors.get(parsed[0]);
   if (!floor) {
@@ -117,6 +156,14 @@ export async function inspectPackageRuntimeContracts(root = repositoryRoot) {
         path: repositoryPath(manifestPath),
         observed: manifest.engines?.node ?? null,
         expected: NODE_RUNTIME_POLICY.engineRange,
+      });
+    }
+    if (!matchesDevEngine(manifest.devEngines?.runtime)) {
+      findings.push({
+        code: "NODE_DEV_ENGINE_DRIFT",
+        path: repositoryPath(manifestPath),
+        observed: manifest.devEngines?.runtime ?? null,
+        expected: NODE_RUNTIME_DEV_ENGINE,
       });
     }
 
