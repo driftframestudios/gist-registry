@@ -1,11 +1,13 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { buildPages, checkProjection } from "./build-pages.mjs";
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 
@@ -48,7 +50,7 @@ export async function checkSiteRelease({ root = repositoryRoot, output = resolve
   return { ...identity, ...checked, standing: "ready_for_authorized_docs_promotion" };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+if (isDirectNodeInvocation(import.meta.url)) {
   try {
     const { values } = parseArgs({ options: { tag: { type: "string" }, output: { type: "string" } } });
     console.log(JSON.stringify(await checkSiteRelease({ tag: values.tag, output: values.output }), null, 2));

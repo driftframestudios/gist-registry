@@ -1,3 +1,5 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -8,6 +10,8 @@ import { fileURLToPath } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const execFileAsync = promisify(execFile);
 const modulePath = fileURLToPath(import.meta.url);
@@ -541,7 +545,7 @@ export async function checkDeliveryObservations({ root = repositoryRoot } = {}) 
   };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   checkDeliveryObservations()
     .then(({ schemaVersion, observationCount }) => {
       console.log(

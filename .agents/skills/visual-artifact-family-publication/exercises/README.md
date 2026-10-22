@@ -1,10 +1,14 @@
 # Exercise: admit and publish one visual family
 
-Run:
+From this skill package, including a copied public package:
 
 ```sh
-node .agents/skills/visual-artifact-family-publication/exercises/exercise.mjs
+npm run exercise
 ```
+
+The package manifest admits the active Node runtime before the exercise starts.
+From the Gist Registry root, the equivalent route is
+`npm run exercise:skill:visual-artifact-family-publication`.
 
 The exercise checks source ownership, rights, intrinsic dimensions, three
 responsive targets, distinct alternative text and caption, unique SVG IDs,

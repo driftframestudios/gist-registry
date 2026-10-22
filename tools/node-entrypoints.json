@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "1.0.0",
+  "diagnosticEntrypoints": [
+    "tools/check-node-runtime.mjs"
+  ],
+  "supportModules": [
+    "tests/fixtures/override-node-version.mjs",
+    "tools/node-cli-entrypoint.mjs",
+    "tools/node-runtime-guard.mjs",
+    "tools/node-runtime-policy.mjs",
+    "tools/portable-node-cli-entrypoint.mjs",
+    "tools/portable-node-runtime-admission.mjs",
+    "tools/public-skills.mjs"
+  ],
+  "selfGuardedTestRoots": [
+    "tests"
+  ],
+  "selfGuardedEntrypoints": [
+    "tools/build-pages.mjs",
+    "tools/check-delivery-observations.mjs",
+    "tools/check-node-entrypoints.mjs",
+    "tools/check-orientation.mjs",
+    "tools/check-public-boundary.mjs",
+    "tools/check-public-skills.mjs",
+    "tools/check-readme-routes.mjs",
+    "tools/check-registry.mjs",
+    "tools/check-schema.mjs",
+    "tools/check-site-release.mjs",
+    "tools/check-skill-exercises.mjs",
+    "tools/install-betterleaks.mjs",
+    "tools/observe-pages.mjs",
+    "tools/scan-secret-material.mjs",
+    "tools/test-postgresql-sample.mjs"
+  ],
+  "identityGuardedEntrypoints": [
+    "tools/build-pages.mjs",
+    "tools/check-delivery-observations.mjs",
+    "tools/check-node-entrypoints.mjs",
+    "tools/check-orientation.mjs",
+    "tools/check-public-boundary.mjs",
+    "tools/check-public-skills.mjs",
+    "tools/check-readme-routes.mjs",
+    "tools/check-registry.mjs",
+    "tools/check-schema.mjs",
+    "tools/check-site-release.mjs",
+    "tools/install-betterleaks.mjs",
+    "tools/observe-pages.mjs",
+    "tools/scan-secret-material.mjs"
+  ],
+  "eagerEntrypoints": [
+    "tools/check-skill-exercises.mjs",
+    "tools/test-postgresql-sample.mjs"
+  ],
+  "packageGuardedRoots": [
+    ".agents/skills/design-token-pipeline-stewardship",
+    ".agents/skills/secret-boundary-inspection",
+    ".agents/skills/semantic-visual-receiver-contracts",
+    ".agents/skills/visual-artifact-family-publication",
+    ".agents/skills/visual-contract-receipt-design",
+    "snippets/cross-browser-visual-contract-observer/0.1.0",
+    "snippets/figma-variable-sync-reconciliation/0.1.0",
+    "snippets/react-aria-visual-contract-receiver/0.1.0",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0",
+    "snippets/typed-absence-and-wire-shape/0.1.0",
+    "snippets/visual-pattern-artifact-compiler/0.1.0"
+  ],
+  "packageGuardedEntrypoints": [
+    ".agents/skills/design-token-pipeline-stewardship/exercises/exercise.mjs",
+    ".agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+    ".agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+    ".agents/skills/semantic-visual-receiver-contracts/exercises/exercise.mjs",
+    ".agents/skills/visual-artifact-family-publication/exercises/exercise.mjs",
+    ".agents/skills/visual-contract-receipt-design/exercises/exercise.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/playwright.config.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/tools/run-example.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/tools/serve-bound-receiver.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/example.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/tools/verify-build.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/vite.config.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/build-candidates.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/make-manifest.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/run-example.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/validate-source.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/verify-generated.mjs",
+    "snippets/typed-absence-and-wire-shape/0.1.0/run-example.mjs",
+    "snippets/visual-pattern-artifact-compiler/0.1.0/playwright.config.mjs",
+    "snippets/visual-pattern-artifact-compiler/0.1.0/tools/build-artifacts.mjs",
+    "snippets/visual-pattern-artifact-compiler/0.1.0/tools/serve-gallery.mjs"
+  ],
+  "packageIdentityGuardedEntrypoints": [
+    "snippets/react-aria-visual-contract-receiver/0.1.0/tools/verify-build.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/build-candidates.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/make-manifest.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/validate-source.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/verify-generated.mjs"
+  ],
+  "packageSupportModules": [
+    "snippets/cross-browser-visual-contract-observer/0.1.0/src/browser-observer.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/src/contracts.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/src/publication.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/src/receipt-schema.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/tests/helpers.mjs",
+    "snippets/cross-browser-visual-contract-observer/0.1.0/tools/paths.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/canonical.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/coordinator.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/errors.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/fake-remote.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/planner.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/remote-contract.mjs",
+    "snippets/figma-variable-sync-reconciliation/0.1.0/src/stores.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/node-cli-entrypoint.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/src/controller.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/src/model.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/tests/setup.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/tools/bounded-files.mjs",
+    "snippets/react-aria-visual-contract-receiver/0.1.0/tools/token-projection.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/adapters/figma-snapshot-to-dtcg.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/config/build-matrix.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/config/style-dictionary.config.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/node-cli-entrypoint.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/src/contract.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/src/publication.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/load-coordinate.mjs",
+    "snippets/style-dictionary-dtcg-pipeline/0.1.0/tools/paths.mjs",
+    "snippets/visual-pattern-artifact-compiler/0.1.0/src/compiler.mjs"
+  ],
+  "preloadedScripts": [
+    {
+      "manifest": "package.json",
+      "script": "test:node"
+    },
+    {
+      "manifest": "package.json",
+      "script": "test:secret-material"
+    }
+  ],
+  "publicExerciseRoutes": [
+    {
+      "manifest": ".agents/skills/design-token-pipeline-stewardship/package.json",
+      "path": ".agents/skills/design-token-pipeline-stewardship/exercises/exercise.mjs",
+      "packageCommand": "node exercises/exercise.mjs",
+      "packageScript": "exercise",
+      "rootScript": "exercise:skill:design-token-pipeline-stewardship"
+    },
+    {
+      "manifest": ".agents/skills/secret-boundary-inspection/package.json",
+      "path": ".agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
+      "packageCommand": "node exercises/exercise.mjs",
+      "packageScript": "exercise",
+      "rootScript": "exercise:skill:secret-boundary-inspection"
+    },
+    {
+      "manifest": ".agents/skills/secret-boundary-inspection/package.json",
+      "path": ".agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+      "packageCommand": "node --test exercises/source-identity.test.mjs",
+      "packageScript": "test:source-identity",
+      "rootScript": "test:skill:secret-boundary-source-identity"
+    },
+    {
+      "manifest": ".agents/skills/semantic-visual-receiver-contracts/package.json",
+      "path": ".agents/skills/semantic-visual-receiver-contracts/exercises/exercise.mjs",
+      "packageCommand": "node exercises/exercise.mjs",
+      "packageScript": "exercise",
+      "rootScript": "exercise:skill:semantic-visual-receiver-contracts"
+    },
+    {
+      "manifest": ".agents/skills/visual-artifact-family-publication/package.json",
+      "path": ".agents/skills/visual-artifact-family-publication/exercises/exercise.mjs",
+      "packageCommand": "node exercises/exercise.mjs",
+      "packageScript": "exercise",
+      "rootScript": "exercise:skill:visual-artifact-family-publication"
+    },
+    {
+      "manifest": ".agents/skills/visual-contract-receipt-design/package.json",
+      "path": ".agents/skills/visual-contract-receipt-design/exercises/exercise.mjs",
+      "packageCommand": "node exercises/exercise.mjs",
+      "packageScript": "exercise",
+      "rootScript": "exercise:skill:visual-contract-receipt-design"
+    }
+  ]
+}

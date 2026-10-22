@@ -1,3 +1,5 @@
+import "./node-runtime-guard.mjs";
+
 import { spawnSync } from "node:child_process";
 
 // The explicitly named database route always runs its live proof or holds.

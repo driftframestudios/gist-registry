@@ -1,7 +1,11 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const modulePath = fileURLToPath(import.meta.url);
 const repositoryRoot = resolve(dirname(modulePath), "..");
@@ -25,7 +29,7 @@ export async function checkRootReadmeCanaryPrefix({ root = repositoryRoot } = {}
   return { checkedPath: "README.md", byteCount: Buffer.byteLength(rootReadmeCanaryPrefix) };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   checkRootReadmeCanaryPrefix()
     .then(({ checkedPath, byteCount }) => {
       console.log(`public-boundary check: passed (${checkedPath}, ${byteCount} prefix bytes)`);

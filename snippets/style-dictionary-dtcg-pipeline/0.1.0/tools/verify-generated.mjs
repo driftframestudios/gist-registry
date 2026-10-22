@@ -1,3 +1,7 @@
+import "../node-runtime-admission.mjs";
+
+import { isDirectNodeInvocation } from "../node-cli-entrypoint.mjs";
+
 import { lstat, opendir } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { BUILD_MATRIX, coordinateId } from "../config/build-matrix.mjs";
@@ -199,7 +203,7 @@ export async function verifyGenerated({ outputRoot }) {
   return { artifactCount: artifacts.length, generatedBytes, artifacts };
 }
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (isDirectNodeInvocation(import.meta.url)) {
   const outputRoot = parseOutputArgument(process.argv.slice(2), ".artifacts/candidate");
   verifyGenerated({ outputRoot })
     .then(result => process.stdout.write(stableStringify(result)))

@@ -1,8 +1,11 @@
+import "./node-runtime-guard.mjs";
+
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 const root = resolve(import.meta.dirname, "..");
+const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const pythonExamples = [
   ["visualization-question-routing", "exercise.py", "--check"],
   ["longitudinal-observation-visualization", "exercise.py", "--check"],
@@ -18,10 +21,10 @@ const pythonExamples = [
 ];
 
 const nodeExamples = [
-  ["design-token-pipeline-stewardship", "exercise.mjs"],
-  ["semantic-visual-receiver-contracts", "exercise.mjs"],
-  ["visual-contract-receipt-design", "exercise.mjs"],
-  ["visual-artifact-family-publication", "exercise.mjs"],
+  ["design-token-pipeline-stewardship", "exercise"],
+  ["semantic-visual-receiver-contracts", "exercise"],
+  ["visual-contract-receipt-design", "exercise"],
+  ["visual-artifact-family-publication", "exercise"],
 ];
 
 const runtimeModes = new Set(["all", "node", "python"]);
@@ -61,9 +64,9 @@ if (
 if (
   !process.exitCode &&
   values.runtime !== "python" &&
-  !exercise(nodeExamples, (name, script) => [
-    process.execPath,
-    [`.agents/skills/${name}/exercises/${script}`],
+  !exercise(nodeExamples, (name, script, args) => [
+    npm,
+    ["--prefix", `.agents/skills/${name}`, "run", script, "--", ...args],
   ])
 ) {
   process.exitCode = 1;
@@ -71,15 +74,12 @@ if (
 
 if (!process.exitCode && values.runtime !== "python") {
   const nodeOnlyExamples = [
-    ["secret-boundary-inspection", "exercise.mjs"],
-    ["receiver source identity", "source-identity.test.mjs", "--test"],
+    ["secret-boundary-inspection", "exercise"],
+    ["secret-boundary-inspection", "test:source-identity"],
   ];
   if (!exercise(nodeOnlyExamples, (name, script, args) => [
-    process.execPath,
-    [
-      ...(args.includes("--test") ? ["--test"] : []),
-      `.agents/skills/secret-boundary-inspection/exercises/${script}`,
-    ],
+    npm,
+    ["--prefix", `.agents/skills/${name}`, "run", script, "--", ...args],
   ])) {
     process.exitCode = 1;
   }

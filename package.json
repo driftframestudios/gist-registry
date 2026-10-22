@@ -15,6 +15,7 @@
   },
   "scripts": {
     "check:node-runtime": "node tools/check-node-runtime.mjs",
+    "check:node-entrypoints": "node tools/check-node-entrypoints.mjs",
     "prebuild:pages": "npm run check:node-runtime",
     "build:pages": "node tools/build-pages.mjs",
     "precheck:pages": "npm run check:node-runtime",
@@ -65,9 +66,9 @@
     "check:python-lock:instrument-ingress-integrity:0.1.0": "uv --cache-dir .artifacts/uv-cache lock --project snippets/instrument-ingress-integrity/0.1.0 --check",
     "check:python-lock:migration-reconciliation-cutover:0.1.0": "uv --cache-dir .artifacts/uv-cache lock --project snippets/migration-reconciliation-cutover/0.1.0 --check",
     "check:python-lock": "npm run check:python-lock:0.1.0 && npm run check:python-lock:0.1.1 && npm run check:python-lock:specimen-custody-outbox:0.1.0 && npm run check:python-lock:instrument-ingress-integrity:0.1.0 && npm run check:python-lock:migration-reconciliation-cutover:0.1.0 && npm run check:python-lock:postgresql-pending-outbox-query:0.1.0",
-    "test:node": "node --test tests/*.test.mjs && npm run test:secret-material && npm run check:public-boundary && npm run check:orientation && npm run check:readme-routes && npm run check:registry && npm run check:schema && npm run check:delivery-observations && npm run check:public-skills && npm run check:pages",
+    "test:node": "node --import ./tools/node-runtime-guard.mjs --test tests/*.test.mjs && npm run test:secret-material && npm run check:node-entrypoints && npm run check:public-boundary && npm run check:orientation && npm run check:readme-routes && npm run check:registry && npm run check:schema && npm run check:delivery-observations && npm run check:public-skills && npm run check:pages",
     "test:node-owned": "npm run test:node && npm run test:typescript && npm run test:visual-contracts && npm run test:skill-exercises:node",
-    "test:secret-material": "node --test tests/security/secret-material.test.mjs",
+    "test:secret-material": "node --import ./tools/node-runtime-guard.mjs --test tests/security/secret-material.test.mjs",
     "lint:python:0.1.0": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked ruff check snippets/document-evidence-extraction/0.1.0/src snippets/document-evidence-extraction/0.1.0/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.0 --locked ruff format --check snippets/document-evidence-extraction/0.1.0/src snippets/document-evidence-extraction/0.1.0/tests",
     "lint:python:0.1.1": "uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.1 --locked ruff check snippets/document-evidence-extraction/0.1.1/src snippets/document-evidence-extraction/0.1.1/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/document-evidence-extraction/0.1.1 --locked ruff format --check snippets/document-evidence-extraction/0.1.1/src snippets/document-evidence-extraction/0.1.1/tests",
     "lint:python:specimen-custody-outbox:0.1.0": "uv --cache-dir .artifacts/uv-cache run --project snippets/specimen-custody-outbox/0.1.0 --locked ruff check snippets/specimen-custody-outbox/0.1.0/src snippets/specimen-custody-outbox/0.1.0/tests && uv --cache-dir .artifacts/uv-cache run --project snippets/specimen-custody-outbox/0.1.0 --locked ruff format --check snippets/specimen-custody-outbox/0.1.0/src snippets/specimen-custody-outbox/0.1.0/tests",
@@ -90,7 +91,13 @@
     "test:postgresql:pending-outbox:0.1.0": "node tools/test-postgresql-sample.mjs",
     "test:skill-exercises": "node tools/check-skill-exercises.mjs --runtime all",
     "test:skill-exercises:node": "node tools/check-skill-exercises.mjs --runtime node",
-    "test:skill-exercises:python": "node tools/check-skill-exercises.mjs --runtime python"
+    "test:skill-exercises:python": "node tools/check-skill-exercises.mjs --runtime python",
+    "exercise:skill:design-token-pipeline-stewardship": "npm --prefix .agents/skills/design-token-pipeline-stewardship run exercise",
+    "exercise:skill:semantic-visual-receiver-contracts": "npm --prefix .agents/skills/semantic-visual-receiver-contracts run exercise",
+    "exercise:skill:visual-contract-receipt-design": "npm --prefix .agents/skills/visual-contract-receipt-design run exercise",
+    "exercise:skill:visual-artifact-family-publication": "npm --prefix .agents/skills/visual-artifact-family-publication run exercise",
+    "exercise:skill:secret-boundary-inspection": "npm --prefix .agents/skills/secret-boundary-inspection run exercise",
+    "test:skill:secret-boundary-source-identity": "npm --prefix .agents/skills/secret-boundary-inspection run test:source-identity"
   },
   "devDependencies": {
     "ajv": "8.20.0",

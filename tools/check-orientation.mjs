@@ -1,7 +1,11 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const modulePath = fileURLToPath(import.meta.url);
 const repositoryRoot = resolve(dirname(modulePath), "..");
@@ -312,7 +316,7 @@ export async function checkOrientationSelection({
   return result;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   checkOrientationSelection()
     .then(({ recordCount, profileCount, defaultRecordCount }) => {
       console.log(

@@ -1,10 +1,14 @@
 # Exercise: carry one token contract into two receivers
 
-Run from the repository root:
+From this skill package, including a copied public package:
 
 ```sh
-node .agents/skills/design-token-pipeline-stewardship/exercises/exercise.mjs
+npm run exercise
 ```
+
+The package manifest admits the active Node runtime before the exercise starts.
+From the Gist Registry root, the equivalent route is
+`npm run exercise:skill:design-token-pipeline-stewardship`.
 
 The exercise admits a synthetic primitive → semantic → component chain,
 validates aliases and the finite brand/mode matrix, checks two target

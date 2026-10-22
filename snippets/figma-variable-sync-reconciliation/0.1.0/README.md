@@ -14,7 +14,7 @@ rate, and workspace authority.
 
 ## Run the example
 
-Requires Node.js 22, 24, or 26.
+Requires Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line.
 
 ```sh
 npm --prefix snippets/figma-variable-sync-reconciliation/0.1.0 ci --ignore-scripts

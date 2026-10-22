@@ -1,3 +1,7 @@
+import "../node-runtime-admission.mjs";
+
+import { isDirectNodeInvocation } from "../node-cli-entrypoint.mjs";
+
 import assert from "node:assert/strict";
 import {createHash, randomUUID} from "node:crypto";
 import {constants as fsConstants} from "node:fs";
@@ -582,6 +586,6 @@ export async function verifyBuild() {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isDirectNodeInvocation(import.meta.url)) {
   await verifyBuild();
 }

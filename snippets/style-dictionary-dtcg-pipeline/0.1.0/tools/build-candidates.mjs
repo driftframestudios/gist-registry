@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import { lstat, mkdir, opendir, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import StyleDictionary from "style-dictionary";
@@ -6,6 +8,7 @@ import { createStyleDictionaryConfig, registerKindlightFormats } from "../config
 import { DEFAULT_LIMITS, PipelineError, stableStringify } from "../src/contract.mjs";
 import { loadCoordinate } from "./load-coordinate.mjs";
 import { packageRoot, parseOutputArgument } from "./paths.mjs";
+import { isDirectNodeInvocation } from "../node-cli-entrypoint.mjs";
 
 registerKindlightFormats(StyleDictionary);
 
@@ -80,7 +83,7 @@ export async function buildCandidates({ outputRoot, beforeCoordinate = async () 
   }
 }
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (isDirectNodeInvocation(import.meta.url)) {
   const outputRoot = parseOutputArgument(process.argv.slice(2), ".artifacts/candidate");
   buildCandidates({ outputRoot })
     .then(result => process.stdout.write(stableStringify({ built: result.built, observation: result.observation })))

@@ -1,8 +1,12 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 export const defaultProjectionRoot = ".artifacts/pages";
 export const projectionManifestFile = "projection-manifest.json";
@@ -217,7 +221,7 @@ export async function observePages({
   };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   observePages()
     .then(summary => {
       console.log(JSON.stringify(summary, null, 2));

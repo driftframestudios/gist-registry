@@ -1,7 +1,10 @@
+import "../node-runtime-admission.mjs";
+
 import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
 import {lstat, mkdtemp, mkdir, readFile, rename, rm, symlink, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join, resolve} from "node:path";
 import test from "node:test";
 import {
   BuildBoundaryError,
@@ -239,4 +242,42 @@ test("evidence output rejects a same-size destination-byte mutation", async () =
         error.details.reason === "file_bytes_changed"
     );
   });
+});
+
+test("the build verifier runs through its canonical and symbolic-link routes", async (context) => {
+  if (process.platform === "win32") return;
+  const packageRoot = resolve(import.meta.dirname, "..");
+  const verifier = resolve(packageRoot, "tools/verify-build.mjs");
+  const root = await mkdtemp(join(tmpdir(), "receiver-verifier-link-"));
+  context.after(() => rm(root, {recursive: true, force: true}));
+  const link = join(root, "verify-build.mjs");
+  const override = join(root, "override-node-version.mjs");
+  await symlink(verifier, link);
+  await writeFile(
+    override,
+    'Object.defineProperty(process, "version", { value: "v26.11.0" });\n'
+  );
+
+  const direct = spawnSync(process.execPath, [verifier], {
+    cwd: packageRoot,
+    encoding: "utf8"
+  });
+  const linked = spawnSync(process.execPath, [link], {
+    cwd: packageRoot,
+    encoding: "utf8"
+  });
+  assert.equal(direct.status, 0, direct.stderr);
+  assert.equal(linked.status, 0, linked.stderr);
+  const directReceipt = JSON.parse(direct.stdout);
+  const linkedReceipt = JSON.parse(linked.stdout);
+  assert.equal(linkedReceipt.coordinate, directReceipt.coordinate);
+  assert.equal(linkedReceipt.manifest.sha256, directReceipt.manifest.sha256);
+  assert.deepEqual(linkedReceipt.measurements, directReceipt.measurements);
+
+  const stale = spawnSync(process.execPath, ["--import", override, link], {
+    cwd: packageRoot,
+    encoding: "utf8"
+  });
+  assert.notEqual(stale.status, 0);
+  assert.match(stale.stderr, /NODE_SECURITY_FLOOR/u);
 });

@@ -3,7 +3,7 @@
   "coordinate": "react-aria-visual-contract-receiver@0.1.0",
   "deterministicManifestSha256": "4a3a1dc6534a17288dd6ae09c416009415e52c2bdb400dfca39b4f9916bb95c8",
   "deterministicMeasurements": {
-    "authoredSourceBytes": 69425,
+    "authoredSourceBytes": 69537,
     "directDependencyCount": 9,
     "resolvedPackageCount": 128,
     "specimenCount": 3,
@@ -16,6 +16,7 @@
   "profiledMeasurements": {
     "runtimeJavaScriptGzipBytes": {
       "observed": 126142,
+      "standing": "historical_pre_floor_observation",
       "coordinate": {
         "node": "26.11.0",
         "zlib": "1.2.12",

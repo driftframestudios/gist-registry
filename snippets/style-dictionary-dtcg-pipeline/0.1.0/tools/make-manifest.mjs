@@ -1,3 +1,7 @@
+import "../node-runtime-admission.mjs";
+
+import { isDirectNodeInvocation } from "../node-cli-entrypoint.mjs";
+
 import { lstat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { BUILD_MATRIX, coordinateId } from "../config/build-matrix.mjs";
@@ -90,7 +94,7 @@ export async function createManifest({ outputRoot, sourceLoader = loadCoordinate
   return manifest;
 }
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (isDirectNodeInvocation(import.meta.url)) {
   const args = process.argv.slice(2);
   const outputRoot = parseOutputArgument(args, ".artifacts/candidate");
   createManifest({ outputRoot })

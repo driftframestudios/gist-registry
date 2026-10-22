@@ -1,10 +1,14 @@
 # Exercise: map decisions to direct evidence
 
-Run:
+From this skill package, including a copied public package:
 
 ```sh
-node .agents/skills/visual-contract-receipt-design/exercises/exercise.mjs
+npm run exercise
 ```
+
+The package manifest admits the active Node runtime before the exercise starts.
+From the Gist Registry root, the equivalent route is
+`npm run exercise:skill:visual-contract-receipt-design`.
 
 The fixture maps five decisions to five evidence classes, gives each a
 controlled fault and consequence, selects the changed-boundary tier, and

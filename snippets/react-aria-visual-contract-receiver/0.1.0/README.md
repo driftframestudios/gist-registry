@@ -19,9 +19,9 @@ accepted or rejected authority, and repeated release remains safe to inspect.
 
 ## Start here
 
-Requires Node.js 22, 24, or 26. The checked lock resolves in Node.js `26.11.0`;
-some development-only transitive packages require a current Node 22, 24, or 26
-maintenance release.
+Use Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line. The package and lock share this
+admission contract, and package-local commands report the matching upgrade
+coordinate when a runtime falls below its line's floor.
 
 ```sh
 npm --prefix snippets/react-aria-visual-contract-receiver/0.1.0 ci --ignore-scripts
@@ -196,18 +196,20 @@ performance budget, security posture, and release decision.
 
 ## Measured build and review budgets
 
-The reviewed Node.js `26.11.0`, zlib `1.2.12`, Vite `8.3.5`, macOS ARM64
-coordinate produced the following baseline. Authored and emitted byte counts,
+The active deterministic baseline is verified across the admitted Node.js
+`22.23.4+`, `24.22.1+`, and `26.12.1+` maintenance lines. Authored and emitted byte counts,
 dependency counts, specimens, transitions, and the build manifest remain exact
 across the supported Node lanes. Gzip size belongs to its Node, zlib, platform,
 architecture, format, and level coordinate because compression implementations
 can produce distinct valid byte streams. Every profile must remain within the
 declared threshold; a matching profile must also match its exact reviewed
-observation.
+observation. The gzip row retains a historical pre-floor observation from
+Node.js `26.11.0`, zlib `1.2.12`, Vite `8.3.5`, and macOS ARM64 so later
+measurements remain comparable to the originally accepted compression profile.
 
 | Dimension | Measured | Review threshold |
 | --- | ---: | ---: |
-| Authored receiver source | 69,425 bytes | 70,000 bytes |
+| Authored receiver source | 69,537 bytes | 70,000 bytes |
 | Direct runtime and development dependencies | 9 | 12 |
 | Lock-resolved package entries | 128 | 150 |
 | Stable specimens | 3 | 25 |

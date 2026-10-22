@@ -1,8 +1,12 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const modulePath = fileURLToPath(import.meta.url);
 const repositoryRoot = resolve(dirname(modulePath), "..");
@@ -222,7 +226,7 @@ export async function checkRegistry({ root = repositoryRoot } = {}) {
   return { artifactCount: registry.entries.length };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   checkRegistry()
     .then(({ artifactCount }) => console.log(`registry check: passed (${artifactCount} artifact)`))
     .catch(error => {

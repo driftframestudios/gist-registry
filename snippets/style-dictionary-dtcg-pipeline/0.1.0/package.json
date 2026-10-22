@@ -14,13 +14,11 @@
     }
   },
   "scripts": {
-    "check:node-runtime": "node ../../../tools/check-node-runtime.mjs",
     "validate": "node tools/validate-source.mjs",
     "build": "node tools/build-candidates.mjs",
     "verify": "node tools/verify-generated.mjs",
     "manifest": "node tools/make-manifest.mjs",
     "example": "node tools/run-example.mjs",
-    "pretest": "npm run check:node-runtime",
     "test": "node --test tests/*.test.mjs"
   },
   "devDependencies": {

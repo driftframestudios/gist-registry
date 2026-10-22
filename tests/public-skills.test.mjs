@@ -1,3 +1,5 @@
+import "../tools/node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import {
   cp,
@@ -158,7 +160,8 @@ test("the complete Node-owned graph runs across the declared security-fixed coor
   assert.match(rootPackage.scripts["test:node-owned"], /test:skill-exercises:node/u);
   assert.doesNotMatch(rootPackage.scripts["test:node-owned"], /test:skill-exercises:python/u);
   assert.match(rootPackage.scripts.test, /test:skill-exercises:python/u);
-  const documentedNodeCoordinate = "Node.js 22, 24, or 26";
+  const documentedNodeCoordinate =
+    /Node\.js\s+22\.23\.4\+,\s+24\.22\.1\+,\s+or\s+26\.12\.1\+\s+within\s+its\s+major\s+line/u;
   const continuousNodeRange = /Node\.js (?:>=22 <27|22 through 26|22–26)/u;
   for (const family of visualContractFamilies) {
     const packageRoot = resolve(repositoryRoot, "snippets", family, "0.1.0");
@@ -169,18 +172,39 @@ test("the complete Node-owned graph runs across the declared security-fixed coor
     assert.equal(packageManifest.engines.node, rootPackage.engines.node);
     assert.equal(packageLock.packages[""].engines.node, rootPackage.engines.node);
     assert.deepEqual(packageManifest.devEngines, rootPackage.devEngines);
-    assert.match(artifactManifest.execution.runtime, new RegExp(documentedNodeCoordinate, "u"));
+    assert.match(artifactManifest.execution.runtime, documentedNodeCoordinate);
     assert.doesNotMatch(artifactManifestText, continuousNodeRange);
   }
   for (const documentationPath of [
+    ".agents/skills/design-token-pipeline-stewardship/references/tool-and-runtime-boundaries.md",
+    ".agents/skills/visual-artifact-family-publication/references/renderer-svg-and-metadata-boundaries.md",
     "planning/visual-contract-official-source-review.md",
     "snippets/react-aria-visual-contract-receiver/0.1.0/README.md",
     "snippets/figma-variable-sync-reconciliation/0.1.0/README.md",
   ]) {
     const documentation = await readFile(resolve(repositoryRoot, documentationPath), "utf8");
-    assert.match(documentation, new RegExp(documentedNodeCoordinate, "u"));
+    assert.match(documentation, documentedNodeCoordinate);
     assert.doesNotMatch(documentation, continuousNodeRange);
   }
+  const rendererBoundary = await readFile(
+    resolve(
+      repositoryRoot,
+      ".agents/skills/visual-artifact-family-publication/references/renderer-svg-and-metadata-boundaries.md",
+    ),
+    "utf8",
+  );
+  assert.match(
+    rendererBoundary,
+    /Sharp 0\.35\.5 supports Node\.js 20\.9 or newer upstream\.[\s\S]*?This package applies the[\s\S]*?admission contract: Node\.js 22\.23\.4\+, 24\.22\.1\+, or 26\.12\.1\+ within its[\s\S]*?major line/u,
+  );
+  const sourceReview = await readFile(
+    resolve(repositoryRoot, "planning/visual-contract-official-source-review.md"),
+    "utf8",
+  );
+  assert.match(
+    sourceReview,
+    /\| Sharp and libvips \|[^\n]*upstream Node 20\.9\+ minimum; repository admission uses Node\.js 22\.23\.4\+, 24\.22\.1\+, or 26\.12\.1\+ within its major line;/u,
+  );
   assert.equal(
     rootPackage.scripts["prepare:visual-contracts:browsers"],
     "npm run prepare:visual-contracts:receiver:0.1.0 && npm run prepare:visual-contracts:observer:0.1.0 && npm run prepare:visual-contracts:artifact-compiler:0.1.0",

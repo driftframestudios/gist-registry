@@ -4,23 +4,22 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const NODE_RUNTIME_POLICY = Object.freeze({
-  engineRange: ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1 <27",
-  localDefault: "24.22.1",
-  floors: Object.freeze(
-    new Map([
-      [22, Object.freeze([22, 23, 4])],
-      [24, Object.freeze([24, 22, 1])],
-      [26, Object.freeze([26, 12, 1])],
-    ]),
-  ),
-});
+import {
+  NODE_RUNTIME_DEV_ENGINE,
+  NODE_RUNTIME_POLICY,
+  assessNodeVersion,
+} from "./node-runtime-policy.mjs";
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
-export const NODE_RUNTIME_DEV_ENGINE = Object.freeze({
-  name: "node",
-  version: NODE_RUNTIME_POLICY.engineRange,
-  onFail: "error",
-});
+export {
+  NODE_RUNTIME_DEV_ENGINE,
+  NODE_RUNTIME_POLICY,
+  assessNodeVersion,
+  assertNodeRuntime,
+  NodeRuntimeAdmissionError,
+  parseNodeCoordinate,
+  parseNodeVersion,
+} from "./node-runtime-policy.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ignoredDirectories = new Set([".artifacts", ".git", "node_modules"]);
@@ -35,13 +34,6 @@ const receiptVersionKeys = [
   "brotli",
 ];
 
-function compareTriples(left, right) {
-  for (let index = 0; index < 3; index += 1) {
-    if (left[index] !== right[index]) return left[index] - right[index];
-  }
-  return 0;
-}
-
 function matchesDevEngine(value) {
   return (
     value !== null &&
@@ -51,77 +43,6 @@ function matchesDevEngine(value) {
     value.version === NODE_RUNTIME_DEV_ENGINE.version &&
     value.onFail === NODE_RUNTIME_DEV_ENGINE.onFail
   );
-}
-
-export function parseNodeVersion(version) {
-  const coordinate = parseNodeCoordinate(version);
-  if (!coordinate || coordinate.prerelease) return null;
-  return coordinate.version;
-}
-
-export function parseNodeCoordinate(version) {
-  const match =
-    /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/u.exec(
-      version,
-    );
-  if (!match) return null;
-  return {
-    version: match.slice(1, 4).map(Number),
-    prerelease: match[4] ?? null,
-    build: match[5] ?? null,
-  };
-}
-
-export function assessNodeVersion(version) {
-  const coordinate = parseNodeCoordinate(version);
-  const remediation =
-    "Select Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line; " +
-    `the reviewed local default is ${NODE_RUNTIME_POLICY.localDefault} via .nvmrc.`;
-
-  if (!coordinate) {
-    return {
-      accepted: false,
-      code: "NODE_VERSION_FORMAT",
-      reason: `The active version value ${JSON.stringify(version)} needs a stable major.minor.patch coordinate.`,
-      remediation,
-    };
-  }
-
-  if (coordinate.prerelease) {
-    return {
-      accepted: false,
-      code: "NODE_PRERELEASE_OUTSIDE_POLICY",
-      reason: `Node.js ${version} is a prerelease coordinate; production admission uses a stable release at or above the accepted floor.`,
-      remediation,
-    };
-  }
-
-  const parsed = coordinate.version;
-
-  const floor = NODE_RUNTIME_POLICY.floors.get(parsed[0]);
-  if (!floor) {
-    return {
-      accepted: false,
-      code: "NODE_MAJOR_OUTSIDE_POLICY",
-      reason: `Node.js ${parsed.join(".")} sits outside the supported 22, 24, and 26 release lines.`,
-      remediation,
-    };
-  }
-
-  if (compareTriples(parsed, floor) < 0) {
-    return {
-      accepted: false,
-      code: "NODE_SECURITY_FLOOR",
-      reason: `Node.js ${parsed.join(".")} precedes the accepted ${floor.join(".")} security floor for this release line.`,
-      remediation,
-    };
-  }
-
-  return {
-    accepted: true,
-    code: "NODE_RUNTIME_ACCEPTED",
-    reason: `Node.js ${parsed.join(".")} satisfies the accepted ${floor.join(".")} security floor for this release line.`,
-  };
 }
 
 async function findPackageManifests(directory = repositoryRoot) {
@@ -240,5 +161,4 @@ async function main() {
   }
 }
 
-const invokedPath = process.argv[1] ? resolve(process.argv[1]) : null;
-if (invokedPath === fileURLToPath(import.meta.url)) await main();
+if (isDirectNodeInvocation(import.meta.url)) await main();

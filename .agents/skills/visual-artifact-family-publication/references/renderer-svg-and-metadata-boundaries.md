@@ -2,11 +2,12 @@
 
 ## Sharp and libvips
 
-Sharp 0.35.5 requires Node.js 20.9 or newer. Its prebuilt dependency coordinate
-varies by operating system, CPU, and libc; record the runtime libvips value
-for each exercised platform coordinate. Shared npm locks can require
-care across platforms, so bind byte receipts to OS, architecture, libc, Node,
-Sharp, and libvips.
+Sharp 0.35.5 supports Node.js 20.9 or newer upstream. This package applies the
+narrower admission contract: Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its
+major line. Its prebuilt dependency coordinate varies by operating system, CPU,
+and libc; record the runtime libvips value for each exercised platform
+coordinate. Shared npm locks can require care across platforms, so bind byte
+receipts to OS, architecture, libc, Node, Sharp, and libvips.
 
 Make WebP quality, alpha quality, effort, lossless/near-lossless, animation, and
 color options explicit where they affect bytes. Sharp strips metadata by

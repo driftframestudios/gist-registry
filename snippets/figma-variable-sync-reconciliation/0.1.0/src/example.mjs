@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import { readFile } from "node:fs/promises";
 
 import { canonicalJson } from "./canonical.mjs";

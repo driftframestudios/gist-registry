@@ -72,7 +72,16 @@ declared representation, path, digest, and local schema relationship agrees.
 The shared `devEngines.runtime` contract admits every root and nested `npm run`,
 `npm install`, and `npm ci` boundary, including the locked nested installs that
 use `--ignore-scripts`. The explicit checker adds the structured receipt and
-upgrade route before accepted CI work begins.
+upgrade route before accepted CI work begins. Repository-owned executable
+tools import the same assertion before their work starts, so a direct
+`node tools/...` route carries the same floor. `npm run check:node-entrypoints`
+reconciles that assertion against the static tool, test, configuration, and
+public-exercise inventory. Each portable snippet and JavaScript skill package
+carries a package-local admission module, so copied packages preserve the same
+direct-entrypoint boundary using files carried inside the copied package. The
+diagnostic checker remains the intentional entry route for an earlier runtime
+because its receipt names the recovery coordinate.
+
 Package audit results describe dependency closure separately from this Node
 core receipt. Artifact runtime behavior, Pages delivery, optional Gist
 publication, and downstream suitability retain their focused observations.
@@ -267,6 +276,7 @@ then install dependencies and run the complete fast path:
 ```sh
 nvm use
 npm run check:node-runtime
+npm run check:node-entrypoints
 npm ci
 npm test
 ```

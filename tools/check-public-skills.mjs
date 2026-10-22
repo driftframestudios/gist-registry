@@ -1,9 +1,12 @@
+import "./node-runtime-guard.mjs";
+
 import { execFile } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import { loadPublicSkills } from "./public-skills.mjs";
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const execFileAsync = promisify(execFile);
 const modulePath = fileURLToPath(import.meta.url);
@@ -20,7 +23,7 @@ export async function checkPublicSkills({ root = repositoryRoot } = {}) {
     classifiedCount: model.publicReady.length + model.withheldNames.length,
   };
 }
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   checkPublicSkills()
     .then(result => {
       console.log(
