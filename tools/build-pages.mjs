@@ -1,3 +1,5 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -16,6 +18,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, posix, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 import { checkRootReadmeCanaryPrefix } from "./check-public-boundary.mjs";
 import { checkDeliveryObservations } from "./check-delivery-observations.mjs";
@@ -1518,7 +1522,7 @@ function parseArguments(arguments_) {
   return options;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   Promise.resolve()
     .then(async () => {
       const options = parseArguments(process.argv.slice(2));

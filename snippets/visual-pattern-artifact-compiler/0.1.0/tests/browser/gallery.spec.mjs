@@ -1,3 +1,5 @@
+import "../../node-runtime-admission.mjs";
+
 import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createRequire } from "node:module";

@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";

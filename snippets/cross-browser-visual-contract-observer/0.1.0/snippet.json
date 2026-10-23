@@ -26,7 +26,7 @@
   "provenance": {
     "class": "independent_synthetic_authoring",
     "description": "The faultable receiver, inventory, matrix, faults, observations, schema, tests, and prose are independently authored synthetic material. A focused smoke consumes the separate Issue #62 synthetic production build at its bound digest. Production design files, participant data, operational routes, private context, and product assets remain with their authorized owners.",
-    "temporalScope": "This version exercises Node.js 22, 24, or 26 and Playwright 1.64.1 with lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370. Each receiving operating system, font set, scale, browser binary, and bitmap policy receives its own receipt.",
+    "temporalScope": "This version exercises Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line and Playwright 1.64.1 with lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370. Each receiving operating system, font set, scale, browser binary, and bitmap policy receives its own receipt.",
     "sourceKeys": [
       "independent-authoring:cross-browser-visual-contract-observer",
       "realistic-synthetic:specimen-review-receiver",
@@ -44,6 +44,7 @@
     {"role":"manifest","path":"snippet.json","declaredMediaType":"application/json"},
     {"role":"dependency_definition","path":"package.json","declaredMediaType":"application/json"},
     {"role":"dependency_lock","path":"package-lock.json","declaredMediaType":"application/json"},
+    {"role":"runtime_admission","path":"node-runtime-admission.mjs","declaredMediaType":"text/javascript"},
     {"role":"browser_configuration","path":"playwright.config.mjs","declaredMediaType":"text/javascript"},
     {"role":"source_receiver","path":"source/receiver.html","declaredMediaType":"text/html"},
     {"role":"source_coordinate","path":"source/coordinates.json","declaredMediaType":"application/json"},
@@ -73,7 +74,7 @@
     {"role":"expected_contract","path":"expected/observer-contract.json","declaredMediaType":"application/json"}
   ],
   "execution": {
-    "runtime": "Node.js 22, 24, or 26; @playwright/test 1.64.1; lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370",
+    "runtime": "Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line; @playwright/test 1.64.1; lock-resolved Chromium 1248, Firefox 1555, and WebKit 2370",
     "dependenciesPath": "package-lock.json",
     "commands": [
       {

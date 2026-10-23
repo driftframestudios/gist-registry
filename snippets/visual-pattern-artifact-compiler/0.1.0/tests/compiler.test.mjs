@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { lstat, mkdir, mkdtemp, readFile, readdir, rename, symlink, truncate, writeFile } from "node:fs/promises";

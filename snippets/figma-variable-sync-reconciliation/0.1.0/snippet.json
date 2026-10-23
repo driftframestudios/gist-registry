@@ -33,7 +33,7 @@
   "provenance": {
     "class": "authorized_source_synthesis",
     "description": "A public, operator-neutral synthesis of design-token synchronization and distributed-operation recovery patterns using a deterministic in-process remote and realistic synthetic variables.",
-    "temporalScope": "This version is a Node.js 22, 24, or 26 coordination exemplar. Live service compatibility belongs to a separately versioned adapter verified against current official API documentation and a synthetic workspace.",
+    "temporalScope": "This version is a Node.js 22.23.4+, 24.22.1+, or 26.12.1+ coordination exemplar within its major line. Live service compatibility belongs to a separately versioned adapter verified against current official API documentation and a synthetic workspace.",
     "sourceKeys": [
       "public-source:figma-rest-api-variables",
       "public-source:figma-rest-api-rate-limits",
@@ -52,6 +52,7 @@
     {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
     {"role": "dependency_definition", "path": "package.json", "declaredMediaType": "application/json"},
     {"role": "dependency_lock", "path": "package-lock.json", "declaredMediaType": "application/json"},
+    {"role": "runtime_admission", "path": "node-runtime-admission.mjs", "declaredMediaType": "text/javascript"},
     {"role": "source", "path": "src/canonical.mjs", "declaredMediaType": "text/javascript"},
     {"role": "source", "path": "src/coordinator.mjs", "declaredMediaType": "text/javascript"},
     {"role": "source", "path": "src/errors.mjs", "declaredMediaType": "text/javascript"},
@@ -66,7 +67,7 @@
     {"role": "expected_contract", "path": "expected/accepted-receipt.json", "declaredMediaType": "application/json"}
   ],
   "execution": {
-    "runtime": "Node.js 22, 24, or 26; standard-library runtime behavior",
+    "runtime": "Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line; standard-library runtime behavior",
     "dependenciesPath": "package-lock.json",
     "commands": [
       {

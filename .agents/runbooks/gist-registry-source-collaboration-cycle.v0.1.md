@@ -152,7 +152,7 @@ Inspect the root Node lock and only the artifact-local runtime declared by the
 selected source:
 
 ```sh
-node --version
+node tools/check-node-runtime.mjs
 npm --version
 uv --version
 npm ls --depth=0
@@ -240,7 +240,7 @@ During iteration, run the artifact's focused lock, lint, and behavior commands.
 Prepare the complete source evidence that remains valid with a working diff:
 
 ```sh
-node --test tests/*.test.mjs
+npm run test:node
 npm run check:public-boundary
 npm run check:registry
 npm run check:schema

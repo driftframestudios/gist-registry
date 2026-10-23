@@ -96,7 +96,8 @@ realistic synthetic material; operational schemas, endpoints, credentials,
 production records, and employer code remain with their authorized owners.
 
 The focused checks establish one in-memory object-to-JSON adapter for passive
-same-realm records under Node.js 22 and TypeScript 5.9.3. The included compiler
+same-realm records under Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its
+major line and TypeScript 5.9.3. The included compiler
 configuration supplies the optional-property distinction; the runtime adapter
 rejects present `undefined` under every caller configuration. `RoutePatch`
 names admitted input and `RoutePatchWire` names projected output, while

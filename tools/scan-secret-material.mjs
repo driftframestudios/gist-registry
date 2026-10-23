@@ -1,3 +1,5 @@
+import "./node-runtime-guard.mjs";
+
 import { createHash, randomBytes } from "node:crypto";
 import { constants as filesystemConstants } from "node:fs";
 import {
@@ -15,6 +17,8 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 import {
   BetterleaksInstallError,
@@ -796,7 +800,7 @@ async function main() {
   process.stdout.write(renderReceipt(receipt));
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isDirectNodeInvocation(import.meta.url)) {
   main().catch((error) => {
     if (error instanceof SecretScanFindingsError) {
       process.stderr.write(renderFindings(error));

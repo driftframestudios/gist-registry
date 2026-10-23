@@ -1,7 +1,11 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { lstat, readFile, readdir } from "node:fs/promises";
 import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const modulePath = fileURLToPath(import.meta.url);
 const repositoryRoot = resolve(dirname(modulePath), "..");
@@ -130,7 +134,7 @@ async function main() {
   );
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath)
+if (isDirectNodeInvocation(import.meta.url))
   main().catch(error => {
     console.error(error);
     process.exitCode = 1;

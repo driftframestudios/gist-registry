@@ -1,3 +1,5 @@
+import "../../node-runtime-admission.mjs";
+
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { extname, relative, resolve } from "node:path";

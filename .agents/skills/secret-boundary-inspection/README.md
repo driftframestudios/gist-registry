@@ -13,9 +13,12 @@ recovery distinct so a clean result means exactly what the receiver observed.
 3. Map the receiving implementation with the
    [receiver adapter contract](references/receiver-adapter-contract.md).
 4. Run the scanner's operational canary before interpreting a clean result.
-5. From this skill directory, run `node exercises/exercise.mjs`; run
-   `node --test exercises/source-identity.test.mjs` for the source-selection
-   regression.
+5. From this skill package, run `npm run exercise`; run
+   `npm run test:source-identity` for the source-selection regression. The
+   package manifest admits the active Node runtime before the portable exercise
+   receives control. The Gist Registry root supplies corresponding
+   `exercise:skill:secret-boundary-inspection` and
+   `test:skill:secret-boundary-source-identity` aliases.
 
 Example request:
 

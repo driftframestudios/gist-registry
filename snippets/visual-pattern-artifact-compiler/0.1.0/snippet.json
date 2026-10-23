@@ -29,7 +29,7 @@
   "provenance": {
     "class": "independent_synthetic_authoring",
     "description": "The code, contract, SVG, gallery, prose, and fixtures are independently authored synthetic material. Visual Fidelity practice informs the mechanism while production art, private design files, operational URLs, participant data, and employer assets remain with their authorized owners.",
-    "temporalScope": "This version exercises Node.js 22, 24, or 26 with Sharp 0.35.5, Playwright 1.64.1, and the libvips and browser coordinates resolved by its exact lock. Another runtime, browser revision, font set, encoder, or media target receives its own observation.",
+    "temporalScope": "This version exercises Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line with Sharp 0.35.5, Playwright 1.64.1, and the libvips and browser coordinates resolved by its exact lock. Another runtime, browser revision, font set, encoder, or media target receives its own observation.",
     "sourceKeys": [
       "independent-authoring:visual-pattern-artifact-compiler",
       "realistic-synthetic:source-to-decision-route"
@@ -46,6 +46,7 @@
     {"role": "manifest", "path": "snippet.json", "declaredMediaType": "application/json"},
     {"role": "dependency_definition", "path": "package.json", "declaredMediaType": "application/json"},
     {"role": "dependency_lock", "path": "package-lock.json", "declaredMediaType": "application/json"},
+    {"role": "runtime_admission", "path": "node-runtime-admission.mjs", "declaredMediaType": "text/javascript"},
     {"role": "source_contract", "path": "source/pattern-contract.json", "declaredMediaType": "application/json"},
     {"role": "source_vector", "path": "source/pattern.svg", "declaredMediaType": "image/svg+xml"},
     {"role": "source_template", "path": "source/gallery-shell.html", "declaredMediaType": "text/html"},
@@ -64,7 +65,7 @@
     {"role": "expected_contract", "path": "expected/contract-expectation.json", "declaredMediaType": "application/json"}
   ],
   "execution": {
-    "runtime": "Node.js 22, 24, or 26; Sharp 0.35.5 and Playwright 1.64.1 with libvips and browser coordinates resolved by package-lock.json",
+    "runtime": "Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line; Sharp 0.35.5 and Playwright 1.64.1 with libvips and browser coordinates resolved by package-lock.json",
     "dependenciesPath": "package-lock.json",
     "commands": [
       {

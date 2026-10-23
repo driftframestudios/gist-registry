@@ -1,10 +1,14 @@
 # Exercise: reconcile two preview generations
 
-Run:
+From this skill package, including a copied public package:
 
 ```sh
-node .agents/skills/semantic-visual-receiver-contracts/exercises/exercise.mjs
+npm run exercise
 ```
+
+The package manifest admits the active Node runtime before the exercise starts.
+From the Gist Registry root, the equivalent route is
+`npm run exercise:skill:semantic-visual-receiver-contracts`.
 
 The exercise checks that native and React routes declare the same state set,
 visible labels retain programmatic associations, a newer preview becomes

@@ -70,6 +70,9 @@
         ".agents/skills/design-token-pipeline-stewardship/exercises/exercise.mjs",
         ".agents/skills/design-token-pipeline-stewardship/exercises/expected-receipt.json",
         ".agents/skills/design-token-pipeline-stewardship/exercises/pipeline.json",
+        ".agents/skills/design-token-pipeline-stewardship/node-runtime-admission.mjs",
+        ".agents/skills/design-token-pipeline-stewardship/package-lock.json",
+        ".agents/skills/design-token-pipeline-stewardship/package.json",
         ".agents/skills/design-token-pipeline-stewardship/references/tool-and-runtime-boundaries.md"
       ],
       "readinessNote": "The portable contract has been exercised through a deterministic DTCG/Style Dictionary compiler and an independent accessible native/React receiver with exact coordinates and recovery evidence."
@@ -196,6 +199,9 @@
         ".agents/skills/secret-boundary-inspection/exercises/README.md",
         ".agents/skills/secret-boundary-inspection/exercises/exercise.mjs",
         ".agents/skills/secret-boundary-inspection/exercises/source-identity.test.mjs",
+        ".agents/skills/secret-boundary-inspection/node-runtime-admission.mjs",
+        ".agents/skills/secret-boundary-inspection/package-lock.json",
+        ".agents/skills/secret-boundary-inspection/package.json",
         ".agents/skills/secret-boundary-inspection/references/embedded-metadata.md",
         ".agents/skills/secret-boundary-inspection/references/evidence-and-recovery.md",
         ".agents/skills/secret-boundary-inspection/references/receiver-adapter-contract.md"
@@ -213,6 +219,9 @@
         ".agents/skills/semantic-visual-receiver-contracts/exercises/exercise.mjs",
         ".agents/skills/semantic-visual-receiver-contracts/exercises/expected-receipt.json",
         ".agents/skills/semantic-visual-receiver-contracts/exercises/receiver-contract.json",
+        ".agents/skills/semantic-visual-receiver-contracts/node-runtime-admission.mjs",
+        ".agents/skills/semantic-visual-receiver-contracts/package-lock.json",
+        ".agents/skills/semantic-visual-receiver-contracts/package.json",
         ".agents/skills/semantic-visual-receiver-contracts/references/framework-and-receiving-boundaries.md"
       ],
       "readinessNote": "Native HTML and React Aria routes have exercised shared state names, labels, stable identity, asynchronous generation checks, and accepted-state recovery."
@@ -283,6 +292,9 @@
         ".agents/skills/visual-artifact-family-publication/exercises/expected-receipt.json",
         ".agents/skills/visual-artifact-family-publication/exercises/family.json",
         ".agents/skills/visual-artifact-family-publication/exercises/pattern.svg",
+        ".agents/skills/visual-artifact-family-publication/node-runtime-admission.mjs",
+        ".agents/skills/visual-artifact-family-publication/package-lock.json",
+        ".agents/skills/visual-artifact-family-publication/package.json",
         ".agents/skills/visual-artifact-family-publication/references/renderer-svg-and-metadata-boundaries.md"
       ],
       "readinessNote": "Synthetic SVG/WebP and token-artifact families have exercised source contracts, semantic companions, deterministic manifests, and accepted-pointer recovery."
@@ -298,6 +310,9 @@
         ".agents/skills/visual-contract-receipt-design/exercises/decisions.json",
         ".agents/skills/visual-contract-receipt-design/exercises/exercise.mjs",
         ".agents/skills/visual-contract-receipt-design/exercises/expected-receipt.json",
+        ".agents/skills/visual-contract-receipt-design/node-runtime-admission.mjs",
+        ".agents/skills/visual-contract-receipt-design/package-lock.json",
+        ".agents/skills/visual-contract-receipt-design/package.json",
         ".agents/skills/visual-contract-receipt-design/references/browser-evidence-and-variance.md"
       ],
       "readinessNote": "Compiler, receiver, and derivative routes have exercised direct oracle selection, controlled faults, exact environment coordinates, and recoverable candidate receipts."

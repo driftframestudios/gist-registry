@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import { spawnSync } from "node:child_process";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";

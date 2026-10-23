@@ -1,10 +1,16 @@
 # Bounded disposition and native-adapter exercise
 
-With Node.js 22 or newer, from the package directory:
+From this skill package, including a copied public package, use the
+runtime-admitted exercise route:
 
 ```sh
-node exercises/exercise.mjs
+npm run exercise
 ```
+
+The repository admits stable Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within
+its respective major line before the portable exercise receives control. From
+the Gist Registry root, the equivalent route is
+`npm run exercise:skill:secret-boundary-inspection`.
 
 This synthetic model distinguishes clean, finding, error, unobserved and resting
 scope states. Missing/duplicate scope records and failed canaries hold the
@@ -18,7 +24,7 @@ With Git supporting `--no-lazy-fetch`, `--no-replace-objects` and
 `--no-optional-locks` (observed with Git 2.50.1), run:
 
 ```sh
-node --test exercises/source-identity.test.mjs
+npm run test:source-identity
 ```
 
 [The three retained cases](source-identity.test.mjs) use temporary synthetic Git
@@ -38,7 +44,7 @@ The same script can exercise the reviewed HASE/Registry two-module adapter when
 the task explicitly authorizes the selected local receiver:
 
 ```sh
-node exercises/exercise.mjs --receiver /path/to/accepted-receiver --revision <full-accepted-sha>
+npm run exercise -- --receiver /path/to/accepted-receiver --revision <full-accepted-sha>
 ```
 
 The caller selects the receiver, its accepted or reviewed candidate revision,

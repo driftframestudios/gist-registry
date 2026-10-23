@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import { rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

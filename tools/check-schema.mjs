@@ -1,3 +1,5 @@
+import "./node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { readFile, realpath } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -7,6 +9,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 import { checkRegistry } from "./check-registry.mjs";
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const modulePath = fileURLToPath(import.meta.url);
 const repositoryRoot = resolve(dirname(modulePath), "..");
@@ -82,7 +85,7 @@ export async function checkSchemaNursery({ root = repositoryRoot } = {}) {
   return { schemaVersion: "0.1.0", artifactCount: checked.length, instances: checked };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === modulePath) {
+if (isDirectNodeInvocation(import.meta.url)) {
   checkSchemaNursery()
     .then(({ schemaVersion, artifactCount }) => {
       console.log(`schema nursery check: passed (${artifactCount} artifact against ${schemaVersion})`);

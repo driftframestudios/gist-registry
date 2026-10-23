@@ -1,3 +1,5 @@
+import "./node-runtime-guard.mjs";
+
 import { createHash } from "node:crypto";
 import {
   chmod,
@@ -14,6 +16,8 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+import { isDirectNodeInvocation } from "./node-cli-entrypoint.mjs";
 
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MAX_RELEASE_ASSET_BYTES = 128 * 1024 * 1024;
@@ -531,7 +535,7 @@ async function main() {
   );
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isDirectNodeInvocation(import.meta.url)) {
   main().catch((error) => {
     const message =
       error instanceof BetterleaksInstallError

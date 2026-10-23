@@ -1,3 +1,5 @@
+import "../tools/node-runtime-guard.mjs";
+
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";

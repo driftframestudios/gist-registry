@@ -1,3 +1,5 @@
+import "./node-runtime-admission.mjs";
+
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({

@@ -54,17 +54,36 @@ work-state authority.
 
 ## Quickest proof
 
-With a current Node.js 22, 24, or 26 maintenance release, install the pinned
-root dependencies and check the complete registry graph:
+Use the reviewed Node.js 24.22.1 local default, or the supported Node.js
+22.23.4+ or 26.12.1+ coordinate within its major line. The repository admits
+the active runtime before installing or exercising the graph:
 
 ```sh
+nvm use
+node tools/check-node-runtime.mjs
 npm ci
 npm run check:registry
 ```
 
-The command establishes that every registry entry resolves to one exact
-manifest and that each declared representation, path, digest, and local schema
-relationship agrees. Artifact runtime behavior, Pages delivery, optional Gist
+The runtime receipt records `process.version`, the relevant
+`process.versions` values, and package-contract alignment. The registry check
+then establishes that every entry resolves to one exact manifest and that each
+declared representation, path, digest, and local schema relationship agrees.
+The shared `devEngines.runtime` contract admits every root and nested `npm run`,
+`npm install`, and `npm ci` boundary, including the locked nested installs that
+use `--ignore-scripts`. The explicit checker adds the structured receipt and
+upgrade route before accepted CI work begins. Repository-owned executable
+tools import the same assertion before their work starts, so a direct
+`node tools/...` route carries the same floor. `npm run check:node-entrypoints`
+reconciles that assertion against the static tool, test, configuration, and
+public-exercise inventory. Each portable snippet and JavaScript skill package
+carries a package-local admission module, so copied packages preserve the same
+direct-entrypoint boundary using files carried inside the copied package. The
+diagnostic checker remains the intentional entry route for an earlier runtime
+because its receipt names the recovery coordinate.
+
+Package audit results describe dependency closure separately from this Node
+core receipt. Artifact runtime behavior, Pages delivery, optional Gist
 publication, and downstream suitability retain their focused observations.
 
 
@@ -248,15 +267,27 @@ The registry uses dependencies where they protect named behavior:
 - Python artifact environments are locked with `uv`, with Ruff providing a
   focused diagnostic and formatting route.
 
-The complete repository suite supports Node.js 22, 24, or 26, TypeScript 5.9.3,
-Python 3.12, and `uv` 0.11.33. Confirm `node --version`,
-`python3.12 --version`, and `uv --version`, then install the root Node
-dependencies and run the complete fast path:
+The complete repository suite supports Node.js 22, 24, or 26 at these security
+floors: 22.23.4, 24.22.1, and 26.12.1. `.nvmrc` selects the reviewed 24.22.1
+local default. TypeScript 5.9.3, Python 3.12, and `uv` 0.11.33 retain their
+resolved coordinates. Confirm the toolchain, admit the active Node runtime,
+then install dependencies and run the complete fast path:
 
 ```sh
+nvm use
+npm run check:node-runtime
+npm run check:node-entrypoints
 npm ci
 npm test
 ```
+
+Use `nvm use 22.23.4`, `nvm use 24.22.1`, or `nvm use 26.12.1` to reproduce a
+specific CI lane. A later patch in the same supported major also satisfies the
+policy. The runtime checker supplies an actionable upgrade coordinate when a
+local selector precedes its accepted floor. npm enforces the same contract at
+each package boundary through `devEngines`; an `EBADDEVENGINES` result directs
+the operator to select one of these coordinates before installation or script
+execution.
 
 The visual-contract packages carry artifact-local locks for Style Dictionary,
 React Aria and React Stately, Playwright, and Sharp/libvips. The default test
@@ -416,9 +447,12 @@ coordinates it actually examined; later hosted behavior remains a new evidence
 question.
 
 The path-filtered Registry checks workflow runs the complete repository suite
-on Node.js 22 in one cancellable fifteen-minute job, then exercises the
-visual-contract packages on Node.js 24 and 26 through two independent
-ten-minute matrix jobs. A
+on Node.js 22.23.4 in one cancellable fifteen-minute job. Two independent
+fifteen-minute matrix jobs repeat the complete Node-owned validation graph on
+Node.js 24.22.1 and 26.12.1. That graph includes the Node skill exercises;
+Python skill exercises remain in the complete repository suite beside their
+locked Python checks. Each lane emits the runtime-admission receipt before
+dependency installation. A
 twenty-minute browser job installs the matching Chromium, Firefox, and WebKit
 revisions and exercises browser receipts plus published-artifact semantics.
 The independent secret-material receiver runs for every pull request with its

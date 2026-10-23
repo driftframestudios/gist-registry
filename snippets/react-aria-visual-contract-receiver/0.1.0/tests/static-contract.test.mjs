@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 import {readFile} from "node:fs/promises";
@@ -107,6 +109,8 @@ test("receiver CSS carries logical, reflow, contrast, motion, and print contract
 test("each measured build dimension carries an explicit review threshold", async () => {
   const budgets = JSON.parse(await read("config/build-budgets.json"));
   const expected = JSON.parse(await read("expected/build-budget-contract.json"));
+  const readme = await read("README.md");
+  const manifest = JSON.parse(await read("snippet.json"));
 
   assert.equal(budgets.coordinate, "react-aria-visual-contract-receiver@0.1.0");
   assert.equal(expected.coordinate, budgets.coordinate);
@@ -143,4 +147,23 @@ test("each measured build dimension carries an explicit review threshold", async
     format: "gzip",
     level: 9
   });
+  assert.equal(
+    expected.profiledMeasurements.runtimeJavaScriptGzipBytes.standing,
+    "historical_pre_floor_observation"
+  );
+  const activeRuntimeFloor =
+    /Node\.js 22\.23\.4\+, 24\.22\.1\+, or 26\.12\.1\+ within its major line/u;
+  assert.match(readme, activeRuntimeFloor);
+  assert.match(
+    manifest.execution.runtime,
+    activeRuntimeFloor,
+  );
+  assert.match(readme, /historical pre-floor observation/u);
+  assert.match(
+    readme,
+    new RegExp(
+      `Authored receiver source \\| ${expected.deterministicMeasurements.authoredSourceBytes.toLocaleString("en-US")} bytes \\|`,
+      "u"
+    )
+  );
 });

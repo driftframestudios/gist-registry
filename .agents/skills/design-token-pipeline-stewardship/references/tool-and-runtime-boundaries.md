@@ -9,7 +9,7 @@ runtime, and date; vendor documentation can advance independently.
 | Boundary | Current coordinate used by the executable family | Material rule |
 | --- | --- | --- |
 | DTCG | Format Module 2025.10 | First stable Final Community Group Report; its community-group status remains distinct from the W3C Standards Track |
-| Style Dictionary | 5.7.0, ESM, Node.js 22+ | Await build APIs; use exact compiler/runtime/lock coordinates |
+| Style Dictionary | 5.7.0, ESM, Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within its major line | Await build APIs; use exact compiler/runtime/lock coordinates |
 | React Aria Components | 1.22.1 observed | High-level unstyled behavior and accessible composition |
 | React Stately | 3.51.0 observed | Reusable state and collection ownership |
 | Spectrum 2 | 1.8.1 package observed | Distinct generation and provider/styling contract |

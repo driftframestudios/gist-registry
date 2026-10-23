@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import { createServer } from "node:http";
 import { readFile, rm } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";

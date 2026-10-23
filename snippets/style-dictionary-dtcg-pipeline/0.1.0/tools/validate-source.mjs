@@ -1,3 +1,5 @@
+import "../node-runtime-admission.mjs";
+
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { adaptFigmaSnapshot } from "../adapters/figma-snapshot-to-dtcg.mjs";
@@ -5,6 +7,7 @@ import { BUILD_MATRIX, coordinateId } from "../config/build-matrix.mjs";
 import { stableStringify, validateTokenGraph } from "../src/contract.mjs";
 import { loadCoordinate } from "./load-coordinate.mjs";
 import { packageRoot } from "./paths.mjs";
+import { isDirectNodeInvocation } from "../node-cli-entrypoint.mjs";
 
 export async function validateAllSources() {
   const coordinates = [];
@@ -25,7 +28,7 @@ export async function validateAllSources() {
   };
 }
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (isDirectNodeInvocation(import.meta.url)) {
   validateAllSources()
     .then(result => process.stdout.write(stableStringify(result)))
     .catch(error => {
